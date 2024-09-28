@@ -42,6 +42,9 @@ class CustomCanvas(tk.Canvas):
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonPress-2>", self.move_start)
+        self.bind("<B2-Motion>", self.move_move)
+        self.bind("<MouseWheel>", self.zoom)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -52,14 +55,52 @@ class CustomCanvas(tk.Canvas):
                     self.add_diagram_output()
         self.set_name(self.name)
 
+        self.imscale = 1.0
+        self.imageid = None
+        self.delta = 0.75
+
+        box = Box(self, 0, 0, self.receiver)
+        self.boxes.append(box)
+
     def set_name(self, name):
         w = self.winfo_width()
         self.coords(self.name, w / 2, 12)
         self.itemconfig(self.name, text=name)
         self.name_text = name
 
+    # move
+    def move_start(self, event):
+        self.scan_mark(event.x, event.y)
+
+    def move_move(self, event):
+        self.scan_dragto(event.x, event.y, gain=1)
+
+    def zoom(self, event):
+        scale = self.imscale
+
+        if event.num == 5 or event.delta == -120:
+            scale *= self.delta
+            self.imscale *= self.delta
+        if event.num == 4 or event.delta == 120:
+            scale /= self.delta
+            self.imscale /= self.delta
+        # Rescale all canvas objects
+        x = self.canvasx(event.x)
+        y = self.canvasy(event.y)
+        # TODO: currently scaling only changes size of widgets but does not update canvas scale.
+        self.scale('all', x, y, scale, scale)
+        self.configure(scrollregion=self.bbox('all'))
+        print(f"box coords: {self.coords(self.boxes[0].rect)}")
+        print(f"box x, y: {self.boxes[0].x}, {self.boxes[0].y}")
+
     # binding for drag select
     def __select_start__(self, event):
+        print()
+        print(f"Canvas click: {self.canvasx(event.x)}, {self.canvasy(event.y)}")
+        print()
+        print(f"Screen coords: {event.x}, {event.y}")
+        print()
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         [box.close_menu() for box in self.boxes]
         [wire.close_menu() for wire in self.wires]
         [(spider.close_menu(), self.tag_raise(spider.circle)) for spider in self.spiders]
@@ -77,6 +118,7 @@ class CustomCanvas(tk.Canvas):
         self.selectBox = self.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1, self.origin_y + 1)
 
     def __select_motion__(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         if self.selecting:
             x_new = event.x
             y_new = event.y

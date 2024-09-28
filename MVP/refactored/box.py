@@ -7,6 +7,7 @@ from MVP.refactored.connection import Connection
 class Box:
     def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None):
         self.canvas = canvas
+        x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
         self.start_x = x
@@ -168,12 +169,14 @@ class Box:
 
     # MOVING, CLICKING ETC.
     def on_press(self, event):
+        event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         self.start_x = event.x
         self.start_y = event.y
         self.x_dif = event.x - self.x
         self.y_dif = event.y - self.y
 
     def on_drag(self, event):
+        event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
         self.start_x = event.x
         self.start_y = event.y
@@ -196,9 +199,14 @@ class Box:
                     go_to_x = spider.x - +self.size[0] / 2
                     break
         self.move(go_to_x, go_to_y)
+        print(f"dif: {self.x_dif}, {self.y_dif}")
+        print(f"go to : {go_to_x}, {go_to_y}")
+        print(f"canvas coords: {event.x}, {event.y}")
+        print(f"box coords: {self.x}, {self.y}")
         self.move_label()
 
     def on_resize_drag(self, event):
+        event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         dx = event.x - self.start_x
         dy = event.y - self.start_y
         self.start_x = event.x
@@ -260,6 +268,7 @@ class Box:
         self.start_y = event.y
 
     def move(self, new_x, new_y):
+        # new_x, new_y = self.canvas.canvasx(new_x), self.canvas.canvasy(new_y)
         is_bad = False
         for connection in self.connections:
             if connection.has_wire and self.is_illegal_move(connection, new_x):
