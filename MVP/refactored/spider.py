@@ -76,13 +76,13 @@ class Spider(Connection):
         for box in self.canvas.boxes:
             if abs(box.x + box.size[0] / 2 - event.x) < box.size[0] / 2 + self.r and move_legal:
                 if self.y + self.r >= box.y and self.y - self.r <= box.y + box.size[1]:
-                    if self.is_snapped:
-                        return
-                    else:
+                    if not self.is_snapped:
                         if (box.y * 2 + box.size[1]) / 2 <= self.y:
                             self.y = box.y + box.size[1] + self.r + 1
                         else:
                             self.y = box.y - self.r - 1
+                    else:
+                        return
                 self.x = box.x + box.size[0] / 2
                 found = True
         for spider in self.canvas.spiders:
@@ -96,13 +96,13 @@ class Spider(Connection):
                 continue
             if abs(spider.location[0] - event.x) < self.r + spider.r and move_legal:
                 if self.y + self.r >= spider.y - spider.r and self.y <= spider.y + self.r + spider.r:
-                    if self.is_snapped:
-                        return
-                    else:
+                    if not self.is_snapped:
                         if spider.y <= self.y:
                             self.y = spider.y + spider.r * 2 + 1
                         else:
                             self.y = spider.y - spider.r * 2 - 1
+                    else:
+                        return
                 self.x = spider.location[0]
                 found = True
         self.is_snapped = found

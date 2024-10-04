@@ -191,25 +191,25 @@ class Box:
                 continue
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
                 if go_to_y + self.size[1] >= box.y and go_to_y <= box.y + box.size[1]:
-                    if self.is_snapped:
-                        return
-                    else:
+                    if not self.is_snapped:
                         if (box.y * 2 + box.size[1]) / 2 <= (self.y * 2 + self.size[1]) / 2:
                             go_to_y = box.y + box.size[1] + 1
                         else:
                             go_to_y = box.y - self.size[1] - 1
+                    else:
+                        return
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
                 found = True
         for spider in self.canvas.spiders:
             if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
                 if go_to_y + self.size[1] >= spider.y - spider.r and go_to_y <= spider.y + spider.r:
-                    if self.is_snapped:
-                        return
-                    else:
+                    if not self.is_snapped:
                         if spider.y <= (self.y * 2 + self.size[1]) / 2:
                             go_to_y = spider.y + spider.r + 1
                         else:
                             go_to_y = spider.y - self.size[1] - spider.r - 1
+                    else:
+                        return
                 go_to_x = spider.x - +self.size[0] / 2
                 found = True
         self.is_snapped = found
