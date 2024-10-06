@@ -25,20 +25,20 @@ class HypergraphNotation:
             wire_end = wire.connections[1]
 
             self.graph.add_node(wire_id, type='wire')
-            port_start, box_start, side_start, wire_start_id = wire_start
-            port_end, box_end, side_end, wire_end_id = wire_end
+            port_start, start_box_id, side_start, wire_start_id = wire_start
+            port_end, end_box_id, side_end, wire_end_id = wire_end
 
-            if box_start is None:
+            if start_box_id is None:
                 start_box = f'input_{input_count}'
                 input_count += 1
             else:
-                start_box = f"box_{box_start}"
+                start_box = f"box_{start_box_id}"
 
-            if box_end is None:
+            if end_box_id is None:
                 end_box = f'output_{output_count}'
                 output_count += 1
             else:
-                end_box = f"box_{box_end}"
+                end_box = f"box_{end_box_id}"
 
             if side_start == 'left':
                 self.graph.add_edge(wire_id, start_box, port=port_start, connection_type='input')
@@ -53,6 +53,13 @@ class HypergraphNotation:
             for connection in spider.connections:
                 port, box_id, side, con_id = connection
                 box_node = f"box_{box_id}"
+                # TODO: fix bug,
+                #  inputs and outputs represents like "box_None" in visualization, when connected with spider
+                # if box_name is None:
+                #     box_node = f'box_{box_count}'
+                #     box_count += 1
+                # else:
+                #     box_node = f"box_{box_name}"
 
                 edge_id = f"{spider_id}_{box_node}_{port}_{side}"
 
