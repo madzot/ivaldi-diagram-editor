@@ -3,7 +3,10 @@ from tkinter import messagebox
 from tkinter import simpledialog
 from tkinter import ttk
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.modules.notations.hypergraph_notation.hypergraph_notation import HypergraphNotation
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter import Exporter
 from MVP.refactored.util.importer import Importer
@@ -75,6 +78,10 @@ class MainDiagram(tk.Tk):
                                  command=self.create_algebraic_notation, bg="white", width=18)
         self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
 
+        self.alg_not = tk.Button(self.control_frame, text="Visualize as graph",
+                                 command=self.visualize_as_graph, bg="light sea green", width=18)
+        self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
+
         # Button for Draw Wire Mode
         self.draw_wire_button = tk.Button(self.control_frame, text="Draw Wire Mode",
                                           command=self.custom_canvas.toggle_draw_wire_mode, bg="white", width=18)
@@ -132,6 +139,19 @@ class MainDiagram(tk.Tk):
                 # Create a button to copy text to clipboard
                 copy_button = tk.Button(frame, text="Copy", command=lambda tb=text_box: self.copy_to_clipboard(tb))
                 copy_button.pack(pady=5)
+
+    def visualize_as_graph(self):
+        plot_window = tk.Toplevel(self)
+        plot_window.title("Graph Visualization")
+
+        hypergraph_notation = HypergraphNotation(self.custom_canvas.receiver.diagram)
+
+        figure = hypergraph_notation.get_hypergraph_figure()
+
+        # Embed the figure in the Tkinter window
+        canvas = FigureCanvasTkAgg(figure, master=plot_window)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     def copy_to_clipboard(self, text_box):
         self.clipboard_clear()  # Clear the clipboard

@@ -12,6 +12,8 @@ class HypergraphNotation:
 
     def create_graph(self):
         self.graph = nx.MultiDiGraph()
+        input_count = 0
+        output_count = 0
 
         for box in self.diagram.boxes:
             box_id = f"box_{box.id}"
@@ -27,12 +29,14 @@ class HypergraphNotation:
             port_end, box_end, side_end, wire_end_id = wire_end
 
             if box_start is None:
-                start_box = 'input'
+                start_box = f'input_{input_count}'
+                input_count += 1
             else:
                 start_box = f"box_{box_start}"
 
             if box_end is None:
-                end_box = 'output'
+                end_box = f'output_{output_count}'
+                output_count += 1
             else:
                 end_box = f"box_{box_end}"
 
@@ -58,14 +62,22 @@ class HypergraphNotation:
                     self.graph.add_edge(spider_id, box_node, port=port, connection_type='spider', key=edge_id)
 
     def visualize_hypergraph(self):
-        plt.figure(figsize=(12, 10))
+        self.get_hypergraph_figure()
+        plt.title('Diagram Graph')
+        plt.show(block=True)
+
+    def get_hypergraph_figure(self):
+        fig, ax = plt.subplots(figsize=(12, 10))
         pos = nx.spring_layout(self.graph, seed=42)
         node_colors = [self.graph.nodes[n].get('type', 'node') for n in self.graph.nodes]
         color_map = {'box': 'lightblue', 'spider': 'lightcoral', 'wire': 'lightgreen'}
-        nx.draw_networkx_nodes(self.graph, pos, node_color=[color_map.get(t, 'grey') for t in node_colors],
+
+        nx.draw_networkx_nodes(self.graph, pos,
+                               node_color=[color_map.get(t, 'grey') for t in node_colors],
                                node_size=700)
         nx.draw_networkx_labels(self.graph, pos)
         nx.draw_networkx_edges(self.graph, pos, arrowstyle='-|>', arrowsize=20)
+
         for i, (u, v, k, d) in enumerate(self.graph.edges(keys=True, data=True)):
             label = d.get('port', '')
             if label is not None:
@@ -73,10 +85,9 @@ class HypergraphNotation:
                 y = (pos[u][1] + pos[v][1]) / 2
 
                 offset = (i - len(self.graph[u][v]) / 2) * 0.03
-                plt.text(x + offset, y + offset, str(label), color='red', fontsize=12, ha='center')
+                ax.text(x + offset, y + offset, str(label), color='red', fontsize=12, ha='center')
 
-        plt.title('Diagram Graph')
-        plt.show()
+        return fig
 
     def get_adjacency_matrix_dense(self):
         adj_matrix = nx.adjacency_matrix(self.graph).todense()
@@ -99,8 +110,6 @@ class HypergraphNotation:
         return np.array(inc_matrix)
 
     def get_graph_string(self):
-        self.visualize_hypergraph()
-
         res = "Nodes:"
         for node, data in self.graph.nodes(data=True):
             res += f"\n{node}: {data}"
