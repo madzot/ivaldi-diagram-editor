@@ -19,12 +19,12 @@ class HypergraphNotation:
 
         for wire in self.diagram.resources:
             wire_id = f"wire_{wire.id}"
-            connection_start = wire.connections[0]
-            connection_end = wire.connections[1]
+            wire_start = wire.connections[0]
+            wire_end = wire.connections[1]
 
             self.graph.add_node(wire_id, type='wire')
-            port_start, box_start, side_start, connection_start_id = connection_start
-            port_end, box_end, side_end, connection_end_id = connection_end
+            port_start, box_start, side_start, wire_start_id = wire_start
+            port_end, box_end, side_end, wire_end_id = wire_end
 
             start_box = f"box_{box_start}"
             end_box = f"box_{box_end}"
@@ -92,6 +92,8 @@ class HypergraphNotation:
         return np.array(inc_matrix)
 
     def get_graph_string(self):
+        self.visualize_hypergraph()
+
         res = "Nodes:"
         for node, data in self.graph.nodes(data=True):
             res += f"\n{node}: {data}"
