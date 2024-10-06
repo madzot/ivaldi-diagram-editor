@@ -26,8 +26,15 @@ class HypergraphNotation:
             port_start, box_start, side_start, wire_start_id = wire_start
             port_end, box_end, side_end, wire_end_id = wire_end
 
-            start_box = f"box_{box_start}"
-            end_box = f"box_{box_end}"
+            if box_start is None:
+                start_box = 'input'
+            else:
+                start_box = f"box_{box_start}"
+
+            if box_end is None:
+                end_box = 'output'
+            else:
+                end_box = f"box_{box_end}"
 
             if side_start == 'left':
                 self.graph.add_edge(wire_id, start_box, port=port_start, connection_type='input')
