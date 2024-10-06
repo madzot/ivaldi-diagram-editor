@@ -8,9 +8,9 @@ class HypergraphNotation:
         self.diagram = diagram
         self.graph = None
         self.hypergraph = None
-        self.create_hypergraph()
+        self.create_graph()
 
-    def create_hypergraph(self):
+    def create_graph(self):
         self.graph = nx.MultiDiGraph()
 
         for box in self.diagram.boxes:
@@ -65,7 +65,7 @@ class HypergraphNotation:
         nx.draw_networkx_nodes(self.graph, pos, node_color=[color_map.get(t, 'grey') for t in node_colors],
                                node_size=700)
         nx.draw_networkx_labels(self.graph, pos)
-        nx.draw_networkx_edges(self.graph, pos, arrowstyle='-|>', arrowsize=10)
+        nx.draw_networkx_edges(self.graph, pos, arrowstyle='-|>', arrowsize=20)
         for i, (u, v, k, d) in enumerate(self.graph.edges(keys=True, data=True)):
             label = d.get('port', '')
             if label is not None:
