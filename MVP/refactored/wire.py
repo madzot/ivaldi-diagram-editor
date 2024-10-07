@@ -149,7 +149,7 @@ class Wire:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, connection.box.id, connection.side],
                                             connection_id=connection.id)
-        elif connection.box is None and self.receiver.listener and self.start_connection.box is not None:
+        else: # TODO: Understand, why previous code was written like this
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, None, connection.side],
                                             connection_id=connection.id)
