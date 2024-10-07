@@ -7,6 +7,7 @@ from PIL import Image
 
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
+from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.wire import Wire
@@ -51,6 +52,7 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
+        self.selector = Selector(self)
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -71,92 +73,20 @@ class CustomCanvas(tk.Canvas):
         if self.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1):
             self.on_canvas_click(event)
             return
-        self.selecting = True
-        self.origin_x = event.x
-        self.origin_y = event.y
-        self.selectBox = self.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1, self.origin_y + 1)
+        self.selector.start_selection(event)
 
     def __select_motion__(self, event):
-        if self.selecting:
-            x_new = event.x
-            y_new = event.y
-            self.coords(self.selectBox, self.origin_x, self.origin_y, x_new, y_new)
+        # Update the selection area as the user drags
+        self.selector.update_selection(event)
 
-    def __select_release__(self, _):
-        # TODO maybe there should be a Selector class to keep things clean?
-        if self.selecting:
-            selected_coordinates = self.coords(self.selectBox)
-            # find boxes in selected area
-            selected_boxes = []
-            for box in self.boxes:
-                x1, y1, x2, y2 = self.coords(box.rect)
-                x = (x1 + x2) / 2
-                y = (y1 + y2) / 2
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_boxes.append(box)
-
-            selected_spiders = []
-            for spider in self.spiders:
-                x, y = spider.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_spiders.append(spider)
-
-            # find wires in selected area (wires with beginning or end in selected box)
-            selected_wires = []
-            for wire in self.wires:
-                # wire start in selected area
-                x, y = wire.end_connection.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_wires.append(wire)
-                    continue
-
-                # wire start in selected area
-                x, y = wire.start_connection.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_wires.append(wire)
-
-            # select all
-            for i in selected_wires + selected_boxes + selected_spiders:
-                i.select()
-
-            if selected_boxes:
-                res = mb.askquestion(message='Add selection to a separate sub-diagram?')
-                if res == 'yes':
-                    x = (selected_coordinates[0] + selected_coordinates[2]) / 2
-                    y = (selected_coordinates[1] + selected_coordinates[3]) / 2
-
-                    # create new box that will contain the sub-diagram
-                    box = self.add_box((x, y))
-                    sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
-                    prev_status = self.receiver.listener
-                    self.receiver.listener = False
-                    self.copier.copy_canvas_contents(sub_diagram, selected_wires, selected_boxes,
-                                                     selected_spiders, selected_coordinates, box)
-                    box.lock_box()
-                    self.receiver.listener = prev_status
-                    for w in list(filter(lambda wire_: (wire_ in self.wires), selected_wires)):
-                        w.delete_self("sub_diagram")
-                    for b in list(filter(lambda box_: (box_ in self.boxes), selected_boxes)):
-                        b.delete_box(keep_sub_diagram=True, action="sub_diagram")
-                    for s in list(filter(lambda spider_: (spider_ in self.spiders), selected_spiders)):
-                        s.delete_spider("sub_diagram")
-                        if self.receiver.listener:
-                            self.receiver.receiver_callback('create_spider_parent', wire_id=s.id,
-                                                            connection_id=s.id,
-                                                            generator_id=box.id)
-                    sub_diagram.set_name(str(sub_diagram.id)[-6:])
-                    box.set_label(str(sub_diagram.id)[-6:])
-                    self.main_diagram.add_canvas(sub_diagram)
-
-            for i in selected_wires + selected_boxes + selected_spiders:
-                i.deselect()
-
-            self.delete(self.selectBox)
-            self.selecting = False
+    def __select_release__(self, event):
+        self.selector.finalize_selection(event, self.boxes, self.spiders, self.wires)
+        if self.selector.selected_items:
+            res = mb.askquestion(message='Add selection to a separate sub-diagram?')
+            if res == 'yes':
+                self.selector.select_action(True)
+                return
+        self.selector.select_action(False)
 
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event):
