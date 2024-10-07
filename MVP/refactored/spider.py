@@ -62,6 +62,9 @@ class Spider(Connection):
     # MOVING, CLICKING ETC.
 
     def on_drag(self, event):
+        if self.canvas.pulling_wire:
+            return
+
         self.y = event.y
         move_legal = False
         if not self.is_illegal_move(event.x):

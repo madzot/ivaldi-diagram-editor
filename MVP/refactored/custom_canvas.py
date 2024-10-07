@@ -27,6 +27,12 @@ class CustomCanvas(tk.Canvas):
         self.inputs: list[Connection] = []
         self.spiders: list[Spider] = []
         self.wires: list[Wire] = []
+        self.temp_wire = None
+        self.temp_end_connection = None
+        self.pulling_wire = False
+        self.previous_x = None
+        self.previous_y = None
+        self.quick_pull = False
         self.receiver = receiver
         self.current_wire_start = None
         self.current_wire = None
@@ -40,6 +46,8 @@ class CustomCanvas(tk.Canvas):
         self.set_name(str(self.id))
         self.selectBox = None
         self.bind("<ButtonPress-1>", self.__select_start__)
+        self.bind('<Motion>', self.start_pulling_wire)
+        self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", self.__select_release__)
         self.selecting = False
@@ -158,6 +166,12 @@ class CustomCanvas(tk.Canvas):
             self.delete(self.selectBox)
             self.selecting = False
 
+    def pull_wire(self, event):
+        if not self.quick_pull:
+            self.quick_pull = True
+            self.toggle_draw_wire_mode()
+            self.on_canvas_click(event)
+
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event):
         if self.draw_wire_mode:
@@ -167,23 +181,44 @@ class CustomCanvas(tk.Canvas):
 
                 conn_x, conn_y, conn_x2, conn_y2 = self.coords(circle.circle)
                 if conn_x <= x <= conn_x2 and conn_y <= y <= conn_y2:
-                    self.handle_connection_click(circle)
+                    self.handle_connection_click(circle, event)
                     return
 
-    def handle_connection_click(self, c):
+    def start_pulling_wire(self, event):
+        if self.draw_wire_mode and self.pulling_wire:
+            if self.temp_wire is not None:
+                self.temp_wire.delete_self()
+            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection)
+            self.wires.append(self.temp_wire)
+            if self.temp_end_connection.location != (self.canvasx(event.x), self.canvasy(event.y)):
+                self.previous_x = self.canvasx(event.x)
+                self.previous_y = self.canvasy(event.y)
+                self.temp_end_connection.delete_me()
+                self.temp_end_connection = Connection(None, None, None, (self.canvasx(event.x), self.canvasy(event.y)), self)
+
+    def handle_connection_click(self, c, event):
         if c.has_wire or not self.draw_wire_mode:
             return
         if not self.current_wire_start:
-            self.start_wire_from_connection(c)
+            self.start_wire_from_connection(c, event)
         else:
             self.end_wire_to_connection(c)
 
-    def start_wire_from_connection(self, connection):
+    def start_wire_from_connection(self, connection, event):
+        x, y = self.canvasx(event.x), self.canvasy(event.y)
         self.current_wire_start = connection
 
         connection.color_green()
 
+        self.pulling_wire = True
+        self.temp_end_connection = Connection(None, None, None, (x, y), self)
+
     def end_wire_to_connection(self, connection, bypass_legality_check=False):
+
+        if connection == self.current_wire_start:
+
+            self.nullify_wire_start()
+            self.cancel_wire_pulling()
 
         if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
                                                                               connection) or bypass_legality_check:
@@ -200,6 +235,19 @@ class CustomCanvas(tk.Canvas):
 
             self.current_wire.update()
             self.nullify_wire_start()
+
+            self.cancel_wire_pulling()
+
+    def cancel_wire_pulling(self):
+        if self.temp_wire is not None:
+            self.temp_end_connection.delete_me()
+            self.temp_wire.delete_self()
+            self.temp_wire = None
+            self.temp_end_connection = None
+            self.pulling_wire = False
+            if self.quick_pull:
+                self.quick_pull = False
+                self.toggle_draw_wire_mode()
 
     def nullify_wire_start(self):
         if self.current_wire_start:
@@ -242,6 +290,7 @@ class CustomCanvas(tk.Canvas):
             self.main_diagram.draw_wire_button.config(bg="lightgreen")
         else:
             self.nullify_wire_start()
+            self.cancel_wire_pulling()
             self.main_diagram.draw_wire_button.config(bg="white")
 
     # RESIZE/UPDATE
