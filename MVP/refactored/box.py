@@ -38,6 +38,8 @@ class Box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
 
+        self.is_snapped = False
+
     def set_id(self, id_):
         if self.receiver.listener:
             self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
@@ -181,20 +183,37 @@ class Box:
         go_to_x = event.x - self.x_dif
         go_to_y = event.y - self.y_dif
 
+
         # snapping into place
         found = False
         for box in self.canvas.boxes:
             if box == self:
                 continue
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
+                if go_to_y + self.size[1] >= box.y and go_to_y <= box.y + box.size[1]:
+                    if not self.is_snapped:
+                        if (box.y * 2 + box.size[1]) / 2 <= (self.y * 2 + self.size[1]) / 2:
+                            go_to_y = box.y + box.size[1] + 1
+                        else:
+                            go_to_y = box.y - self.size[1] - 1
+                    else:
+                        return
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
                 found = True
-                break
-        if not found:
-            for spider in self.canvas.spiders:
-                if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
-                    go_to_x = spider.x - +self.size[0] / 2
-                    break
+        for spider in self.canvas.spiders:
+            if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
+                if go_to_y + self.size[1] >= spider.y - spider.r and go_to_y <= spider.y + spider.r:
+                    if not self.is_snapped:
+                        if spider.y <= (self.y * 2 + self.size[1]) / 2:
+                            go_to_y = spider.y + spider.r + 1
+                        else:
+                            go_to_y = spider.y - self.size[1] - spider.r - 1
+                    else:
+                        return
+                go_to_x = spider.x - +self.size[0] / 2
+                found = True
+        self.is_snapped = found
+
         self.move(go_to_x, go_to_y)
         self.move_label()
 
