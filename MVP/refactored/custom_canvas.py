@@ -172,7 +172,7 @@ class CustomCanvas(tk.Canvas):
             connection = self.get_connection_from_location(event)
             if connection is not None and not connection.has_wire:
                 self.toggle_draw_wire_mode()
-                self.on_canvas_click(event)
+                self.on_canvas_click(event, connection)
             else:
                 self.quick_pull = False
 
@@ -188,8 +188,9 @@ class CustomCanvas(tk.Canvas):
         return None
 
     # HANDLE CLICK ON CANVAS
-    def on_canvas_click(self, event):
-        connection = self.get_connection_from_location(event)
+    def on_canvas_click(self, event, connection=None):
+        if connection is None:
+            connection = self.get_connection_from_location(event)
         if connection is not None:
             self.handle_connection_click(connection, event)
 
@@ -215,14 +216,15 @@ class CustomCanvas(tk.Canvas):
             self.end_wire_to_connection(c)
 
     def start_wire_from_connection(self, connection, event=None):
-        self.current_wire_start = connection
+        if connection.side == "spider" or not connection.has_wire:
+            self.current_wire_start = connection
 
-        connection.color_green()
+            connection.color_green()
 
-        if event is not None:
-            x, y = self.canvasx(event.x), self.canvasy(event.y)
-            self.pulling_wire = True
-            self.temp_end_connection = Connection(None, None, None, (x, y), self)
+            if event is not None:
+                x, y = self.canvasx(event.x), self.canvasy(event.y)
+                self.pulling_wire = True
+                self.temp_end_connection = Connection(None, None, None, (x, y), self)
 
     def end_wire_to_connection(self, connection, bypass_legality_check=False):
 
@@ -232,6 +234,7 @@ class CustomCanvas(tk.Canvas):
 
         if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
                                                                               connection) or bypass_legality_check:
+            self.cancel_wire_pulling()
             self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
             self.wires.append(self.current_wire)
 
@@ -245,8 +248,6 @@ class CustomCanvas(tk.Canvas):
 
             self.current_wire.update()
             self.nullify_wire_start()
-
-            self.cancel_wire_pulling()
 
     def cancel_wire_pulling(self):
         if self.temp_wire is not None:
@@ -361,6 +362,7 @@ class CustomCanvas(tk.Canvas):
 
         if start.side == end.side == "spider":
             return True
+
         return not (start.side == end.side or start.side == "left" and start.location[0] - start.width_between_boxes <=
                     end.location[0] or start.side == "right" and start.location[0] + start.width_between_boxes >=
                     end.location[0])
