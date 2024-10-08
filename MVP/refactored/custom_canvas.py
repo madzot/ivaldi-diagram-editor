@@ -80,7 +80,7 @@ class CustomCanvas(tk.Canvas):
         self.selector.update_selection(event)
 
     def __select_release__(self, event):
-        self.selector.finalize_selection(event, self.boxes, self.spiders, self.wires)
+        self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
         if self.selector.selected_items:
             res = mb.askquestion(message='Add selection to a separate sub-diagram?')
             if res == 'yes':
