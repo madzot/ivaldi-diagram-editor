@@ -223,15 +223,11 @@ class Box:
         resize_y = self.y + self.size[1] - self.resize_handle_size
         dx = event.x - self.start_x
         dy = event.y - self.start_y
-        
-        if (dx > 0
-                and self.size[0] == 20
-                and not resize_x <= event.x):
+
+        if dx > 0 and not resize_x <= event.x:
             dx = 0
 
-        if (dy > 0
-                and self.size[1] == 20
-                and not resize_y <= event.y):
+        if dy > 0 and not resize_y <= event.y:
             dy = 0
 
         self.start_x = event.x
