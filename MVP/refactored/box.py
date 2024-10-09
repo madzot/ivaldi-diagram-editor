@@ -25,9 +25,8 @@ class Box:
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.rect = self.canvas.create_rectangle(self.x, self.y, self.x + self.size[0], self.y + self.size[1],
                                                  outline="black", fill="white")
-        self.resize_handle_size = 10
-        self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - self.resize_handle_size,
-                                                          self.y + self.size[1] - self.resize_handle_size,
+        self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - 10,
+                                                          self.y + self.size[1] - 10,
                                                           self.x + self.size[0], self.y + self.size[1],
                                                           outline="black", fill="black")
         self.locked = False
