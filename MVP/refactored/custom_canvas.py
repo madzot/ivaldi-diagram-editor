@@ -56,8 +56,10 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
 
         self.imscale = 1.0
-        self.imageid = None
         self.delta = 0.75
+
+        self.create_line(0, 0, 1280, 0, fill="red", width=2)
+        self.create_line(0, 0, 0, 800, fill="red", width=2)
 
         box = Box(self, 0, 0, self.receiver)
         self.boxes.append(box)
@@ -76,7 +78,7 @@ class CustomCanvas(tk.Canvas):
         self.scan_dragto(event.x, event.y, gain=1)
 
     def zoom(self, event):
-        scale = self.imscale
+        scale = 1
 
         if event.num == 5 or event.delta == -120:
             scale *= self.delta
@@ -87,8 +89,30 @@ class CustomCanvas(tk.Canvas):
         # Rescale all canvas objects
         x = self.canvasx(event.x)
         y = self.canvasy(event.y)
-        # TODO: currently scaling only changes size of widgets but does not update canvas scale.
-        self.scale('all', x, y, scale, scale)
+
+        for box in self.boxes:
+            box.x *= scale
+            box.y *= scale
+            box.update_size(box.size[0] * scale, box.size[1] * scale)
+
+        for spider in self.spiders:
+            spider.x *= scale
+            spider.y *= scale
+            spider.location = spider.x, spider.y
+            spider.r *= scale
+            self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
+                        spider.y + spider.r)
+
+        for input in self.inputs:
+            input.r *= scale
+            input.location = input.location[0] * scale, input.location[1] * scale
+            self.coords(input.circle, input.location[0] - input.r, input.location[1] - input.r,
+                        input.location[0] + input.r, input.location[1] + input.r)
+
+        for wire in self.wires:
+            wire.wire_width *= scale
+            wire.update()
+        # self.scale('all', x, y, scale, scale)
         self.configure(scrollregion=self.bbox('all'))
         print(f"box coords: {self.coords(self.boxes[0].rect)}")
         print(f"box x, y: {self.boxes[0].x}, {self.boxes[0].y}")
