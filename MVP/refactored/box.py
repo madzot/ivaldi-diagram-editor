@@ -183,7 +183,6 @@ class Box:
         go_to_x = event.x - self.x_dif
         go_to_y = event.y - self.y_dif
 
-
         # snapping into place
         found = False
         for box in self.canvas.boxes:
@@ -218,8 +217,17 @@ class Box:
         self.move_label()
 
     def on_resize_drag(self, event):
+        resize_x = self.x + self.size[0] - 10
+        resize_y = self.y + self.size[1] - 10
         dx = event.x - self.start_x
         dy = event.y - self.start_y
+
+        if dx > 0 and not resize_x <= event.x:
+            dx = 0
+
+        if dy > 0 and not resize_y <= event.y:
+            dy = 0
+
         self.start_x = event.x
         self.start_y = event.y
         new_size_x = max(20, self.size[0] + dx)
