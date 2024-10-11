@@ -217,8 +217,8 @@ class Box:
         self.move_label()
 
     def on_resize_drag(self, event):
-        resize_x = self.x + self.size[0] - self.resize_handle_size
-        resize_y = self.y + self.size[1] - self.resize_handle_size
+        resize_x = self.x + self.size[0] - 10
+        resize_y = self.y + self.size[1] - 10
         dx = event.x - self.start_x
         dy = event.y - self.start_y
 
