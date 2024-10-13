@@ -27,6 +27,7 @@ class CustomCanvas(tk.Canvas):
         self.inputs: list[Connection] = []
         self.spiders: list[Spider] = []
         self.wires: list[Wire] = []
+        self.corners: list[Connection] = []
         self.receiver = receiver
         self.current_wire_start = None
         self.current_wire = None
@@ -42,8 +43,6 @@ class CustomCanvas(tk.Canvas):
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", self.__select_release__)
-        self.bind("<ButtonPress-2>", self.move_start)
-        self.bind("<B2-Motion>", self.move_move)
         self.bind("<MouseWheel>", self.zoom)
         self.selecting = False
         self.copier = Copier()
@@ -55,14 +54,22 @@ class CustomCanvas(tk.Canvas):
                     self.add_diagram_output()
         self.set_name(self.name)
 
-        self.imscale = 1.0
+        self.total_scale = 1.0
         self.delta = 0.75
-
-        self.create_line(0, 0, 1280, 0, fill="red", width=2)
-        self.create_line(0, 0, 0, 800, fill="red", width=2)
 
         box = Box(self, 0, 0, self.receiver)
         self.boxes.append(box)
+
+        c1 = Connection(None, None, "left", (0, 0), self, 1)
+        c2 = Connection(None, None, "left", (0, 800), self, 1)
+        c3 = Connection(None, None, "left", (1280, 0), self, 1)
+        c4 = Connection(None, None, "left", (1280, 800), self, 1)
+        self.corners.append(c1)
+        self.corners.append(c2)
+        self.corners.append(c3)
+        self.corners.append(c4)
+
+        self.prev_scale = 1.0
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -70,60 +77,64 @@ class CustomCanvas(tk.Canvas):
         self.itemconfig(self.name, text=name)
         self.name_text = name
 
-    # move
-    def move_start(self, event):
-        self.scan_mark(event.x, event.y)
-
-    def move_move(self, event):
-        self.scan_dragto(event.x, event.y, gain=1)
-
     def zoom(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         scale = 1
 
+        self.prev_scale = self.total_scale
         if event.num == 5 or event.delta == -120:
             scale *= self.delta
-            self.imscale *= self.delta
+            self.total_scale *= self.delta
         if event.num == 4 or event.delta == 120:
             scale /= self.delta
-            self.imscale /= self.delta
-        # Rescale all canvas objects
-        x = self.canvasx(event.x)
-        y = self.canvasy(event.y)
+            self.total_scale /= self.delta
+
+        if self.prev_scale < self.total_scale:
+            denominator = 0.75
+        else:
+            denominator = 4 / 3
+
+        for corner in self.corners:
+            next_location = (
+                self.calculate_zoom_dif(event.x, corner.location[0], denominator),
+                self.calculate_zoom_dif(event.y, corner.location[1], denominator)
+            )
+            if 0 < round(next_location[0]) < 1280 or 0 < round(next_location[1]) < 800:
+                return
+            corner.location = next_location
+            self.coords(corner.circle, next_location[0] - corner.r, corner.location[1] - corner.r,
+                        corner.location[0] + corner.r, corner.location[1] + corner.r)
+
+        for i_o in self.inputs + self.outputs:
+            i_o_location = (
+                self.calculate_zoom_dif(event.x, i_o.location[0], denominator),
+                self.calculate_zoom_dif(event.y, i_o.location[1], denominator)
+            )
+            i_o.r *= scale
+            i_o.location = i_o_location
+            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
+                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
 
         for box in self.boxes:
-            box.x *= scale
-            box.y *= scale
+            box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
+            box.y = self.calculate_zoom_dif(event.y, box.y, denominator)
             box.update_size(box.size[0] * scale, box.size[1] * scale)
 
         for spider in self.spiders:
-            spider.x *= scale
-            spider.y *= scale
+            spider.x = self.calculate_zoom_dif(event.x, spider.x, denominator)
+            spider.y = self.calculate_zoom_dif(event.x, spider.y, denominator)
             spider.location = spider.x, spider.y
             spider.r *= scale
             self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
                         spider.y + spider.r)
 
-        for input in self.inputs:
-            input.r *= scale
-            input.location = input.location[0] * scale, input.location[1] * scale
-            self.coords(input.circle, input.location[0] - input.r, input.location[1] - input.r,
-                        input.location[0] + input.r, input.location[1] + input.r)
-
         for wire in self.wires:
             wire.wire_width *= scale
             wire.update()
-        # self.scale('all', x, y, scale, scale)
         self.configure(scrollregion=self.bbox('all'))
-        print(f"box coords: {self.coords(self.boxes[0].rect)}")
-        print(f"box x, y: {self.boxes[0].x}, {self.boxes[0].y}")
 
     # binding for drag select
     def __select_start__(self, event):
-        print()
-        print(f"Canvas click: {self.canvasx(event.x)}, {self.canvasy(event.y)}")
-        print()
-        print(f"Screen coords: {event.x}, {event.y}")
-        print()
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         [box.close_menu() for box in self.boxes]
         [wire.close_menu() for wire in self.wires]
@@ -495,3 +506,8 @@ class CustomCanvas(tk.Canvas):
                 c_max = connection.index
                 c = connection
         return c
+
+    @staticmethod
+    def calculate_zoom_dif(zoom_coord, object_coord, denominator):
+        """Calculates how much an object needs to be moved when zooming."""
+        return round(zoom_coord - (zoom_coord - object_coord) / denominator, 4)
