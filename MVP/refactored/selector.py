@@ -42,6 +42,8 @@ class Selector:
                                    or self.is_within_selection_point(wire.end_connection.location,
                                                                      selected_coordinates)]
             self.selected_items = self.selected_boxes + self.selected_spiders + self.selected_wires
+            for item in self.selected_items:
+                item.select()
 
     def select_action(self, create_sub_diagram=False):
         if self.selecting:
@@ -51,8 +53,6 @@ class Selector:
                 self.finish_selection()
             else:
                 # Perform simple selection by selecting all found items, could be used for moving/deleting
-                for item in self.selected_items:
-                    item.select()
                 self.finish_selection()
 
     def finish_selection(self):
