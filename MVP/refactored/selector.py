@@ -35,16 +35,16 @@ class Selector:
             self.selected_boxes = [box for box in boxes if self.is_within_selection(box.rect, selected_coordinates)]
 
             self.selected_spiders = [spider for spider in spiders if
-                                self.is_within_selection_point(spider.location, selected_coordinates)]
+                                     self.is_within_selection_point(spider.location, selected_coordinates)]
 
             self.selected_wires = [wire for wire in wires if
-                              self.is_within_selection_point(wire.start_connection.location, selected_coordinates) or
-                              self.is_within_selection_point(wire.end_connection.location, selected_coordinates)]
+                                   self.is_within_selection_point(wire.start_connection.location, selected_coordinates)
+                                   or self.is_within_selection_point(wire.end_connection.location,
+                                                                     selected_coordinates)]
             self.selected_items = self.selected_boxes + self.selected_spiders + self.selected_wires
 
     def select_action(self, create_sub_diagram=False):
         if self.selecting:
-            # If create_sub_diagram is True, move selected items into a new sub-diagram
             if create_sub_diagram:
                 self.create_sub_diagram(self.selected_boxes, self.selected_spiders, self.selected_wires,
                                         self.canvas.coords(self.selectBox))
@@ -53,7 +53,6 @@ class Selector:
                 # Perform simple selection by selecting all found items, could be used for moving/deleting
                 for item in self.selected_items:
                     item.select()
-                    # Should be done after moving
                 self.finish_selection()
 
     def finish_selection(self):
@@ -65,7 +64,6 @@ class Selector:
         self.selected_items.clear()
 
     def create_sub_diagram(self, boxes, spiders, wires, coordinates):
-        # Create new box at the center of the selection area
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
 
@@ -95,7 +93,6 @@ class Selector:
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
                 )
 
-        # Set the name and label for the new sub-diagram
         sub_diagram.set_name(str(sub_diagram.id)[-6:])
         box.set_label(str(sub_diagram.id)[-6:])
         self.canvas.main_diagram.add_canvas(sub_diagram)

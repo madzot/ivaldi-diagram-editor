@@ -76,7 +76,6 @@ class CustomCanvas(tk.Canvas):
         self.selector.start_selection(event)
 
     def __select_motion__(self, event):
-        # Update the selection area as the user drags
         self.selector.update_selection(event)
 
     def __select_release__(self, event):
