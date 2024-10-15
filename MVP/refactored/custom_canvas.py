@@ -51,6 +51,7 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
+        self.columns = {}
 
     def set_name(self, name):
         w = self.winfo_width()
