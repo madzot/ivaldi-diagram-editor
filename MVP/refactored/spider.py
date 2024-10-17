@@ -139,9 +139,7 @@ class Spider(Connection):
         [w.update() for w in self.wires]
 
     def find_space_y(self, go_to_x, go_to_y):
-        print("adada")
         objects_by_distance = sorted(self.canvas.columns[float(go_to_x)], key=lambda x: abs(self.y - x.y))
-        print(objects_by_distance)
         for item in objects_by_distance:
             if item == self:
                 continue
@@ -166,12 +164,6 @@ class Spider(Connection):
                     upper_y = component.y - component.r
                     lower_y = component.y + component.r
 
-                print()
-                print(go_to_y_up)
-                print(go_to_y_down)
-                print(upper_y)
-                print(lower_y)
-                print()
                 if go_to_y_up + self.r >= upper_y and go_to_y_up - self.r <= lower_y:
                     y_up = False
                 if go_to_y_down + self.r >= upper_y and go_to_y_down - self.r <= lower_y:
@@ -179,16 +171,13 @@ class Spider(Connection):
 
             if y_up and not y_down:
                 go_to_y = go_to_y_up
-                print("FINISHING FIRST")
                 break
             elif y_down and not y_up:
-                print("FINISHING SECOND")
                 go_to_y = go_to_y_down
                 break
             elif not y_up and not y_down:
                 continue
             elif y_down and y_up:
-                print("FINISHING THIRD")
                 distance_to_y_up = abs(self.y - go_to_y_up)
                 distance_to_y_down = abs(self.y - go_to_y_down)
                 if distance_to_y_up < distance_to_y_down:

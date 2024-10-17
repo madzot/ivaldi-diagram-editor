@@ -178,7 +178,6 @@ class Box:
 
     def on_drag(self, event):
 
-        print(self.canvas.columns)
         self.start_x = event.x
         self.start_y = event.y
 
@@ -261,12 +260,6 @@ class Box:
                     upper_y = component.y - component.r
                     lower_y = component.y + component.r
 
-                print()
-                print(go_to_y_up)
-                print(go_to_y_down)
-                print(lower_y)
-                print(upper_y)
-                print()
                 if go_to_y_up + self.size[1] >= upper_y and go_to_y_up <= lower_y:
                     y_up = False
                 if go_to_y_down + self.size[1] >= upper_y and go_to_y_down <= lower_y:
@@ -274,16 +267,13 @@ class Box:
 
             if y_up and not y_down:
                 go_to_y = go_to_y_up
-                print("FINISHING FIRST")
                 break
             elif y_down and not y_up:
-                print("FINISHING SECOND")
                 go_to_y = go_to_y_down
                 break
             elif not y_up and not y_down:
                 continue
             elif y_down and y_up:
-                print("FINISHING THIRD")
                 distance_to_y_up = abs(self.y - go_to_y_up)
                 distance_to_y_down = abs(self.y - go_to_y_down)
                 if distance_to_y_up < distance_to_y_down:
