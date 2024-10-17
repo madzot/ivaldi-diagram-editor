@@ -16,7 +16,7 @@ def curved_line(start, end, det=15):
 
 
 class Wire:
-    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None):
+    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False):
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.start_connection = start_connection
@@ -28,7 +28,8 @@ class Wire:
         else:
             self.id = id_
         self.receiver = receiver
-        self.handle_wire_addition_callback()
+        if not temporary:
+            self.handle_wire_addition_callback()
         self.update()
 
     def delete_self(self, action=None):
