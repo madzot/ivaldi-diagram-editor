@@ -1,4 +1,5 @@
 import os
+import sys
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
@@ -198,14 +199,15 @@ class CustomCanvas(tk.Canvas):
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
                 self.temp_wire.delete_self()
-            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection)
-            self.wires.append(self.temp_wire)
             if self.temp_end_connection.location != (self.canvasx(event.x), self.canvasy(event.y)):
                 self.previous_x = self.canvasx(event.x)
                 self.previous_y = self.canvasy(event.y)
                 self.temp_end_connection.delete_me()
-                self.temp_end_connection = Connection(None, None, None, (self.canvasx(event.x), self.canvasy(event.y)),
+                self.temp_end_connection = Connection(None, sys.maxsize, None,
+                                                      (self.canvasx(event.x), self.canvasy(event.y)),
                                                       self)
+            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True)
+            self.wires.append(self.temp_wire)
 
     def handle_connection_click(self, c, event):
         if c.has_wire or not self.draw_wire_mode:
