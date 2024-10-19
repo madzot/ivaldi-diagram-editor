@@ -51,12 +51,41 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
+        self.bind('<ButtonPress-3>', self.show_context_menu)
+        self.context_menu = tk.Menu(self, tearoff=0)
 
     def set_name(self, name):
         w = self.winfo_width()
         self.coords(self.name, w / 2, 12)
         self.itemconfig(self.name, text=name)
         self.name_text = name
+
+    def close_menu(self):
+        if self.context_menu:
+            self.context_menu.destroy()
+
+    def show_context_menu(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
+        if not self.is_mouse_on_object(event):
+            self.close_menu()
+            self.context_menu = tk.Menu(self, tearoff=0)
+
+            self.context_menu.add_command(label="Add undefined box",
+                                          command=lambda loc=(event.x, event.y): self.add_box(loc))
+            self.context_menu.add_command(label="Add spider",
+                                          command=lambda loc=(event.x, event.y): self.add_spider(loc))
+
+            self.context_menu.add_command(label="Cancel")
+            self.context_menu.post(event.x_root, event.y_root)
+
+    def is_mouse_on_object(self, event):
+        for box in self.boxes:
+            if box.x <= event.x <= box.x + box.size[0] and box.y <= event.y <= box.y + box.size[1]:
+                return True
+        for spider in self.spiders:
+            if spider.x - spider.r <= event.x <= spider.x + spider.r and spider.y - spider.r <= event.y <= spider.y + spider.r:
+                return True
+        return False
 
     # binding for drag select
     def __select_start__(self, event):

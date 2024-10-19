@@ -77,7 +77,7 @@ class Box:
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
         self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_command(label="Cancel")
-        self.context_menu.post(event.x_root, event.y_root)
+        self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def save_box_to_menu(self):
         if not self.label_text:
