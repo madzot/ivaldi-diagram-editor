@@ -34,6 +34,7 @@ class Spider(Connection):
         return True
 
     def bind_events(self):
+        self.canvas.tag_bind(self.circle, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.circle, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
 
@@ -62,6 +63,10 @@ class Spider(Connection):
         self.wires.append(wire)
 
     # MOVING, CLICKING ETC.
+    def on_press(self, event):
+        if self not in self.canvas.selector.selected_items:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
 
     def on_drag(self, event):
         self.y = event.y

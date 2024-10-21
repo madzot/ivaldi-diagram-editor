@@ -2,7 +2,6 @@ class Selector:
     def __init__(self, canvas):
         self.canvas = canvas
         self.selecting = False
-        self.selectBox = None
         self.selected_items = []
         self.selected_boxes = []
         self.selected_spiders = []
@@ -11,11 +10,10 @@ class Selector:
         self.origin_y = None
 
     def start_selection(self, event):
-        """Begin the selection process."""
         self.selecting = True
         self.origin_x = event.x
         self.origin_y = event.y
-        self.selectBox = self.canvas.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1,
+        self.canvas.selectBox = self.canvas.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1,
                                                       self.origin_y + 1)
         self.selected_items.clear()
         self.selected_boxes.clear()
@@ -26,11 +24,11 @@ class Selector:
         if self.selecting:
             x_new = event.x
             y_new = event.y
-            self.canvas.coords(self.selectBox, self.origin_x, self.origin_y, x_new, y_new)
+            self.canvas.coords(self.canvas.selectBox, self.origin_x, self.origin_y, x_new, y_new)
 
     def finalize_selection(self, boxes, spiders, wires):
         if self.selecting:
-            selected_coordinates = self.canvas.coords(self.selectBox)
+            selected_coordinates = self.canvas.coords(self.canvas.selectBox)
 
             self.selected_boxes = [box for box in boxes if self.is_within_selection(box.rect, selected_coordinates)]
 
@@ -45,21 +43,20 @@ class Selector:
             for item in self.selected_items:
                 item.select()
 
-    def select_action(self, create_sub_diagram=False):
+    def select_action(self, create_diagram=False):
         if self.selecting:
-            if create_sub_diagram:
+            if create_diagram:
                 self.create_sub_diagram(self.selected_boxes, self.selected_spiders, self.selected_wires,
-                                        self.canvas.coords(self.selectBox))
+                                        self.canvas.coords(self.canvas.selectBox))
                 self.finish_selection()
             else:
-                # Perform simple selection by selecting all found items, could be used for moving/deleting
                 self.finish_selection()
 
     def finish_selection(self):
         for item in self.selected_items:
             item.deselect()
         # Remove the selection box and reset selecting state
-        self.canvas.delete(self.selectBox)
+        self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
         self.selected_items.clear()
 
@@ -70,22 +67,17 @@ class Selector:
         # Create a new box that will contain the sub-diagram
         box = self.canvas.add_box((x, y))
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
-
         prev_status = self.canvas.receiver.listener
         self.canvas.receiver.listener = False
-
-        # Copy the selected items into the sub-diagram
         self.canvas.copier.copy_canvas_contents(
             sub_diagram, wires, boxes, spiders, coordinates, box
         )
         box.lock_box()
         self.canvas.receiver.listener = prev_status
-
-        # Remove the selected items from the main diagram
         for wire in filter(lambda w: w in self.canvas.wires, wires):
             wire.delete_self("sub_diagram")
-        for box in filter(lambda b: b in self.canvas.boxes, boxes):
-            box.delete_box(keep_sub_diagram=True, action="sub_diagram")
+        for box_ in filter(lambda b: b in self.canvas.boxes, boxes):
+            box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
         for spider in filter(lambda s: s in self.canvas.spiders, spiders):
             spider.delete_spider("sub_diagram")
             if self.canvas.receiver.listener:

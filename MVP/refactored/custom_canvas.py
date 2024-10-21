@@ -80,12 +80,13 @@ class CustomCanvas(tk.Canvas):
 
     def __select_release__(self, event):
         self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
-        if self.selector.selected_items:
+        if len(self.selector.selected_items) > 1:
             res = mb.askquestion(message='Add selection to a separate sub-diagram?')
             if res == 'yes':
                 self.selector.select_action(True)
                 return
         self.selector.select_action(False)
+
 
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event):
@@ -98,6 +99,17 @@ class CustomCanvas(tk.Canvas):
                 if conn_x <= x <= conn_x2 and conn_y <= y <= conn_y2:
                     self.handle_connection_click(circle)
                     return
+        if self.selector.selected_items:
+            for item in self.selector.selected_items:
+                if isinstance(item, Box):
+                    if not (item.x < event.x < item.x + item.size[0] and item.y < event.y < item.y + item.size[1]):
+                        item.deselect()
+                        self.selector.selected_items.remove(item)
+                if isinstance(item, Spider):
+                    if not (item.x - item.r / 2 < event.x < item.x + item.r / 2 and
+                            item.y - item.r / 2 < event.y < item.y + item.r / 2):
+                        item.deselect()
+                        self.selector.selected_items.remove(item)
 
     def handle_connection_click(self, c):
         if c.has_wire or not self.draw_wire_mode:
