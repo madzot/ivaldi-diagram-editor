@@ -28,6 +28,7 @@ class Wire:
         else:
             self.id = id_
         self.receiver = receiver
+        self.is_temporary = temporary
         if not temporary:
             self.handle_wire_addition_callback()
         self.update()
@@ -36,7 +37,8 @@ class Wire:
         self.start_connection.remove_wire(self)
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
-        self.canvas.wires.remove(self)
+        if not self.is_temporary:
+            self.canvas.wires.remove(self)
         self.handle_wire_deletion_callback(action)
 
     def delete_from_canvas(self):
