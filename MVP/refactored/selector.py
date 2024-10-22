@@ -14,7 +14,7 @@ class Selector:
         self.origin_x = event.x
         self.origin_y = event.y
         self.canvas.selectBox = self.canvas.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1,
-                                                      self.origin_y + 1)
+                                                             self.origin_y + 1)
         self.selected_items.clear()
         self.selected_boxes.clear()
         self.selected_spiders.clear()

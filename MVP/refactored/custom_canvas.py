@@ -40,9 +40,10 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
+        self.selector = Selector(self)
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind("<B1-Motion>", self.__select_motion__)
-        self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -52,7 +53,6 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
-        self.selector = Selector(self)
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -78,7 +78,7 @@ class CustomCanvas(tk.Canvas):
     def __select_motion__(self, event):
         self.selector.update_selection(event)
 
-    def __select_release__(self, event):
+    def __select_release__(self):
         self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
         if len(self.selector.selected_items) > 1:
             res = mb.askquestion(message='Add selection to a separate sub-diagram?')
@@ -86,7 +86,6 @@ class CustomCanvas(tk.Canvas):
                 self.selector.select_action(True)
                 return
         self.selector.select_action(False)
-
 
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event):
