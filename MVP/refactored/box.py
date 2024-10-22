@@ -199,10 +199,6 @@ class Box:
                     go_to_x = spider.x - +self.size[0] / 2
                     break
         self.move(go_to_x, go_to_y)
-        print(f"dif: {self.x_dif}, {self.y_dif}")
-        print(f"go to : {go_to_x}, {go_to_y}")
-        print(f"canvas coords: {event.x}, {event.y}")
-        print(f"box coords: {self.x}, {self.y}")
         self.move_label()
 
     def on_resize_drag(self, event):
