@@ -186,7 +186,6 @@ class Box:
         go_to_x = event.x - self.x_dif
         go_to_y = event.y - self.y_dif
 
-
         # snapping into place
         found = False
         for box in self.canvas.boxes:
