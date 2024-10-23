@@ -64,7 +64,6 @@ class Spider(Connection):
         self.wires.append(wire)
 
     # MOVING, CLICKING ETC.
-
     def on_drag(self, event):
 
         go_to_y = event.y
@@ -122,13 +121,7 @@ class Spider(Connection):
                         return
                 found = True
         self.is_snapped = found
-        if not found and self.snapped_x:
-            self.canvas.columns[self.snapped_x].remove(self)
-            if len(self.canvas.columns[self.snapped_x]) == 1:
-                self.canvas.columns[self.snapped_x][0].snapped_x = None
-                self.canvas.columns[self.snapped_x][0].is_snapped = False
-                self.canvas.columns.pop(self.snapped_x, None)
-            self.snapped_x = None
+        self.canvas.remove_from_column(self, found)
 
         self.location = [go_to_x, go_to_y]
         self.x = go_to_x
@@ -157,34 +150,19 @@ class Spider(Connection):
                 if component == self or component == item:
                     continue
 
-                if isinstance(component, Box):
-                    upper_y = component.y
-                    lower_y = component.y + component.size[1]
-                else:
-                    upper_y = component.y - component.r
-                    lower_y = component.y + component.r
+                upper_y, lower_y = self.canvas.get_upper_lower_edges(component)
 
                 if go_to_y_up + self.r >= upper_y and go_to_y_up - self.r <= lower_y:
                     y_up = False
                 if go_to_y_down + self.r >= upper_y and go_to_y_down - self.r <= lower_y:
                     y_down = False
 
-            if y_up and not y_down:
-                go_to_y = go_to_y_up
+            up_or_down = self.canvas.check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, self)
+            if up_or_down[0]:
+                go_to_y = up_or_down[1]
                 break
-            elif y_down and not y_up:
-                go_to_y = go_to_y_down
-                break
-            elif not y_up and not y_down:
+            else:
                 continue
-            elif y_down and y_up:
-                distance_to_y_up = abs(self.y - go_to_y_up)
-                distance_to_y_down = abs(self.y - go_to_y_down)
-                if distance_to_y_up < distance_to_y_down:
-                    go_to_y = go_to_y_up
-                else:
-                    go_to_y = go_to_y_down
-                break
         return go_to_y
 
     def is_illegal_move(self, new_x):
