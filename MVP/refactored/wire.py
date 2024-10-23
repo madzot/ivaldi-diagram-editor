@@ -39,7 +39,8 @@ class Wire:
         self.canvas.delete(self.line)
         if not self.is_temporary:
             self.canvas.wires.remove(self)
-        self.handle_wire_deletion_callback(action)
+        if not self.is_temporary:
+            self.handle_wire_deletion_callback(action)
 
     def delete_from_canvas(self):
         if self.start_connection and self.start_connection.is_spider():
