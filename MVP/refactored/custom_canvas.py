@@ -76,14 +76,16 @@ class CustomCanvas(tk.Canvas):
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))
 
             self.context_menu.add_command(label="Cancel")
-            self.context_menu.post(event.x_root, event.y_root)
+            self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def is_mouse_on_object(self, event):
         for box in self.boxes:
-            if box.x <= event.x <= box.x + box.size[0] and box.y <= event.y <= box.y + box.size[1]:
+            if (box.x <= event.x <= box.x + box.size[0]
+                    and box.y <= event.y <= box.y + box.size[1]):
                 return True
         for spider in self.spiders:
-            if spider.x - spider.r <= event.x <= spider.x + spider.r and spider.y - spider.r <= event.y <= spider.y + spider.r:
+            if (spider.x - spider.r <= event.x <= spider.x + spider.r
+                    and spider.y - spider.r <= event.y <= spider.y + spider.r):
                 return True
         return False
 
