@@ -10,6 +10,8 @@ class Selector:
         self.origin_y = None
 
     def start_selection(self, event):
+        for item in self.selected_items:
+            item.deselect()
         self.selecting = True
         self.origin_x = event.x
         self.origin_y = event.y
