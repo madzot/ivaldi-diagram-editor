@@ -60,14 +60,15 @@ class CustomCanvas(tk.Canvas):
         box = Box(self, 0, 0, self.receiver)
         self.boxes.append(box)
 
-        c1 = Connection(None, None, "left", (0, 0), self, 1)
-        c2 = Connection(None, None, "left", (0, 800), self, 1)
-        c3 = Connection(None, None, "left", (1280, 0), self, 1)
-        c4 = Connection(None, None, "left", (1280, 800), self, 1)
+        c1 = Connection(None, None, "left", (0, 0), self, 0)
+        c2 = Connection(None, None, "left", (0, 0), self, 0)
+        c3 = Connection(None, None, "left", (0, 0), self, 0)
+        c4 = Connection(None, None, "left", (0, 0), self, 0)
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
         self.corners.append(c4)
+        self.update_corners()
 
         self.prev_scale = 1.0
 
@@ -105,7 +106,7 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(event.x, corner.location[0], denominator),
                 self.calculate_zoom_dif(event.y, corner.location[1], denominator)
             )
-            if 0 < round(next_location[0]) < 1280 or 0 < round(next_location[1]) < 800:
+            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
                 return
 
         for corner in self.corners:
@@ -340,7 +341,14 @@ class CustomCanvas(tk.Canvas):
         self.coords(self.name, w / 2, 10)
 
         self.update_inputs_outputs()
+        self.update_corners()
         # TODO here or somewhere else limit resize if it would mess up output/input display
+
+    def update_corners(self):
+        self.corners[0].move_to([0, 0])
+        self.corners[1].move_to([0, self.winfo_height()])
+        self.corners[2].move_to([self.winfo_width(), 0])
+        self.corners[3].move_to([self.winfo_width(), self.winfo_height()])
 
     def update_inputs_outputs(self):
         x = self.winfo_width()

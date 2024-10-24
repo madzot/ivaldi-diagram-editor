@@ -18,6 +18,8 @@ class MainDiagram(tk.Tk):
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
 
+        self.configure(width=screen_width_min, height=screen_height_min)
+
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False, width=screen_width_min,
                                           height=screen_height_min, bg="white")
 
@@ -32,10 +34,10 @@ class MainDiagram(tk.Tk):
         self.tree_root_id = str(self.custom_canvas.id)
         # Bind the treeview to the click event
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
+        self.tree.update()
 
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.control_frame = tk.Frame(self)
-        self.wm_minsize(screen_width_min, screen_height_min)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
         self.exporter = Exporter(self.custom_canvas)
@@ -44,6 +46,7 @@ class MainDiagram(tk.Tk):
         self.undefined_box_button = tk.Button(self.control_frame, text="Add Undefined Box",
                                               command=self.custom_canvas.add_box, bg="white", width=18)
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.undefined_box_button.update()
 
         self.boxes = {}
 
@@ -97,6 +100,8 @@ class MainDiagram(tk.Tk):
 
         if load:
             self.load_from_file()
+        self.minsize(screen_width_min + self.tree.winfo_width() + self.undefined_box_button.winfo_width(),
+                     screen_height_min)
         self.mainloop()
 
     def create_algebraic_notation(self):
