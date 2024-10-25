@@ -52,7 +52,7 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
-        self.bind("<ButtonPress-3>", self.cancel_wire_pulling)
+        self.bind("<ButtonPress-3>", self.handle_right_click)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -62,8 +62,13 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
-        self.bind('<ButtonPress-3>', self.show_context_menu)
         self.context_menu = tk.Menu(self, tearoff=0)
+
+    def handle_right_click(self, event):
+        if self.draw_wire_mode:
+            self.cancel_wire_pulling(event)
+        else:
+            self.show_context_menu(event)
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -174,7 +179,7 @@ class CustomCanvas(tk.Canvas):
                 self.previous_x = self.canvasx(event.x)
                 self.previous_y = self.canvasy(event.y)
                 self.temp_end_connection.delete_me()
-                self.temp_end_connection = Connection(None, sys.maxsize, None,
+                self.temp_end_connection = Connection(None, 0, None,
                                                       (self.canvasx(event.x), self.canvasy(event.y)),
                                                       self)
             self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True)
@@ -222,7 +227,7 @@ class CustomCanvas(tk.Canvas):
             self.nullify_wire_start()
 
     def cancel_wire_pulling(self, event=None):
-        if event and self.draw_wire_mode:
+        if event:
             self.nullify_wire_start()
         if self.temp_wire is not None:
             self.temp_end_connection.delete_me()
