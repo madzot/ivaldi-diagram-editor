@@ -78,7 +78,7 @@ class Box:
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
         self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_command(label="Cancel")
-        self.context_menu.post(event.x_root, event.y_root)
+        self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def save_box_to_menu(self):
         if not self.label_text:
@@ -171,6 +171,9 @@ class Box:
 
     # MOVING, CLICKING ETC.
     def on_press(self, event):
+        if self not in self.canvas.selector.selected_items:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
         self.start_x = event.x
         self.start_y = event.y
         self.x_dif = event.x - self.x

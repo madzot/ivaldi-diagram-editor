@@ -7,6 +7,7 @@ from PIL import Image
 
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
+from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.wire import Wire
@@ -39,9 +40,10 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
+        self.selector = Selector(self)
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind("<B1-Motion>", self.__select_motion__)
-        self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -51,6 +53,8 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
+        self.bind('<ButtonPress-3>', self.show_context_menu)
+        self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
 
     def set_name(self, name):
@@ -58,6 +62,35 @@ class CustomCanvas(tk.Canvas):
         self.coords(self.name, w / 2, 12)
         self.itemconfig(self.name, text=name)
         self.name_text = name
+
+    def close_menu(self):
+        if self.context_menu:
+            self.context_menu.destroy()
+
+    def show_context_menu(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
+        if not self.is_mouse_on_object(event):
+            self.close_menu()
+            self.context_menu = tk.Menu(self, tearoff=0)
+
+            self.context_menu.add_command(label="Add undefined box",
+                                          command=lambda loc=(event.x, event.y): self.add_box(loc))
+            self.context_menu.add_command(label="Add spider",
+                                          command=lambda loc=(event.x, event.y): self.add_spider(loc))
+
+            self.context_menu.add_command(label="Cancel")
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+
+    def is_mouse_on_object(self, event):
+        for box in self.boxes:
+            if (box.x <= event.x <= box.x + box.size[0]
+                    and box.y <= event.y <= box.y + box.size[1]):
+                return True
+        for spider in self.spiders:
+            if (spider.x - spider.r <= event.x <= spider.x + spider.r
+                    and spider.y - spider.r <= event.y <= spider.y + spider.r):
+                return True
+        return False
 
     # binding for drag select
     def __select_start__(self, event):
@@ -72,92 +105,19 @@ class CustomCanvas(tk.Canvas):
         if self.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1):
             self.on_canvas_click(event)
             return
-        self.selecting = True
-        self.origin_x = event.x
-        self.origin_y = event.y
-        self.selectBox = self.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1, self.origin_y + 1)
+        self.selector.start_selection(event)
 
     def __select_motion__(self, event):
-        if self.selecting:
-            x_new = event.x
-            y_new = event.y
-            self.coords(self.selectBox, self.origin_x, self.origin_y, x_new, y_new)
+        self.selector.update_selection(event)
 
-    def __select_release__(self, _):
-        # TODO maybe there should be a Selector class to keep things clean?
-        if self.selecting:
-            selected_coordinates = self.coords(self.selectBox)
-            # find boxes in selected area
-            selected_boxes = []
-            for box in self.boxes:
-                x1, y1, x2, y2 = self.coords(box.rect)
-                x = (x1 + x2) / 2
-                y = (y1 + y2) / 2
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_boxes.append(box)
-
-            selected_spiders = []
-            for spider in self.spiders:
-                x, y = spider.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_spiders.append(spider)
-
-            # find wires in selected area (wires with beginning or end in selected box)
-            selected_wires = []
-            for wire in self.wires:
-                # wire start in selected area
-                x, y = wire.end_connection.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_wires.append(wire)
-                    continue
-
-                # wire start in selected area
-                x, y = wire.start_connection.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_wires.append(wire)
-
-            # select all
-            for i in selected_wires + selected_boxes + selected_spiders:
-                i.select()
-
-            if selected_boxes:
-                res = mb.askquestion(message='Add selection to a separate sub-diagram?')
-                if res == 'yes':
-                    x = (selected_coordinates[0] + selected_coordinates[2]) / 2
-                    y = (selected_coordinates[1] + selected_coordinates[3]) / 2
-
-                    # create new box that will contain the sub-diagram
-                    box = self.add_box((x, y))
-                    sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
-                    prev_status = self.receiver.listener
-                    self.receiver.listener = False
-                    self.copier.copy_canvas_contents(sub_diagram, selected_wires, selected_boxes,
-                                                     selected_spiders, selected_coordinates, box)
-                    box.lock_box()
-                    self.receiver.listener = prev_status
-                    for w in list(filter(lambda wire_: (wire_ in self.wires), selected_wires)):
-                        w.delete_self("sub_diagram")
-                    for b in list(filter(lambda box_: (box_ in self.boxes), selected_boxes)):
-                        b.delete_box(keep_sub_diagram=True, action="sub_diagram")
-                    for s in list(filter(lambda spider_: (spider_ in self.spiders), selected_spiders)):
-                        s.delete_spider("sub_diagram")
-                        if self.receiver.listener:
-                            self.receiver.receiver_callback('create_spider_parent', wire_id=s.id,
-                                                            connection_id=s.id,
-                                                            generator_id=box.id)
-                    sub_diagram.set_name(str(sub_diagram.id)[-6:])
-                    box.set_label(str(sub_diagram.id)[-6:])
-                    self.main_diagram.add_canvas(sub_diagram)
-
-            for i in selected_wires + selected_boxes + selected_spiders:
-                i.deselect()
-
-            self.delete(self.selectBox)
-            self.selecting = False
+    def __select_release__(self):
+        self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
+        if len(self.selector.selected_items) > 1:
+            res = mb.askquestion(message='Add selection to a separate sub-diagram?')
+            if res == 'yes':
+                self.selector.select_action(True)
+                return
+        self.selector.select_action(False)
 
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event):
@@ -170,6 +130,17 @@ class CustomCanvas(tk.Canvas):
                 if conn_x <= x <= conn_x2 and conn_y <= y <= conn_y2:
                     self.handle_connection_click(circle)
                     return
+        if self.selector.selected_items:
+            for item in self.selector.selected_items:
+                if isinstance(item, Box):
+                    if not (item.x < event.x < item.x + item.size[0] and item.y < event.y < item.y + item.size[1]):
+                        item.deselect()
+                        self.selector.selected_items.remove(item)
+                if isinstance(item, Spider):
+                    if not (item.x - item.r / 2 < event.x < item.x + item.r / 2 and
+                            item.y - item.r / 2 < event.y < item.y + item.r / 2):
+                        item.deselect()
+                        self.selector.selected_items.remove(item)
 
     def handle_connection_click(self, c):
         if c.has_wire or not self.draw_wire_mode:
@@ -240,6 +211,9 @@ class CustomCanvas(tk.Canvas):
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
         if self.draw_wire_mode:
+            for item in self.selector.selected_items:
+                item.deselect()
+            self.selector.selected_items.clear()
             self.main_diagram.draw_wire_button.config(bg="lightgreen")
         else:
             self.nullify_wire_start()
