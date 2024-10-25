@@ -39,6 +39,7 @@ class Box:
                                                 connection_id=self.canvas.diagram_source_box.id)
 
         self.is_snapped = False
+        self.snapped_x = None
 
     def set_id(self, id_):
         if self.receiver.listener:
@@ -192,32 +193,77 @@ class Box:
             if box == self:
                 continue
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
+
+                go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
+                self.snapped_x = float(go_to_x + self.size[0] / 2)
+
+                if self.snapped_x not in self.canvas.columns:
+                    self.canvas.columns[self.snapped_x] = [box]
+                if self not in self.canvas.columns[self.snapped_x]:
+                    self.canvas.columns[self.snapped_x].append(self)
+
                 if go_to_y + self.size[1] >= box.y and go_to_y <= box.y + box.size[1]:
                     if not self.is_snapped:
-                        if (box.y * 2 + box.size[1]) / 2 <= (self.y * 2 + self.size[1]) / 2:
-                            go_to_y = box.y + box.size[1] + 1
-                        else:
-                            go_to_y = box.y - self.size[1] - 1
+                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
                     else:
                         return
-                go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
+
                 found = True
         for spider in self.canvas.spiders:
             if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
+                go_to_x = spider.x - +self.size[0] / 2
+                self.snapped_x = float(spider.x)
+
+                if self.snapped_x not in self.canvas.columns:
+                    self.canvas.columns[self.snapped_x] = [spider]
+                if self not in self.canvas.columns[self.snapped_x]:
+                    self.canvas.columns[self.snapped_x].append(self)
+
                 if go_to_y + self.size[1] >= spider.y - spider.r and go_to_y <= spider.y + spider.r:
                     if not self.is_snapped:
-                        if spider.y <= (self.y * 2 + self.size[1]) / 2:
-                            go_to_y = spider.y + spider.r + 1
-                        else:
-                            go_to_y = spider.y - self.size[1] - spider.r - 1
+                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
                     else:
                         return
-                go_to_x = spider.x - +self.size[0] / 2
                 found = True
         self.is_snapped = found
+        self.canvas.remove_from_column(self, found)
 
         self.move(go_to_x, go_to_y)
         self.move_label()
+
+    def find_space_y(self, go_to_x, go_to_y):
+        objects_by_distance = sorted(self.canvas.columns[float(go_to_x)], key=lambda x: abs(self.y - x.y))
+        for item in objects_by_distance:
+            if item == self:
+                continue
+            y_up = True
+            y_down = True
+
+            if isinstance(item, Box):
+                go_to_y_up = item.y - self.size[1] - 1
+                go_to_y_down = item.y + item.size[1] + 1
+            else:
+                go_to_y_up = item.y - item.r - self.size[1] - 1
+                go_to_y_down = item.y + item.r + 1
+
+            for component in objects_by_distance:
+                if component == self or component == item:
+                    continue
+
+                upper_y, lower_y = self.canvas.get_upper_lower_edges(component)
+
+                if go_to_y_up + self.size[1] >= upper_y and go_to_y_up <= lower_y:
+                    y_up = False
+                if go_to_y_down + self.size[1] >= upper_y and go_to_y_down <= lower_y:
+                    y_down = False
+
+            up_or_down = self.canvas.check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, self)
+            if up_or_down[0]:
+                go_to_y = up_or_down[1]
+                break
+            else:
+                continue
+        return go_to_y
 
     def on_resize_drag(self, event):
         resize_x = self.x + self.size[0] - 10
@@ -405,6 +451,14 @@ class Box:
 
         self.canvas.delete(self.rect)
         self.canvas.delete(self.resize_handle)
+
+        if self.snapped_x and self.snapped_x in self.canvas.columns:
+            self.canvas.columns[self.snapped_x].remove(self)
+            if len(self.canvas.columns[self.snapped_x]) == 1:
+                self.canvas.columns[self.snapped_x][0].snapped_x = None
+                self.canvas.columns[self.snapped_x][0].is_snapped = False
+                self.canvas.columns.pop(self.snapped_x, None)
+            self.snapped_x = None
         if self in self.canvas.boxes:
             self.canvas.boxes.remove(self)
         self.canvas.delete(self.label)
