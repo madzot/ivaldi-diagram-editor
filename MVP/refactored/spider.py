@@ -45,7 +45,7 @@ class Spider(Connection):
         self.context_menu.add_command(label="Delete Spider", command=self.delete_spider)
         self.context_menu.add_command(label="Cancel")
 
-        self.context_menu.post(event.x_root, event.y_root)
+        self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def delete_spider(self, action=None):
         [wire.delete_self(self) for wire in self.wires.copy()]
