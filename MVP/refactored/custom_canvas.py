@@ -51,6 +51,7 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonPress-3>", self.cancel_wire_pulling)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -250,7 +251,9 @@ class CustomCanvas(tk.Canvas):
             self.current_wire.update()
             self.nullify_wire_start()
 
-    def cancel_wire_pulling(self):
+    def cancel_wire_pulling(self, event=None):
+        if event and self.draw_wire_mode:
+            self.nullify_wire_start()
         if self.temp_wire is not None:
             self.temp_end_connection.delete_me()
             self.temp_wire.delete_self()
