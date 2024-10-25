@@ -190,6 +190,7 @@ class CustomCanvas(tk.Canvas):
             return
         if not self.current_wire_start:
             self.start_wire_from_connection(c, event)
+            self.start_pulling_wire(event)
         else:
             self.end_wire_to_connection(c)
 
