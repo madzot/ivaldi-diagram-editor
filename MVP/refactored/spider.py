@@ -97,6 +97,7 @@ class Spider(Connection):
                 if go_to_y + self.r >= box.y and go_to_y - self.r <= box.y + box.size[1]:
                     if not self.is_snapped:
                         go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                        break
                     else:
                         return
 
@@ -124,9 +125,32 @@ class Spider(Connection):
                 if go_to_y + self.r >= spider.y - spider.r and go_to_y - self.r <= spider.y + spider.r:
                     if not self.is_snapped:
                         go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                        break
                     else:
                         return
                 found = True
+
+        if found:
+            for column_item in self.canvas.columns[self.snapped_x]:
+                if column_item == self:
+                    continue
+                if isinstance(column_item, Box):
+                    if (go_to_y + self.r >= column_item.y
+                            and go_to_y - self.r <= column_item.y + column_item.size[1]):
+                        if not self.is_snapped:
+                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                            break
+                        else:
+                            return
+                else:
+                    if (go_to_y + self.r >= column_item.y - column_item.r
+                            and go_to_y - self.r <= column_item.y + column_item.r):
+                        if not self.is_snapped:
+                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                            break
+                        else:
+                            return
+
         self.is_snapped = found
         self.canvas.remove_from_column(self, found)
 

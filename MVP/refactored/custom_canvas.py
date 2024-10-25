@@ -55,6 +55,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.bind('<ButtonPress-3>', self.show_context_menu)
         self.context_menu = tk.Menu(self, tearoff=0)
+        self.is_context_menu_open = False
         self.columns = {}
 
     def set_name(self, name):
@@ -81,7 +82,13 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.add_command(label="Cancel")
             self.context_menu.tk_popup(event.x_root, event.y_root)
 
+    @staticmethod
+    def grouped(iterable, n):
+        "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
+        return zip(*[iter(iterable)] * n)
+
     def is_mouse_on_object(self, event):
+        print(event)
         for box in self.boxes:
             if (box.x <= event.x <= box.x + box.size[0]
                     and box.y <= event.y <= box.y + box.size[1]):
@@ -90,6 +97,9 @@ class CustomCanvas(tk.Canvas):
             if (spider.x - spider.r <= event.x <= spider.x + spider.r
                     and spider.y - spider.r <= event.y <= spider.y + spider.r):
                 return True
+        for wire in self.wires:
+
+            print(self.coords(wire.line))
         return False
 
     # binding for drag select
