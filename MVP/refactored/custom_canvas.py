@@ -179,6 +179,9 @@ class CustomCanvas(tk.Canvas):
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
         if self.draw_wire_mode:
+            for item in self.selector.selected_items:
+                item.deselect()
+            self.selector.selected_items.clear()
             self.main_diagram.draw_wire_button.config(bg="lightgreen")
         else:
             self.nullify_wire_start()
