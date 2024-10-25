@@ -1,3 +1,4 @@
+import hashlib
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
@@ -58,6 +59,12 @@ class MainDiagram(tk.Tk):
         self.manage_boxes = tk.Button(self.control_frame, text="Manage Boxes",
                                       command=self.manage_boxes_method, bg="white", width=18)
         self.manage_boxes.pack(side=tk.TOP, padx=5, pady=5)
+
+        self.quick_create_booleans = []
+        self.get_boxes_from_file()
+        self.manage_quick_create = tk.Button(self.control_frame, text="Manage Quick Create",
+                                             command=self.manage_quick_create, bg="white", width=18)
+        self.manage_quick_create.pack(side=tk.TOP, padx=5, pady=5)
         # Add Spider
         self.spider_box = tk.Button(self.control_frame, text="Add Spider",
                                     command=self.custom_canvas.add_spider, bg="white", width=18)
@@ -97,7 +104,14 @@ class MainDiagram(tk.Tk):
 
         if load:
             self.load_from_file()
+        self.json_file_hash = self.calculate_json_file_hash()
         self.mainloop()
+
+    @staticmethod
+    def calculate_json_file_hash():
+        with open("conf/boxes_conf.json", "r") as file:
+            file_hash = hashlib.sha256(file.read().encode()).hexdigest()
+        return file_hash
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
@@ -294,6 +308,39 @@ class MainDiagram(tk.Tk):
         remove_button = tk.Button(button_frame, text="Remove Item", command=remove_selected_item)
         remove_button.pack(side=tk.LEFT, padx=5)
 
+    def manage_quick_create(self):
+        list_window = tk.Toplevel(self, width=100)
+        list_window.minsize(100, 150)
+        list_window.title("List of Boxes")
+
+        if self.calculate_json_file_hash() != self.json_file_hash:
+            self.get_boxes_from_file()
+
+        checkbox_frame = tk.Frame(list_window)
+        for i, box in enumerate(self.boxes):
+            checkbox = tk.Checkbutton(checkbox_frame, text=box, variable=self.quick_create_booleans[i])
+            checkbox.pack(padx=5, anchor=tk.W)
+
+        checkbox_frame.pack(pady=10)
+
+        button_frame = tk.Frame(list_window)
+        button_frame.pack(pady=10)
+
+        def save():
+            self.custom_canvas.quick_create_boxes = []
+            for j, name in enumerate(self.boxes):
+                if self.quick_create_booleans[j].get():
+                    self.custom_canvas.quick_create_boxes.append(name)
+                else:
+                    try:
+                        self.custom_canvas.quick_create_boxes.remove(name)
+                    except ValueError:
+                        pass
+            list_window.destroy()
+
+        remove_button = tk.Button(button_frame, text="Save", command=save)
+        remove_button.pack(padx=5)
+
     def update_dropdown_menu(self):
         self.boxes = {}
 
@@ -316,8 +363,10 @@ class MainDiagram(tk.Tk):
 
     def get_boxes_from_file(self):
         d = self.importer.load_boxes_to_menu()
+        self.quick_create_booleans = []
         for k in d:
             self.boxes[k] = self.add_custom_box
+            self.quick_create_booleans.append(tk.BooleanVar())
 
     def add_custom_box(self, name, canvas):
         self.importer.add_box_from_menu(canvas, name)

@@ -52,7 +52,7 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
-        self.bind("<ButtonPress-3>", self.handle_right_click)
+        self.bind("<Button-3>", self.handle_right_click)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -64,6 +64,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
+        self.quick_create_boxes = []
 
     def handle_right_click(self, event):
         if self.draw_wire_mode:
@@ -89,6 +90,16 @@ class CustomCanvas(tk.Canvas):
 
             self.context_menu.add_command(label="Add undefined box",
                                           command=lambda loc=(event.x, event.y): self.add_box(loc))
+
+            if len(self.quick_create_boxes) > 0:
+                sub_menu = tk.Menu(self.context_menu, tearoff=0)
+                self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
+                for box in self.quick_create_boxes:
+                    # noinspection PyUnresolvedReferences
+                    sub_menu.add_command(label=box,
+                                         command=lambda loc=(event.x, event.y), name=box:
+                                         self.master.importer.add_box_from_menu(self, name, loc))
+
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))
 
