@@ -55,7 +55,6 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.bind('<ButtonPress-3>', self.show_context_menu)
         self.context_menu = tk.Menu(self, tearoff=0)
-        self.is_context_menu_open = False
         self.columns = {}
 
     def set_name(self, name):
