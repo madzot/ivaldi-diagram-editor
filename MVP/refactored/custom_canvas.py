@@ -55,6 +55,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.bind('<ButtonPress-3>', self.show_context_menu)
         self.context_menu = tk.Menu(self, tearoff=0)
+        self.columns = {}
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -403,3 +404,42 @@ class CustomCanvas(tk.Canvas):
                 c_max = connection.index
                 c = connection
         return c
+
+    def remove_from_column(self, item, found):
+        if not found and item.snapped_x:
+            snapped_x = item.snapped_x
+            self.columns[snapped_x].remove(item)
+            if len(self.columns[snapped_x]) == 1:
+                self.columns[snapped_x][0].snapped_x = None
+                self.columns[snapped_x][0].is_snapped = False
+                self.columns.pop(item, None)
+            item.snapped_x = None
+
+    @staticmethod
+    def get_upper_lower_edges(component):
+        if isinstance(component, Box):
+            upper_y = component.y
+            lower_y = component.y + component.size[1]
+        else:
+            upper_y = component.y - component.r
+            lower_y = component.y + component.r
+        return upper_y, lower_y
+
+    @staticmethod
+    def check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, item):
+        break_boolean = True
+        go_to_y = None
+        if y_up and not y_down:
+            go_to_y = go_to_y_up
+        elif y_down and not y_up:
+            go_to_y = go_to_y_down
+        elif not y_up and not y_down:
+            break_boolean = False
+        elif y_down and y_up:
+            distance_to_y_up = abs(item.y - go_to_y_up)
+            distance_to_y_down = abs(item.y - go_to_y_down)
+            if distance_to_y_up < distance_to_y_down:
+                go_to_y = go_to_y_up
+            else:
+                go_to_y = go_to_y_down
+        return break_boolean, go_to_y
