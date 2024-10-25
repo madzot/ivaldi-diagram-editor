@@ -60,16 +60,19 @@ class CustomCanvas(tk.Canvas):
         box = Box(self, 0, 0, self.receiver)
         self.boxes.append(box)
 
-        c1 = Connection(None, None, "left", (0, 0), self, 1)
-        c2 = Connection(None, None, "left", (0, 800), self, 1)
-        c3 = Connection(None, None, "left", (1280, 0), self, 1)
-        c4 = Connection(None, None, "left", (1280, 800), self, 1)
+        c1 = Connection(None, None, "left", (0, 0), self, 0)
+        c2 = Connection(None, None, "left", (0, 0), self, 0)
+        c3 = Connection(None, None, "left", (0, 0), self, 0)
+        c4 = Connection(None, None, "left", (0, 0), self, 0)
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
         self.corners.append(c4)
+        self.update_corners()
 
         self.prev_scale = 1.0
+
+        self.zoom_history = []
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -91,16 +94,26 @@ class CustomCanvas(tk.Canvas):
 
         if self.prev_scale < self.total_scale:
             denominator = 0.75
+            self.zoom_history.append((event.x, event.y))
         else:
+            if len(self.zoom_history) == 0:
+                return
             denominator = 4 / 3
+            event.x, event.y = self.zoom_history.pop()
 
         for corner in self.corners:
             next_location = (
                 self.calculate_zoom_dif(event.x, corner.location[0], denominator),
                 self.calculate_zoom_dif(event.y, corner.location[1], denominator)
             )
-            if 0 < round(next_location[0]) < 1280 or 0 < round(next_location[1]) < 800:
+            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
                 return
+
+        for corner in self.corners:
+            next_location = (
+                self.calculate_zoom_dif(event.x, corner.location[0], denominator),
+                self.calculate_zoom_dif(event.y, corner.location[1], denominator)
+            )
             corner.location = next_location
             self.coords(corner.circle, next_location[0] - corner.r, corner.location[1] - corner.r,
                         corner.location[0] + corner.r, corner.location[1] + corner.r)
@@ -122,7 +135,7 @@ class CustomCanvas(tk.Canvas):
 
         for spider in self.spiders:
             spider.x = self.calculate_zoom_dif(event.x, spider.x, denominator)
-            spider.y = self.calculate_zoom_dif(event.x, spider.y, denominator)
+            spider.y = self.calculate_zoom_dif(event.y, spider.y, denominator)
             spider.location = spider.x, spider.y
             spider.r *= scale
             self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
@@ -328,7 +341,14 @@ class CustomCanvas(tk.Canvas):
         self.coords(self.name, w / 2, 10)
 
         self.update_inputs_outputs()
+        self.update_corners()
         # TODO here or somewhere else limit resize if it would mess up output/input display
+
+    def update_corners(self):
+        self.corners[0].move_to([0, 0])
+        self.corners[1].move_to([0, self.winfo_height()])
+        self.corners[2].move_to([self.winfo_width(), 0])
+        self.corners[3].move_to([self.winfo_width(), self.winfo_height()])
 
     def update_inputs_outputs(self):
         x = self.winfo_width()
