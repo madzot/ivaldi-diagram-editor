@@ -72,6 +72,8 @@ class Spider(Connection):
                 self.canvas.selector.selected_items.append(self)
 
     def on_drag(self, event):
+        if self.canvas.pulling_wire:
+            return
 
         go_to_y = event.y
         go_to_x = self.x
