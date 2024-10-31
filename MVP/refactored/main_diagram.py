@@ -47,6 +47,7 @@ class MainDiagram(tk.Tk):
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
 
         self.boxes = {}
+        self.quick_create_boxes = []
 
         # Create Menubutton and Menu for dropdown
         self.dropdown_button = tk.Menubutton(self.control_frame, text="Select Box to Add", relief="raised")
@@ -327,13 +328,13 @@ class MainDiagram(tk.Tk):
         button_frame.pack(pady=10)
 
         def save():
-            self.custom_canvas.quick_create_boxes = []
+            self.quick_create_boxes = []
             for j, name in enumerate(self.boxes):
                 if self.quick_create_booleans[j].get():
-                    self.custom_canvas.quick_create_boxes.append(name)
+                    self.quick_create_boxes.append(name)
                 else:
                     try:
-                        self.custom_canvas.quick_create_boxes.remove(name)
+                        self.quick_create_boxes.remove(name)
                     except ValueError:
                         pass
             list_window.destroy()

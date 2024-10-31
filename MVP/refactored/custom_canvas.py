@@ -64,7 +64,6 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
-        self.quick_create_boxes = []
 
     def handle_right_click(self, event):
         if self.draw_wire_mode:
@@ -91,10 +90,12 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.add_command(label="Add undefined box",
                                           command=lambda loc=(event.x, event.y): self.add_box(loc))
 
-            if len(self.quick_create_boxes) > 0:
+            # noinspection PyUnresolvedReferences
+            if len(self.master.quick_create_boxes) > 0:
                 sub_menu = tk.Menu(self.context_menu, tearoff=0)
                 self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
-                for box in self.quick_create_boxes:
+                # noinspection PyUnresolvedReferences
+                for box in self.master.quick_create_boxes:
                     # noinspection PyUnresolvedReferences
                     sub_menu.add_command(label=box,
                                          command=lambda loc=(event.x, event.y), name=box:
