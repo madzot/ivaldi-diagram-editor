@@ -31,6 +31,7 @@ class Spider(Connection):
 
         self.is_snapped = False
         self.snapped_x = None
+        self.prev_snapped = None
 
     def is_spider(self):
         return True
@@ -87,25 +88,17 @@ class Spider(Connection):
             go_to_x = event.x
             move_legal = True
 
+        col_preset = None
+
         # snapping into place
         # TODO bug here with box and 2 spiders
         found = False
         for box in self.canvas.boxes:
-            if abs(box.x + box.size[0] / 2 - event.x) < box.size[0] / 2 + self.r and move_legal:
-
+            if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
                 go_to_x = box.x + box.size[0] / 2
                 self.snapped_x = float(go_to_x)
 
-                if self.snapped_x not in self.canvas.columns:
-                    self.canvas.columns[self.snapped_x] = [box]
-                if self not in self.canvas.columns[self.snapped_x]:
-                    self.canvas.columns[self.snapped_x].append(self)
-
-                if go_to_y + self.r >= box.y and go_to_y - self.r <= box.y + box.size[1]:
-                    if not self.is_snapped:
-                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
-                    else:
-                        return
+                col_preset = box
 
                 found = True
         for spider in self.canvas.spiders:
@@ -119,23 +112,43 @@ class Spider(Connection):
             if cancel:
                 continue
 
-            if abs(spider.location[0] - event.x) < self.r + spider.r and move_legal:
+            if abs(spider.location[0] - go_to_x) < self.r + spider.r and move_legal:
                 go_to_x = spider.location[0]
-                self.snapped_x = go_to_x
+                self.snapped_x = float(go_to_x)
 
-                if self.snapped_x not in self.canvas.columns:
-                    self.canvas.columns[self.snapped_x] = [spider]
-                if self not in self.canvas.columns[self.snapped_x]:
-                    self.canvas.columns[self.snapped_x].append(self)
+                col_preset = spider
 
-                if go_to_y + self.r >= spider.y - spider.r and go_to_y - self.r <= spider.y + spider.r:
-                    if not self.is_snapped:
-                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
-                    else:
-                        return
                 found = True
+
+        if found:
+
+            if self.snapped_x not in self.canvas.columns:
+                self.canvas.columns[self.snapped_x] = [col_preset]
+            if self not in self.canvas.columns[self.snapped_x]:
+                self.canvas.columns[self.snapped_x].append(self)
+
+            for column_item in self.canvas.columns[self.snapped_x]:
+                if column_item == self:
+                    continue
+                if isinstance(column_item, Box):
+                    if (go_to_y + self.r >= column_item.y
+                            and go_to_y - self.r <= column_item.y + column_item.size[1]):
+                        if not self.is_snapped:
+                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                        else:
+                            return
+                else:
+                    if (go_to_y + self.r >= column_item.y - column_item.r
+                            and go_to_y - self.r <= column_item.y + column_item.r):
+                        if not self.is_snapped:
+                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                        else:
+                            return
+
+        self.canvas.setup_column_removal(self, found)
+
         self.is_snapped = found
-        self.canvas.remove_from_column(self, found)
+        self.prev_snapped = self.snapped_x
 
         self.location = [go_to_x, go_to_y]
         self.x = go_to_x

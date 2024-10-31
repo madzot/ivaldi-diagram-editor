@@ -486,15 +486,22 @@ class CustomCanvas(tk.Canvas):
                 c = connection
         return c
 
-    def remove_from_column(self, item, found):
+    def setup_column_removal(self, item, found):
         if not found and item.snapped_x:
-            snapped_x = item.snapped_x
-            self.columns[snapped_x].remove(item)
-            if len(self.columns[snapped_x]) == 1:
-                self.columns[snapped_x][0].snapped_x = None
-                self.columns[snapped_x][0].is_snapped = False
-                self.columns.pop(item, None)
+            self.remove_from_column(item, item.snapped_x)
             item.snapped_x = None
+            item.prev_snapped = None
+        elif item.is_snapped and found and item.snapped_x != item.prev_snapped:
+            self.remove_from_column(item, item.prev_snapped)
+        item.is_snapped = found
+        item.prev_snapped = item.snapped_x
+
+    def remove_from_column(self, item, snapped_x):
+        self.columns[snapped_x].remove(item)
+        if len(self.columns[snapped_x]) == 1:
+            self.columns[snapped_x][0].snapped_x = None
+            self.columns[snapped_x][0].is_snapped = False
+            self.columns.pop(snapped_x, None)
 
     @staticmethod
     def get_upper_lower_edges(component):
