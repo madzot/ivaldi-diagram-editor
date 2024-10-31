@@ -518,6 +518,3 @@ class CustomCanvas(tk.Canvas):
             else:
                 go_to_y = go_to_y_down
         return break_boolean, go_to_y
-
-    def set_selector(self, selector):
-        self.selector = selector
