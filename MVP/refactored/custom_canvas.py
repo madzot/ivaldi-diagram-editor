@@ -53,7 +53,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.bind("<ButtonPress-3>", self.handle_right_click)
-        self.bind_all("<Delete>", lambda event: self.delete_selected_items())
+        self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -135,7 +135,12 @@ class CustomCanvas(tk.Canvas):
         self.selector.select_action(False)
 
     def delete_selected_items(self):
-        print("Button works")
+        print("Real_canvas:" + str(self))
+        print("Boxes in canvas")
+        print(self.boxes)
+        print("selected items:")
+        print(self.selector.selected_items)
+        print(self.selector)
         self.selector.delete_selected_items()
 
     def pull_wire(self, event):
@@ -519,3 +524,6 @@ class CustomCanvas(tk.Canvas):
             else:
                 go_to_y = go_to_y_down
         return break_boolean, go_to_y
+
+    def set_selector(self, selector):
+        self.selector = selector

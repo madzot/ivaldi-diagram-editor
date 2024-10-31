@@ -56,6 +56,7 @@ class Box:
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
         self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
+        self.canvas.tag_bind(self.rect, '<Delete>', lambda event: self.press_delete())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -354,6 +355,7 @@ class Box:
             self.update_wires()
 
     def select(self):
+        self.canvas.focus_set()
         self.canvas.itemconfig(self.rect, outline="green")
         [c.select() for c in self.connections]
 
@@ -522,3 +524,8 @@ class Box:
         if not self.has_right_connections():
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
+
+    def press_delete(self):
+        print("do")
+        self.canvas.delete_selected_items()
+
