@@ -67,12 +67,6 @@ class CustomCanvas(tk.Canvas):
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
 
-    def handle_right_click(self, event):
-        if self.draw_wire_mode:
-            self.cancel_wire_pulling(event)
-        else:
-            self.show_context_menu(event)
-
         self.total_scale = 1.0
         self.delta = 0.75
 
@@ -92,6 +86,12 @@ class CustomCanvas(tk.Canvas):
         self.prev_scale = 1.0
 
         self.zoom_history = []
+
+    def handle_right_click(self, event):
+        if self.draw_wire_mode:
+            self.cancel_wire_pulling(event)
+        else:
+            self.show_context_menu(event)
 
     def set_name(self, name):
         w = self.winfo_width()
