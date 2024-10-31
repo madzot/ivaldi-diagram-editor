@@ -19,7 +19,8 @@ class MainDiagram(tk.Tk):
         screen_height_min = round(self.winfo_screenheight() / 1.5)
 
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False, width=screen_width_min,
-                                          height=screen_height_min, bg="white")
+                                          height=screen_height_min, bg="white", highlightthickness=0)
+        self.custom_canvas.focus_set()
 
         self.tree = ttk.Treeview(self)
         self.tree.pack(side=tk.LEFT)
@@ -224,6 +225,7 @@ class MainDiagram(tk.Tk):
         if selected_item:
             new_canvas = self.canvasses[selected_item]
             self.switch_canvas(new_canvas)
+            new_canvas.focus_set()
 
     def add_diagram_input(self, id_=None):
         box_c = None

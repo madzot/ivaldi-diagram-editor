@@ -135,12 +135,6 @@ class CustomCanvas(tk.Canvas):
         self.selector.select_action(False)
 
     def delete_selected_items(self):
-        print("Real_canvas:" + str(self))
-        print("Boxes in canvas")
-        print(self.boxes)
-        print("selected items:")
-        print(self.selector.selected_items)
-        print(self.selector)
         self.selector.delete_selected_items()
 
     def pull_wire(self, event):

@@ -149,7 +149,7 @@ class Box:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
-                                            self.canvas, add_boxes)
+                                            self.canvas, add_boxes, highlightthickness=0)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text
@@ -355,7 +355,6 @@ class Box:
             self.update_wires()
 
     def select(self):
-        self.canvas.focus_set()
         self.canvas.itemconfig(self.rect, outline="green")
         [c.select() for c in self.connections]
 
