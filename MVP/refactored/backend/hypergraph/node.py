@@ -7,7 +7,7 @@ class Node:
             inputs = []
         if outputs is None:
             outputs = []
-        self.node_id = node_id
+        self.id = node_id
         self.inputs = inputs
         self.outputs = outputs
 
@@ -40,7 +40,7 @@ class Node:
 
     def __str__(self) -> str:
         """Return a string representation of the node."""
-        return (f"Node ID: {self.node_id}\n"
+        return (f"Node ID: {self.id}\n"
                 f"Inputs: {self.inputs}\n"
                 f"Outputs: {self.outputs}")
 

@@ -99,13 +99,13 @@ class Hypergraph(Node):
 
     def __str__(self) -> str:
         """Return a string representation of the hypergraph."""
-        node_descriptions = [f"Node ID: {node.node_id}, Inputs: {node.inputs}, Outputs: {node.outputs}" for node in
+        node_descriptions = [f"Node ID: {node.id}, Inputs: {node.inputs}, Outputs: {node.outputs}" for node in
                              self.nodes]
 
         # Format the node descriptions into a single string
         nodes_str = "\n".join(node_descriptions)
 
-        return (f"Hypergraph ID: {self.node_id}\n"
+        return (f"Hypergraph ID: {self.id}\n"
                 f"Inputs: {self.inputs}\n"
                 f"Outputs: {self.outputs}\n"
                 f"Nodes:\n{nodes_str}")

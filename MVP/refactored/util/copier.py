@@ -1,3 +1,8 @@
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
+from MVP.refactored.backend.hypergraph.node import Node
+
+
 class Copier:
 
     def copy_canvas_contents(self, canvas, wires, boxes, spiders, selected_coordinates, box):

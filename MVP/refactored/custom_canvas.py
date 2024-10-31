@@ -11,7 +11,7 @@ from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.wire import Wire
 
-from MVP.refactored.backend.hypergraph.hypergraph_singleton import Singleton
+from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
 
 
 class CustomCanvas(tk.Canvas):
