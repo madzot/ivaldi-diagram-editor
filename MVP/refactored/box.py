@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import simpledialog
 
+from MVP.refactored.backend.hypergraph.hypergraph_singleton import Singleton
 from MVP.refactored.connection import Connection
+from MVP.refactored.backend.hypergraph.node import Node
 
 
 class Box:
@@ -22,6 +24,8 @@ class Box:
             self.id = id(self)
         else:
             self.id = id_
+        self.node = Node(self.id)
+        Singleton.hypergraph.add_node(self.node)
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.rect = self.canvas.create_rectangle(self.x, self.y, self.x + self.size[0], self.y + self.size[1],
                                                  outline="black", fill="white")
@@ -45,6 +49,7 @@ class Box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
         self.id = id_
+        self.node.node_id = self.id
 
     def bind_events(self):
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)

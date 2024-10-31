@@ -5,6 +5,7 @@ from tkinter import ttk
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from MVP.refactored.backend.hypergraph.hypergraph_singleton import Singleton
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.hypergraph_notation.hypergraph_notation import HypergraphNotation
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
@@ -94,7 +95,8 @@ class MainDiagram(tk.Tk):
             "Remove input": self.custom_canvas.remove_diagram_input,
             "Remove output": self.custom_canvas.remove_diagram_output,
             "Add input": self.custom_canvas.add_diagram_input,
-            "Add output": self.custom_canvas.add_diagram_output
+            "Add output": self.custom_canvas.add_diagram_output,
+            "Check hypergraph": self.check_hypergraph, # TODO temporarily, only for test
         }
         self.saved_buttons = {}
         for name, method in buttons.items():
@@ -105,6 +107,10 @@ class MainDiagram(tk.Tk):
         if load:
             self.load_from_file()
         self.mainloop()
+
+    def check_hypergraph(self):
+        value = Singleton.hypergraph
+        print(value)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):

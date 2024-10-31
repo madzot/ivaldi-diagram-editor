@@ -1,4 +1,4 @@
-from node import Node
+from MVP.refactored.backend.hypergraph.node import Node
 
 
 class Hypergraph(Node):
@@ -16,8 +16,8 @@ class Hypergraph(Node):
     def add_node(self, node: Node) -> None:
         if node in self.nodes:
             raise ValueError("Node already exists")
-        if not node.is_valid():
-            raise ValueError("Node is not valid")
+        # if not node.is_valid():
+        #     raise ValueError("Node is not valid")
         self.nodes.append(node)
         self.set_hypergraph_io()
 

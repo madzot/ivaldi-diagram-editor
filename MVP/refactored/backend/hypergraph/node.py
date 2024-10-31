@@ -30,7 +30,7 @@ class Node:
         self.outputs.remove(output_id)
 
     def is_valid(self) -> bool:
-        return len(self.inputs) > 0 and len(self.outputs) > 0
+        return len(self.inputs) > 0 and len(self.outputs) > 0 # If it graphs root or last child?
 
     def has_input(self, input_id) -> bool:
         return input_id in self.inputs

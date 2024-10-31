@@ -1,5 +1,8 @@
 import tkinter as tk
 
+from MVP.refactored.backend.hypergraph.hypergraph_singleton import Singleton
+from MVP.refactored.backend.hypergraph.node import Node
+
 
 class Connection:
     def __init__(self, box, index, side, location, canvas, r=5, id_=None):
@@ -17,7 +20,10 @@ class Connection:
 
         else:
             self.id = id_
-
+        self.node = None
+        if box is None:
+            self.node = Node(self.id)
+            Singleton.hypergraph.add_node(self.node)
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
         self.circle = self.canvas.create_oval(location[0] - self.r, location[1] - self.r, location[0] + self.r,
