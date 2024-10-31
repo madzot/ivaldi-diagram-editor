@@ -39,6 +39,9 @@ class Box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
 
+        self.is_snapped = False
+        self.snapped_x = None
+
     def set_id(self, id_):
         if self.receiver.listener:
             self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
@@ -76,7 +79,7 @@ class Box:
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
         self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_command(label="Cancel")
-        self.context_menu.post(event.x_root, event.y_root)
+        self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def save_box_to_menu(self):
         if not self.label_text:
@@ -170,6 +173,9 @@ class Box:
     # MOVING, CLICKING ETC.
     def on_press(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
+        if self not in self.canvas.selector.selected_items:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
         self.start_x = event.x
         self.start_y = event.y
         self.x_dif = event.x - self.x
@@ -190,21 +196,91 @@ class Box:
             if box == self:
                 continue
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
+
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
+                self.snapped_x = float(go_to_x + self.size[0] / 2)
+
+                if self.snapped_x not in self.canvas.columns:
+                    self.canvas.columns[self.snapped_x] = [box]
+                if self not in self.canvas.columns[self.snapped_x]:
+                    self.canvas.columns[self.snapped_x].append(self)
+
+                if go_to_y + self.size[1] >= box.y and go_to_y <= box.y + box.size[1]:
+                    if not self.is_snapped:
+                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                    else:
+                        return
+
                 found = True
-                break
-        if not found:
-            for spider in self.canvas.spiders:
-                if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
-                    go_to_x = spider.x - +self.size[0] / 2
-                    break
+        for spider in self.canvas.spiders:
+            if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
+                go_to_x = spider.x - +self.size[0] / 2
+                self.snapped_x = float(spider.x)
+
+                if self.snapped_x not in self.canvas.columns:
+                    self.canvas.columns[self.snapped_x] = [spider]
+                if self not in self.canvas.columns[self.snapped_x]:
+                    self.canvas.columns[self.snapped_x].append(self)
+
+                if go_to_y + self.size[1] >= spider.y - spider.r and go_to_y <= spider.y + spider.r:
+                    if not self.is_snapped:
+                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                    else:
+                        return
+                found = True
+        self.is_snapped = found
+        self.canvas.remove_from_column(self, found)
+
         self.move(go_to_x, go_to_y)
         self.move_label()
 
+    def find_space_y(self, go_to_x, go_to_y):
+        objects_by_distance = sorted(self.canvas.columns[float(go_to_x)], key=lambda x: abs(self.y - x.y))
+        for item in objects_by_distance:
+            if item == self:
+                continue
+            y_up = True
+            y_down = True
+
+            if isinstance(item, Box):
+                go_to_y_up = item.y - self.size[1] - 1
+                go_to_y_down = item.y + item.size[1] + 1
+            else:
+                go_to_y_up = item.y - item.r - self.size[1] - 1
+                go_to_y_down = item.y + item.r + 1
+
+            for component in objects_by_distance:
+                if component == self or component == item:
+                    continue
+
+                upper_y, lower_y = self.canvas.get_upper_lower_edges(component)
+
+                if go_to_y_up + self.size[1] >= upper_y and go_to_y_up <= lower_y:
+                    y_up = False
+                if go_to_y_down + self.size[1] >= upper_y and go_to_y_down <= lower_y:
+                    y_down = False
+
+            up_or_down = self.canvas.check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, self)
+            if up_or_down[0]:
+                go_to_y = up_or_down[1]
+                break
+            else:
+                continue
+        return go_to_y
+
     def on_resize_drag(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
+        resize_x = self.x + self.size[0] - 10
+        resize_y = self.y + self.size[1] - 10
         dx = event.x - self.start_x
         dy = event.y - self.start_y
+
+        if dx > 0 and not resize_x <= event.x:
+            dx = 0
+
+        if dy > 0 and not resize_y <= event.y:
+            dy = 0
+
         self.start_x = event.x
         self.start_y = event.y
         new_size_x = max(20, self.size[0] + dx)
@@ -264,7 +340,6 @@ class Box:
         self.start_y = event.y
 
     def move(self, new_x, new_y):
-        # new_x, new_y = self.canvas.canvasx(new_x), self.canvas.canvasy(new_y)
         is_bad = False
         for connection in self.connections:
             if connection.has_wire and self.is_illegal_move(connection, new_x):
@@ -380,6 +455,14 @@ class Box:
 
         self.canvas.delete(self.rect)
         self.canvas.delete(self.resize_handle)
+
+        if self.snapped_x and self.snapped_x in self.canvas.columns:
+            self.canvas.columns[self.snapped_x].remove(self)
+            if len(self.canvas.columns[self.snapped_x]) == 1:
+                self.canvas.columns[self.snapped_x][0].snapped_x = None
+                self.canvas.columns[self.snapped_x][0].is_snapped = False
+                self.canvas.columns.pop(self.snapped_x, None)
+            self.snapped_x = None
         if self in self.canvas.boxes:
             self.canvas.boxes.remove(self)
         self.canvas.delete(self.label)

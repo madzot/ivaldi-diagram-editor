@@ -1,5 +1,6 @@
 import tkinter as tk
 
+from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 
 
@@ -28,10 +29,14 @@ class Spider(Connection):
             else:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id)
 
+        self.is_snapped = False
+        self.snapped_x = None
+
     def is_spider(self):
         return True
 
     def bind_events(self):
+        self.canvas.tag_bind(self.circle, '<ButtonPress-1>', lambda event: self.on_press())
         self.canvas.tag_bind(self.circle, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
 
@@ -42,7 +47,7 @@ class Spider(Connection):
         self.context_menu.add_command(label="Delete Spider", command=self.delete_spider)
         self.context_menu.add_command(label="Cancel")
 
-        self.context_menu.post(event.x_root, event.y_root)
+        self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def delete_spider(self, action=None):
         [wire.delete_self(self) for wire in self.wires.copy()]
@@ -60,43 +65,114 @@ class Spider(Connection):
         self.wires.append(wire)
 
     # MOVING, CLICKING ETC.
+    def on_press(self):
+        if not self.canvas.draw_wire_mode:
+            if self not in self.canvas.selector.selected_items:
+                self.select()
+                self.canvas.selector.selected_items.append(self)
 
     def on_drag(self, event):
-        self.y = event.y
+        if self.canvas.pulling_wire:
+            return
+
+        go_to_y = event.y
+        go_to_x = self.x
         move_legal = False
         if not self.is_illegal_move(event.x):
-            self.x = event.x
+            go_to_x = event.x
             move_legal = True
 
         # snapping into place
         # TODO bug here with box and 2 spiders
         found = False
         for box in self.canvas.boxes:
-            if box == self:
-                continue
             if abs(box.x + box.size[0] / 2 - event.x) < box.size[0] / 2 + self.r and move_legal:
-                self.x = box.x + box.size[0] / 2
-                found = True
-                break
-        if not found:
-            for spider in self.canvas.spiders:
-                if spider == self:
-                    continue
-                cancel = False
-                for wire in spider.wires:
-                    if wire.end_connection == self or wire.start_connection == self:
-                        cancel = True
-                if cancel:
-                    continue
-                if abs(spider.location[0] - event.x) < self.r + spider.r and move_legal:
-                    self.x = spider.location[0]
-                    break
 
-        self.location = [self.x, self.y]
+                go_to_x = box.x + box.size[0] / 2
+                self.snapped_x = float(go_to_x)
+
+                if self.snapped_x not in self.canvas.columns:
+                    self.canvas.columns[self.snapped_x] = [box]
+                if self not in self.canvas.columns[self.snapped_x]:
+                    self.canvas.columns[self.snapped_x].append(self)
+
+                if go_to_y + self.r >= box.y and go_to_y - self.r <= box.y + box.size[1]:
+                    if not self.is_snapped:
+                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                    else:
+                        return
+
+                found = True
+        for spider in self.canvas.spiders:
+            if spider == self:
+                continue
+
+            cancel = False
+            for wire in spider.wires:
+                if wire.end_connection == self or wire.start_connection == self:
+                    cancel = True
+            if cancel:
+                continue
+
+            if abs(spider.location[0] - event.x) < self.r + spider.r and move_legal:
+                go_to_x = spider.location[0]
+                self.snapped_x = go_to_x
+
+                if self.snapped_x not in self.canvas.columns:
+                    self.canvas.columns[self.snapped_x] = [spider]
+                if self not in self.canvas.columns[self.snapped_x]:
+                    self.canvas.columns[self.snapped_x].append(self)
+
+                if go_to_y + self.r >= spider.y - spider.r and go_to_y - self.r <= spider.y + spider.r:
+                    if not self.is_snapped:
+                        go_to_y = self.find_space_y(self.snapped_x, go_to_y)
+                    else:
+                        return
+                found = True
+        self.is_snapped = found
+        self.canvas.remove_from_column(self, found)
+
+        self.location = [go_to_x, go_to_y]
+        self.x = go_to_x
+        self.y = go_to_y
 
         self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
                            self.y + self.r)
         [w.update() for w in self.wires]
+
+    def find_space_y(self, go_to_x, go_to_y):
+        objects_by_distance = sorted(self.canvas.columns[float(go_to_x)], key=lambda x: abs(self.y - x.y))
+        for item in objects_by_distance:
+            if item == self:
+                continue
+            y_up = True
+            y_down = True
+
+            if isinstance(item, Box):
+                go_to_y_up = item.y - self.r - 1
+                go_to_y_down = item.y + item.size[1] + self.r + 1
+            else:
+                go_to_y_up = item.y - item.r - self.r - 1
+                go_to_y_down = item.y + item.r + self.r + 1
+
+            for component in objects_by_distance:
+                if component == self or component == item:
+                    continue
+
+                upper_y, lower_y = self.canvas.get_upper_lower_edges(component)
+
+                if go_to_y_up + self.r >= upper_y and go_to_y_up - self.r <= lower_y:
+                    y_up = False
+                if go_to_y_down + self.r >= upper_y and go_to_y_down - self.r <= lower_y:
+                    y_down = False
+
+            up_or_down = self.canvas.check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, self)
+            if up_or_down[0]:
+                go_to_y = up_or_down[1]
+                break
+            else:
+                continue
+        return go_to_y
 
     def is_illegal_move(self, new_x):
         for connection in list(filter(lambda x: (x is not None and x != self),

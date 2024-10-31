@@ -7,6 +7,7 @@ from PIL import Image
 
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
+from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.wire import Wire
@@ -28,6 +29,12 @@ class CustomCanvas(tk.Canvas):
         self.spiders: list[Spider] = []
         self.wires: list[Wire] = []
         self.corners: list[Connection] = []
+        self.temp_wire = None
+        self.temp_end_connection = None
+        self.pulling_wire = False
+        self.previous_x = None
+        self.previous_y = None
+        self.quick_pull = False
         self.receiver = receiver
         self.current_wire_start = None
         self.current_wire = None
@@ -40,9 +47,13 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
+        self.selector = Selector(self)
         self.bind("<ButtonPress-1>", self.__select_start__)
+        self.bind('<Motion>', self.start_pulling_wire)
+        self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
-        self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
+        self.bind("<ButtonPress-3>", self.handle_right_click)
         self.bind("<MouseWheel>", self.zoom)
         self.selecting = False
         self.copier = Copier()
@@ -53,6 +64,14 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
+        self.context_menu = tk.Menu(self, tearoff=0)
+        self.columns = {}
+
+    def handle_right_click(self, event):
+        if self.draw_wire_mode:
+            self.cancel_wire_pulling(event)
+        else:
+            self.show_context_menu(event)
 
         self.total_scale = 1.0
         self.delta = 0.75
@@ -146,6 +165,35 @@ class CustomCanvas(tk.Canvas):
             wire.update()
         self.configure(scrollregion=self.bbox('all'))
 
+    def close_menu(self):
+        if self.context_menu:
+            self.context_menu.destroy()
+
+    def show_context_menu(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
+        if not self.is_mouse_on_object(event):
+            self.close_menu()
+            self.context_menu = tk.Menu(self, tearoff=0)
+
+            self.context_menu.add_command(label="Add undefined box",
+                                          command=lambda loc=(event.x, event.y): self.add_box(loc))
+            self.context_menu.add_command(label="Add spider",
+                                          command=lambda loc=(event.x, event.y): self.add_spider(loc))
+
+            self.context_menu.add_command(label="Cancel")
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+
+    def is_mouse_on_object(self, event):
+        for box in self.boxes:
+            if (box.x <= event.x <= box.x + box.size[0]
+                    and box.y <= event.y <= box.y + box.size[1]):
+                return True
+        for spider in self.spiders:
+            if (spider.x - spider.r <= event.x <= spider.x + spider.r
+                    and spider.y - spider.r <= event.y <= spider.y + spider.r):
+                return True
+        return False
+
     # binding for drag select
     def __select_start__(self, event):
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
@@ -160,123 +208,102 @@ class CustomCanvas(tk.Canvas):
         if self.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1):
             self.on_canvas_click(event)
             return
-        self.selecting = True
-        self.origin_x = event.x
-        self.origin_y = event.y
-        self.selectBox = self.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1, self.origin_y + 1)
+        self.selector.start_selection(event)
 
     def __select_motion__(self, event):
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
-        if self.selecting:
-            x_new = event.x
-            y_new = event.y
-            self.coords(self.selectBox, self.origin_x, self.origin_y, x_new, y_new)
+        self.selector.update_selection(event)
 
-    def __select_release__(self, _):
-        # TODO maybe there should be a Selector class to keep things clean?
-        if self.selecting:
-            selected_coordinates = self.coords(self.selectBox)
-            # find boxes in selected area
-            selected_boxes = []
-            for box in self.boxes:
-                x1, y1, x2, y2 = self.coords(box.rect)
-                x = (x1 + x2) / 2
-                y = (y1 + y2) / 2
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_boxes.append(box)
+    def __select_release__(self):
+        self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
+        if len(self.selector.selected_items) > 1:
+            res = mb.askquestion(message='Add selection to a separate sub-diagram?')
+            if res == 'yes':
+                self.selector.select_action(True)
+                return
+        self.selector.select_action(False)
 
-            selected_spiders = []
-            for spider in self.spiders:
-                x, y = spider.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_spiders.append(spider)
+    def pull_wire(self, event):
+        if not self.quick_pull and not self.draw_wire_mode:
+            self.quick_pull = True
+            connection = self.get_connection_from_location(event)
+            if connection is not None and not connection.has_wire:
+                self.toggle_draw_wire_mode()
+                self.on_canvas_click(event, connection)
+            else:
+                self.quick_pull = False
 
-            # find wires in selected area (wires with beginning or end in selected box)
-            selected_wires = []
-            for wire in self.wires:
-                # wire start in selected area
-                x, y = wire.end_connection.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_wires.append(wire)
-                    continue
-
-                # wire start in selected area
-                x, y = wire.start_connection.location
-                if selected_coordinates[0] <= x <= selected_coordinates[2] and selected_coordinates[1] <= y <= \
-                        selected_coordinates[3]:
-                    selected_wires.append(wire)
-
-            # select all
-            for i in selected_wires + selected_boxes + selected_spiders:
-                i.select()
-
-            if selected_boxes:
-                res = mb.askquestion(message='Add selection to a separate sub-diagram?')
-                if res == 'yes':
-                    x = (selected_coordinates[0] + selected_coordinates[2]) / 2
-                    y = (selected_coordinates[1] + selected_coordinates[3]) / 2
-
-                    # create new box that will contain the sub-diagram
-                    box = self.add_box((x, y))
-                    sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
-                    prev_status = self.receiver.listener
-                    self.receiver.listener = False
-                    self.copier.copy_canvas_contents(sub_diagram, selected_wires, selected_boxes,
-                                                     selected_spiders, selected_coordinates, box)
-                    box.lock_box()
-                    self.receiver.listener = prev_status
-                    for w in list(filter(lambda wire_: (wire_ in self.wires), selected_wires)):
-                        w.delete_self("sub_diagram")
-                    for b in list(filter(lambda box_: (box_ in self.boxes), selected_boxes)):
-                        b.delete_box(keep_sub_diagram=True, action="sub_diagram")
-                    for s in list(filter(lambda spider_: (spider_ in self.spiders), selected_spiders)):
-                        s.delete_spider("sub_diagram")
-                        if self.receiver.listener:
-                            self.receiver.receiver_callback('create_spider_parent', wire_id=s.id,
-                                                            connection_id=s.id,
-                                                            generator_id=box.id)
-                    sub_diagram.set_name(str(sub_diagram.id)[-6:])
-                    box.set_label(str(sub_diagram.id)[-6:])
-                    self.main_diagram.add_canvas(sub_diagram)
-
-            for i in selected_wires + selected_boxes + selected_spiders:
-                i.deselect()
-
-            self.delete(self.selectBox)
-            self.selecting = False
-
-    # HANDLE CLICK ON CANVAS
-    def on_canvas_click(self, event):
-        if self.draw_wire_mode:
+    def get_connection_from_location(self, event):
+        if self.draw_wire_mode or self.quick_pull:
             x, y = event.x, event.y
             for circle in [c for box in self.boxes for c in
                            box.connections] + self.outputs + self.inputs + self.spiders:
 
                 conn_x, conn_y, conn_x2, conn_y2 = self.coords(circle.circle)
                 if conn_x <= x <= conn_x2 and conn_y <= y <= conn_y2:
-                    self.handle_connection_click(circle)
-                    return
+                    return circle
+        return None
 
-    def handle_connection_click(self, c):
+    # HANDLE CLICK ON CANVAS
+    def on_canvas_click(self, event, connection=None):
+        if connection is None:
+            connection = self.get_connection_from_location(event)
+        if connection is not None:
+            self.handle_connection_click(connection, event)
+        if self.selector.selected_items:
+            for item in self.selector.selected_items:
+                if isinstance(item, Box):
+                    if not (item.x < event.x < item.x + item.size[0] and item.y < event.y < item.y + item.size[1]):
+                        item.deselect()
+                        self.selector.selected_items.remove(item)
+                if isinstance(item, Spider):
+                    if not (item.x - item.r / 2 < event.x < item.x + item.r / 2 and
+                            item.y - item.r / 2 < event.y < item.y + item.r / 2):
+                        item.deselect()
+                        self.selector.selected_items.remove(item)
+
+    def start_pulling_wire(self, event):
+        if self.draw_wire_mode and self.pulling_wire:
+            if self.temp_wire is not None:
+                self.temp_wire.delete_self()
+            if self.temp_end_connection.location != (self.canvasx(event.x), self.canvasy(event.y)):
+                self.previous_x = self.canvasx(event.x)
+                self.previous_y = self.canvasy(event.y)
+                self.temp_end_connection.delete_me()
+                self.temp_end_connection = Connection(None, 0, None,
+                                                      (self.canvasx(event.x), self.canvasy(event.y)),
+                                                      self)
+            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True)
+
+    def handle_connection_click(self, c, event):
         if c.has_wire or not self.draw_wire_mode:
             return
         if not self.current_wire_start:
-            self.start_wire_from_connection(c)
+            self.start_wire_from_connection(c, event)
+            self.start_pulling_wire(event)
         else:
             self.end_wire_to_connection(c)
 
-    def start_wire_from_connection(self, connection):
-        self.current_wire_start = connection
+    def start_wire_from_connection(self, connection, event=None):
+        if connection.side == "spider" or not connection.has_wire:
+            self.current_wire_start = connection
 
-        connection.color_green()
+            connection.color_green()
+
+            if event is not None:
+                x, y = self.canvasx(event.x), self.canvasy(event.y)
+                self.pulling_wire = True
+                self.temp_end_connection = Connection(None, None, None, (x, y), self)
 
     def end_wire_to_connection(self, connection, bypass_legality_check=False):
 
+        if connection == self.current_wire_start:
+            self.nullify_wire_start()
+            self.cancel_wire_pulling()
+
         if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
                                                                               connection) or bypass_legality_check:
+            self.cancel_wire_pulling()
             self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
             self.wires.append(self.current_wire)
 
@@ -290,6 +317,20 @@ class CustomCanvas(tk.Canvas):
 
             self.current_wire.update()
             self.nullify_wire_start()
+
+    def cancel_wire_pulling(self, event=None):
+        if event:
+            self.nullify_wire_start()
+        if self.temp_wire is not None:
+            self.temp_end_connection.delete_me()
+            self.temp_wire.delete_self()
+            self.temp_wire = None
+            self.temp_end_connection = None
+            self.pulling_wire = False
+            if self.quick_pull:
+                self.quick_pull = False
+                self.draw_wire_mode = False
+                self.main_diagram.draw_wire_button.config(bg="white")
 
     def nullify_wire_start(self):
         if self.current_wire_start:
@@ -329,9 +370,13 @@ class CustomCanvas(tk.Canvas):
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
         if self.draw_wire_mode:
+            for item in self.selector.selected_items:
+                item.deselect()
+            self.selector.selected_items.clear()
             self.main_diagram.draw_wire_button.config(bg="lightgreen")
         else:
             self.nullify_wire_start()
+            self.cancel_wire_pulling()
             self.main_diagram.draw_wire_button.config(bg="white")
 
     # RESIZE/UPDATE
@@ -398,6 +443,7 @@ class CustomCanvas(tk.Canvas):
 
         if start.side == end.side == "spider":
             return True
+
         return not (start.side == end.side or start.side == "left" and start.location[0] - start.width_between_boxes <=
                     end.location[0] or start.side == "right" and start.location[0] + start.width_between_boxes >=
                     end.location[0])
@@ -531,3 +577,42 @@ class CustomCanvas(tk.Canvas):
     def calculate_zoom_dif(zoom_coord, object_coord, denominator):
         """Calculates how much an object needs to be moved when zooming."""
         return round(zoom_coord - (zoom_coord - object_coord) / denominator, 4)
+
+    def remove_from_column(self, item, found):
+        if not found and item.snapped_x:
+            snapped_x = item.snapped_x
+            self.columns[snapped_x].remove(item)
+            if len(self.columns[snapped_x]) == 1:
+                self.columns[snapped_x][0].snapped_x = None
+                self.columns[snapped_x][0].is_snapped = False
+                self.columns.pop(item, None)
+            item.snapped_x = None
+
+    @staticmethod
+    def get_upper_lower_edges(component):
+        if isinstance(component, Box):
+            upper_y = component.y
+            lower_y = component.y + component.size[1]
+        else:
+            upper_y = component.y - component.r
+            lower_y = component.y + component.r
+        return upper_y, lower_y
+
+    @staticmethod
+    def check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, item):
+        break_boolean = True
+        go_to_y = None
+        if y_up and not y_down:
+            go_to_y = go_to_y_up
+        elif y_down and not y_up:
+            go_to_y = go_to_y_down
+        elif not y_up and not y_down:
+            break_boolean = False
+        elif y_down and y_up:
+            distance_to_y_up = abs(item.y - go_to_y_up)
+            distance_to_y_down = abs(item.y - go_to_y_down)
+            if distance_to_y_up < distance_to_y_down:
+                go_to_y = go_to_y_up
+            else:
+                go_to_y = go_to_y_down
+        return break_boolean, go_to_y
