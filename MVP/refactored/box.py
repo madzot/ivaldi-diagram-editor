@@ -148,7 +148,7 @@ class Box:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
-                                            self.canvas, add_boxes)
+                                            self.canvas, add_boxes, highlightthickness=0)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text
@@ -171,9 +171,11 @@ class Box:
 
     # MOVING, CLICKING ETC.
     def on_press(self, event):
-        if self not in self.canvas.selector.selected_items:
-            self.select()
-            self.canvas.selector.selected_items.append(self)
+        for item in self.canvas.selector.selected_items:
+            item.deselect()
+        self.canvas.selector.selected_items.clear()
+        self.select()
+        self.canvas.selector.selected_items.append(self)
         self.start_x = event.x
         self.start_y = event.y
         self.x_dif = event.x - self.x

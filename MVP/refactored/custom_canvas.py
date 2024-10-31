@@ -53,6 +53,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.bind("<ButtonPress-3>", self.handle_right_click)
+        self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -66,6 +67,8 @@ class CustomCanvas(tk.Canvas):
         self.columns = {}
 
     def handle_right_click(self, event):
+        if self.selector.selecting:
+            self.selector.finish_selection()
         if self.draw_wire_mode:
             self.cancel_wire_pulling(event)
         else:
@@ -119,6 +122,7 @@ class CustomCanvas(tk.Canvas):
         if self.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1):
             self.on_canvas_click(event)
             return
+        self.selector.finish_selection()
         self.selector.start_selection(event)
 
     def __select_motion__(self, event):
@@ -132,6 +136,9 @@ class CustomCanvas(tk.Canvas):
                 self.selector.select_action(True)
                 return
         self.selector.select_action(False)
+
+    def delete_selected_items(self):
+        self.selector.delete_selected_items()
 
     def pull_wire(self, event):
         if not self.quick_pull and not self.draw_wire_mode:
@@ -156,21 +163,12 @@ class CustomCanvas(tk.Canvas):
 
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event, connection=None):
+        if self.selector.selecting:
+            self.selector.finish_selection()
         if connection is None:
             connection = self.get_connection_from_location(event)
         if connection is not None:
             self.handle_connection_click(connection, event)
-        if self.selector.selected_items:
-            for item in self.selector.selected_items:
-                if isinstance(item, Box):
-                    if not (item.x < event.x < item.x + item.size[0] and item.y < event.y < item.y + item.size[1]):
-                        item.deselect()
-                        self.selector.selected_items.remove(item)
-                if isinstance(item, Spider):
-                    if not (item.x - item.r / 2 < event.x < item.x + item.r / 2 and
-                            item.y - item.r / 2 < event.y < item.y + item.r / 2):
-                        item.deselect()
-                        self.selector.selected_items.remove(item)
 
     def start_pulling_wire(self, event):
         if self.draw_wire_mode and self.pulling_wire:

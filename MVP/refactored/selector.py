@@ -1,3 +1,8 @@
+from MVP.refactored.box import Box
+from MVP.refactored.spider import Spider
+from MVP.refactored.wire import Wire
+
+
 class Selector:
     def __init__(self, canvas):
         self.canvas = canvas
@@ -52,15 +57,16 @@ class Selector:
                                         self.canvas.coords(self.canvas.selectBox))
                 self.finish_selection()
             else:
-                self.finish_selection()
+                self.canvas.delete(self.canvas.selectBox)
+                self.selecting = False
 
     def finish_selection(self):
         for item in self.selected_items:
             item.deselect()
+        self.selected_items.clear()
         # Remove the selection box and reset selecting state
         self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
-        self.selected_items.clear()
 
     def create_sub_diagram(self, boxes, spiders, wires, coordinates):
         x = (coordinates[0] + coordinates[2]) / 2
@@ -96,6 +102,16 @@ class Selector:
         x = (x1 + x2) / 2
         y = (y1 + y2) / 2
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
+
+    def delete_selected_items(self):
+        for item in self.selected_items:
+            if isinstance(item, Box):
+                item.delete_box()
+            if isinstance(item, Spider):
+                item.delete_spider()
+            if isinstance(item, Wire):
+                item.delete_self()
+        self.selected_items.clear()
 
     @staticmethod
     def is_within_selection_point(point, selection_coords):
