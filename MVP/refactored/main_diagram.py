@@ -205,6 +205,9 @@ class MainDiagram(tk.Tk):
                 self.custom_canvas.diagram_source_box.set_label(new_name)
 
     def switch_canvas(self, canvas):
+        for item in self.custom_canvas.selector.selected_items:
+            item.deselect()
+        self.custom_canvas.selector.selected_items.clear()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
         # Show the selected canvas

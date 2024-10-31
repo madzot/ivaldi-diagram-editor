@@ -57,15 +57,16 @@ class Selector:
                                         self.canvas.coords(self.canvas.selectBox))
                 self.finish_selection()
             else:
-                self.finish_selection()
+                self.canvas.delete(self.canvas.selectBox)
+                self.selecting = False
 
     def finish_selection(self):
         for item in self.selected_items:
             item.deselect()
+        self.selected_items.clear()
         # Remove the selection box and reset selecting state
         self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
-        self.selected_items.clear()
 
     def create_sub_diagram(self, boxes, spiders, wires, coordinates):
         x = (coordinates[0] + coordinates[2]) / 2
