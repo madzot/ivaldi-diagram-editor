@@ -109,8 +109,6 @@ class Selector:
                 item.delete_box()
             if isinstance(item, Spider):
                 item.delete_spider()
-            if isinstance(item, Wire):
-                item.delete_self()
         self.selected_items.clear()
 
     @staticmethod
