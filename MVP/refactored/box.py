@@ -1,9 +1,12 @@
 import tkinter as tk
+
 from tkinter import simpledialog
+from tkinter import filedialog
 
 from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
 from MVP.refactored.connection import Connection
 from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
 
 
 class Box:
@@ -43,6 +46,8 @@ class Box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
 
+        self.box_function = None
+
     def set_id(self, id_):
         if self.receiver.listener:
             self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
@@ -79,9 +84,26 @@ class Box:
             self.context_menu.add_command(label="Edit Sub-Diagram", command=self.edit_sub_diagram)
             self.context_menu.add_command(label="Lock Box", command=self.lock_box)
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
+        self.context_menu.add_command(label="Add function", command=lambda: self.add_function(event))
         self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_command(label="Cancel")
         self.context_menu.post(event.x_root, event.y_root)
+
+    def add_function(self, event):
+        menu = tk.Menu(self.canvas, tearoff=0)
+        for name in functions:
+            menu.add_command(label=name, command=lambda x=name:self.set_function(x))
+        menu.add_command(label="Add custom function", command=self.show_add_custom_function_menu)
+        menu.post(event.x_root, event.y_root)
+
+    def show_add_custom_function_menu(self):
+        file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
+                                           filetypes=(("Python script", "*.py"),))
+        if file:
+            self.box_function = BoxFunction(file.name, file.read())
+
+    def set_function(self, name, code=None):
+        self.box_function = BoxFunction(name, code)
 
     def save_box_to_menu(self):
         if not self.label_text:
