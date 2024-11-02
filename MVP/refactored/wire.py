@@ -31,6 +31,24 @@ class Wire:
         self.handle_wire_addition_callback()
         self.update()
 
+        # if self.start_connection.box is not None:
+        #     node = self.start_connection.box.node
+        # else:
+        #     node = self.start_connection.node
+        # if self.start_connection.side == "right":
+        #     node.add_output(self.id)
+        # else:
+        #     node.add_input(self.id)
+        #
+        # if self.end_connection.box is not None:
+        #     node = self.end_connection.box.node
+        # else:
+        #     node = self.end_connection.node
+        # if self.end_connection.side == "right":
+        #     node.add_output(self.id)
+        # else:
+        #     node.add_input(self.id)
+
     def delete_self(self, action=None):
         self.start_connection.remove_wire(self)
         self.end_connection.remove_wire(self)

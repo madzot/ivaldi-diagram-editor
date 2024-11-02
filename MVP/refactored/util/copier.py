@@ -1,9 +1,25 @@
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
+from MVP.refactored.backend.hypergraph.node import Node
+
+
 class Copier:
 
     def copy_canvas_contents(self, canvas, wires, boxes, spiders, selected_coordinates, box):
         self.copy_over_boxes(boxes, canvas)
         self.copy_over_spiders(spiders, canvas)
         self.copy_over_wires(wires, selected_coordinates, box, canvas)
+        hypergraph = Hypergraph(canvas.id)
+        for box in canvas.boxes:
+            node = Node(box.id)
+            for connection in box.connections:
+                if connection.side == "left" and connection.has_wire:
+                    node.add_input(connection.wire.id)
+                elif connection.has_wire:
+                    node.add_output(connection.wire.id)
+            hypergraph.add_node(node)
+        Manage.hypergraphs.append(hypergraph)
+        print(hypergraph.__str__())
 
     @staticmethod
     def copy_over_spiders(spiders, canvas):

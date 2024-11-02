@@ -11,6 +11,8 @@ from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.wire import Wire
 
+from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
+
 
 class CustomCanvas(tk.Canvas):
     def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, **kwargs):
@@ -190,7 +192,7 @@ class CustomCanvas(tk.Canvas):
             self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
             self.wires.append(self.current_wire)
 
-            if self.current_wire_start.box is not None:
+            if self.current_wire_start.box is not None: # TODO
                 self.current_wire_start.box.add_wire(self.current_wire)
             if connection.box is not None:
                 connection.box.add_wire(self.current_wire)
