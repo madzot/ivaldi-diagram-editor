@@ -5,11 +5,10 @@ from tkinter import ttk
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.hypergraph_notation.hypergraph_notation import HypergraphNotation
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
-from MVP.refactored.util.exporter import Exporter
+from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
 
 
@@ -42,7 +41,7 @@ class MainDiagram(tk.Tk):
         self.wm_minsize(screen_width_min, screen_height_min)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
-        self.exporter = Exporter(self.custom_canvas)
+        self.project_exporter = ProjectExporter(self.custom_canvas)
         self.importer = Importer(self.custom_canvas)
         # Add undefined box
         self.undefined_box_button = tk.Button(self.control_frame, text="Add Undefined Box",
@@ -92,6 +91,7 @@ class MainDiagram(tk.Tk):
         buttons = {
             "Save project": self.save_to_file,
             "Save png": self.custom_canvas.save_as_png,
+            "Export hypergraph": self.custom_canvas.export_hypergraph,
             "Remove input": self.custom_canvas.remove_diagram_input,
             "Remove output": self.custom_canvas.remove_diagram_output,
             "Add input": self.custom_canvas.add_diagram_input,
@@ -178,6 +178,7 @@ class MainDiagram(tk.Tk):
             buttons = {
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
+                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.custom_canvas.remove_diagram_input,
                 "Remove output": self.custom_canvas.remove_diagram_output,
                 "Add input": self.custom_canvas.add_diagram_input,
@@ -187,6 +188,7 @@ class MainDiagram(tk.Tk):
             buttons = {
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
+                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.remove_diagram_input,
                 "Remove output": self.remove_diagram_output,
                 "Add input": self.add_diagram_input,
@@ -332,7 +334,7 @@ class MainDiagram(tk.Tk):
             self.dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
 
     def remove_option(self, option):
-        self.exporter.del_box_menu_option(option)
+        self.project_exporter.del_box_menu_option(option)
         self.update_dropdown_menu()
 
     def get_boxes_from_file(self):
@@ -344,7 +346,7 @@ class MainDiagram(tk.Tk):
         self.importer.add_box_from_menu(canvas, name)
 
     def save_box_to_diagram_menu(self, box):
-        self.exporter.export_box_to_menu(box)
+        self.project_exporter.export_box_to_menu(box)
         self.update_dropdown_menu()
 
     def set_title(self, filename):
@@ -355,7 +357,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
-        filename = self.exporter.export()
+        filename = self.project_exporter.export()
         self.set_title(filename)
 
     def load_from_file(self):
