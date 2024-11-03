@@ -435,3 +435,6 @@ class CustomCanvas(tk.Canvas):
 
     def export_hypergraph(self):
         self.hypergraph_exporter.export()
+
+    def visualize_hypergraph(self):
+        ...
