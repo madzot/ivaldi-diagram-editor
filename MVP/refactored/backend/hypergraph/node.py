@@ -38,6 +38,14 @@ class Node:
     def has_output(self, output_id) -> bool:
         return output_id in self.outputs
 
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the node."""
+        return {
+            "id": self.id,
+            "inputs": self.inputs,
+            "outputs": self.outputs,
+        }
+
     def __str__(self) -> str:
         """Return a string representation of the node."""
         return (f"Node ID: {self.id}\n"

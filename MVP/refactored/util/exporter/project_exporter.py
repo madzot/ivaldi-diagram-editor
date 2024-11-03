@@ -1,27 +1,17 @@
 import json
 import time
-from tkinter import filedialog
 from tkinter import messagebox
 
-from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.util.exporter.exporter import Exporter
 
 
-class Exporter:
+class ProjectExporter(Exporter):
+
     def __init__(self, canvas):
-        self.canvas: CustomCanvas = canvas
+        super().__init__(canvas)
         self.boxes_json_conf = "conf/boxes_conf.json"
 
-    def export(self):
-        filename = self.ask_filename_and_location()
-        if filename:
-            d = self.create_master_dict(filename)
-            with open(filename, "w") as outfile:
-                json.dump(d, outfile, indent=4)
-            messagebox.showinfo("Info", "Project saved successfully")
-
-        return filename
-
-    def create_master_dict(self, filename):
+    def create_file_content(self, filename):
         return {"file_name": filename,
                 "date": time.time(),
                 "main_canvas": self.create_canvas_dict(self.canvas)
@@ -95,15 +85,6 @@ class Exporter:
         if connection.wire:
             d["wire_id"] = connection.wire.id
         return d
-
-    @staticmethod
-    def ask_filename_and_location():
-        # Define the default file type and file extension
-        filetypes = [('JSON files', '*.json')]
-
-        # Show the save file dialog
-        file_path = filedialog.asksaveasfilename(defaultextension='.json', filetypes=filetypes, title="Save JSON file")
-        return file_path
 
     # BOX MENU LOGIC
     def export_box_to_menu(self, box):

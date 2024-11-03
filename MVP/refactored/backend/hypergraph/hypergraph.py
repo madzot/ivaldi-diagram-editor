@@ -45,8 +45,8 @@ class Hypergraph(Node):
             all_inputs.update(node.inputs)
             all_outputs.update(node.outputs)
 
-        self.inputs = all_inputs - all_outputs
-        self.outputs = all_outputs - all_inputs
+        self.inputs = list(all_inputs - all_outputs)
+        self.outputs = list(all_outputs - all_inputs)
 
     def is_valid(self) -> bool:
         """Validate hypergraph structure by checking input/output consistency and cycles."""
@@ -99,6 +99,12 @@ class Hypergraph(Node):
         current_path.remove(node)
         return True
 
+    def to_dict(self) -> dict:
+        """Return a dictionary representation of the hypergraph."""
+        hypergraph_dict = super().to_dict()
+        hypergraph_dict["nodes"] = [node.to_dict() for node in self.nodes]
+        return hypergraph_dict
+
     def visualize(self):
         """Visualize the hypergraph using matplotlib and networkx."""
         G = self._construct_graph()
@@ -146,6 +152,7 @@ class Hypergraph(Node):
         node_descriptions = [f"Node ID: {node.id}, Inputs: {node.inputs}, Outputs: {node.outputs}" for node in
                              self.nodes]
 
+        # Format the node descriptions into a single string
         nodes_str = "\n".join(node_descriptions)
 
         return (f"Hypergraph ID: {self.id}\n"
