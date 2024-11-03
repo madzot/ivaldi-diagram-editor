@@ -9,9 +9,8 @@ from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
+from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from MVP.refactored.wire import Wire
-
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
 
 
 class CustomCanvas(tk.Canvas):
@@ -46,6 +45,8 @@ class CustomCanvas(tk.Canvas):
         self.bind("<ButtonRelease-1>", self.__select_release__)
         self.selecting = False
         self.copier = Copier()
+        self.hypergraph_exporter = HypergraphExporter(self)
+
         if add_boxes and diagram_source_box:
             for connection in diagram_source_box.connections:
                 if connection.side == "left":
@@ -431,3 +432,6 @@ class CustomCanvas(tk.Canvas):
                 c_max = connection.index
                 c = connection
         return c
+
+    def export_hypergraph(self):
+        self.hypergraph_exporter.export()

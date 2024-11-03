@@ -1,9 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
 from MVP.refactored.connection import Connection
-from MVP.refactored.backend.hypergraph.node import Node
 
 
 class Box:
