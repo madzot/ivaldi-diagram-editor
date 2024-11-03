@@ -1,4 +1,6 @@
 from MVP.refactored.backend.hypergraph.node import Node
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class Hypergraph(Node):
@@ -97,12 +99,53 @@ class Hypergraph(Node):
         current_path.remove(node)
         return True
 
+    def visualize(self):
+        """Visualize the hypergraph using matplotlib and networkx."""
+        G = self._construct_graph()
+        pos = nx.spring_layout(G)
+        self._draw_graph(G, pos)
+
+    def _construct_graph(self):
+        """Construct the directed graph for the hypergraph using NetworkX."""
+        G = nx.DiGraph()
+        for node in self.nodes:
+            G.add_node(node.id, label=f"N_{node.id}")
+            for output in node.outputs:
+                for other_node in self.nodes:
+                    if output in other_node.inputs:
+                        G.add_edge(node.id, other_node.id, label=output)
+        start_node_id = "input"
+        G.add_node(start_node_id)
+        for input_wire in self.inputs:
+            for node in self.nodes:
+                if input_wire in node.inputs:
+                    G.add_edge(start_node_id, node.id, label=input_wire)
+        end_node_id = "output"
+        G.add_node(end_node_id)
+        for output_wire in self.outputs:
+            for node in self.nodes:
+                if output_wire in node.outputs:
+                    G.add_edge(node.id, end_node_id, label=output_wire)
+        return G
+
+    def _draw_graph(self, G, pos):
+        """Draw the graph using matplotlib."""
+        plt.figure(figsize=(10, 5))
+        nx.draw_networkx_nodes(G, pos, nodelist=[node.id for node in self.nodes],
+                               node_size=700, node_color='lightblue', alpha=0.8)
+        nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, edge_color="black")
+        edge_labels = {(u, v): d['label'] for u, v, d in G.edges(data=True)}
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        nx.draw_networkx_labels(G, pos, labels={n: G.nodes[n].get('label', n) for n in G.nodes()})
+        plt.title(f"Hypergraph ID: {self.id}")
+        plt.axis('off')
+        plt.show()
+
     def __str__(self) -> str:
         """Return a string representation of the hypergraph."""
         node_descriptions = [f"Node ID: {node.id}, Inputs: {node.inputs}, Outputs: {node.outputs}" for node in
                              self.nodes]
 
-        # Format the node descriptions into a single string
         nodes_str = "\n".join(node_descriptions)
 
         return (f"Hypergraph ID: {self.id}\n"
@@ -111,12 +154,13 @@ class Hypergraph(Node):
                 f"Nodes:\n{nodes_str}")
 
 
-def test_hypergraph_str():
-    # Create sample nodes
+def test_hypergraph_visualization():
     node1 = Node(node_id=0, inputs=[0], outputs=[1, 2])
     node2 = Node(node_id=1, inputs=[1], outputs=[3])
     node3 = Node(node_id=2, inputs=[2], outputs=[4])
+    node4 = Node(node_id=3, inputs=[3, 4], outputs=[5])
 
-    # Create a hypergraph
-    hypergraph = Hypergraph(hypergraph_id=100, nodes=[node1, node2, node3])
+    hypergraph = Hypergraph(hypergraph_id=103, nodes=[node1, node2, node3, node4])
+
     print(str(hypergraph))
+    hypergraph.visualize()
