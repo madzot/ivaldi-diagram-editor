@@ -53,7 +53,8 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
-        self.bind("<ButtonPress-3>", self.handle_right_click)
+        self.bind("<Button-3>", self.handle_right_click)
+        self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.bind("<MouseWheel>", self.zoom)
         self.selecting = False
         self.copier = Copier()
@@ -88,6 +89,8 @@ class CustomCanvas(tk.Canvas):
         self.zoom_history = []
 
     def handle_right_click(self, event):
+        if self.selector.selecting:
+            self.selector.finish_selection()
         if self.draw_wire_mode:
             self.cancel_wire_pulling(event)
         else:
@@ -177,6 +180,18 @@ class CustomCanvas(tk.Canvas):
 
             self.context_menu.add_command(label="Add undefined box",
                                           command=lambda loc=(event.x, event.y): self.add_box(loc))
+
+            # noinspection PyUnresolvedReferences
+            if len(self.master.quick_create_boxes) > 0:
+                sub_menu = tk.Menu(self.context_menu, tearoff=0)
+                self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
+                # noinspection PyUnresolvedReferences
+                for box in self.master.quick_create_boxes:
+                    # noinspection PyUnresolvedReferences
+                    sub_menu.add_command(label=box,
+                                         command=lambda loc=(event.x, event.y), name=box:
+                                         self.master.importer.add_box_from_menu(self, name, loc))
+
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))
 
@@ -208,6 +223,7 @@ class CustomCanvas(tk.Canvas):
         if self.find_overlapping(event.x - 1, event.y - 1, event.x + 1, event.y + 1):
             self.on_canvas_click(event)
             return
+        self.selector.finish_selection()
         self.selector.start_selection(event)
 
     def __select_motion__(self, event):
@@ -222,6 +238,9 @@ class CustomCanvas(tk.Canvas):
                 self.selector.select_action(True)
                 return
         self.selector.select_action(False)
+
+    def delete_selected_items(self):
+        self.selector.delete_selected_items()
 
     def pull_wire(self, event):
         if not self.quick_pull and not self.draw_wire_mode:
@@ -246,21 +265,12 @@ class CustomCanvas(tk.Canvas):
 
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event, connection=None):
+        if self.selector.selecting:
+            self.selector.finish_selection()
         if connection is None:
             connection = self.get_connection_from_location(event)
         if connection is not None:
             self.handle_connection_click(connection, event)
-        if self.selector.selected_items:
-            for item in self.selector.selected_items:
-                if isinstance(item, Box):
-                    if not (item.x < event.x < item.x + item.size[0] and item.y < event.y < item.y + item.size[1]):
-                        item.deselect()
-                        self.selector.selected_items.remove(item)
-                if isinstance(item, Spider):
-                    if not (item.x - item.r / 2 < event.x < item.x + item.r / 2 and
-                            item.y - item.r / 2 < event.y < item.y + item.r / 2):
-                        item.deselect()
-                        self.selector.selected_items.remove(item)
 
     def start_pulling_wire(self, event):
         if self.draw_wire_mode and self.pulling_wire:
@@ -573,20 +583,27 @@ class CustomCanvas(tk.Canvas):
                 c = connection
         return c
 
+    def setup_column_removal(self, item, found):
+        if not found and item.snapped_x:
+            self.remove_from_column(item, item.snapped_x)
+            item.snapped_x = None
+            item.prev_snapped = None
+        elif item.is_snapped and found and item.snapped_x != item.prev_snapped:
+            self.remove_from_column(item, item.prev_snapped)
+        item.is_snapped = found
+        item.prev_snapped = item.snapped_x
+
+    def remove_from_column(self, item, snapped_x):
+        self.columns[snapped_x].remove(item)
+        if len(self.columns[snapped_x]) == 1:
+            self.columns[snapped_x][0].snapped_x = None
+            self.columns[snapped_x][0].is_snapped = False
+            self.columns.pop(snapped_x, None)
+
     @staticmethod
     def calculate_zoom_dif(zoom_coord, object_coord, denominator):
         """Calculates how much an object needs to be moved when zooming."""
         return round(zoom_coord - (zoom_coord - object_coord) / denominator, 4)
-
-    def remove_from_column(self, item, found):
-        if not found and item.snapped_x:
-            snapped_x = item.snapped_x
-            self.columns[snapped_x].remove(item)
-            if len(self.columns[snapped_x]) == 1:
-                self.columns[snapped_x][0].snapped_x = None
-                self.columns[snapped_x][0].is_snapped = False
-                self.columns.pop(item, None)
-            item.snapped_x = None
 
     @staticmethod
     def get_upper_lower_edges(component):

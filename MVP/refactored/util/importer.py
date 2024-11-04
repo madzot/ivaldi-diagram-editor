@@ -127,13 +127,13 @@ class Importer:
         random_string = ''.join(random.choice(characters) for _ in range(length))
         return random_string
 
-    def add_box_from_menu(self, canvas, box_name):
+    def add_box_from_menu(self, canvas, box_name, loc=(100, 100)):
         with open(self.boxes_json_conf, 'r') as json_file:
             self.seed = self.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box()
+            new_box = canvas.add_box(loc)
             if box["label"]:
                 new_box.set_label(box["label"])
             for _ in range(box["left_c"]):
@@ -142,13 +142,13 @@ class Importer:
                 new_box.add_right_connection()
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False,add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
 
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:
                     name = box["label"]
                 else:
-                    name =str( sub_diagram.id)
+                    name = str(sub_diagram.id)
                 sub_diagram.set_name(name)
                 canvas.main_diagram.add_canvas(sub_diagram)
                 canvas.itemconfig(new_box.rect, fill="#dfecf2")
