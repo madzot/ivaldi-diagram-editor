@@ -100,10 +100,24 @@ class Box:
         file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
                                            filetypes=(("Python script", "*.py"),))
         if file:
-            self.box_function = BoxFunction(file.name, file.read())
+            self.set_function(file.name, file.read())
 
     def set_function(self, name, code=None):
         self.box_function = BoxFunction(name, code)
+
+    def count_inputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "left":
+                count += 1
+        return count
+
+    def count_outputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "right":
+                count += 1
+        return count
 
     def save_box_to_menu(self):
         if not self.label_text:
