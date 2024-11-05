@@ -34,7 +34,7 @@ class Hypergraph(Node):
         return None
 
     def remove_node(self, node: Node) -> None:
-        self.nodes.pop(node)
+        self.nodes.remove(node)
 
     def set_hypergraph_io(self) -> None:
         """Define input and output wires for hypergraph."""

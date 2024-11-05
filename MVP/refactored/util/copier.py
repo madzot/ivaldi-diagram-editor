@@ -1,5 +1,5 @@
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
+from MVP.refactored.backend.hypergraph.hypergraph_manage import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
 
 
@@ -18,7 +18,7 @@ class Copier:
                 elif connection.has_wire:
                     node.add_output(connection.wire.id)
             hypergraph.add_node(node)
-        Manage.hypergraphs.append(hypergraph)
+        HypergraphManager.hypergraphs.append(hypergraph)
         print(hypergraph.__str__())
 
     @staticmethod

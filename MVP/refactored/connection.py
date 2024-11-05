@@ -1,8 +1,5 @@
 import tkinter as tk
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
-from MVP.refactored.backend.hypergraph.node import Node
-
 
 class Connection:
     def __init__(self, box, index, side, location, canvas, r=5, id_=None):
