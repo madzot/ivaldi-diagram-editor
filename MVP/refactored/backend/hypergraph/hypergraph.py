@@ -51,6 +51,7 @@ class Hypergraph(Node):
     def is_valid(self) -> bool:
         """Validate hypergraph structure by checking input/output consistency and cycles."""
         if not self.inputs or not self.outputs or not self.nodes:
+            print("Inputs, outputs, or nodes are empty")
             return False
 
         node_inputs = set()
@@ -58,6 +59,7 @@ class Hypergraph(Node):
 
         for node in self.nodes:
             if not node.is_valid():
+                print(f"Node {node.id} is not valid")
                 return False
 
             node_inputs.update(node.inputs)
@@ -66,17 +68,25 @@ class Hypergraph(Node):
         # Check if all node inputs are either in hypergraph inputs or match any node's outputs
         invalid_inputs = node_inputs - set(self.inputs) - node_outputs
         if invalid_inputs:
+            print(f"Invalid inputs: {invalid_inputs}")
             return False
 
         # Check if all node outputs are either in hypergraph outputs or match any node's inputs
         invalid_outputs = node_outputs - set(self.outputs) - node_inputs
         if invalid_outputs:
+            print(f"Invalid outputs: {invalid_outputs}")
             return False
 
         if not self.is_connected():
+            print("Hypergraph is not connected")
             return False
 
-        return self.has_no_cycles()
+        has_no_cycles = self.has_no_cycles()
+        if not has_no_cycles:
+            print("Hypergraph has cycles")
+            return False
+
+        return True
 
     def is_connected(self) -> bool:
         """Check if the hypergraph is connected by verifying all nodes are reachable from an arbitrary starting node."""
