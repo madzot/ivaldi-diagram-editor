@@ -5,6 +5,7 @@ from tkinter import messagebox as mb
 
 from PIL import Image
 
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.spider import Spider
@@ -14,7 +15,8 @@ from MVP.refactored.wire import Wire
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, **kwargs):
+
+    def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, id_=None, **kwargs):
         super().__init__(master, **kwargs)
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
@@ -35,7 +37,12 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Button-1>', self.on_canvas_click)
         self.bind("<Configure>", self.on_canvas_resize)
         self.diagram_source_box = diagram_source_box  # Only here if canvas is sub-diagram
-        self.id = id(self)
+
+        if not id_:
+            self.id = id(self)
+        else:
+            self.id = id_
+
         self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
@@ -54,6 +61,10 @@ class CustomCanvas(tk.Canvas):
                 if connection.side == "right":
                     self.add_diagram_output()
         self.set_name(self.name)
+
+    def delete(self, *args):
+        HypergraphManager.modify_canvas_hypergraph(self)
+        super().delete(args)
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -186,23 +197,27 @@ class CustomCanvas(tk.Canvas):
 
         connection.color_green()
 
-    def end_wire_to_connection(self, connection, bypass_legality_check=False):
+    def end_wire_to_connection(self, connection, bypass_legality_check=False) -> None:
+        wire_is_legal = self.is_wire_between_connections_legal(self.current_wire_start, connection)
 
-        if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
-                                                                              connection) or bypass_legality_check:
-            self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
-            self.wires.append(self.current_wire)
+        if not ((self.current_wire_start and wire_is_legal) or bypass_legality_check):
+            return
 
-            if self.current_wire_start.box is not None: # TODO
-                self.current_wire_start.box.add_wire(self.current_wire)
-            if connection.box is not None:
-                connection.box.add_wire(self.current_wire)
+        self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
+        self.wires.append(self.current_wire)
 
-            self.current_wire_start.add_wire(self.current_wire)
-            connection.add_wire(self.current_wire)
+        if self.current_wire_start.box is not None:
+            self.current_wire_start.box.add_wire(self.current_wire)
+        if connection.box is not None:
+            connection.box.add_wire(self.current_wire)
 
-            self.current_wire.update()
-            self.nullify_wire_start()
+        self.current_wire_start.add_wire(self.current_wire)
+        connection.add_wire(self.current_wire)
+
+        self.current_wire.update()
+        self.nullify_wire_start()
+
+        HypergraphManager.create_hypergraphs_from_canvas(self)
 
     def nullify_wire_start(self):
         if self.current_wire_start:

@@ -14,7 +14,6 @@ class Connection:
         self.r = r
         if not id_:
             self.id = id(self)
-
         else:
             self.id = id_
         self.node = None

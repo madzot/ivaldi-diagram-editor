@@ -50,10 +50,16 @@ class Hypergraph(Node):
 
     def is_valid(self) -> bool:
         """Validate hypergraph structure by checking input/output consistency and cycles."""
+        if not self.inputs or not self.outputs or not self.nodes:
+            return False
+
         node_inputs = set()
         node_outputs = set()
 
         for node in self.nodes:
+            if not node.is_valid():
+                return False
+
             node_inputs.update(node.inputs)
             node_outputs.update(node.outputs)
 
