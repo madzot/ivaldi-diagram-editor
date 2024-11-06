@@ -1,12 +1,9 @@
 import tkinter as tk
-
-from tkinter import simpledialog
 from tkinter import filedialog
+from tkinter import simpledialog
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import HypergraphManager
-from MVP.refactored.connection import Connection
-from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
+from MVP.refactored.connection import Connection
 
 
 class Box:
@@ -188,7 +185,7 @@ class Box:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
-                                            self.canvas, add_boxes)
+                                            self.canvas, add_boxes, self.id)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text

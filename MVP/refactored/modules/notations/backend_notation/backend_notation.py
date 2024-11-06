@@ -1,4 +1,4 @@
-from MVP.refactored.backend.hypergraph.hypergraph_manage import HypergraphManager
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
 
 class BackendNotation:
