@@ -27,14 +27,14 @@ class Hypergraph(Node):
         for node in nodes:
             self.add_node(node)
 
-    def get_node(self, node_id: int) -> Node:
+    def get_node(self, node_id: int) -> Node | None:
         for node in self.nodes:
             if node.id == node_id:
                 return node
         return None
 
     def remove_node(self, node: Node) -> None:
-        self.nodes.pop(node)
+        self.nodes.remove(node)
 
     def set_hypergraph_io(self) -> None:
         """Define input and output wires for hypergraph."""
@@ -50,10 +50,16 @@ class Hypergraph(Node):
 
     def is_valid(self) -> bool:
         """Validate hypergraph structure by checking input/output consistency and cycles."""
+        if not self.inputs or not self.outputs or not self.nodes:
+            return False
+
         node_inputs = set()
         node_outputs = set()
 
         for node in self.nodes:
+            if not node.is_valid():
+                return False
+
             node_inputs.update(node.inputs)
             node_outputs.update(node.outputs)
 
@@ -67,7 +73,29 @@ class Hypergraph(Node):
         if invalid_outputs:
             return False
 
+        if not self.is_connected():
+            return False
+
         return self.has_no_cycles()
+
+    def is_connected(self) -> bool:
+        """Check if the hypergraph is connected by verifying all nodes are reachable from an arbitrary starting node."""
+        visited = set()
+        self.explore_connected(self.nodes[0], visited)
+
+        return len(visited) == len(self.nodes)
+
+    def explore_connected(self, node, visited):
+        """Helper function to perform DFS for connectivity check."""
+        if node in visited:
+            return
+        visited.add(node)
+
+        for output in node.outputs:
+            for other_node in self.nodes:
+                if output in other_node.inputs and other_node not in visited:
+                    self.explore_connected(other_node, visited)
+
 
     def has_no_cycles(self) -> bool:
         """Check if the hypergraph has no cycles."""
