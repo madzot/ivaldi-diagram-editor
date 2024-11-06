@@ -101,11 +101,15 @@ class Hypergraph(Node):
             return
         visited.add(node)
 
-        for output in node.outputs:
+        for node_output in node.outputs:
             for other_node in self.nodes:
-                if output in other_node.inputs and other_node not in visited:
+                if node_output in other_node.inputs and other_node not in visited:
                     self.explore_connected(other_node, visited)
 
+        for node_input in node.inputs:
+            for other_node in self.nodes:
+                if node_input in other_node.outputs and other_node not in visited:
+                    self.explore_connected(other_node, visited)
 
     def has_no_cycles(self) -> bool:
         """Check if the hypergraph has no cycles."""
@@ -145,32 +149,32 @@ class Hypergraph(Node):
 
     def visualize(self):
         """Visualize the hypergraph using matplotlib and networkx."""
-        G = self._construct_graph()
-        pos = nx.spring_layout(G)
-        self._draw_graph(G, pos)
+        g = self._construct_graph()
+        pos = nx.spring_layout(g)
+        self._draw_graph(g, pos)
 
     def _construct_graph(self):
         """Construct the directed graph for the hypergraph using NetworkX."""
-        G = nx.DiGraph()
+        g = nx.DiGraph()
         for node in self.nodes:
-            G.add_node(node.id, label=f"N_{node.id}")
+            g.add_node(node.id, label=f"N_{node.id}")
             for output in node.outputs:
                 for other_node in self.nodes:
                     if output in other_node.inputs:
-                        G.add_edge(node.id, other_node.id, label=output)
+                        g.add_edge(node.id, other_node.id, label=output)
         start_node_id = "input"
-        G.add_node(start_node_id)
+        g.add_node(start_node_id)
         for input_wire in self.inputs:
             for node in self.nodes:
                 if input_wire in node.inputs:
-                    G.add_edge(start_node_id, node.id, label=input_wire)
+                    g.add_edge(start_node_id, node.id, label=input_wire)
         end_node_id = "output"
-        G.add_node(end_node_id)
+        g.add_node(end_node_id)
         for output_wire in self.outputs:
             for node in self.nodes:
                 if output_wire in node.outputs:
-                    G.add_edge(node.id, end_node_id, label=output_wire)
-        return G
+                    g.add_edge(node.id, end_node_id, label=output_wire)
+        return g
 
     def _draw_graph(self, G, pos):
         """Draw the graph using matplotlib."""
@@ -199,13 +203,16 @@ class Hypergraph(Node):
                 f"Nodes:\n{nodes_str}")
 
 
-def test_hypergraph_visualization():
-    node1 = Node(node_id=0, inputs=[0], outputs=[1, 2])
-    node2 = Node(node_id=1, inputs=[1], outputs=[3])
-    node3 = Node(node_id=2, inputs=[2], outputs=[4])
-    node4 = Node(node_id=3, inputs=[3, 4], outputs=[5])
+def hypergraph_visualization():
+    node2 = Node(node_id=1, inputs=[1, 2], outputs=[5])
+    node3 = Node(node_id=2, inputs=[3, 4], outputs=[6])
+    node4 = Node(node_id=3, inputs=[5, 6], outputs=[7])
+    node1 = Node(node_id=4, inputs=[7], outputs=[8])
 
     hypergraph = Hypergraph(hypergraph_id=103, nodes=[node1, node2, node3, node4])
 
-    print(str(hypergraph))
-    hypergraph.visualize()
+    result = hypergraph.is_connected()
+    print(result)
+
+
+hypergraph_visualization()

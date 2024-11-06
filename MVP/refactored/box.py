@@ -36,7 +36,6 @@ class Box:
         self.locked = False
         self.bind_events()
         self.sub_diagram = None
-        self.sub_diagram_id = None
         self.receiver = receiver
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add", generator_id=self.id)
@@ -44,7 +43,6 @@ class Box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
         self.box_function = None
-        print(functions)
 
     def set_id(self, id_):
         if self.receiver.listener:
@@ -90,13 +88,13 @@ class Box:
     def add_function(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
         for name in functions:
-            menu.add_command(label=name, command=lambda x=name:self.set_function(x))
+            menu.add_command(label=name, command=lambda x=name: self.set_function(x))
         menu.add_command(label="Add custom function", command=self.show_add_custom_function_menu)
         menu.post(event.x_root, event.y_root)
 
     def show_add_custom_function_menu(self):
         file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
-                                           filetypes=(("Python script", "*.py"),))
+                                      filetypes=(("Python script", "*.py"),))
         if file:
             self.set_function(file.name, file.read())
 

@@ -10,14 +10,14 @@ class CodeGenerator:
         for box in canvas.boxes:
             box_function = box.box_function
 
-            if box.sub_diagram_id is None:
+            if canvasses[str(box.id)] is None:
                 code = "\n" + box_function.code  # TODO change function name
                 if code not in code_parts.keys():
                     code_parts[code] = [box.id]
                 else:
                     code_parts[code].append(box.id)
             else:
-                canvas: CustomCanvas = canvasses[str(box.sub_diagram_id)]
+                canvas: CustomCanvas = canvasses[str(box.id)]
                 return CodeGenerator.generate_code(canvas, canvasses)
 
         return "".join(code_parts.keys())

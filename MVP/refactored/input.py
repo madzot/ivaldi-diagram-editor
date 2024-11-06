@@ -4,7 +4,7 @@ class Input:
             self.id = id(self)
         else:
             self.id = id_
-        self.value: int|None = None
+        self.value: int | None = None
         self.wire = None
         self.has_wire = False
 
@@ -13,7 +13,7 @@ class Input:
             self.wire = wire
             self.has_wire = True
 
-    def remove_wire(self, wire=None):
+    def remove_wire(self):
         if self.wire:
             self.wire = None
             self.has_wire = False
