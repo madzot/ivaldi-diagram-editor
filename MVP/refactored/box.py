@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import simpledialog
 from tkinter import filedialog
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
+from MVP.refactored.backend.hypergraph.hypergraph_manage import HypergraphManager
 from MVP.refactored.connection import Connection
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions

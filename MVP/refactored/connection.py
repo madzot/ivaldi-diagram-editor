@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
+from MVP.refactored.backend.hypergraph.hypergraph_manage import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
 
 

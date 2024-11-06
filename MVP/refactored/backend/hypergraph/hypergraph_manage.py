@@ -1,7 +1,7 @@
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 
 
-class Manage:
+class HypergraphManager:
     hypergraphs: list[Hypergraph] = []
 
     @staticmethod

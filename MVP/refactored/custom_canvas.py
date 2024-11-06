@@ -5,6 +5,7 @@ from tkinter import messagebox as mb
 
 from PIL import Image
 
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.spider import Spider
