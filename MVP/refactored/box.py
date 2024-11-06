@@ -39,13 +39,13 @@ class Box:
         self.locked = False
         self.bind_events()
         self.sub_diagram = None
+        self.sub_diagram_id = None
         self.receiver = receiver
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add", generator_id=self.id)
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
-
         self.box_function = None
 
     def set_id(self, id_):

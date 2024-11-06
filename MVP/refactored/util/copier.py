@@ -10,6 +10,7 @@ class Copier:
         self.copy_over_spiders(spiders, canvas)
         self.copy_over_wires(wires, selected_coordinates, box, canvas)
         hypergraph = Hypergraph(canvas.id)
+        box.sub_diagram_id = canvas.id
         for box in canvas.boxes:
             node = Node(box.id)
             for connection in box.connections:

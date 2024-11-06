@@ -209,6 +209,9 @@ class MainDiagram(tk.Tk):
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
 
+    def get_canvas_by_id(self, canvas_id):
+        return self.canvasses[canvas_id]
+
     def change_canvas_name(self, canvas):
         self.tree.item(str(canvas.id), text=canvas.name_text)
 
