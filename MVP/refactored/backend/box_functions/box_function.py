@@ -1,32 +1,39 @@
+import os
 from inspect import signature
 
 
-def add(numbers: list) -> int:
-    return sum(numbers)
+def get_predefined_functions() -> dict:
+    predefined_functions = {}
+    functions_path = os.path.join(os.path.dirname(__file__), "./predefined/")
+    dirs_and_files = os.listdir(functions_path)
+    for name in dirs_and_files:
+        full_path = os.path.join(functions_path, name)
+        if os.path.isfile(full_path):
+            file = open(full_path, "r")
+            function_name = name.replace(".py", "").replace("_", " ")
+            predefined_functions[function_name] = file.read()
+    return predefined_functions
 
 
-def subtract(numbers: list) -> int:
-    return numbers[0] - sum(numbers[1:])
-
-
-functions = {
-    "Copy": lambda x: [x, x],
-    "Add": add,
-    "Subtract": subtract
-}
+functions = get_predefined_functions()
 
 
 class BoxFunction:
-    def __init__(self, name, code):
+    def __init__(self, name, code=None):
         self.name = name
-        self.code = code or functions.get(name)
-        if isinstance(self.code, str):
-            function = {}
-            exec(self.code, {}, function)
-            self.code = function["invoke"]
+        if name in functions:
+            self.code = functions[name]
+        elif code is not None:
+            self.code = code
+        else:
+            raise ValueError("Should be specified function code or name of predefined function")
+        local = {}
+        exec(self.code, {}, local)
+        self.function = local["invoke"]
+        self.meta = local["meta"]
 
     def __call__(self, *args):
-        return self.code(*args)
+        return self.function(*args)
 
     def count_inputs(self):
         sig = signature(self.code)

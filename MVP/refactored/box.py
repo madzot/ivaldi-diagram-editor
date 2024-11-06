@@ -47,6 +47,7 @@ class Box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
         self.box_function = None
+        print(functions)
 
     def set_id(self, id_):
         if self.receiver.listener:
