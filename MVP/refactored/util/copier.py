@@ -14,7 +14,7 @@ class Copier:
     @staticmethod
     def copy_over_boxes(boxes, canvas):
         for old_box in boxes:
-            sub_diagram_box = canvas.add_box((old_box.x, old_box.y), size=old_box.size)
+            sub_diagram_box = canvas.add_box((old_box.x, old_box.y), size=old_box.size, shape=old_box.shape)
             sub_diagram_box.set_id(old_box.id)
             for connection in old_box.connections:
                 if connection.side == "right":
@@ -178,3 +178,18 @@ class Copier:
                 box.canvas.start_wire_from_connection(c)
                 box.canvas.end_wire_to_connection(pre_c, True)
                 break
+
+    @staticmethod
+    def copy_box(old_box, new_box):
+        for connection in old_box.connections:
+            if connection.side == "right":
+                new_connection = new_box.add_right_connection()
+                new_connection.id = connection.id
+            if connection.side == "left":
+                new_connection = new_box.add_left_connection()
+                new_connection.id = connection.id
+        new_box.set_label(old_box.label_text)
+
+
+
+

@@ -73,7 +73,7 @@ class Selector:
         y = (coordinates[1] + coordinates[3]) / 2
 
         # Create a new box that will contain the sub-diagram
-        box = self.canvas.add_box((x, y))
+        box = self.canvas.add_box((x, y), shape="rectangle")
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
         self.canvas.receiver.listener = False
@@ -98,10 +98,16 @@ class Selector:
         self.canvas.main_diagram.add_canvas(sub_diagram)
 
     def is_within_selection(self, rect, selection_coords):
-        x1, y1, x2, y2 = self.canvas.coords(rect)
-        x = (x1 + x2) / 2
-        y = (y1 + y2) / 2
-        return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
+        if len(self.canvas.coords(rect)) == 4:
+            x1, y1, x2, y2 = self.canvas.coords(rect)
+            x = (x1 + x2) / 2
+            y = (y1 + y2) / 2
+            return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
+        if len(self.canvas.coords(rect)) == 6:
+            x1, y1, x2, y2, x3, y3 = self.canvas.coords(rect)
+            x = (x1 + x2 + x3) / 3
+            y = (y1 + y2 + y3) / 3
+            return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def delete_selected_items(self):
         for item in self.selected_items:

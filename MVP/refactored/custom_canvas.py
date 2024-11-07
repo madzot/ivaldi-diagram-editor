@@ -258,8 +258,8 @@ class CustomCanvas(tk.Canvas):
         self.current_wire_start = None
         self.current_wire = None
 
-    def add_box(self, loc=(100, 100), size=(60, 60), id_=None):
-        box = Box(self, *loc, self.receiver, size=size, id_=id_)
+    def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape="rectangle"):
+        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape)
         self.boxes.append(box)
         return box
 
