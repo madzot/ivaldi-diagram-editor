@@ -94,7 +94,7 @@ class CustomCanvas(tk.Canvas):
 
         self.pan_history_x = 0
         self.pan_history_y = 0
-        self.pan_speed = 10
+        self.pan_speed = 20
 
     def pan_right(self, event):
         for corner in self.corners:
