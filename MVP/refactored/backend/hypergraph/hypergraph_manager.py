@@ -10,6 +10,15 @@ class HypergraphManager:
 
     hypergraphs: list[Hypergraph] = []
 
+
+    @staticmethod
+    def get_graph_by_node_id(node_id: int) -> Hypergraph | None:
+        for hypergraph in HypergraphManager.hypergraphs:
+            for node in hypergraph.nodes:
+                if node.id == node_id:
+                    return hypergraph
+        return None
+
     @staticmethod
     def get_graph_by_id(hypergraph_id: int) -> Hypergraph | None:
         for graph in HypergraphManager.hypergraphs:

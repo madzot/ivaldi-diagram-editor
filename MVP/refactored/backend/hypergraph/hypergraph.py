@@ -28,6 +28,25 @@ class Hypergraph(Node):
             if input_id in node.inputs:
                 return node
 
+    def get_node_children_by_id(self, node_id: int) -> list[Node]:
+        return self.get_node_children_by_node(self.get_node(node_id))
+
+    def get_node_children_by_node(self, required_node: Node) -> list[Node]:
+        children = []
+        for node in self.nodes:
+            if any(n in node.inputs for n in required_node.outputs): # If requiredNode outputs wire id contains another node inputs wire id
+                children.append(node)
+        return children
+
+    def get_node_parents_by_id(self, node_id: int) -> list[Node]:
+        return self.get_node_parents_by_node(self.get_node(node_id))
+
+    def get_node_parents_by_node(self, required_node: Node) -> list[Node]:
+        parents = []
+        for node in self.nodes:
+            if any(n in node.outputs for n in required_node.inputs):  # If requiredNode outputs wire id contains another node inputs wire id
+                parents.append(node)
+        return parents
 
     def add_nodes(self, nodes: [Node]) -> None:
         for node in nodes:

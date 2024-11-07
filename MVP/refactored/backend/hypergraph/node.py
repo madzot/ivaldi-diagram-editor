@@ -1,3 +1,6 @@
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+
+
 class Node:
 
     def __init__(self, node_id=None, inputs=None, outputs=None):
@@ -10,6 +13,14 @@ class Node:
         self.id = node_id
         self.inputs = inputs
         self.outputs = outputs
+
+    def get_children(self):
+        hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
+        return hypergraph.get_node_children_by_node(self)
+
+    def get_parents(self):
+        hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
+        return hypergraph.get_node_parents_by_node(self)
 
     def add_input(self, input_id: int) -> None:
         if input_id in self.inputs or input_id in self.outputs:
