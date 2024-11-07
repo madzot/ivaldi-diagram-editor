@@ -30,6 +30,5 @@ class CodeGenerator:
         hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
         first_nodes = [hypergraph.get_node_by_input(x) for x in hypergraph]
         
-        main_function = ""
 
         return ""
