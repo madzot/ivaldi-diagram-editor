@@ -7,7 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from MVP.refactored.backend.code_generator import CodeGenerator
 from MVP.refactored.custom_canvas import CustomCanvas
-from MVP.refactored.modules.notations.hypergraph_notation.hypergraph_notation import HypergraphNotation
+from MVP.refactored.modules.notations.diagram_notation.diagram_notation import DiagramNotation
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
@@ -155,7 +155,7 @@ class MainDiagram(tk.Tk):
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
-        hypergraph_notation = HypergraphNotation(self.custom_canvas.receiver.diagram)
+        hypergraph_notation = DiagramNotation(self.custom_canvas.receiver.diagram)
 
         figure = hypergraph_notation.get_hypergraph_figure()
 
