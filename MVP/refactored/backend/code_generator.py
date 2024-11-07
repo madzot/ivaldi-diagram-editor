@@ -12,20 +12,16 @@ class CodeGenerator:
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], processed_canvases=None) -> str:
         """
-       Generate the code for a set of boxes on a canvas and write it to a file.
-
-       This method generates code for each box function on the provided canvas by extracting code from each box’s
-       function, ensuring that no duplicate functions are added. It constructs an entry point function, `get_result`,
-       and saves all the code into a file called 'diagram.py'.
-
-       Args:
-           canvas (CustomCanvas): The main canvas containing boxes to generate code from.
-           canvasses (dict[str, CustomCanvas]): A dictionary mapping canvas IDs to `CustomCanvas` objects.
-           processed_canvases (set, optional): Tracks canvases that have been processed to prevent duplicates.
-
-       Returns:
-           str: The complete generated code as a string, also saved to 'diagram.py'.
-       """
+        Generate code for the boxes on the canvas and save it to 'diagram.py'.
+        This method creates code for each box and writes it to a file, avoiding duplicates.
+        The code includes a main function to execute all box functions.
+        Args:
+            canvas: The main canvas to generate code from.
+            canvasses: A dictionary of canvas IDs and corresponding canvasses.
+            processed_canvases: A set of processed canvasses to avoid duplication.
+        Returns:
+            str: The generated code as a string.
+        """
         if processed_canvases is None:
             processed_canvases = set()
 
@@ -62,16 +58,12 @@ class CodeGenerator:
     @classmethod
     def get_all_methods_code(cls, code_part: dict[BoxFunction, list[int]]) -> dict[tuple[int], str]:
         """
-        Create a dictionary mapping box IDs to their function code.
-
-        For each box function, this method modifies the function’s code by replacing the function name with the box
-        function name and adds the resulting code to a dictionary.
-
+        Create a dictionary with box IDs and their function code.
+        This method updates the code by using the box's function name and stores it in a dictionary.
         Args:
-            code_part (dict[BoxFunction, list[int]]): A dictionary mapping `BoxFunction` instances to lists of box IDs.
-
+            code_part: A dictionary of box functions and box IDs.
         Returns:
-            dict[tuple[int], str]: A dictionary where keys are tuples of box IDs, and values are modified function code strings.
+            dict: A dictionary of box IDs and their function code as strings.
         """
         all_methods_code: dict[tuple[int], str] = dict()
 
@@ -86,17 +78,13 @@ class CodeGenerator:
     @classmethod
     def construct_main_function(cls, code_part: dict[tuple[int], str], canvas: CustomCanvas) -> str:
         """
-        Construct the main entry function that calls each box function in order.
-
-        This method traverses the hypergraph corresponding to the canvas and constructs a `get_result` function that
-        calls each box function based on the node dependencies.
-
+        Build the main function that calls each box function.
+        This method creates a `get_result` function that calls box functions in order based on the node dependencies.
         Args:
-            code_part (dict[tuple[int], str]): A dictionary of box IDs and their associated function code.
-            canvas (CustomCanvas): The main canvas from which nodes are retrieved.
-
+            code_part: A dictionary with box IDs and their function code.
+            canvas: The main canvas with nodes.
         Returns:
-            str: The constructed `get_result` function code as a string.
+            str: The code for the `get_result` function.
         """
         nodes_queue = Queue()
         main_function = StringIO()
@@ -134,17 +122,13 @@ class CodeGenerator:
     @classmethod
     def get_children_nodes(cls, current_level_nodes: list[Node], node_input_count_check: dict[int, int]) -> list:
         """
-        Retrieve the next level of child nodes based on the current nodes and input counts.
-
-        This method checks each node's children and ensures that only children with all required inputs are added to
-        the next level. It also updates the input count tracking dictionary.
-
+        Get the next level of child nodes.
+        This method checks each node’s children and adds them if they have all required inputs.
         Args:
-            current_level_nodes (list[Node]): The list of nodes currently being processed.
-            node_input_count_check (dict[int, int]): Tracks the input count for each node ID.
-
+            current_level_nodes: The nodes being processed at the current level.
+            node_input_count_check: A dictionary tracking input counts for each node ID.
         Returns:
-            list[Node]: A list of nodes for the next level in the graph traversal.
+            list: The next level of child nodes.
         """
         children = set()
 
