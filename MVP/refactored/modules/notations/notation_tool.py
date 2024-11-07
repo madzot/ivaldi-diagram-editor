@@ -1,5 +1,5 @@
-from MVP.refactored.modules.notations.backend_notation.backend_notation import BackendNotation
 from MVP.refactored.modules.notations.hypergraph_notation.hypergraph_notation import HypergraphNotation
+from MVP.refactored.modules.notations.diagram_notation.diagram_notation import DiagramNotation
 from MVP.refactored.modules.notations.pseudo_notation.pseudo_notation import PseudoNotation
 
 
@@ -19,13 +19,13 @@ def is_canvas_complete(canvas):
 
 def get_notations(canvas):
     pseudo = PseudoNotation()
-    hypergraph_notation = HypergraphNotation(canvas.receiver.diagram)
-    backend_notation = BackendNotation()
+    diagram_notation = DiagramNotation(canvas.receiver.diagram)
+    hypergraph_notation = HypergraphNotation()
 
     # TODO add all different notations here
     ...
     return {"Pseudo notation": pseudo.get_pseudo_notations(canvas),
             # TODO add notations' method calls here to combine all to one dict
-            "Hypergraph notation": hypergraph_notation.get_graph_string(),
-            "Back end logic notation": backend_notation.get_all_hypergraph_notations(),
+            "Diagram notation": diagram_notation.get_graph_string(),
+            "Hypergraph notation": hypergraph_notation.get_all_hypergraph_notations(),
             }
