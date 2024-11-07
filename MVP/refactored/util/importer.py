@@ -53,7 +53,7 @@ class Importer:
                     new_box.add_right_connection(self.get_id(c["id"]))
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False,add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:
                     name = box["label"]
@@ -142,13 +142,13 @@ class Importer:
                 new_box.add_right_connection()
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False,add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
 
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:
                     name = box["label"]
                 else:
-                    name =str( sub_diagram.id)
+                    name = str(sub_diagram.id)
                 sub_diagram.set_name(name)
                 canvas.main_diagram.add_canvas(sub_diagram)
                 canvas.itemconfig(new_box.rect, fill="#dfecf2")

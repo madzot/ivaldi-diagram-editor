@@ -1,43 +1,55 @@
-def add(numbers: list) -> int:
-    return sum(numbers)
+import os
+from inspect import signature
 
-def subtract(numbers: list) -> int:
-    return numbers[0] - sum(numbers[1:])
 
-functions = {
-    "Copy": lambda x: [x, x],
-    "Add": add,
-    "Subtract": subtract
-}
+def get_predefined_functions() -> dict:
+    predefined_functions = {}
+    functions_path = os.path.join(os.path.dirname(__file__), "./predefined/")
+    dirs_and_files = os.listdir(functions_path)
+    for name in dirs_and_files:
+        full_path = os.path.join(functions_path, name)
+        if os.path.isfile(full_path):
+            file = open(full_path, "r")
+            function_name = name.replace(".py", "").replace("_", " ")
+            predefined_functions[function_name] = file.read()
+    return predefined_functions
+
+
+functions = get_predefined_functions()  # When user add his own custom function, this functions should be there
+
 
 class BoxFunction:
-    def __init__(self, name, code):
+    def __init__(self, name, code=None):
         self.name = name
-        self.code = code or functions.get(name)
+        if name in functions:
+            self.code: str = functions[name]
+        elif code is not None:
+            self.code: str = code
+        else:
+            raise ValueError("Should be specified function code or name of predefined function")
+        local = {}
+        exec(self.code, {}, local)
+        self.function = local["invoke"]
+        self.meta = local["meta"]
 
     def __call__(self, *args):
-        if callable(self.code):
-            return self.code(*args)
-        else:
-            function = {}
-            try:
-                exec(self.code, {}, function)
-                return function["invoke"](args)
-            except Exception as e:
-                print(f"Error executing code in '{self.name}':", e)
-                return None
+        return self.function(*args)
+
+    def count_inputs(self):
+        sig = signature(self.code)
+        params = sig.parameters
+        count = len(params)
+        if params["self"]:
+            count -= 1
+        return count
 
     def __str__(self):
         return self.name
 
 
 def test_box():
-    custom_code = """def call(*args):
+    custom_code = """def invoke(n, l, g, *args):
         return sum(args)
     """
-    function = {}
-    exec(custom_code, {}, function)
-
-    print(function["call"](3, 4, 5, 6))
-
-test_box()
+    function = BoxFunction("test", custom_code)
+    print(function.count_inputs())

@@ -6,6 +6,7 @@ from tkinter import messagebox as mb
 from PIL import Image
 
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.spider import Spider
@@ -151,6 +152,7 @@ class CustomCanvas(tk.Canvas):
                     self.copier.copy_canvas_contents(sub_diagram, selected_wires, selected_boxes,
                                                      selected_spiders, selected_coordinates, box)
                     box.lock_box()
+                    box.contain_sub_diagram = True
                     self.receiver.listener = prev_status
                     for w in list(filter(lambda wire_: (wire_ in self.wires), selected_wires)):
                         w.delete_self("sub_diagram")
@@ -229,6 +231,18 @@ class CustomCanvas(tk.Canvas):
         box = Box(self, *loc, self.receiver, size=size, id_=id_)
         self.boxes.append(box)
         return box
+
+    def get_box_by_id(self, box_id: int) -> Box | None:
+        for box in self.boxes:
+            if box.id == box_id:
+                return box
+        return None
+
+    def get_box_function(self, box_id) -> BoxFunction | None:
+        box = self.get_box_by_id(box_id)
+        if box:
+            return box.box_function
+        return None
 
     def add_spider(self, loc=(100, 100), id_=None):
         spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
