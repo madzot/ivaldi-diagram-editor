@@ -1,3 +1,6 @@
+from decorator import append
+
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.custom_canvas import CustomCanvas
 
 
@@ -23,7 +26,10 @@ class CodeGenerator:
         return "".join(code_parts.keys())
 
     @classmethod
-    def construct_main_function(cls, code_part: {str: [int]}, canvas) -> str:
+    def construct_main_function(cls, code_part: {str: [int]}, canvas: CustomCanvas) -> str:
+        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
+        first_nodes = [hypergraph.get_node_by_input(x) for x in hypergraph]
+        
         main_function = ""
 
         return ""
