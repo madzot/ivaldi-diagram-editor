@@ -56,10 +56,10 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.bind("<MouseWheel>", self.zoom)
-        self.bind("<Right>", self.pan_right)
-        self.bind("<Left>", self.pan_left)
-        self.bind("<Down>", self.pan_down)
-        self.bind("<Up>", self.pan_up)
+        self.bind("<Right>", self.pan_horizontal)
+        self.bind("<Left>", self.pan_horizontal)
+        self.bind("<Down>", self.pan_vertical)
+        self.bind("<Up>", self.pan_vertical)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -78,10 +78,10 @@ class CustomCanvas(tk.Canvas):
         box = Box(self, 0, 0, self.receiver)
         self.boxes.append(box)
 
-        c1 = Connection(None, None, "left", (0, 0), self, 0)
-        c2 = Connection(None, None, "left", (0, 0), self, 0)
-        c3 = Connection(None, None, "left", (0, 0), self, 0)
-        c4 = Connection(None, None, "left", (0, 0), self, 0)
+        c1 = Connection(None, None, "left", [0, 0], self, 0)
+        c2 = Connection(None, None, "left", [0, 0], self, 0)
+        c3 = Connection(None, None, "left", [0, 0], self, 0)
+        c4 = Connection(None, None, "left", [0, 0], self, 0)
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
@@ -96,112 +96,68 @@ class CustomCanvas(tk.Canvas):
         self.pan_history_y = 0
         self.pan_speed = 20
 
-    def pan_right(self, event):
+    def pan_horizontal(self, event):
+        if event.keysym == "Right":
+            multiplier = -1
+        else:
+            multiplier = 1
+
         for corner in self.corners:
-            next_location = (
-                corner.location[0] - self.pan_speed, corner.location[1]
-            )
+            next_location = [
+                corner.location[0] + multiplier * self.pan_speed,
+                corner.location[1]
+            ]
             if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
+                self.pan_speed = min(abs(1 - corner.location[0]), abs(self.winfo_width() - corner.location[0] - 1))
                 return
+
+        for connection in self.corners + self.inputs + self.outputs:
+            connection.location[0] = connection.location[0] + multiplier * self.pan_speed
+            self.coords(connection.circle,
+                        connection.location[0] - connection.r, connection.location[1] - connection.r,
+                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        self.move_boxes_spiders(True, multiplier)
+        self.pan_speed = 20
+
+    def pan_vertical(self, event):
+        if event.keysym == "Down":
+            multiplier = -1
+        else:
+            multiplier = 1
+
         for corner in self.corners:
-            corner.location = (corner.location[0] - self.pan_speed, corner.location[1])
-            self.coords(corner.circle, corner.location[0] - corner.r, corner.location[1] - corner.r, corner.location[0] + corner.r, corner.location[1] + corner.r)
+            next_location = [
+                corner.location[0], corner.location[1] + multiplier * self.pan_speed
+            ]
+            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
+                self.pan_speed = min(abs(1 - corner.location[1]), abs(self.winfo_height() - corner.location[1] - 1))
+                return
+
+        for connection in self.corners + self.inputs + self.outputs:
+            connection.location[1] = connection.location[1] + multiplier * self.pan_speed
+            self.coords(connection.circle,
+                        connection.location[0] - connection.r, connection.location[1] - connection.r,
+                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        self.move_boxes_spiders(False, multiplier)
+        self.pan_speed = 20
+
+    def move_boxes_spiders(self, is_horizontal, multiplier):
+        if is_horizontal:
+            attr = "x"
+            self.pan_history_x += multiplier * self.pan_speed
+        else:
+            attr = "y"
+            self.pan_history_y += multiplier * self.pan_speed
         for spider in self.spiders:
-            spider.x -= self.pan_speed
+            setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
             spider.move_to((spider.x, spider.y))
         for box in self.boxes:
-            box.x -= self.pan_speed
+            setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
             box.update_size(box.size[0], box.size[1])
-        for i_o in self.inputs + self.outputs:
-            i_o.location = (i_o.location[0] - self.pan_speed, i_o.location[1])
-            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
-                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
         for wire in self.wires:
             wire.update()
         if self.pulling_wire:
             self.temp_wire.update()
-        self.pan_history_x -= self.pan_speed
-
-    def pan_left(self, event):
-        for corner in self.corners:
-            next_location = (
-                corner.location[0] + self.pan_speed, corner.location[1]
-            )
-            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
-                return
-        for corner in self.corners:
-            corner.location = (corner.location[0] + self.pan_speed, corner.location[1])
-            self.coords(corner.circle, corner.location[0] - corner.r, corner.location[1] - corner.r, corner.location[0] + corner.r, corner.location[1] + corner.r)
-        for spider in self.spiders:
-            spider.x += self.pan_speed
-            spider.move_to((spider.x, spider.y))
-        for box in self.boxes:
-            box.x += self.pan_speed
-            box.update_size(box.size[0], box.size[1])
-        for i_o in self.inputs + self.outputs:
-            i_o.location = (i_o.location[0] + self.pan_speed, i_o.location[1])
-            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
-                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
-        for wire in self.wires:
-            wire.update()
-        if self.pulling_wire:
-            self.temp_wire.update()
-        self.pan_history_x += self.pan_speed
-
-
-    def pan_down(self, event):
-        for corner in self.corners:
-            next_location = (
-                corner.location[0], corner.location[1] - self.pan_speed
-            )
-            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
-                return
-        for corner in self.corners:
-            corner.location = (corner.location[0], corner.location[1] - self.pan_speed)
-            self.coords(corner.circle, corner.location[0] - corner.r, corner.location[1] - corner.r, corner.location[0] + corner.r, corner.location[1] + corner.r)
-        for spider in self.spiders:
-            spider.y -= self.pan_speed
-            spider.move_to((spider.x, spider.y))
-        for box in self.boxes:
-            box.y -= self.pan_speed
-            box.update_size(box.size[0], box.size[1])
-        for i_o in self.inputs + self.outputs:
-            i_o.location = (i_o.location[0], i_o.location[1] - self.pan_speed)
-            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
-                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
-        for wire in self.wires:
-            wire.update()
-        if self.pulling_wire:
-            self.temp_wire.update()
-        self.pan_history_y -= self.pan_speed
-
-
-    def pan_up(self, event):
-        for corner in self.corners:
-            next_location = (
-                corner.location[0], corner.location[1] + self.pan_speed
-            )
-            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
-                return
-        for corner in self.corners:
-            corner.location = (corner.location[0], corner.location[1] + self.pan_speed)
-            self.coords(corner.circle, corner.location[0] - corner.r, corner.location[1] - corner.r, corner.location[0] + corner.r, corner.location[1] + corner.r)
-        for spider in self.spiders:
-            spider.y += self.pan_speed
-            spider.move_to((spider.x, spider.y))
-        for box in self.boxes:
-            box.y += self.pan_speed
-            box.update_size(box.size[0], box.size[1])
-        for i_o in self.inputs + self.outputs:
-            i_o.location = (i_o.location[0], i_o.location[1] + self.pan_speed)
-            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
-                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
-        for wire in self.wires:
-            wire.update()
-        if self.pulling_wire:
-            self.temp_wire.update()
-        self.pan_history_y += self.pan_speed
-
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -228,13 +184,10 @@ class CustomCanvas(tk.Canvas):
             spider.move_to((spider.x, spider.y))
         for wire in self.wires:
             wire.update()
-        for i_o in self.inputs + self.outputs:
-            i_o.location = (i_o.location[0] - x_offset, i_o.location[1] - y_offset)
-            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
-                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
-        for corner in self.corners:
-            corner.location = (corner.location[0] - x_offset, corner.location[1] - y_offset)
-            self.coords(corner.circle, corner.location[0] - corner.r, corner.location[1] - corner.r, corner.location[0] + corner.r, corner.location[1] + corner.r)
+        for i_o_c in self.inputs + self.outputs + self.corners:
+            i_o_c.location = [i_o_c.location[0] - x_offset, i_o_c.location[1] - y_offset]
+            self.coords(i_o_c.circle, i_o_c.location[0] - i_o_c.r, i_o_c.location[1] - i_o_c.r,
+                        i_o_c.location[0] + i_o_c.r, i_o_c.location[1] + i_o_c.r)
         self.pan_history_x = 0
         self.pan_history_y = 0
 
@@ -261,27 +214,19 @@ class CustomCanvas(tk.Canvas):
             self.move_items(self.pan_history_x, self.pan_history_y)
 
         for corner in self.corners:
-            next_location = (
+            next_location = [
                 self.calculate_zoom_dif(event.x, corner.location[0], denominator),
                 self.calculate_zoom_dif(event.y, corner.location[1], denominator)
-            )
-            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
-                return
-
-        for corner in self.corners:
-            next_location = (
-                self.calculate_zoom_dif(event.x, corner.location[0], denominator),
-                self.calculate_zoom_dif(event.y, corner.location[1], denominator)
-            )
+            ]
             corner.location = next_location
             self.coords(corner.circle, next_location[0] - corner.r, corner.location[1] - corner.r,
                         corner.location[0] + corner.r, corner.location[1] + corner.r)
 
         for i_o in self.inputs + self.outputs:
-            i_o_location = (
+            i_o_location = [
                 self.calculate_zoom_dif(event.x, i_o.location[0], denominator),
                 self.calculate_zoom_dif(event.y, i_o.location[1], denominator)
-            )
+            ]
             i_o.r *= scale
             i_o.location = i_o_location
             self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
@@ -620,7 +565,7 @@ class CustomCanvas(tk.Canvas):
         output_index = max([o.index for o in self.outputs] + [0])
         if len(self.outputs) != 0:
             output_index += 1
-        connection_output_new = Connection(self.diagram_source_box, output_index, "left", (0, 0), self, id_=id_)
+        connection_output_new = Connection(self.diagram_source_box, output_index, "left", [0, 0], self, id_=id_)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -656,7 +601,7 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, "right", (0, 0), self, id_=id_)
+        new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self, id_=id_)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id)
