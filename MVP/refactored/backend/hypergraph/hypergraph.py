@@ -173,46 +173,43 @@ class Hypergraph(Node):
         return hypergraph_dict
 
     def visualize(self):
-        """Visualize the hypergraph using matplotlib and networkx."""
-        g = self._construct_graph()
-        pos = nx.spring_layout(g)
-        self._draw_graph(g, pos)
-
-    def _construct_graph(self):
-        """Construct the directed graph for the hypergraph using NetworkX."""
+        """Visualize the hypergraph using matplotlib and networkx, returning the figure."""
         g = nx.DiGraph()
         for node in self.nodes:
-            g.add_node(node.id, label=f"N_{node.id}")
+            g.add_node(node.id, label="N_" + str(node.id)[-6:])
             for output in node.outputs:
                 for other_node in self.nodes:
                     if output in other_node.inputs:
-                        g.add_edge(node.id, other_node.id, label=output)
+                        g.add_edge(node.id, other_node.id, label=str(output)[-6:])
+
         start_node_id = "input"
         g.add_node(start_node_id)
         for input_wire in self.inputs:
             for node in self.nodes:
                 if input_wire in node.inputs:
-                    g.add_edge(start_node_id, node.id, label=input_wire)
+                    g.add_edge(start_node_id, node.id, label=str(input_wire)[-6:])
+
         end_node_id = "output"
         g.add_node(end_node_id)
         for output_wire in self.outputs:
             for node in self.nodes:
                 if output_wire in node.outputs:
-                    g.add_edge(node.id, end_node_id, label=output_wire)
-        return g
+                    g.add_edge(node.id, end_node_id, label=str(output_wire)[-6:])
 
-    def _draw_graph(self, G, pos):
-        """Draw the graph using matplotlib."""
-        plt.figure(figsize=(10, 5))
-        nx.draw_networkx_nodes(G, pos, nodelist=[node.id for node in self.nodes],
+        fig, ax = plt.subplots(figsize=(10, 5))
+        pos = nx.spring_layout(g)
+
+        nx.draw_networkx_nodes(g, pos, ax=ax, nodelist=[node.id for node in self.nodes],
                                node_size=700, node_color='lightblue', alpha=0.8)
-        nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=20, edge_color="black")
-        edge_labels = {(u, v): d['label'] for u, v, d in G.edges(data=True)}
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
-        nx.draw_networkx_labels(G, pos, labels={n: G.nodes[n].get('label', n) for n in G.nodes()})
-        plt.title(f"Hypergraph ID: {self.id}")
-        plt.axis('off')
-        plt.show()
+        nx.draw_networkx_edges(g, pos, ax=ax, arrowstyle="->", arrowsize=20, edge_color="black")
+        edge_labels = {(u, v): d['label'] for u, v, d in g.edges(data=True)}
+        nx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels, ax=ax)
+        nx.draw_networkx_labels(g, pos, labels={n: g.nodes[n].get('label', n) for n in g.nodes()}, ax=ax)
+
+        ax.set_title(f"Hypergraph ID: {self.id}")
+        ax.axis('off')
+
+        return fig
 
     def __str__(self) -> str:
         """Return a string representation of the hypergraph."""
