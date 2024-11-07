@@ -1,12 +1,9 @@
 import tkinter as tk
-
-from tkinter import simpledialog
 from tkinter import filedialog
+from tkinter import simpledialog
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
-from MVP.refactored.connection import Connection
-from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
+from MVP.refactored.connection import Connection
 
 
 class Box:
@@ -45,7 +42,6 @@ class Box:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
-
         self.box_function = None
 
     def set_id(self, id_):
@@ -92,18 +88,32 @@ class Box:
     def add_function(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
         for name in functions:
-            menu.add_command(label=name, command=lambda x=name:self.set_function(x))
+            menu.add_command(label=name, command=lambda x=name: self.set_function(x))
         menu.add_command(label="Add custom function", command=self.show_add_custom_function_menu)
         menu.post(event.x_root, event.y_root)
 
     def show_add_custom_function_menu(self):
         file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
-                                           filetypes=(("Python script", "*.py"),))
+                                      filetypes=(("Python script", "*.py"),))
         if file:
-            self.box_function = BoxFunction(file.name, file.read())
+            self.set_function(file.name, file.read())
 
     def set_function(self, name, code=None):
         self.box_function = BoxFunction(name, code)
+
+    def count_inputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "left":
+                count += 1
+        return count
+
+    def count_outputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "right":
+                count += 1
+        return count
 
     def save_box_to_menu(self):
         if not self.label_text:
@@ -173,7 +183,7 @@ class Box:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
-                                            self.canvas, add_boxes)
+                                            self.canvas, add_boxes, self.id)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text

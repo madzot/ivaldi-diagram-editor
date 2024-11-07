@@ -5,11 +5,13 @@ from tkinter import ttk
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from MVP.refactored.backend.hypergraph.hypergraph_manage import Manage
+from MVP.refactored.backend.code_generator import CodeGenerator
+from MVP.refactored.backend.hypergraph.hypergraph import hypergraph_visualization
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.custom_canvas import CustomCanvas
-from MVP.refactored.modules.notations.hypergraph_notation.hypergraph_notation import HypergraphNotation
+from MVP.refactored.modules.notations.diagram_notation.diagram_notation import DiagramNotation
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
-from MVP.refactored.util.exporter import Exporter
+from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
 
 
@@ -42,7 +44,7 @@ class MainDiagram(tk.Tk):
         self.wm_minsize(screen_width_min, screen_height_min)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
-        self.exporter = Exporter(self.custom_canvas)
+        self.project_exporter = ProjectExporter(self.custom_canvas)
         self.importer = Importer(self.custom_canvas)
         # Add undefined box
         self.undefined_box_button = tk.Button(self.control_frame, text="Add Undefined Box",
@@ -80,7 +82,8 @@ class MainDiagram(tk.Tk):
         self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
 
         self.alg_not = tk.Button(self.control_frame, text="Visualize as graph",
-                                 command=self.visualize_as_graph, bg="light sea green", width=18)
+                                 command=lambda: self.visualize_as_graph(self.custom_canvas),
+                                 bg="light sea green", width=18)
         self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
 
         # Button for Draw Wire Mode
@@ -88,10 +91,16 @@ class MainDiagram(tk.Tk):
                                           command=self.custom_canvas.toggle_draw_wire_mode, bg="white", width=18)
         self.draw_wire_button.pack(side=tk.TOP, padx=5, pady=25)
 
+        self.generate_code_btn = tk.Button(self.control_frame, text="Generate code",
+                                           command=self.generate_code, bg="white", width=18)
+        self.generate_code_btn.pack(side=tk.TOP, padx=5, pady=5)
+
         # Bottom buttons
         buttons = {
+            "Generate code": self.generate_code,
             "Save project": self.save_to_file,
             "Save png": self.custom_canvas.save_as_png,
+            "Export hypergraph": self.custom_canvas.export_hypergraph,
             "Remove input": self.custom_canvas.remove_diagram_input,
             "Remove output": self.custom_canvas.remove_diagram_output,
             "Add input": self.custom_canvas.add_diagram_input,
@@ -106,6 +115,10 @@ class MainDiagram(tk.Tk):
         if load:
             self.load_from_file()
         self.mainloop()
+
+    def generate_code(self):
+        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)  # TODO if user in sub diagram, should use another canvas
+        print("-----------------------\ncode is: \n", code)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
@@ -141,18 +154,29 @@ class MainDiagram(tk.Tk):
                 copy_button = tk.Button(frame, text="Copy", command=lambda tb=text_box: self.copy_to_clipboard(tb))
                 copy_button.pack(pady=5)
 
-    def visualize_as_graph(self):
+    def visualize_as_graph(self, canvas):
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
-        hypergraph_notation = HypergraphNotation(self.custom_canvas.receiver.diagram)
+        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
+        if hypergraph is None:
+            messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
+            plot_window.destroy()
+            return
 
-        figure = hypergraph_notation.get_hypergraph_figure()
+        try:
+            figure = hypergraph.visualize()
+        except Exception as e:
+            print(f"Error during visualization: {e}")
+            messagebox.showerror("Error", "Failed to generate the visualization.")
+            plot_window.destroy()
+            return
 
-        # Embed the figure in the Tkinter window
-        canvas = FigureCanvasTkAgg(figure, master=plot_window)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        figure_canvas = FigureCanvasTkAgg(figure, master=plot_window)
+        figure_canvas.draw()
+        figure_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        plot_window.update_idletasks()
+        plot_window.deiconify()
 
     def copy_to_clipboard(self, text_box):
         self.clipboard_clear()  # Clear the clipboard
@@ -176,8 +200,10 @@ class MainDiagram(tk.Tk):
         # TODO figure out why this is needed! and change it!
         if not self.custom_canvas.diagram_source_box:
             buttons = {
+                "Generate code": self.generate_code,
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
+                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.custom_canvas.remove_diagram_input,
                 "Remove output": self.custom_canvas.remove_diagram_output,
                 "Add input": self.custom_canvas.add_diagram_input,
@@ -185,8 +211,10 @@ class MainDiagram(tk.Tk):
             }
         else:
             buttons = {
+                "Generate code": self.generate_code,
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
+                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.remove_diagram_input,
                 "Remove output": self.remove_diagram_output,
                 "Add input": self.add_diagram_input,
@@ -206,6 +234,9 @@ class MainDiagram(tk.Tk):
 
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
+
+    def get_canvas_by_id(self, canvas_id):
+        return self.canvasses[canvas_id]
 
     def change_canvas_name(self, canvas):
         self.tree.item(str(canvas.id), text=canvas.name_text)
@@ -332,7 +363,7 @@ class MainDiagram(tk.Tk):
             self.dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
 
     def remove_option(self, option):
-        self.exporter.del_box_menu_option(option)
+        self.project_exporter.del_box_menu_option(option)
         self.update_dropdown_menu()
 
     def get_boxes_from_file(self):
@@ -344,7 +375,7 @@ class MainDiagram(tk.Tk):
         self.importer.add_box_from_menu(canvas, name)
 
     def save_box_to_diagram_menu(self, box):
-        self.exporter.export_box_to_menu(box)
+        self.project_exporter.export_box_to_menu(box)
         self.update_dropdown_menu()
 
     def set_title(self, filename):
@@ -355,7 +386,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
-        filename = self.exporter.export()
+        filename = self.project_exporter.export()
         self.set_title(filename)
 
     def load_from_file(self):
