@@ -115,7 +115,7 @@ class MainDiagram(tk.Tk):
 
     def generate_code(self):
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)  # TODO if user in sub diagram, should use another canvas
-        print("code is: ", code)
+        print("-----------------------\ncode is: \n", code)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
