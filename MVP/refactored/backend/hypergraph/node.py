@@ -20,10 +20,14 @@ class Node:
         self.outputs = outputs
 
     def get_children(self):
+        module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")
+        HypergraphManager = getattr(module, "HypergraphManager")
         hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
         return hypergraph.get_node_children_by_node(self)
 
     def get_parents(self):
+        module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")
+        HypergraphManager = getattr(module, "HypergraphManager")
         hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
         return hypergraph.get_node_parents_by_node(self)
 
@@ -67,6 +71,14 @@ class Node:
         return (f"Node ID: {self.id}\n"
                 f"Inputs: {self.inputs}\n"
                 f"Outputs: {self.outputs}")
+
+    def __eq__(self, other):
+        if not isinstance(other, Node):
+            return False
+        return other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 def test_node_str():

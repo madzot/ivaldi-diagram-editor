@@ -15,16 +15,16 @@ def get_predefined_functions() -> dict:
     return predefined_functions
 
 
-functions = get_predefined_functions()
+functions = get_predefined_functions()  # When user add his own custom function, this functions should be there
 
 
 class BoxFunction:
     def __init__(self, name, code=None):
         self.name = name
         if name in functions:
-            self.code = functions[name]
+            self.code: str = functions[name]
         elif code is not None:
-            self.code = code
+            self.code: str = code
         else:
             raise ValueError("Should be specified function code or name of predefined function")
         local = {}
