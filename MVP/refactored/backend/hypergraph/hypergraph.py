@@ -23,6 +23,31 @@ class Hypergraph(Node):
         self.nodes.append(node)
         self.set_hypergraph_io()
 
+    def get_node_by_input(self, input_id: int):
+        for node in self.nodes:
+            if input_id in node.inputs:
+                return node
+
+    def get_node_children_by_id(self, node_id: int) -> list[Node]:
+        return self.get_node_children_by_node(self.get_node(node_id))
+
+    def get_node_children_by_node(self, required_node: Node) -> list[Node]:
+        children = []
+        for node in self.nodes:
+            if any(n in node.inputs for n in required_node.outputs): # If requiredNode outputs wire id contains another node inputs wire id
+                children.append(node)
+        return children
+
+    def get_node_parents_by_id(self, node_id: int) -> list[Node]:
+        return self.get_node_parents_by_node(self.get_node(node_id))
+
+    def get_node_parents_by_node(self, required_node: Node) -> list[Node]:
+        parents = []
+        for node in self.nodes:
+            if any(n in node.outputs for n in required_node.inputs):  # If requiredNode outputs wire id contains another node inputs wire id
+                parents.append(node)
+        return parents
+
     def add_nodes(self, nodes: [Node]) -> None:
         for node in nodes:
             self.add_node(node)
@@ -51,6 +76,7 @@ class Hypergraph(Node):
     def is_valid(self) -> bool:
         """Validate hypergraph structure by checking input/output consistency and cycles."""
         if not self.inputs or not self.outputs or not self.nodes:
+            print("Inputs, outputs, or nodes are empty")
             return False
 
         node_inputs = set()
@@ -58,6 +84,7 @@ class Hypergraph(Node):
 
         for node in self.nodes:
             if not node.is_valid():
+                print(f"Node {node.id} is not valid")
                 return False
 
             node_inputs.update(node.inputs)
@@ -66,17 +93,25 @@ class Hypergraph(Node):
         # Check if all node inputs are either in hypergraph inputs or match any node's outputs
         invalid_inputs = node_inputs - set(self.inputs) - node_outputs
         if invalid_inputs:
+            print(f"Invalid inputs: {invalid_inputs}")
             return False
 
         # Check if all node outputs are either in hypergraph outputs or match any node's inputs
         invalid_outputs = node_outputs - set(self.outputs) - node_inputs
         if invalid_outputs:
+            print(f"Invalid outputs: {invalid_outputs}")
             return False
 
         if not self.is_connected():
+            print("Hypergraph is not connected")
             return False
 
-        return self.has_no_cycles()
+        has_no_cycles = self.has_no_cycles()
+        if not has_no_cycles:
+            print("Hypergraph has cycles")
+            return False
+
+        return True
 
     def is_connected(self) -> bool:
         """Check if the hypergraph is connected by verifying all nodes are reachable from an arbitrary starting node."""
@@ -91,11 +126,15 @@ class Hypergraph(Node):
             return
         visited.add(node)
 
-        for output in node.outputs:
+        for node_output in node.outputs:
             for other_node in self.nodes:
-                if output in other_node.inputs and other_node not in visited:
+                if node_output in other_node.inputs and other_node not in visited:
                     self.explore_connected(other_node, visited)
 
+        for node_input in node.inputs:
+            for other_node in self.nodes:
+                if node_input in other_node.outputs and other_node not in visited:
+                    self.explore_connected(other_node, visited)
 
     def has_no_cycles(self) -> bool:
         """Check if the hypergraph has no cycles."""
@@ -135,32 +174,32 @@ class Hypergraph(Node):
 
     def visualize(self):
         """Visualize the hypergraph using matplotlib and networkx."""
-        G = self._construct_graph()
-        pos = nx.spring_layout(G)
-        self._draw_graph(G, pos)
+        g = self._construct_graph()
+        pos = nx.spring_layout(g)
+        self._draw_graph(g, pos)
 
     def _construct_graph(self):
         """Construct the directed graph for the hypergraph using NetworkX."""
-        G = nx.DiGraph()
+        g = nx.DiGraph()
         for node in self.nodes:
-            G.add_node(node.id, label=f"N_{node.id}")
+            g.add_node(node.id, label=f"N_{node.id}")
             for output in node.outputs:
                 for other_node in self.nodes:
                     if output in other_node.inputs:
-                        G.add_edge(node.id, other_node.id, label=output)
+                        g.add_edge(node.id, other_node.id, label=output)
         start_node_id = "input"
-        G.add_node(start_node_id)
+        g.add_node(start_node_id)
         for input_wire in self.inputs:
             for node in self.nodes:
                 if input_wire in node.inputs:
-                    G.add_edge(start_node_id, node.id, label=input_wire)
+                    g.add_edge(start_node_id, node.id, label=input_wire)
         end_node_id = "output"
-        G.add_node(end_node_id)
+        g.add_node(end_node_id)
         for output_wire in self.outputs:
             for node in self.nodes:
                 if output_wire in node.outputs:
-                    G.add_edge(node.id, end_node_id, label=output_wire)
-        return G
+                    g.add_edge(node.id, end_node_id, label=output_wire)
+        return g
 
     def _draw_graph(self, G, pos):
         """Draw the graph using matplotlib."""
@@ -189,13 +228,16 @@ class Hypergraph(Node):
                 f"Nodes:\n{nodes_str}")
 
 
-def test_hypergraph_visualization():
-    node1 = Node(node_id=0, inputs=[0], outputs=[1, 2])
-    node2 = Node(node_id=1, inputs=[1], outputs=[3])
-    node3 = Node(node_id=2, inputs=[2], outputs=[4])
-    node4 = Node(node_id=3, inputs=[3, 4], outputs=[5])
+def hypergraph_visualization():
+    node2 = Node(node_id=1, inputs=[1, 2], outputs=[5])
+    node3 = Node(node_id=2, inputs=[3, 4], outputs=[6])
+    node4 = Node(node_id=3, inputs=[5, 6], outputs=[7])
+    node1 = Node(node_id=4, inputs=[7], outputs=[8])
 
     hypergraph = Hypergraph(hypergraph_id=103, nodes=[node1, node2, node3, node4])
 
-    print(str(hypergraph))
-    hypergraph.visualize()
+    result = hypergraph.is_connected()
+    print(result)
+
+
+hypergraph_visualization()

@@ -1,10 +1,7 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
-
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.node import Node
-
 if TYPE_CHECKING:
     from MVP.refactored.custom_canvas import CustomCanvas
 
@@ -13,8 +10,17 @@ class HypergraphManager:
 
     hypergraphs: list[Hypergraph] = []
 
+
     @staticmethod
-    def get_graph_by_id(hypergraph_id: int) -> Hypergraph|None:
+    def get_graph_by_node_id(node_id: int) -> Hypergraph | None:
+        for hypergraph in HypergraphManager.hypergraphs:
+            for node in hypergraph.nodes:
+                if node.id == node_id:
+                    return hypergraph
+        return None
+
+    @staticmethod
+    def get_graph_by_id(hypergraph_id: int) -> Hypergraph | None:
         for graph in HypergraphManager.hypergraphs:
             if graph.id == hypergraph_id:
                 return graph

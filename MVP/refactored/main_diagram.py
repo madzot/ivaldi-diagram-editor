@@ -5,6 +5,7 @@ from tkinter import ttk
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from MVP.refactored.backend.code_generator import CodeGenerator
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.hypergraph_notation.hypergraph_notation import HypergraphNotation
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
@@ -87,8 +88,13 @@ class MainDiagram(tk.Tk):
                                           command=self.custom_canvas.toggle_draw_wire_mode, bg="white", width=18)
         self.draw_wire_button.pack(side=tk.TOP, padx=5, pady=25)
 
+        self.generate_code_btn = tk.Button(self.control_frame, text="Generate code",
+                                           command=self.generate_code, bg="white", width=18)
+        self.generate_code_btn.pack(side=tk.TOP, padx=5, pady=5)
+
         # Bottom buttons
         buttons = {
+            "Generate code": self.generate_code,
             "Save project": self.save_to_file,
             "Save png": self.custom_canvas.save_as_png,
             "Export hypergraph": self.custom_canvas.export_hypergraph,
@@ -106,6 +112,10 @@ class MainDiagram(tk.Tk):
         if load:
             self.load_from_file()
         self.mainloop()
+
+    def generate_code(self):
+        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)  # TODO if user in sub diagram, should use another canvas
+        print("-----------------------\ncode is: \n", code)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
@@ -176,6 +186,7 @@ class MainDiagram(tk.Tk):
         # TODO figure out why this is needed! and change it!
         if not self.custom_canvas.diagram_source_box:
             buttons = {
+                "Generate code": self.generate_code,
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
                 "Export hypergraph": self.custom_canvas.export_hypergraph,
@@ -186,6 +197,7 @@ class MainDiagram(tk.Tk):
             }
         else:
             buttons = {
+                "Generate code": self.generate_code,
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
                 "Export hypergraph": self.custom_canvas.export_hypergraph,
@@ -208,6 +220,9 @@ class MainDiagram(tk.Tk):
 
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
+
+    def get_canvas_by_id(self, canvas_id):
+        return self.canvasses[canvas_id]
 
     def change_canvas_name(self, canvas):
         self.tree.item(str(canvas.id), text=canvas.name_text)

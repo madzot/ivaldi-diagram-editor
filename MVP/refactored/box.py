@@ -42,7 +42,6 @@ class Box:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
-
         self.box_function = None
 
     def set_id(self, id_):
@@ -89,18 +88,32 @@ class Box:
     def add_function(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
         for name in functions:
-            menu.add_command(label=name, command=lambda x=name:self.set_function(x))
+            menu.add_command(label=name, command=lambda x=name: self.set_function(x))
         menu.add_command(label="Add custom function", command=self.show_add_custom_function_menu)
         menu.post(event.x_root, event.y_root)
 
     def show_add_custom_function_menu(self):
         file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
-                                           filetypes=(("Python script", "*.py"),))
+                                      filetypes=(("Python script", "*.py"),))
         if file:
-            self.box_function = BoxFunction(file.name, file.read())
+            self.set_function(file.name, file.read())
 
     def set_function(self, name, code=None):
         self.box_function = BoxFunction(name, code)
+
+    def count_inputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "left":
+                count += 1
+        return count
+
+    def count_outputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "right":
+                count += 1
+        return count
 
     def save_box_to_menu(self):
         if not self.label_text:
