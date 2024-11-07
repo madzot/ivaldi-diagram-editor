@@ -173,7 +173,6 @@ class Hypergraph(Node):
         return hypergraph_dict
 
     def visualize(self):
-        """Visualize the hypergraph using matplotlib and networkx."""
         g = self._construct_graph()
         pos = nx.spring_layout(g)
         self._draw_graph(g, pos)
