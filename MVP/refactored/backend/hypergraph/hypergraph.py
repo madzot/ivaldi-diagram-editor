@@ -112,7 +112,6 @@ class Hypergraph(Node):
 
 
 def test_hypergraph_str():
-    # Create sample nodes
     node1 = Node(node_id=0, inputs=[0], outputs=[1, 2])
     node2 = Node(node_id=1, inputs=[1], outputs=[3])
     node3 = Node(node_id=2, inputs=[2], outputs=[4])
