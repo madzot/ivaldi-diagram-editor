@@ -119,6 +119,7 @@ class CustomCanvas(tk.Canvas):
             self.zoom_history.append((event.x, event.y))
         else:
             if len(self.zoom_history) == 0:
+                self.total_scale = self.prev_scale
                 return
             denominator = 4 / 3
             event.x, event.y = self.zoom_history.pop()
@@ -166,6 +167,7 @@ class CustomCanvas(tk.Canvas):
         for wire in self.wires:
             wire.wire_width *= scale
             wire.update()
+        self.update_inputs_outputs()
         self.configure(scrollregion=self.bbox('all'))
 
     def close_menu(self):
@@ -406,19 +408,19 @@ class CustomCanvas(tk.Canvas):
         self.corners[3].move_to([self.winfo_width(), self.winfo_height()])
 
     def update_inputs_outputs(self):
-        x = self.winfo_width()
-        y = self.winfo_height()
+        x = self.corners[3].location[0]
+        y = self.corners[3].location[1]
         output_index = max([o.index for o in self.outputs] + [0])
         for o in self.outputs:
             i = o.index
             step = y / (output_index + 2)
-            o.move_to((x - 7, step * (i + 1)))
+            o.move_to([x - 7, step * (i + 1)])
 
         input_index = max([o.index for o in self.inputs] + [0])
         for o in self.inputs:
             i = o.index
             step = y / (input_index + 2)
-            o.move_to((6, step * (i + 1)))
+            o.move_to([6 + self.corners[0].location[0], step * (i + 1)])
         [w.update() for w in self.wires]
 
     def delete_everything(self):
@@ -483,7 +485,7 @@ class CustomCanvas(tk.Canvas):
         output_index = max([o.index for o in self.outputs] + [0])
         if len(self.outputs) != 0:
             output_index += 1
-        connection_output_new = Connection(self.diagram_source_box, output_index, "left", (0, 0), self, id_=id_)
+        connection_output_new = Connection(self.diagram_source_box, output_index, "left", [0, 0], self, r=5*self.total_scale, id_=id_)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -519,7 +521,7 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, "right", (0, 0), self, id_=id_)
+        new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self, r=5*self.total_scale, id_=id_)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id)
