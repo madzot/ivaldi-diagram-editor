@@ -154,6 +154,7 @@ class CustomCanvas(tk.Canvas):
             box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
             box.y = self.calculate_zoom_dif(event.y, box.y, denominator)
             box.update_size(box.size[0] * scale, box.size[1] * scale)
+            box.move_label()
 
         for spider in self.spiders:
             spider.x = self.calculate_zoom_dif(event.x, spider.x, denominator)
