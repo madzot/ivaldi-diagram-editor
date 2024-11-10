@@ -52,19 +52,20 @@ class CodeEditor:
             anchor=tk.E
         )
 
-        param_string = ""
-        return_string = "    return "
+        param_list = []
+        return_list = []
         input_count = 0
         output_count = 0
         for i in self.box.connections:
             if i.side == "left":
-                param_string += f"x{input_count}"
+                param_list.append(f"x{input_count}")
                 input_count += 1
             else:
-                return_string += f"y{output_count}"
+                return_list.append(f"y{output_count}")
                 output_count += 1
 
-        text = f"def {self.box.label_text}({param_string}):\n{return_string}"
+        text = (f"def {self.box.label_text}{tuple(param_list)}:\n"
+                f"    return {tuple(return_list)}")
         if self.box.label_text in self.box.canvas.master.label_content.keys():
             text = self.box.canvas.master.label_content[self.box.label_text]
 
