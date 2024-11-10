@@ -52,7 +52,19 @@ class CodeEditor:
             anchor=tk.E
         )
 
-        text = ""
+        param_string = ""
+        return_string = "    return "
+        input_count = 0
+        output_count = 0
+        for i in self.box.connections:
+            if i.side == "left":
+                param_string += f"x{input_count}"
+                input_count += 1
+            else:
+                return_string += f"y{output_count}"
+                output_count += 1
+
+        text = f"def {self.box.label_text}({param_string}):\n{return_string}"
         if self.box.label_text in self.box.canvas.master.label_content.keys():
             text = self.box.canvas.master.label_content[self.box.label_text]
 
