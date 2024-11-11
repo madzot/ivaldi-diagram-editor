@@ -2,18 +2,17 @@ import re
 from queue import Queue
 from io import StringIO
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.code_generation.renamer import Renamer
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.custom_canvas import CustomCanvas
-
 
 class CodeGenerator:
 
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
-        file_content = ""
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
-        file_content += cls.get_imports([f.code for f in code_parts.keys()]) + "\n"
+        file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n"
 
         return file_content
 

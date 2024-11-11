@@ -48,6 +48,9 @@ class BoxFunction:
             return self.code == other.code  # potentially can be very time expensive
         return False
 
+    def __hash__(self):
+        return hash(self.code)
+
     def __str__(self):
         return self.name
 
