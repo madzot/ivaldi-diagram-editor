@@ -7,17 +7,33 @@ from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManag
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.custom_canvas import CustomCanvas
 
-class CodeGenerator:
 
+class CodeGenerator: # TODO get_result, and remove extra spaces
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
         file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n"
 
+        box_functions: dict[BoxFunction, set[str]] = {}
+
+        for box_function in code_parts.keys():
+            renamer = Renamer()
+            variables = set()
+            variables.update(renamer.find_globals(box_function.code))
+            variables.update(renamer.find_function_names(box_function.code))
+            box_functions[box_function] = variables
+
+        function_list = cls.rename(box_functions)
+        function_list = cls.remove_meta(function_list)
+        function_list = cls.remove_imports(function_list)
+
+        file_content += "\n".join(function_list)
+
         return file_content
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[BoxFunction, list[int]]:
+    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[
+        BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         for box in canvas.boxes:
             if str(box.id) in canvasses:
@@ -40,14 +56,42 @@ class CodeGenerator:
         return "\n".join(imports)
 
     @classmethod
-    def get_functions_definitions(cls):
-        ...
+    def rename(cls, names: dict[BoxFunction, set[str]]) -> list[str]:
+        renamed_code_parts: list[str] = list()
+        for i, (box_function, names) in enumerate(names.items()):
+            renamer = Renamer()
+            code_part = box_function.code
+            for name in names:
+                if name == "meta":
+                    continue
+                new_name = f'{name}_{i}'
+                code_part = renamer.refactor_code(code_part, name, new_name)
+            renamed_code_parts.append(code_part)
+        return renamed_code_parts
 
-    def rename_global_variables(cls):
-        ...
+    @classmethod
+    def remove_imports(cls, code_parts: list[str]) -> list[str]:
+        regex = r"(^import .+)|(^from .+)"
+        regex2 = r"^\n+"
+        result = []
 
-    def rename_methods(cls):
-        ...
+        for part in code_parts:
+            cleaned_part = re.sub(regex, "", part, flags=re.MULTILINE)
+            cleaned_part = re.sub(regex2, "", cleaned_part)
+            result.append(cleaned_part)
+        return result
+
+    @classmethod
+    def remove_meta(cls, code_parts: list[str]) -> list[str]:
+        regex = r"^meta\s=\s{[\s\S]+?}"
+        regex2 = r"^\n+"
+        result = []
+
+        for part in code_parts:
+            cleaned_part = re.sub(regex, "", part, flags=re.MULTILINE)
+            cleaned_part = re.sub(regex2, "", cleaned_part)
+            result.append(cleaned_part)
+        return result
 
     @classmethod
     def get_all_methods_code(cls, code_part: dict[BoxFunction, list[int]]) -> dict[tuple[int], str]:
@@ -64,15 +108,6 @@ class CodeGenerator:
 
     @classmethod
     def construct_main_function(cls, code_part: dict[tuple[int], str], canvas: CustomCanvas) -> str:
-        """
-        Build the main function that calls each box function.
-        This method creates a `get_result` function that calls box functions in order based on the node dependencies.
-        Args:
-            code_part: A dictionary with box IDs and their function code.
-            canvas: The main canvas with nodes.
-        Returns:
-            str: The code for the `get_result` function.
-        """
         nodes_queue = Queue()
         main_function = StringIO()
         main_function.write("def get_result():\n\t")
@@ -129,3 +164,19 @@ class CodeGenerator:
                     children.add(node_child)
 
         return children
+
+# TODO check
+
+#     """
+#     def copy():
+#
+#     def fac(n):
+#         return fac(n - 1)....
+#         _________
+#
+#     def sum():
+#
+#     def fac(m):
+#         return fac(m - 1)....
+#
+#     """
