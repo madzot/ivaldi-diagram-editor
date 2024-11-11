@@ -3,7 +3,9 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
-from PIL import Image
+import ttkbootstrap as ttk
+from PIL import Image, ImageTk
+from ttkbootstrap.constants import *
 
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
@@ -11,7 +13,6 @@ from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.wire import Wire
-from ttkbootstrap.constants import *
 
 
 class CustomCanvas(tk.Canvas):
@@ -19,7 +20,7 @@ class CustomCanvas(tk.Canvas):
         super().__init__(master, **kwargs)
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
-        self.configure(bg='black', width=screen_width_min, height=screen_height_min, highlightthickness=20, highlightcolor="black")
+        self.configure(bg='white', width=screen_width_min, height=screen_height_min)
 
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
@@ -65,6 +66,14 @@ class CustomCanvas(tk.Canvas):
                     self.add_diagram_output()
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
+
+        self.tree_logo = (Image.open("../../file-tree-outline.png"))
+        self.tree_logo = self.tree_logo.resize((20, 15))
+        self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
+
+        button = ttk.Button(self, image=self.tree_logo,
+                            command=lambda: self.master.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
+        button.place(relx=0.02, rely=0.025, anchor=tk.CENTER)
         self.columns = {}
 
     def handle_right_click(self, event):
@@ -251,7 +260,7 @@ class CustomCanvas(tk.Canvas):
             if self.quick_pull:
                 self.quick_pull = False
                 self.draw_wire_mode = False
-                self.main_diagram.draw_wire_button.config(bg="white")
+                self.main_diagram.draw_wire_button.config(bootstyle=(PRIMARY, OUTLINE))
 
     def nullify_wire_start(self):
         if self.current_wire_start:
