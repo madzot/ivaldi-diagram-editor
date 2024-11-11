@@ -10,61 +10,50 @@ from MVP.refactored.custom_canvas import CustomCanvas
 class CodeGenerator:
 
     @classmethod
-    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], processed_canvases=None) -> str:
-        """
-        Generate code for the boxes on the canvas and save it to 'diagram.py'.
-        This method creates code for each box and writes it to a file, avoiding duplicates.
-        The code includes a main function to execute all box functions.
-        Args:
-            canvas: The main canvas to generate code from.
-            canvasses: A dictionary of canvas IDs and corresponding canvasses.
-            processed_canvases: A set of processed canvasses to avoid duplication.
-        Returns:
-            str: The generated code as a string.
-        """
-        if processed_canvases is None:
-            processed_canvases = set()
-
-        processed_canvases.add(canvas.id)
-        code_parts: dict[BoxFunction, list[int]] = {}
+    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
         file_content = ""
-
-        for box in canvas.boxes:
-            box_function = box.box_function
-
-            if box.id in processed_canvases:
-                continue
-
-            if canvasses.get(str(box.id)) is None:
-                if box_function not in code_parts.keys():
-                    code_parts[box_function] = [box.id]
-                else:
-                    code_parts[box_function].append(box.id)
-            else:
-                sub_canvas: CustomCanvas = canvasses[str(box.id)]
-                return cls.generate_code(sub_canvas, canvasses, processed_canvases)
-
-        all_methods_code = cls.get_all_methods_code(code_parts)  # dict
-        main_function = cls.construct_main_function(all_methods_code, canvas)  # str
-
-        file_content += "".join(all_methods_code.values())
-        file_content += "\n" + main_function
-
-        with open("diagram.py", "w") as file:
-            file.write(file_content)
+        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
+        file_content += cls.get_imports([f.code for f in code_parts.keys()]) + "\n"
 
         return file_content
 
     @classmethod
+    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[
+        BoxFunction, list[int]]:
+        code_parts: dict[BoxFunction, list[int]] = dict()
+        for box in canvas.boxes:
+            if str(box.id) in canvasses:
+                code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses))
+            else:
+                if box.box_function in code_parts:
+                    code_parts[box.box_function].append(box.id)
+                else:
+                    code_parts[box.box_function] = [box.id]
+        return code_parts
+
+    @classmethod
+    def get_imports(cls, code_parts: list[str]) -> str:
+        regex = r"(^import .+)|(^from .+)"
+        imports = set()
+        for part in code_parts:
+            code_imports = re.finditer(regex, part, re.MULTILINE)
+            for code_import in code_imports:
+                imports.add(code_import.group())
+        return "\n".join(imports)
+
+    @classmethod
+    def get_functions_definitions(cls):
+        ...
+
+    def rename_global_variables(cls):
+        ...
+
+    def rename_methods(cls):
+        ...
+
+    @classmethod
     def get_all_methods_code(cls, code_part: dict[BoxFunction, list[int]]) -> dict[tuple[int], str]:
-        """
-        Create a dictionary with box IDs and their function code.
-        This method updates the code by using the box's function name and stores it in a dictionary.
-        Args:
-            code_part: A dictionary of box functions and box IDs.
-        Returns:
-            dict: A dictionary of box IDs and their function code as strings.
-        """
+        # check
         all_methods_code: dict[tuple[int], str] = dict()
 
         for function, box_ids in code_part.items():
