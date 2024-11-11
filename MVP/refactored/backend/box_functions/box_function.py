@@ -43,6 +43,11 @@ class BoxFunction:
             count -= 1
         return count
 
+    def __eq__(self, other):
+        if isinstance(other, BoxFunction):
+            return self.code == other.code  # potentially can be very time expensive
+        return False
+
     def __str__(self):
         return self.name
 

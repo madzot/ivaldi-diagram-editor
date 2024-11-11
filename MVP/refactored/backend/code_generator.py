@@ -18,8 +18,7 @@ class CodeGenerator:
         return file_content
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[
-        BoxFunction, list[int]]:
+    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         for box in canvas.boxes:
             if str(box.id) in canvasses:
