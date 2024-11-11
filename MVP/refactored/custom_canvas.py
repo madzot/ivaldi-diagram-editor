@@ -11,6 +11,7 @@ from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.wire import Wire
+from ttkbootstrap.constants import *
 
 
 class CustomCanvas(tk.Canvas):
@@ -18,7 +19,7 @@ class CustomCanvas(tk.Canvas):
         super().__init__(master, **kwargs)
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
-        self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+        self.configure(bg='black', width=screen_width_min, height=screen_height_min, highlightthickness=20, highlightcolor="black")
 
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
@@ -293,11 +294,11 @@ class CustomCanvas(tk.Canvas):
             for item in self.selector.selected_items:
                 item.deselect()
             self.selector.selected_items.clear()
-            self.main_diagram.draw_wire_button.config(bg="lightgreen")
+            self.main_diagram.draw_wire_button.config(bootstyle=SUCCESS)
         else:
             self.nullify_wire_start()
             self.cancel_wire_pulling()
-            self.main_diagram.draw_wire_button.config(bg="white")
+            self.main_diagram.draw_wire_button.config(bootstyle=(PRIMARY, OUTLINE))
 
     # RESIZE/UPDATE
     def on_canvas_resize(self, _):

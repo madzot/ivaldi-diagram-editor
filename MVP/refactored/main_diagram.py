@@ -2,12 +2,14 @@ import hashlib
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
-from tkinter import ttk
+# from tkinter import ttk
+import ttkbootstrap as ttk
 
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter import Exporter
 from MVP.refactored.util.importer import Importer
+from ttkbootstrap.constants import *
 
 
 class MainDiagram(tk.Tk):
@@ -20,7 +22,7 @@ class MainDiagram(tk.Tk):
         screen_height_min = round(self.winfo_screenheight() / 1.5)
 
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False, width=screen_width_min,
-                                          height=screen_height_min, bg="white", highlightthickness=0)
+                                          height=screen_height_min, bg="white")
         self.custom_canvas.focus_set()
 
         self.tree = ttk.Treeview(self)
@@ -43,50 +45,49 @@ class MainDiagram(tk.Tk):
         self.exporter = Exporter(self.custom_canvas)
         self.importer = Importer(self.custom_canvas)
         # Add undefined box
-        self.undefined_box_button = tk.Button(self.control_frame, text="Add Undefined Box",
-                                              command=self.custom_canvas.add_box, bg="white", width=18)
+        self.undefined_box_button = ttk.Button(self.control_frame, text="Add Undefined Box",
+                                               command=self.custom_canvas.add_box, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
 
         self.boxes = {}
         self.quick_create_boxes = []
 
         # Create Menubutton and Menu for dropdown
-        self.dropdown_button = tk.Menubutton(self.control_frame, text="Select Box to Add", relief="raised")
-        self.dropdown_menu = tk.Menu(self.dropdown_button, tearoff=0)
+        self.dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box to Add", width=16, bootstyle=(PRIMARY, OUTLINE))
+        self.dropdown_menu = ttk.Menu(self.dropdown_button, tearoff=0)
         self.dropdown_button.config(menu=self.dropdown_menu)
         self.dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
-        self.dropdown_button.config(width=20, background="white")
         self.update_dropdown_menu()
 
-        self.manage_boxes = tk.Button(self.control_frame, text="Manage Boxes",
-                                      command=self.manage_boxes_method, bg="white", width=18)
+        self.manage_boxes = ttk.Button(self.control_frame, text="Manage Boxes",
+                                      command=self.manage_boxes_method, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.manage_boxes.pack(side=tk.TOP, padx=5, pady=5)
 
         self.quick_create_booleans = []
         self.get_boxes_from_file()
-        self.manage_quick_create = tk.Button(self.control_frame, text="Manage Quick Create",
-                                             command=self.manage_quick_create, bg="white", width=18)
+        self.manage_quick_create = ttk.Button(self.control_frame, text="Manage Quick Create",
+                                             command=self.manage_quick_create, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.manage_quick_create.pack(side=tk.TOP, padx=5, pady=5)
         # Add Spider
-        self.spider_box = tk.Button(self.control_frame, text="Add Spider",
-                                    command=self.custom_canvas.add_spider, bg="white", width=18)
+        self.spider_box = ttk.Button(self.control_frame, text="Add Spider",
+                                    command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.spider_box.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.rename = tk.Button(self.control_frame, text="Rename Diagram",
-                                command=self.rename, bg="white", width=18)
+        self.rename = ttk.Button(self.control_frame, text="Rename Diagram",
+                                command=self.rename, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.rename.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.random = tk.Button(self.control_frame, text="Connect At Random",
-                                command=self.custom_canvas.random, bg="white", width=18)
+        self.random = ttk.Button(self.control_frame, text="Connect At Random",
+                                command=self.custom_canvas.random, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.random.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.alg_not = tk.Button(self.control_frame, text="Get Algebraic Notation",
-                                 command=self.create_algebraic_notation, bg="white", width=18)
+        self.alg_not = ttk.Button(self.control_frame, text="Get Algebraic Notation",
+                                 command=self.create_algebraic_notation, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
 
         # Button for Draw Wire Mode
-        self.draw_wire_button = tk.Button(self.control_frame, text="Draw Wire Mode",
-                                          command=self.custom_canvas.toggle_draw_wire_mode, bg="white", width=18)
+        self.draw_wire_button = ttk.Button(self.control_frame, text="Draw Wire Mode",
+                                          command=self.custom_canvas.toggle_draw_wire_mode, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.draw_wire_button.pack(side=tk.TOP, padx=5, pady=25)
 
         # Bottom buttons
@@ -100,7 +101,7 @@ class MainDiagram(tk.Tk):
         }
         self.saved_buttons = {}
         for name, method in buttons.items():
-            button = tk.Button(self.control_frame, text=name, command=method, bg="white", width=18)
+            button = ttk.Button(self.control_frame, text=name, command=method, width=20, bootstyle=(PRIMARY, OUTLINE))
             button.pack(side=tk.BOTTOM, padx=5, pady=5)
             self.saved_buttons[name] = button
 
