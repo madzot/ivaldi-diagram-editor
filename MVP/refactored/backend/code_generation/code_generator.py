@@ -3,6 +3,7 @@ from queue import Queue
 from io import StringIO
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.code_generation.renamer import Renamer
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.custom_canvas import CustomCanvas
@@ -16,7 +17,7 @@ class CodeGenerator: # TODO get_result, and remove extra spaces
 
         box_functions: dict[BoxFunction, set[str]] = {}
 
-        for box_function in code_parts.keys():
+        for box_function in code_parts.keys():  # get all variables of code
             renamer = Renamer()
             variables = set()
             variables.update(renamer.find_globals(box_function.code))
@@ -32,8 +33,7 @@ class CodeGenerator: # TODO get_result, and remove extra spaces
         return file_content
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[
-        BoxFunction, list[int]]:
+    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         for box in canvas.boxes:
             if str(box.id) in canvasses:

@@ -23,10 +23,11 @@ class Hypergraph(Node):
         self.nodes.append(node)
         self.set_hypergraph_io()
 
-    def get_node_by_input(self, input_id: int):
+    def get_node_by_input(self, input_id: int) -> Node|None:
         for node in self.nodes:
             if input_id in node.inputs:
                 return node
+        return None
 
     def get_node_children_by_id(self, node_id: int) -> list[Node]:
         return self.get_node_children_by_node(self.get_node(node_id))
