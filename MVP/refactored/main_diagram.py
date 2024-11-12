@@ -47,6 +47,13 @@ class MainDiagram(tk.Tk):
                                               command=self.custom_canvas.add_box, bg="white", width=18)
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
 
+        self.shape_dropdown_button = tk.Menubutton(self.control_frame, text="Select Shape", relief="raised")
+        self.dropdown_menu = tk.Menu(self.shape_dropdown_button, tearoff=0)
+        self.shape_dropdown_button.config(menu=self.dropdown_menu)
+        self.shape_dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.shape_dropdown_button.config(width=20, background="white")
+        self.update_shape_dropdown_menu()
+
         self.boxes = {}
         self.quick_create_boxes = []
 
@@ -396,3 +403,11 @@ class MainDiagram(tk.Tk):
         filename = self.importer.import_diagram()
         if filename:
             self.set_title(filename.replace(".json", ""))
+
+    def update_shape_dropdown_menu(self):
+        shapes = ["rectangle", "triangle"]
+        self.dropdown_menu.delete(0, tk.END)  # Clear the existing menu
+
+        for shape in shapes:
+            self.dropdown_menu.add_command(label=shape,
+                                           command=lambda s=shape: self.custom_canvas.change_box_shape(s))

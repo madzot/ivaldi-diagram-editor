@@ -414,12 +414,12 @@ class Box:
         self.update_wires()
 
     def update_position(self):
-        if len(self.canvas.coords(self.rect)) == 4:
+        if self.shape == "rectangle":
             self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
-        else:
+        if self.shape == "triangle":
             self.canvas.coords(self.rect,
-                               self.x + self.size[0], self.y + self.size[1] / 2,  # Right point
-                               self.x, self.y,  # Top left point
+                               self.x + self.size[0], self.y + self.size[1] / 2,
+                               self.x, self.y,
                                self.x, self.y + self.size[1])
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                            self.x + self.size[0], self.y + self.size[1])
