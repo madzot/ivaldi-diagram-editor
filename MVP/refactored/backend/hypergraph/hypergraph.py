@@ -29,6 +29,12 @@ class Hypergraph(Node):
                 return node
         return None
 
+    def get_node_by_output(self, output_id: int) -> Node|None:
+        for node in self.nodes:
+            if output_id in node.outputs:
+                return node
+        return None
+
     def get_node_children_by_id(self, node_id: int) -> list[Node]:
         return self.get_node_children_by_node(self.get_node(node_id))
 

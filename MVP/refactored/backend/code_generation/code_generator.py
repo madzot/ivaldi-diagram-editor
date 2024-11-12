@@ -9,7 +9,7 @@ from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.custom_canvas import CustomCanvas
 
 
-class CodeGenerator:  # TODO get_result, and remove extra spaces
+class CodeGenerator:  # TODO remove extra spaces, fix get result probably incorrect sequence of function args
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
@@ -24,11 +24,13 @@ class CodeGenerator:  # TODO get_result, and remove extra spaces
             variables.update(renamer.find_function_names(box_function.code))
             box_functions[box_function] = variables
 
-        function_list = cls.rename(box_functions)
+        function_list, renamed_functions = cls.rename(box_functions)
         function_list = cls.remove_meta(function_list)
         function_list = cls.remove_imports(function_list)
 
         file_content += "\n".join(function_list)
+
+        file_content += "\n" + cls.construct_main_function(canvas, renamed_functions)
 
         return file_content
 
@@ -56,8 +58,9 @@ class CodeGenerator:  # TODO get_result, and remove extra spaces
         return "\n".join(imports)
 
     @classmethod
-    def rename(cls, names: dict[BoxFunction, set[str]]) -> list[str]:
+    def rename(cls, names: dict[BoxFunction, set[str]]) -> tuple[list[str], dict[BoxFunction, str]]:
         renamed_code_parts: list[str] = list()
+        renamed_functions: dict[BoxFunction, str] = dict()
         for i, (box_function, names) in enumerate(names.items()):
             renamer = Renamer()
             code_part = box_function.code
@@ -65,9 +68,11 @@ class CodeGenerator:  # TODO get_result, and remove extra spaces
                 if name == "meta":
                     continue
                 new_name = f'{name}_{i}'
+                if name == "invoke":
+                    renamed_functions[box_function] = new_name
                 code_part = renamer.refactor_code(code_part, name, new_name)
             renamed_code_parts.append(code_part)
-        return renamed_code_parts
+        return renamed_code_parts, renamed_functions
 
     @classmethod
     def remove_imports(cls, code_parts: list[str]) -> list[str]:
@@ -94,38 +99,61 @@ class CodeGenerator:  # TODO get_result, and remove extra spaces
         return result
 
     @classmethod
-    def construct_main_function(cls, canvas: CustomCanvas, box_functions: dict[BoxFunction, set[str]]) -> str:
+    def construct_main_function(cls, canvas: CustomCanvas, renamed_functions: dict[BoxFunction, str]) -> str:
         main_function = ""
         hypergraph: Hypergraph = HypergraphManager().get_graph_by_id(canvas.id)
-        input_nodes: list[Node] = list(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
+        input_nodes: set[Node] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
+
+        main_function += cls.create_definition_of_main_function(input_nodes)
+
         nodes_queue: Queue[Node] = Queue()
         node_input_count_check: dict[int, int] = dict()
 
         for node in input_nodes:
             node_input_count_check[node.id] = 0
             for node_input in node.inputs:
-                if hypergraph.get_node_by_input(node_input) is not None:
+                if hypergraph.get_node_by_output(node_input) is None:
                     node_input_count_check[node.id] += 1
             if node_input_count_check[node.id] == len(node.inputs):
                 nodes_queue.put(node)
-            nodes_queue.put(node)
 
         while len(input_nodes) > 0:
             input_nodes = cls.get_children_nodes(input_nodes, node_input_count_check)
             for node in input_nodes:
                 nodes_queue.put(node)
 
-        main_function += cls.create_definition_of_main_function(input_nodes)
+
+        function_result_variables: dict[int, str] = dict()
+        input_index = 1
+        result_index = 1
+
+        while not nodes_queue.empty():
+            node = nodes_queue.get()
+            variable_name = f"res_{result_index}"
+            result = f"{variable_name} = {renamed_functions[canvas.get_box_function(node.id)]}("
+            result_index += 1
+            function_result_variables[node.id] = variable_name
+            for input in node.inputs:
+                input_node = hypergraph.get_node_by_output(input)
+                if input_node is None:
+                    result += f"input_{input_index}, "
+                    input_index += 1
+                else:
+                    result += f"{function_result_variables[input_node.id]}, "
+            result = result[:-2] + ")\n\t"
+            main_function += result
 
         return main_function
 
     @classmethod
-    def create_definition_of_main_function(cls, input_nodes: list[Node]) -> str:
+    def create_definition_of_main_function(cls, input_nodes: set[Node]) -> str:
         definition = "def main("
         variables_count = sum(map(lambda node: len(node.inputs), input_nodes))
+        has_args = False
         for i in range(variables_count):
             definition += f"input_{i + 1} = None, "
-        definition = definition[:-2] + "):\n\t"
+            has_args = True
+        definition = (definition[:-2] if has_args else definition) + "):\n\t"
 
         return definition
 
@@ -137,7 +165,7 @@ class CodeGenerator:  # TODO get_result, and remove extra spaces
         return content
 
     @classmethod
-    def get_children_nodes(cls, current_level_nodes: list[Node], node_input_count_check: dict[int, int]) -> list:
+    def get_children_nodes(cls, current_level_nodes: list[Node], node_input_count_check: dict[int, int]) -> set:
         children = set()
 
         for node in current_level_nodes:
