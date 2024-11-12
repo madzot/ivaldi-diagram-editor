@@ -9,7 +9,7 @@ from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.custom_canvas import CustomCanvas
 
 
-class CodeGenerator: # TODO get_result, and remove extra spaces
+class CodeGenerator:  # TODO get_result, and remove extra spaces
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
@@ -94,64 +94,50 @@ class CodeGenerator: # TODO get_result, and remove extra spaces
         return result
 
     @classmethod
-    def get_all_methods_code(cls, code_part: dict[BoxFunction, list[int]]) -> dict[tuple[int], str]:
-        # check
-        all_methods_code: dict[tuple[int], str] = dict()
+    def construct_main_function(cls, canvas: CustomCanvas, box_functions: dict[BoxFunction, set[str]]) -> str:
+        main_function = ""
+        hypergraph: Hypergraph = HypergraphManager().get_graph_by_id(canvas.id)
+        input_nodes: list[Node] = list(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
+        nodes_queue: Queue[Node] = Queue()
+        node_input_count_check: dict[int, int] = dict()
 
-        for function, box_ids in code_part.items():
-            method_name = function.name
-            index = function.code.find("def invoke")
-            code = function.code[:index + 4] + method_name + function.code[index + 10:]
-            all_methods_code[tuple(box_ids)] = code
+        for node in input_nodes:
+            node_input_count_check[node.id] = 0
+            for node_input in node.inputs:
+                if hypergraph.get_node_by_input(node_input) is not None:
+                    node_input_count_check[node.id] += 1
+            if node_input_count_check[node.id] == len(node.inputs):
+                nodes_queue.put(node)
+            nodes_queue.put(node)
 
-        return all_methods_code
+        while len(input_nodes) > 0:
+            input_nodes = cls.get_children_nodes(input_nodes, node_input_count_check)
+            for node in input_nodes:
+                nodes_queue.put(node)
+
+        main_function += cls.create_definition_of_main_function(input_nodes)
+
+        return main_function
 
     @classmethod
-    def construct_main_function(cls, code_part: dict[tuple[int], str], canvas: CustomCanvas) -> str:
-        nodes_queue = Queue()
-        main_function = StringIO()
-        main_function.write("def get_result():\n\t")
+    def create_definition_of_main_function(cls, input_nodes: list[Node]) -> str:
+        definition = "def main("
+        variables_count = sum(map(lambda node: len(node.inputs), input_nodes))
+        for i in range(variables_count):
+            definition += f"input_{i + 1} = None, "
+        definition = definition[:-2] + "):\n\t"
 
-        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
-        node_input_count_check: dict[int, int] = {}
-        current_level_nodes = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
+        return definition
 
-        for node in current_level_nodes:
-            nodes_queue.put(node.id)
-
-        while current_level_nodes:
-            current_level_nodes = cls.get_children_nodes(current_level_nodes, node_input_count_check)
-
-            for node in current_level_nodes:
-                nodes_queue.put(node.id)
-
+    @classmethod
+    def create_main_function_content(cls, nodes_queue: Queue[Node]) -> str:
+        content = ""
         while not nodes_queue.empty():
-            node_id = nodes_queue.get()
-
-            for nodes_ids, code in code_part.items():
-                if node_id in nodes_ids:
-                    pattern = r"def\s+([a-zA-Z_][\w]*)\s*\(([^)]*)\)"
-                    match = re.search(pattern, code)
-
-                    if match:
-                        func_name = match.group(1)
-                        params = [param.split(":")[0].strip() for param in match.group(2).split(",")]
-                        function_signature = f"{func_name}({', '.join(params)})"
-                        main_function.write(function_signature + '\n\t')
-
-        return main_function.getvalue()
+            ...
+        return content
 
     @classmethod
     def get_children_nodes(cls, current_level_nodes: list[Node], node_input_count_check: dict[int, int]) -> list:
-        """
-        Get the next level of child nodes.
-        This method checks each node’s children and adds them if they have all required inputs.
-        Args:
-            current_level_nodes: The nodes being processed at the current level.
-            node_input_count_check: A dictionary tracking input counts for each node ID.
-        Returns:
-            list: The next level of child nodes.
-        """
         children = set()
 
         for node in current_level_nodes:
