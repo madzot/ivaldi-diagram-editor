@@ -51,7 +51,7 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
-        self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
+        self.bind("<ButtonRelease-1>", self.__select_release__)
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.selecting = False
@@ -141,14 +141,14 @@ class CustomCanvas(tk.Canvas):
     def __select_motion__(self, event):
         self.selector.update_selection(event)
 
-    def __select_release__(self):
+    def __select_release__(self, event):
         self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
         if len(self.selector.selected_items) > 1:
             res = mb.askquestion(message='Add selection to a separate sub-diagram?')
             if res == 'yes':
-                self.selector.select_action(True)
+                self.selector.select_action(event, True)
                 return
-        self.selector.select_action(False)
+        self.selector.select_action(event, False)
 
     def delete_selected_items(self):
         self.selector.delete_selected_items()

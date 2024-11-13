@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog
 
+from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.connection import Connection
 
 
@@ -68,6 +69,9 @@ class Box:
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
+        if not self.sub_diagram:
+            self.context_menu.add_command(label="Add code", command=self.open_editor)
+
         if not self.locked and not self.sub_diagram:
             self.context_menu.add_command(label="Add Left Connection", command=self.add_left_connection)
             self.context_menu.add_command(label="Add Right Connection", command=self.add_right_connection)
@@ -91,6 +95,9 @@ class Box:
         self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_command(label="Cancel")
         self.context_menu.tk_popup(event.x_root, event.y_root)
+
+    def open_editor(self):
+        CodeEditor(self)
 
     def save_box_to_menu(self):
         if not self.label_text:

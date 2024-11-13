@@ -114,6 +114,7 @@ class MainDiagram(tk.Tk):
         if load:
             self.load_from_file()
         self.json_file_hash = self.calculate_json_file_hash()
+        self.label_content = {}
         self.mainloop()
 
     @staticmethod

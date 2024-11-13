@@ -50,11 +50,11 @@ class Selector:
             for item in self.selected_items:
                 item.select()
 
-    def select_action(self, create_diagram=False):
+    def select_action(self, event, create_diagram=False):
         if self.selecting:
             if create_diagram:
                 self.create_sub_diagram(self.selected_boxes, self.selected_spiders, self.selected_wires,
-                                        self.canvas.coords(self.canvas.selectBox))
+                                        self.canvas.coords(self.canvas.selectBox), event)
                 self.finish_selection()
             else:
                 self.canvas.delete(self.canvas.selectBox)
@@ -68,12 +68,14 @@ class Selector:
         self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
 
-    def create_sub_diagram(self, boxes, spiders, wires, coordinates):
+    def create_sub_diagram(self, boxes, spiders, wires, coordinates, event):
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
+        event.x, event.y = x, y
 
         # Create a new box that will contain the sub-diagram
         box = self.canvas.add_box((x, y), shape="rectangle")
+        box.on_drag(event)
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
         self.canvas.receiver.listener = False
@@ -98,16 +100,10 @@ class Selector:
         self.canvas.main_diagram.add_canvas(sub_diagram)
 
     def is_within_selection(self, rect, selection_coords):
-        if len(self.canvas.coords(rect)) == 4:
-            x1, y1, x2, y2 = self.canvas.coords(rect)
-            x = (x1 + x2) / 2
-            y = (y1 + y2) / 2
-            return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
-        if len(self.canvas.coords(rect)) == 6:
-            x1, y1, x2, y2, x3, y3 = self.canvas.coords(rect)
-            x = (x1 + x2 + x3) / 3
-            y = (y1 + y2 + y3) / 3
-            return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
+        x1, y1, x2, y2 = self.canvas.coords(rect)
+        x = (x1 + x2) / 2
+        y = (y1 + y2) / 2
+        return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def delete_selected_items(self):
         for item in self.selected_items:
