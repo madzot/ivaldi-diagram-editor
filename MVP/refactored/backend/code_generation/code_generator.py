@@ -38,7 +38,8 @@ class CodeGenerator:
         return autopep8.fix_code(file_content)
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[BoxFunction, list[int]]:
+    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[
+                            BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         for box in canvas.boxes:
             if str(box.id) in canvasses:
@@ -81,37 +82,36 @@ class CodeGenerator:
     def remove_imports(cls, code_parts: list[str]) -> list[str]:
         regex = r"(^import .+)|(^from .+)"
         regex2 = r"^\n+"
-        result = []
+        code_parts_without_imports = []
 
         for part in code_parts:
             cleaned_part = re.sub(regex, "", part, flags=re.MULTILINE)
             cleaned_part = re.sub(regex2, "", cleaned_part)
-            result.append(cleaned_part)
-        return result
+            code_parts_without_imports.append(cleaned_part)
+        return code_parts_without_imports
 
     @classmethod
     def remove_meta(cls, code_parts: list[str]) -> list[str]:
         regex = r"^meta\s=\s{[\s\S]+?}"
         regex2 = r"^\n+"
-        result = []
+        code_parts_without_meta = []
 
         for part in code_parts:
             cleaned_part = re.sub(regex, "", part, flags=re.MULTILINE)
             cleaned_part = re.sub(regex2, "", cleaned_part)
-            result.append(cleaned_part)
-        return result
+            code_parts_without_meta.append(cleaned_part)
+        return code_parts_without_meta
 
     @classmethod
     def construct_main_function(cls, canvas: CustomCanvas, renamed_functions: dict[BoxFunction, str]) -> str:
         main_function = ""
         hypergraph: Hypergraph = HypergraphManager().get_graph_by_id(canvas.id)
         input_nodes: set[Node] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
-
+        input_nodes = sorted(input_nodes, key=lambda input_node: canvas.get_box_by_id(input_node.id).y)
         main_function += cls.create_definition_of_main_function(input_nodes)
-
         nodes_queue: Queue[Node] = Queue()
         node_input_count_check: dict[int, int] = dict()
-        input_nodes = sorted(input_nodes, key=lambda node: canvas.get_box_by_id(node.id).y)
+
         for node in input_nodes:
             node_input_count_check[node.id] = 0
             for node_input in node.inputs:
@@ -121,38 +121,27 @@ class CodeGenerator:
                 nodes_queue.put(node)
 
         while len(input_nodes) > 0:
-            input_nodes = cls.get_children_nodes(input_nodes, node_input_count_check)  # TODO check maybe here also sort?
+            input_nodes = cls.get_children_nodes(input_nodes,
+                                                 node_input_count_check)
+            input_nodes = sorted(input_nodes, key=lambda input_node: canvas.get_box_by_id(input_node.id).y)
             for node in input_nodes:
                 nodes_queue.put(node)
 
-        function_result_variables: dict[int, str] = dict()
-        input_index = 1
-        result_index = 1
+        main_function_content, function_result_variables = cls.create_main_function_content(
+                                                                    canvas, nodes_queue, renamed_functions, hypergraph)
+        main_function_return = cls.create_main_function_return(function_result_variables, hypergraph)
 
-        while not nodes_queue.empty():
-            node = nodes_queue.get()
-            variable_name = f"res_{result_index}"
-            result = f"{variable_name} = {renamed_functions[canvas.get_box_function(node.id)]}("
-            result_index += 1
-            function_result_variables[node.id] = variable_name
-
-            for input in node.inputs:
-                input_node = hypergraph.get_node_by_output(input)
-                if input_node is None:
-                    result += f"input_{input_index}, "
-                    input_index += 1
-                else:
-                    result += f"{function_result_variables[input_node.id]}, "
-            result = result[:-2] + ")\n\t"
-            main_function += result
-            #  TODO make return to main function
+        main_function += main_function_content
+        main_function += main_function_return
         return main_function
 
     @classmethod
     def create_definition_of_main_function(cls, input_nodes: set[Node]) -> str:
+
         definition = "def main("
         variables_count = sum(map(lambda node: len(node.inputs), input_nodes))
         has_args = False
+
         for i in range(variables_count):
             definition += f"input_{i + 1} = None, "
             has_args = True
@@ -161,12 +150,41 @@ class CodeGenerator:
         return definition
 
     @classmethod
-    def create_main_function_content(cls, nodes_queue: Queue[Node]) -> str:
+    def create_main_function_content(cls, canvas: CustomCanvas, nodes_queue: Queue[Node],
+                                     renamed_functions: dict[BoxFunction, str], hypergraph: Hypergraph
+                                     ) -> list[str, dict[int, str]]:
+
+        function_result_variables: dict[int, str] = dict()
+        input_index = 1
+        result_index = 1
         content = ""
+
         while not nodes_queue.empty():
-            ...
-            # TODO paste here part of main method
-        return content
+            node = nodes_queue.get()
+            variable_name = f"res_{result_index}"
+            line = f"{variable_name} = {renamed_functions[canvas.get_box_function(node.id)]}("
+            result_index += 1
+            function_result_variables[node.id] = variable_name
+
+            for input_wire in node.inputs:
+                input_node = hypergraph.get_node_by_output(input_wire)  # to get parent of node by their connection
+                if input_node is None:
+                    line += f"input_{input_index}, "
+                    input_index += 1
+                else:
+                    line += f"{function_result_variables[input_node.id]}, "
+            line = line[:-2] + ")\n\t"
+            content += line
+
+        return content, function_result_variables
+
+    @classmethod
+    def create_main_function_return(cls, function_result_variables: dict[int, str], hypergraph: Hypergraph) -> str:
+        return_statement = "return "
+        output_nodes = set(hypergraph.get_node_by_output(output) for output in hypergraph.outputs)
+        for output_node in output_nodes:
+            return_statement += f'{function_result_variables.get(output_node.id)}, '
+        return return_statement[:-2]
 
     @classmethod
     def get_children_nodes(cls, current_level_nodes: list[Node], node_input_count_check: dict[int, int]) -> set:
