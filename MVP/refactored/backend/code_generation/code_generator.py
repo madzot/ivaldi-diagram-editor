@@ -118,7 +118,7 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
                 nodes_queue.put(node)
 
         while len(input_nodes) > 0:
-            input_nodes = cls.get_children_nodes(input_nodes, node_input_count_check)
+            input_nodes = cls.get_children_nodes(input_nodes, node_input_count_check)  # TODO check maybe here also sort?
             for node in input_nodes:
                 nodes_queue.put(node)
 
@@ -132,6 +132,7 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
             result = f"{variable_name} = {renamed_functions[canvas.get_box_function(node.id)]}("
             result_index += 1
             function_result_variables[node.id] = variable_name
+
             for input in node.inputs:
                 input_node = hypergraph.get_node_by_output(input)
                 if input_node is None:
