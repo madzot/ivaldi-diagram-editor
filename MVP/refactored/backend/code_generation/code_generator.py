@@ -9,7 +9,7 @@ from MVP.refactored.custom_canvas import CustomCanvas
 import autopep8
 
 
-class CodeGenerator:  # TODO fix get result probably incorrect sequence of function args
+class CodeGenerator:
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
@@ -31,6 +31,9 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
         file_content += "\n".join(function_list)
 
         file_content += "\n" + cls.construct_main_function(canvas, renamed_functions)
+
+        with open("diagram.py", "w") as file:
+            file.write(autopep8.fix_code(file_content))
 
         return autopep8.fix_code(file_content)
 
@@ -108,7 +111,7 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
 
         nodes_queue: Queue[Node] = Queue()
         node_input_count_check: dict[int, int] = dict()
-
+        input_nodes = sorted(input_nodes, key=lambda node: canvas.get_box_by_id(node.id).y)
         for node in input_nodes:
             node_input_count_check[node.id] = 0
             for node_input in node.inputs:
@@ -142,7 +145,7 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
                     result += f"{function_result_variables[input_node.id]}, "
             result = result[:-2] + ")\n\t"
             main_function += result
-
+            #  TODO make return to main function
         return main_function
 
     @classmethod
@@ -162,6 +165,7 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
         content = ""
         while not nodes_queue.empty():
             ...
+            # TODO paste here part of main method
         return content
 
     @classmethod
@@ -178,19 +182,3 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
                     children.add(node_child)
 
         return children
-
-# TODO check
-
-#     """
-#     def copy():
-#
-#     def fac(n):
-#         return fac(n - 1)....
-#         _________
-#
-#     def sum():
-#
-#     def fac(m):
-#         return fac(m - 1)....
-#
-#     """

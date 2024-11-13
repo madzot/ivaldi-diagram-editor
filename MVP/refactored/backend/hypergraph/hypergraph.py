@@ -23,13 +23,13 @@ class Hypergraph(Node):
         self.nodes.append(node)
         self.set_hypergraph_io()
 
-    def get_node_by_input(self, input_id: int) -> Node|None:
+    def get_node_by_input(self, input_id: int) -> Node | None:
         for node in self.nodes:
             if input_id in node.inputs:
                 return node
         return None
 
-    def get_node_by_output(self, output_id: int) -> Node|None:
+    def get_node_by_output(self, output_id: int) -> Node | None:
         for node in self.nodes:
             if output_id in node.outputs:
                 return node
