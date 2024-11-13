@@ -67,7 +67,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
-        self.tree_logo = (Image.open("../../file-tree-outline.png"))
+        self.tree_logo = (Image.open("../../assets/file-tree-outline.png"))
         self.tree_logo = self.tree_logo.resize((20, 15))
         self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
 

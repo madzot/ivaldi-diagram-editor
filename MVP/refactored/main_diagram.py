@@ -28,6 +28,9 @@ class MainDiagram(tk.Tk):
 
         self.is_tree_visible = True
         self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
+        self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
+        self.tree.update()
+        self.tree.config(height=20)  # Number of visible rows
         self.toggle_treeview()
 
         # Add some items to the tree
@@ -407,6 +410,8 @@ class MainDiagram(tk.Tk):
             self.is_tree_visible = True
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
+            self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
         else:
             self.is_tree_visible = False
+            self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
