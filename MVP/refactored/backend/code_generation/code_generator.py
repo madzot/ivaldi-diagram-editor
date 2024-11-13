@@ -7,9 +7,10 @@ from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.custom_canvas import CustomCanvas
+import autopep8
 
 
-class CodeGenerator:  # TODO remove extra spaces, fix get result probably incorrect sequence of function args
+class CodeGenerator:  # TODO fix get result probably incorrect sequence of function args
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
@@ -32,7 +33,7 @@ class CodeGenerator:  # TODO remove extra spaces, fix get result probably incorr
 
         file_content += "\n" + cls.construct_main_function(canvas, renamed_functions)
 
-        return file_content
+        return autopep8.fix_code(file_content)
 
     @classmethod
     def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[BoxFunction, list[int]]:
