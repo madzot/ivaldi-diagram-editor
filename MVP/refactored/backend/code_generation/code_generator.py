@@ -1,6 +1,5 @@
 import re
 from queue import Queue
-from io import StringIO
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.code_generation.renamer import Renamer
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
@@ -14,7 +13,7 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
-        file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n"
+        file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n\n"
 
         box_functions: dict[BoxFunction, set[str]] = {}
 
@@ -122,7 +121,6 @@ class CodeGenerator:  # TODO fix get result probably incorrect sequence of funct
             input_nodes = cls.get_children_nodes(input_nodes, node_input_count_check)
             for node in input_nodes:
                 nodes_queue.put(node)
-
 
         function_result_variables: dict[int, str] = dict()
         input_index = 1
