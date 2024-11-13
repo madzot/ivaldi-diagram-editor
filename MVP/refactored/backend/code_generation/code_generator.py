@@ -1,12 +1,14 @@
 import re
 from queue import Queue
+
+import autopep8
+
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.code_generation.renamer import Renamer
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.custom_canvas import CustomCanvas
-import autopep8
 
 
 class CodeGenerator:

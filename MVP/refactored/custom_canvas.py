@@ -219,7 +219,7 @@ class CustomCanvas(tk.Canvas):
         self.current_wire.update()
         self.nullify_wire_start()
 
-        HypergraphManager.create_hypergraphs_from_canvas(self)
+        HypergraphManager.modify_canvas_hypergraph(self)
 
     def nullify_wire_start(self):
         if self.current_wire_start:
