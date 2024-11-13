@@ -12,7 +12,7 @@ from MVP.refactored.custom_canvas import CustomCanvas
 class Importer:
     def __init__(self, canvas):
         self.canvas: CustomCanvas = canvas
-        self.boxes_json_conf = "conf/boxes_conf.json"
+        self.boxes_json_conf = "./MVP/refactored/conf/boxes_conf.json"
         self.id_randomize = {}
         self.seed = ""
         self.random_id = False
