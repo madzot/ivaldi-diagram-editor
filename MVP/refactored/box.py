@@ -119,9 +119,7 @@ class Box:
         inputs = []
         for connection in self.connections:
             if connection.side == "left":
-                # print(connection.location[1])
                 inputs.append(connection.wire.id)
-        # print("-------------------------------")
         return inputs
 
     def get_outputs(self) -> list[int]:
