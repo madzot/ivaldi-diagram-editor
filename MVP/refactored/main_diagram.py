@@ -5,11 +5,9 @@ from tkinter import ttk
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from MVP.refactored.backend.code_generator import CodeGenerator
-from MVP.refactored.backend.hypergraph.hypergraph import hypergraph_visualization
+from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.custom_canvas import CustomCanvas
-from MVP.refactored.modules.notations.diagram_notation.diagram_notation import DiagramNotation
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
@@ -118,7 +116,7 @@ class MainDiagram(tk.Tk):
 
     def generate_code(self):
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)  # TODO if user in sub diagram, should use another canvas
-        print("-----------------------\ncode is: \n", code)
+        print("-----------------------\ncode is:\n", code, sep="", end="")
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):

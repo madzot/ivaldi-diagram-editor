@@ -115,6 +115,20 @@ class Box:
                 count += 1
         return count
 
+    def get_inputs(self) -> list[int]:
+        inputs = []
+        for connection in self.connections:
+            if connection.side == "left":
+                inputs.append(connection.wire.id)
+        return inputs
+
+    def get_outputs(self) -> list[int]:
+        outputs = []
+        for connection in self.connections:
+            if connection.side == "right":
+                outputs.append(connection.wire.id)
+        return outputs
+
     def save_box_to_menu(self):
         if not self.label_text:
             self.edit_label()
