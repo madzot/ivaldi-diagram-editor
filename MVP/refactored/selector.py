@@ -100,9 +100,23 @@ class Selector:
         self.canvas.main_diagram.add_canvas(sub_diagram)
 
     def is_within_selection(self, rect, selection_coords):
-        x1, y1, x2, y2 = self.canvas.coords(rect)
-        x = (x1 + x2) / 2
-        y = (y1 + y2) / 2
+        if len(self.canvas.coords(rect)) == 4:
+            x1, y1, x2, y2 = self.canvas.coords(rect)
+            x = (x1 + x2) / 2
+            y = (y1 + y2) / 2
+            return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
+        if len(self.canvas.coords(rect)) == 6:
+            x1, y1, x2, y2, x3, y3 = self.canvas.coords(rect)
+            x = (x1 + x2 + x3) / 3
+            y = (y1 + y2 + y3) / 3
+        if len(self.canvas.coords(rect)) == 8:
+            x1, y1, x2, y2, x3, y3, x4, y4 = self.canvas.coords(rect)
+            x = (x1 + x2 + x3 + x4) / 4
+            y = (y1 + y2 + y3 + y4) / 4
+        if len(self.canvas.coords(rect)) == 10:
+            x1, y1, x2, y2, x3, y3, x4, y4, x5, y5 = self.canvas.coords(rect)
+            x = (x1 + x2 + x3 + x4 + x5) / 5
+            y = (y1 + y2 + y3 + y4 + y5) / 5
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def delete_selected_items(self):
