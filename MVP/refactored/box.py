@@ -418,7 +418,6 @@ class Box:
         self.update_wires()
 
     def update_position(self):
-        "TODO"
         if self.shape == "rectangle":
             self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
         if self.shape == "triangle":
@@ -578,27 +577,28 @@ class Box:
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
 
     def create_rect(self):
+        w, h = self.size
         if self.shape == "rectangle":
-            return self.canvas.create_rectangle(self.x, self.y, self.x + self.size[0], self.y + self.size[1],
+            return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
                                                 outline="black", fill="white")
         if self.shape == "triangle":
-            return self.canvas.create_polygon(self.x + self.size[0], self.y + self.size[1] / 2, self.x, self.y,
-                                              self.x, self.y + self.size[1], outline="black", fill="white")
+            return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
+                                              self.x, self.y + h, outline="black", fill="white")
         if self.shape == "AND":
             return self.canvas.create_polygon(
                 self.x, self.y,
-                self.x + self.size[0] / 2, self.y,
-                self.x + self.size[0], self.y + self.size[1] / 2,
-                self.x + self.size[0] / 2, self.y + self.size[1],
-                self.x, self.y + self.size[1],
+                self.x + w / 2, self.y,
+                self.x + w, self.y + h / 2,
+                self.x + w / 2, self.y + h,
+                self.x, self.y + h,
                 outline="black", fill="white")
 
         if self.shape == "OR":
             return self.canvas.create_polygon(
                 self.x, self.y,
-                self.x + self.size[0], self.y + self.size[1] / 2,
-                self.x, self.y + self.size[1],
-                self.x + self.size[0] / 4, self.y + self.size[1] / 2,
+                self.x + w, self.y + h / 2,
+                self.x, self.y + h,
+                self.x + w / 4, self.y + h / 2,
                 outline="black", fill="white")
 
     def change_shape(self, shape):
