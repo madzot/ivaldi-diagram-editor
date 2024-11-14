@@ -56,6 +56,10 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.bind("<MouseWheel>", self.zoom)
+        self.bind("<Right>", self.pan_horizontal)
+        self.bind("<Left>", self.pan_horizontal)
+        self.bind("<Down>", self.pan_vertical)
+        self.bind("<Up>", self.pan_vertical)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -74,10 +78,10 @@ class CustomCanvas(tk.Canvas):
         box = Box(self, 0, 0, self.receiver)
         self.boxes.append(box)
 
-        c1 = Connection(None, None, "left", (0, 0), self, 0)
-        c2 = Connection(None, None, "left", (0, 0), self, 0)
-        c3 = Connection(None, None, "left", (0, 0), self, 0)
-        c4 = Connection(None, None, "left", (0, 0), self, 0)
+        c1 = Connection(None, None, "left", [0, 0], self, 0)
+        c2 = Connection(None, None, "left", [0, 0], self, 0)
+        c3 = Connection(None, None, "left", [0, 0], self, 0)
+        c4 = Connection(None, None, "left", [0, 0], self, 0)
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
@@ -87,6 +91,73 @@ class CustomCanvas(tk.Canvas):
         self.prev_scale = 1.0
 
         self.zoom_history = []
+
+        self.pan_history_x = 0
+        self.pan_history_y = 0
+        self.pan_speed = 20
+
+    def pan_horizontal(self, event):
+        if event.keysym == "Right":
+            multiplier = -1
+        else:
+            multiplier = 1
+
+        for corner in self.corners:
+            next_location = [
+                corner.location[0] + multiplier * self.pan_speed,
+                corner.location[1]
+            ]
+            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
+                self.pan_speed = min(abs(1 - corner.location[0]), abs(self.winfo_width() - corner.location[0] - 1))
+                return
+
+        for connection in self.corners + self.inputs + self.outputs:
+            connection.location[0] = connection.location[0] + multiplier * self.pan_speed
+            self.coords(connection.circle,
+                        connection.location[0] - connection.r, connection.location[1] - connection.r,
+                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        self.move_boxes_spiders(True, multiplier)
+        self.pan_speed = 20
+
+    def pan_vertical(self, event):
+        if event.keysym == "Down":
+            multiplier = -1
+        else:
+            multiplier = 1
+
+        for corner in self.corners:
+            next_location = [
+                corner.location[0], corner.location[1] + multiplier * self.pan_speed
+            ]
+            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
+                self.pan_speed = min(abs(1 - corner.location[1]), abs(self.winfo_height() - corner.location[1] - 1))
+                return
+
+        for connection in self.corners + self.inputs + self.outputs:
+            connection.location[1] = connection.location[1] + multiplier * self.pan_speed
+            self.coords(connection.circle,
+                        connection.location[0] - connection.r, connection.location[1] - connection.r,
+                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        self.move_boxes_spiders(False, multiplier)
+        self.pan_speed = 20
+
+    def move_boxes_spiders(self, is_horizontal, multiplier):
+        if is_horizontal:
+            attr = "x"
+            self.pan_history_x += multiplier * self.pan_speed
+        else:
+            attr = "y"
+            self.pan_history_y += multiplier * self.pan_speed
+        for spider in self.spiders:
+            setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
+            spider.move_to((spider.x, spider.y))
+        for box in self.boxes:
+            setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
+            box.update_size(box.size[0], box.size[1])
+        for wire in self.wires:
+            wire.update()
+        if self.pulling_wire:
+            self.temp_wire.update()
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -101,6 +172,24 @@ class CustomCanvas(tk.Canvas):
         self.coords(self.name, w / 2, 12)
         self.itemconfig(self.name, text=name)
         self.name_text = name
+
+    def move_items(self, x_offset, y_offset):
+        for box in self.boxes:
+            box.x -= x_offset
+            box.y -= y_offset
+            box.update_size(box.size[0], box.size[1])
+        for spider in self.spiders:
+            spider.x -= x_offset
+            spider.y -= y_offset
+            spider.move_to((spider.x, spider.y))
+        for wire in self.wires:
+            wire.update()
+        for i_o_c in self.inputs + self.outputs + self.corners:
+            i_o_c.location = [i_o_c.location[0] - x_offset, i_o_c.location[1] - y_offset]
+            self.coords(i_o_c.circle, i_o_c.location[0] - i_o_c.r, i_o_c.location[1] - i_o_c.r,
+                        i_o_c.location[0] + i_o_c.r, i_o_c.location[1] + i_o_c.r)
+        self.pan_history_x = 0
+        self.pan_history_y = 0
 
     def zoom(self, event):
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
@@ -123,29 +212,22 @@ class CustomCanvas(tk.Canvas):
                 return
             denominator = 4 / 3
             event.x, event.y = self.zoom_history.pop()
+            self.move_items(self.pan_history_x, self.pan_history_y)
 
         for corner in self.corners:
-            next_location = (
+            next_location = [
                 self.calculate_zoom_dif(event.x, corner.location[0], denominator),
                 self.calculate_zoom_dif(event.y, corner.location[1], denominator)
-            )
-            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
-                return
-
-        for corner in self.corners:
-            next_location = (
-                self.calculate_zoom_dif(event.x, corner.location[0], denominator),
-                self.calculate_zoom_dif(event.y, corner.location[1], denominator)
-            )
+            ]
             corner.location = next_location
             self.coords(corner.circle, next_location[0] - corner.r, corner.location[1] - corner.r,
                         corner.location[0] + corner.r, corner.location[1] + corner.r)
 
         for i_o in self.inputs + self.outputs:
-            i_o_location = (
+            i_o_location = [
                 self.calculate_zoom_dif(event.x, i_o.location[0], denominator),
                 self.calculate_zoom_dif(event.y, i_o.location[1], denominator)
-            )
+            ]
             i_o.r *= scale
             i_o.location = i_o_location
             self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
@@ -155,6 +237,7 @@ class CustomCanvas(tk.Canvas):
             box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
             box.y = self.calculate_zoom_dif(event.y, box.y, denominator)
             box.update_size(box.size[0] * scale, box.size[1] * scale)
+            box.move_label()
 
         for spider in self.spiders:
             spider.x = self.calculate_zoom_dif(event.x, spider.x, denominator)
