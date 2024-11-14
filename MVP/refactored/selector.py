@@ -50,11 +50,11 @@ class Selector:
             for item in self.selected_items:
                 item.select()
 
-    def select_action(self, create_diagram=False):
+    def select_action(self, event, create_diagram=False):
         if self.selecting:
             if create_diagram:
                 self.create_sub_diagram(self.selected_boxes, self.selected_spiders, self.selected_wires,
-                                        self.canvas.coords(self.canvas.selectBox))
+                                        self.canvas.coords(self.canvas.selectBox), event)
                 self.finish_selection()
             else:
                 self.canvas.delete(self.canvas.selectBox)
@@ -68,12 +68,14 @@ class Selector:
         self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
 
-    def create_sub_diagram(self, boxes, spiders, wires, coordinates):
+    def create_sub_diagram(self, boxes, spiders, wires, coordinates, event):
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
+        event.x, event.y = x, y
 
         # Create a new box that will contain the sub-diagram
         box = self.canvas.add_box((x, y))
+        box.on_drag(event)
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
         self.canvas.receiver.listener = False
