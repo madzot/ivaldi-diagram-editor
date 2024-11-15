@@ -73,7 +73,7 @@ class CodeEditor:
             return_str = return_str.replace(",", "")
         text = f"def {self.box.label_text}{param_str}:\n    return {return_str}"
         if self.box.label_text in self.box.canvas.master.label_content.keys():
-            text = self.box.canvas.master.label_content[self.box.label_text]
+            text = self.box.canvas.master.label_content[self.box.label_text].strip()
 
         self.edit_area.insert('1.0', text)
 
@@ -103,13 +103,16 @@ class CodeEditor:
         if os.stat("conf/functions_conf.json").st_size != 0:
             with open("conf/functions_conf.json", "r+") as file:
                 existing_json = json.load(file)
-                existing_json[self.box.label_text] = self.edit_area.get('1.0', tk.END)
+                existing_json[self.box.label_text] = self.edit_area.get('1.0', tk.END).strip()
                 json_object = json.dumps(existing_json, indent=4)
+                file.seek(0)
+                file.truncate(0)
                 file.write(json_object)
         else:
             with open("conf/functions_conf.json", "w") as file:
-                json_object = json.dumps({f"{self.box.label_text}": self.edit_area.get('1.0', tk.END)}, indent=4)
+                json_object = json.dumps({f"{self.box.label_text}": self.edit_area.get('1.0', tk.END).strip()}, indent=4)
                 file.write(json_object)
+        self.box.update_io()
         self.box.canvas.master.label_content[self.box.label_text] = self.edit_area.get("1.0", tk.END)
         self.window.destroy()
 
