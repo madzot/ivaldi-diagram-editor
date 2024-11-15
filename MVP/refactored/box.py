@@ -1,5 +1,9 @@
 import tkinter as tk
 from tkinter import simpledialog
+from tkinter import messagebox
+import json
+import re
+import os
 
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.connection import Connection
@@ -324,8 +328,30 @@ class Box:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def edit_label(self):
-        # TODO check if label is already in use and if definitions match
         self.label_text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        if os.stat("conf/functions_conf.json").st_size != 0:
+            with open("conf/functions_conf.json", "r") as file:
+                data = json.load(file)
+                for key, value in data.items():
+                    if key == self.label_text:
+                        if messagebox.askokcancel("Confirmation",
+                                                  "A box with this label already exists."
+                                                  " Do you want to use the existing box?"):
+                            for connection in self.connections:
+                                self.remove_connection(connection)
+                            inputs_amount = len(re.search("\\((.*)\\):", value).group(1).split(","))
+                            outputs = re.search("return (.*$)", value).group(1)
+                            if outputs[0] == "(":
+                                outputs = outputs[1:-1]
+                            outputs_amount = len(outputs.strip().split(","))
+                            for i in range(inputs_amount):
+                                self.add_left_connection()
+                            if outputs:
+                                for j in range(outputs_amount):
+                                    self.add_right_connection()
+                        else:
+                            return self.edit_label()
+
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
