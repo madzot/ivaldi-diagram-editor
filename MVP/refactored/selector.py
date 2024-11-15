@@ -13,6 +13,8 @@ class Selector:
         self.selected_wires = []
         self.origin_x = None
         self.origin_y = None
+        self.connection_mapping = {}
+        self.copied_items = {"boxes": [], "spiders": [], "wires": []}  # Initialize copied_items
 
     def start_selection(self, event):
         for item in self.selected_items:
@@ -118,3 +120,77 @@ class Selector:
         """Check if a point is within the selection area."""
         x, y = point
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
+
+    def copy_selected_items(self):
+        """Store the selected items for later pasting."""
+        self.copied_items = {
+            "boxes": [box for box in self.selected_items if isinstance(box, Box)],
+            "spiders": [spider for spider in self.selected_items if isinstance(spider, Spider)],
+            "wires": [
+                {
+                    "wire": wire,
+                    "start_connection": wire.start_connection,
+                    "end_connection": wire.end_connection,
+                }
+                for wire in self.selected_items if isinstance(wire, Wire)
+            ],
+        }
+
+    def paste_copied_items(self, offset_x=50, offset_y=50):
+        """Recreate the copied items on the canvas at an offset."""
+        new_items = {"boxes": [], "spiders": [], "wires": []}
+        connection_mapping = {}
+
+        # Step 1: Paste boxes and remap connections
+        for box in self.copied_items["boxes"]:
+            # Correct the parameter names for the `add_box` method
+            new_box = self.canvas.add_box(
+                loc=(box.x + offset_x, box.y + offset_y),
+                size=box.size,
+                id_=None
+            )
+            for connection in box.connections:
+                if connection.side == "left":
+                    new_conn = new_box.add_left_connection()
+                else:
+                    new_conn = new_box.add_right_connection()
+                connection_mapping[connection] = new_conn
+            new_items["boxes"].append(new_box)
+
+        # Step 2: Paste spiders and map them
+        for spider in self.copied_items["spiders"]:
+            new_spider = self.canvas.add_spider(
+                loc=(spider.location[0] + offset_x, spider.location[1] + offset_y),
+                id_=None
+            )
+            connection_mapping[spider] = new_spider
+            new_items["spiders"].append(new_spider)
+
+        # Step 3: Recreate wires
+        for wire_info in self.copied_items["wires"]:
+            original_wire = wire_info["wire"]
+            start_conn = connection_mapping.get(wire_info["start_connection"])
+            end_conn = connection_mapping.get(wire_info["end_connection"])
+
+            if start_conn and end_conn:
+                new_wire = Wire(
+                    self.canvas,
+                    start_connection=start_conn,
+                    receiver=self.canvas.receiver,
+                    end_connection=end_conn,
+                )
+                new_items["wires"].append(new_wire)
+            else:
+                print(
+                    f"Failed to recreate wire {original_wire.id}: "
+                    f"Start: {start_conn}, End: {end_conn}"
+                )
+
+        self.canvas.update()
+        print(f"Pasted items: {new_items}")
+
+
+
+
+
+

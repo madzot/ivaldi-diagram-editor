@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+from copy import deepcopy
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
@@ -65,6 +66,10 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
+
+        # Add copy-paste bindings
+        self.bind_all("<Control-c>", self.copy_selected_items)
+        self.bind_all("<Control-v>", self.paste_copied_items)
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -531,3 +536,11 @@ class CustomCanvas(tk.Canvas):
             else:
                 go_to_y = go_to_y_down
         return break_boolean, go_to_y
+
+    def copy_selected_items(self, event=None):  # Add event argument
+        self.selector.copy_selected_items()
+
+    def paste_copied_items(self, event):
+        offset_x = event.x - self.selector.origin_x
+        offset_y = event.y - self.selector.origin_y
+        self.selector.paste_copied_items(offset_x, offset_y)
