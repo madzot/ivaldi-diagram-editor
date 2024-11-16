@@ -91,13 +91,13 @@ class Copier:
                         canvas.end_wire_to_connection(spider)
                         break
 
-            # Add wires with start connection in the selected are and end connection outside
         for wire in half_in:
             wire = wire[1]
             start_c = wire.start_connection
             end_c = wire.end_connection
             status = self.get_wire_select_status(wire, selected_coordinates)
             if status == "START_IN":
+                # Add wires with start connection in the selected are and end connection outside
                 if start_c.side == "spider":
                     side_bool = self.add_diagram_io_based_on_spider(selected_coordinates, box, end_c)
                     for spider in canvas.spiders:

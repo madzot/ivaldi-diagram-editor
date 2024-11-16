@@ -11,15 +11,11 @@ class Hypergraph(Node):
         if nodes is None:
             nodes = []
         self.nodes = nodes
-        # if not self.is_valid(): TODO
-        #     raise ValueError("The hypergraph is not valid.")
         self.set_hypergraph_io()
 
     def add_node(self, node: Node) -> None:
         if node in self.nodes:
             raise ValueError("Node already exists")
-        # if not node.is_valid():
-        #     raise ValueError("Node is not valid")
         self.nodes.append(node)
         self.set_hypergraph_io()
 
@@ -230,18 +226,3 @@ class Hypergraph(Node):
                 f"Inputs: {self.inputs}\n"
                 f"Outputs: {self.outputs}\n"
                 f"Nodes:\n{nodes_str}")
-
-
-def hypergraph_visualization():
-    node2 = Node(node_id=1, inputs=[1, 2], outputs=[5])
-    node3 = Node(node_id=2, inputs=[3, 4], outputs=[6])
-    node4 = Node(node_id=3, inputs=[5, 6], outputs=[7])
-    node1 = Node(node_id=4, inputs=[7], outputs=[8])
-
-    hypergraph = Hypergraph(hypergraph_id=103, nodes=[node1, node2, node3, node4])
-
-    result = hypergraph.is_connected()
-    print(result)
-
-
-hypergraph_visualization()
