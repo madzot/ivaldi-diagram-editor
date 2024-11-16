@@ -138,6 +138,7 @@ class CustomCanvas(tk.Canvas):
             for i in selected_wires + selected_boxes + selected_spiders:
                 i.select()
 
+            sub_diagram_box = None
             if selected_boxes:
                 res = mb.askquestion(message='Add selection to a separate sub-diagram?')
                 if res == 'yes':
@@ -145,14 +146,14 @@ class CustomCanvas(tk.Canvas):
                     y = (selected_coordinates[1] + selected_coordinates[3]) / 2
 
                     # create new box that will contain the sub-diagram
-                    box = self.add_box((x, y))
-                    sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
+                    sub_diagram_box = self.add_box((x, y))
+                    sub_diagram = sub_diagram_box.edit_sub_diagram(save_to_canvasses=False)
                     prev_status = self.receiver.listener
                     self.receiver.listener = False
                     self.copier.copy_canvas_contents(sub_diagram, selected_wires, selected_boxes,
-                                                     selected_spiders, selected_coordinates, box)
-                    box.lock_box()
-                    box.contain_sub_diagram = True
+                                                     selected_spiders, selected_coordinates, sub_diagram_box)
+                    sub_diagram_box.lock_box()
+                    sub_diagram_box.contain_sub_diagram = True
                     self.receiver.listener = prev_status
                     for w in list(filter(lambda wire_: (wire_ in self.wires), selected_wires)):
                         w.delete_self("sub_diagram")
@@ -163,16 +164,30 @@ class CustomCanvas(tk.Canvas):
                         if self.receiver.listener:
                             self.receiver.receiver_callback('create_spider_parent', wire_id=s.id,
                                                             connection_id=s.id,
-                                                            generator_id=box.id)
+                                                            generator_id=sub_diagram_box.id)
                     sub_diagram.set_name(str(sub_diagram.id)[-6:])
-                    box.set_label(str(sub_diagram.id)[-6:])
+                    sub_diagram_box.set_label(str(sub_diagram.id)[-6:])
                     self.main_diagram.add_canvas(sub_diagram)
 
             for i in selected_wires + selected_boxes + selected_spiders:
                 i.deselect()
 
+            self._fix_new_sub_diagram_box_wires(sub_diagram_box)
+
             self.delete(self.selectBox)
             self.selecting = False
+
+    def _fix_new_sub_diagram_box_wires(self, sub_diagram_box: Box) -> None:
+        """
+        This is workaround to fix the wires that are not connected to the sub-diagram box
+        TODO: Fix the original issue
+        """
+        if not sub_diagram_box:
+            return
+
+        for connection in sub_diagram_box.connections:
+            correct_wire = connection.wire
+            correct_wire.end_connection.wire = correct_wire
 
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event):
@@ -219,7 +234,7 @@ class CustomCanvas(tk.Canvas):
         self.current_wire.update()
         self.nullify_wire_start()
 
-        HypergraphManager.create_hypergraphs_from_canvas(self)
+        HypergraphManager.modify_canvas_hypergraph(self)
 
     def nullify_wire_start(self):
         if self.current_wire_start:
