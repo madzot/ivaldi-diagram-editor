@@ -110,9 +110,14 @@ class CodeEditor:
                 file.write(json_object)
         else:
             with open("conf/functions_conf.json", "w") as file:
-                json_object = json.dumps({f"{self.box.label_text}": self.edit_area.get('1.0', tk.END).strip()}, indent=4)
+                json_object = json.dumps(
+                    {f"{self.box.label_text}": self.edit_area.get('1.0', tk.END).strip()},
+                    indent=4
+                )
                 file.write(json_object)
-        self.box.update_io()
+        for box in self.box.canvas.boxes:
+            if box.label_text in self.box.label_text:
+                box.update_io()
         self.box.canvas.master.label_content[self.box.label_text] = self.edit_area.get("1.0", tk.END)
         self.window.destroy()
 
