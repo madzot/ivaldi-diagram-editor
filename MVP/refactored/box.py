@@ -443,7 +443,6 @@ class Box:
         conn_x, conn_y = self.get_connection_coordinates("left", i)
         connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_)
         self.connections.append(connection)
-        print(self.connections)
 
         self.update_connections()
         self.update_wires()
@@ -460,7 +459,6 @@ class Box:
         connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_)
 
         self.connections.append(connection)
-        print(self.connections)
         self.update_connections()
         self.update_wires()
         if self.receiver.listener:
@@ -578,7 +576,6 @@ class Box:
         elif shape == "triangle":
             new_box = self.canvas.add_box((self.x, self.y), self.size, shape="triangle")
         else:
-            print("no such shape")
             return
         self.canvas.copier.copy_box(self, new_box)
         self.delete_box()
