@@ -110,6 +110,7 @@ class MainDiagram(tk.Tk):
         if load:
             self.load_from_file()
         self.json_file_hash = self.calculate_json_file_hash()
+        self.label_content = {}
         self.minsize(screen_width_min + self.tree.winfo_width() + self.undefined_box_button.winfo_width(),
                      screen_height_min)
         self.mainloop()
