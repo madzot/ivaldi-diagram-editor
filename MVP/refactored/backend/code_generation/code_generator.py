@@ -161,10 +161,20 @@ class CodeGenerator:
         result_index = 1
         content = ""
 
+        # if node have multiple input wires from one box function it means that this box functions returns multiple elements
+        # for example res_func1[0], res_func1[1].
+        # Key is node id for corresponding box function
+        # Value is current using index - res_func1[0]. When we use that function output we raise index
+        function_output_index: dict[int, int] = dict()
+        for node in hypergraph.nodes:
+            if len(node.outputs) > 1:
+                function_output_index[node.id] = 0
+
         while not nodes_queue.empty():
             node = nodes_queue.get()
             variable_name = f"res_{result_index}"
-            line = f"{variable_name} = {renamed_functions[canvas.get_box_function(node.id)]}("
+            current_box_function = canvas.get_box_function(node.id)
+            line = f"{variable_name} = {renamed_functions[current_box_function]}("
             result_index += 1
             function_result_variables[node.id] = variable_name
 
@@ -174,7 +184,11 @@ class CodeGenerator:
                     line += f"input_{input_index}, "
                     input_index += 1
                 else:
-                    line += f"{function_result_variables[input_node.id]}, "
+                    if input_node.id in function_output_index:
+                        line += f"{function_result_variables[input_node.id]}[{function_output_index[input_node.id]}], "
+                        function_output_index[input_node.id] += 1
+                    else:
+                        line += f"{function_result_variables[input_node.id]}, "
             line = line[:-2] + ")\n\t"
             content += line
 
