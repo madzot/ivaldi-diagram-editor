@@ -210,7 +210,12 @@ class CodeGenerator:
             current_node_children = node.get_children()
 
             for node_child in current_node_children:
-                node_input_count_check[node_child.id] = node_input_count_check.get(node_child.id, 0) + 1
+                connections_with_parent_node = 0
+                for parent_node_output in node.outputs:
+                    if parent_node_output in node_child.inputs:
+                        connections_with_parent_node += 1
+                        
+                node_input_count_check[node_child.id] = node_input_count_check.get(node_child.id, 0) + connections_with_parent_node
 
                 if node_input_count_check[node_child.id] == len(node_child.inputs):
                     children.add(node_child)
