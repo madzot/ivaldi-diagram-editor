@@ -1,7 +1,11 @@
 import os
 import tkinter as tk
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 from tkinter import filedialog
 from tkinter import messagebox as mb
+import tikzplotlib
 
 from PIL import Image
 
@@ -16,6 +20,7 @@ from MVP.refactored.wire import Wire
 class CustomCanvas(tk.Canvas):
     def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, **kwargs):
         super().__init__(master, **kwargs)
+
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
         self.configure(bg='white', width=screen_width_min, height=screen_height_min)
@@ -54,6 +59,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<ButtonRelease-1>", self.__select_release__)
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
+        self.bind("o", lambda event: self.create_tikz())
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -502,6 +508,23 @@ class CustomCanvas(tk.Canvas):
             self.columns[snapped_x][0].snapped_x = None
             self.columns[snapped_x][0].is_snapped = False
             self.columns.pop(snapped_x, None)
+
+    def create_tikz(self):
+        plt.style.use("ggplot")
+
+        t = np.arange(0.0, 2.0, 0.1)
+        s = np.sin(2 * np.pi * t)
+        s2 = np.cos(2 * np.pi * t)
+        plt.plot(t, s, "o-", lw=4.1)
+        plt.plot(t, s2, "o-", lw=4.1)
+        plt.xlabel("time (s)")
+        plt.ylabel("Voltage (mV)")
+        plt.title("Simple plot $\\frac{\\alpha}{2}$")
+        plt.grid(True)
+
+        tikzplotlib.save("test.tex")
+        plt.close()
+        mpl.rcParams.update(mpl.rcParamsDefault)
 
     @staticmethod
     def get_upper_lower_edges(component):
