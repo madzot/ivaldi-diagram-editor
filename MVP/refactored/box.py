@@ -79,8 +79,6 @@ class Box:
             self.context_menu.add_cascade(menu=sub_menu, label="Shape")
             sub_menu.add_command(label="Rectangle", command=lambda shape="rectangle": self.change_shape(shape))
             sub_menu.add_command(label="Triangle", command=lambda shape="triangle": self.change_shape(shape))
-            sub_menu.add_command(label="AND", command=lambda shape="AND": self.change_shape(shape))
-            sub_menu.add_command(label="OR", command=lambda shape="OR": self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -425,19 +423,6 @@ class Box:
                                self.x + self.size[0], self.y + self.size[1] / 2,
                                self.x, self.y,
                                self.x, self.y + self.size[1])
-        if self.shape == "AND":
-            self.canvas.coords(self.rect,
-                               self.x, self.y,
-                               self.x + self.size[0] / 2, self.y,
-                               self.x + self.size[0], self.y + self.size[1] / 2,
-                               self.x + self.size[0] / 2, self.y + self.size[1],
-                               self.x, self.y + self.size[1])
-        if self.shape == "OR":
-            self.canvas.coords(self.rect,
-                               self.x, self.y,
-                               self.x + self.size[0], self.y + self.size[1] / 2,
-                               self.x, self.y + self.size[1],
-                               self.x + self.size[0] / 4, self.y + self.size[1] / 2)
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                            self.x + self.size[0], self.y + self.size[1])
 
@@ -458,6 +443,7 @@ class Box:
         conn_x, conn_y = self.get_connection_coordinates("left", i)
         connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_)
         self.connections.append(connection)
+        print(self.connections)
 
         self.update_connections()
         self.update_wires()
@@ -474,6 +460,7 @@ class Box:
         connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_)
 
         self.connections.append(connection)
+        print(self.connections)
         self.update_connections()
         self.update_wires()
         if self.receiver.listener:
@@ -584,32 +571,12 @@ class Box:
         if self.shape == "triangle":
             return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
                                               self.x, self.y + h, outline="black", fill="white")
-        if self.shape == "AND":
-            return self.canvas.create_polygon(
-                self.x, self.y,
-                self.x + w / 2, self.y,
-                self.x + w, self.y + h / 2,
-                self.x + w / 2, self.y + h,
-                self.x, self.y + h,
-                outline="black", fill="white")
-
-        if self.shape == "OR":
-            return self.canvas.create_polygon(
-                self.x, self.y,
-                self.x + w, self.y + h / 2,
-                self.x, self.y + h,
-                self.x + w / 4, self.y + h / 2,
-                outline="black", fill="white")
 
     def change_shape(self, shape):
         if shape == "rectangle":
-            new_box = self.canvas.add_box((self.x, self.y), self.size, self.id, "rectangle")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")
         elif shape == "triangle":
-            new_box = self.canvas.add_box((self.x, self.y), self.size, self.id, "triangle")
-        elif shape == "AND":
-            new_box = self.canvas.add_box((self.x, self.y), self.size, self.id, "AND")
-        elif shape == "OR":
-            new_box = self.canvas.add_box((self.x, self.y), self.size, self.id, "OR")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="triangle")
         else:
             print("no such shape")
             return

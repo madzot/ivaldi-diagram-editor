@@ -406,7 +406,7 @@ class MainDiagram(tk.Tk):
             self.set_title(filename.replace(".json", ""))
 
     def update_shape_dropdown_menu(self):
-        shapes = ["rectangle", "triangle", "AND", "OR"]
+        shapes = ["rectangle", "triangle"]
         self.dropdown_menu.delete(0, tk.END)  # Clear the existing menu
 
         for shape in shapes:
