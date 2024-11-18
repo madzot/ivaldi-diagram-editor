@@ -1,10 +1,12 @@
 import os
+from numpy import random
 import tkinter as tk
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from tkinter import filedialog
 from tkinter import messagebox as mb
+import matplotlib.patches as patches
 import tikzplotlib
 
 from PIL import Image
@@ -510,21 +512,39 @@ class CustomCanvas(tk.Canvas):
             self.columns.pop(snapped_x, None)
 
     def create_tikz(self):
-        plt.style.use("ggplot")
+        print("Starting tikz")
+        fig, ax = plt.subplots(1, figsize=(12.8, 8))
 
-        t = np.arange(0.0, 2.0, 0.1)
-        s = np.sin(2 * np.pi * t)
-        s2 = np.cos(2 * np.pi * t)
-        plt.plot(t, s, "o-", lw=4.1)
-        plt.plot(t, s2, "o-", lw=4.1)
-        plt.xlabel("time (s)")
-        plt.ylabel("Voltage (mV)")
-        plt.title("Simple plot $\\frac{\\alpha}{2}$")
-        plt.grid(True)
+        for box in self.boxes:
+            rect = patches.Rectangle((box.x / 100, 8 - box.y / 100), box.size[0] / 100, box.size[1] / 100, label='_nolegend_')
+            ax.add_patch(rect)
 
+        # Below is for testing
+        # art = patches.Rectangle((0, 0), 1, 1, color='r', label='_nolegend_')
+        # # use add_patch instead, it's more clear what you are doing
+        # ax.add_patch(art)
+        #
+        art = patches.Circle((0, 0), radius=0.1, color='b')
+        ax.add_patch(art)
+
+        # set the limit of the axes to -3,3 both on x and y
+        ax.set_xlim(0, 12.8)
+        ax.set_ylim(0, 8)
+        # Test part ends
+
+
+        # fig = plt.figure()
+        #
+        # ax = fig.add_subplot(1, 1, 1)
+        # data = patches.Rectangle((1,1), 10, 10, angle=0)
+        # ax.add_patch(data)
+        plt.axis('off')
+        # plt.show()
+        #
         tikzplotlib.save("test.tex")
         plt.close()
-        mpl.rcParams.update(mpl.rcParamsDefault)
+        print("Done tikz")
+        # mpl.rcParams.update(mpl.rcParamsDefault)
 
     @staticmethod
     def get_upper_lower_edges(component):
