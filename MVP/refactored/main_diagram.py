@@ -48,8 +48,8 @@ class MainDiagram(tk.Tk):
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
 
         self.shape_dropdown_button = tk.Menubutton(self.control_frame, text="Select Shape", relief="raised")
-        self.dropdown_menu = tk.Menu(self.shape_dropdown_button, tearoff=0)
-        self.shape_dropdown_button.config(menu=self.dropdown_menu)
+        self.shape_dropdown_menu = tk.Menu(self.shape_dropdown_button, tearoff=0)
+        self.shape_dropdown_button.config(menu=self.shape_dropdown_menu)
         self.shape_dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
         self.shape_dropdown_button.config(width=20, background="white")
         self.update_shape_dropdown_menu()
@@ -407,8 +407,8 @@ class MainDiagram(tk.Tk):
 
     def update_shape_dropdown_menu(self):
         shapes = ["rectangle", "triangle"]
-        self.dropdown_menu.delete(0, tk.END)  # Clear the existing menu
+        self.shape_dropdown_menu.delete(0, tk.END)
 
         for shape in shapes:
-            self.dropdown_menu.add_command(label=shape,
-                                           command=lambda s=shape: self.custom_canvas.change_box_shape(s))
+            self.shape_dropdown_menu.add_command(label=shape,
+                                                 command=lambda s=shape: self.custom_canvas.change_box_shape(s))
