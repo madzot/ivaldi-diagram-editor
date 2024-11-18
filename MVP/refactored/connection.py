@@ -16,10 +16,7 @@ class Connection:
             self.id = id(self)
         else:
             self.id = id_
-        self.node = None
-        # if box is None:
-            # self.node = Node(self.id) TODO rewrite
-            # Singleton.hypergraph.add_node(self.node) rewrite
+
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
         self.circle = self.canvas.create_oval(location[0] - self.r, location[1] - self.r, location[0] + self.r,

@@ -16,7 +16,7 @@ def curved_line(start, end, det=15):
 
 
 class Wire:
-    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None):
+    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False):
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.start_connection = start_connection
@@ -28,15 +28,19 @@ class Wire:
         else:
             self.id = id_
         self.receiver = receiver
-        self.handle_wire_addition_callback()
+        self.is_temporary = temporary
+        if not temporary:
+            self.handle_wire_addition_callback()
         self.update()
 
     def delete_self(self, action=None):
         self.start_connection.remove_wire(self)
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
-        self.canvas.wires.remove(self)
-        self.handle_wire_deletion_callback(action)
+        if not self.is_temporary:
+            self.canvas.wires.remove(self)
+        if not self.is_temporary:
+            self.handle_wire_deletion_callback(action)
 
     def delete_from_canvas(self):
         if self.start_connection and self.start_connection.is_spider():
@@ -69,12 +73,14 @@ class Wire:
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
 
     def show_context_menu(self, event):
-        self.close_menu()
-        self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.context_menu.add_command(label="Create Spider", command=lambda bound_arg=event: self.create_spider(event))
-        self.context_menu.add_command(label="Delete wire", command=self.delete_self)
-        self.context_menu.add_command(label="Cancel")
-        self.context_menu.post(event.x_root, event.y_root)
+        if not self.is_temporary:
+            self.close_menu()
+            self.context_menu = tk.Menu(self.canvas, tearoff=0)
+            self.context_menu.add_command(label="Create Spider",
+                                          command=lambda bound_arg=event: self.create_spider(event))
+            self.context_menu.add_command(label="Delete wire", command=self.delete_self)
+            self.context_menu.add_command(label="Cancel")
+            self.context_menu.post(event.x_root, event.y_root)
 
     def create_spider(self, event):
         x, y = event.x, event.y
@@ -149,7 +155,7 @@ class Wire:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, connection.box.id, connection.side],
                                             connection_id=connection.id)
-        else:  # TODO: Understand, why previous code was written like this
+        elif connection.box is None and self.receiver.listener and self.start_connection.box is not None:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, None, connection.side],
                                             connection_id=connection.id)
