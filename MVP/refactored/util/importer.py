@@ -127,13 +127,13 @@ class Importer:
         random_string = ''.join(random.choice(characters) for _ in range(length))
         return random_string
 
-    def add_box_from_menu(self, canvas, box_name):
+    def add_box_from_menu(self, canvas, box_name, loc=(100, 100)):
         with open(self.boxes_json_conf, 'r') as json_file:
             self.seed = self.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box()
+            new_box = canvas.add_box(loc)
             if box["label"]:
                 new_box.set_label(box["label"])
             for _ in range(box["left_c"]):
