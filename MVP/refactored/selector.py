@@ -104,10 +104,12 @@ class Selector:
             x1, y1, x2, y2 = self.canvas.coords(rect)
             x = (x1 + x2) / 2
             y = (y1 + y2) / 2
-        if len(self.canvas.coords(rect)) == 6:
+        elif len(self.canvas.coords(rect)) == 6:
             x1, y1, x2, y2, x3, y3 = self.canvas.coords(rect)
             x = (x1 + x2 + x3) / 3
             y = (y1 + y2 + y3) / 3
+        else:
+            return False
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def delete_selected_items(self):
