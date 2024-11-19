@@ -154,6 +154,7 @@ class Spider(Connection):
         self.x = go_to_x
         self.y = go_to_y
 
+        print(self.location)
         self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
                            self.y + self.r)
         [w.update() for w in self.wires]
