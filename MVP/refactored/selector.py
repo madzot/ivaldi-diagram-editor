@@ -1,6 +1,5 @@
 from MVP.refactored.box import Box
 from MVP.refactored.spider import Spider
-from MVP.refactored.wire import Wire
 
 
 class Selector:
