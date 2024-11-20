@@ -339,13 +339,7 @@ class Box:
                         if messagebox.askokcancel("Confirmation",
                                                   "A box with this label already exists."
                                                   " Do you want to use the existing box?"):
-                            for connection in self.connections:
-                                self.remove_connection(connection)
-                            inputs_amount, outputs_amount = self.get_input_output_amount_off_code(code)
-                            for i in range(inputs_amount):
-                                self.add_left_connection()
-                            for j in range(outputs_amount):
-                                self.add_right_connection()
+                            self.update_io()
                         else:
                             return self.edit_label()
 
