@@ -522,7 +522,6 @@ class CustomCanvas(tk.Canvas):
         return zip(a, a)
 
     def create_tikz(self):
-        print("Starting tikz")
         fig, ax = plt.subplots(1, figsize=(12.8, 8))
         ax.set_aspect('equal', adjustable='box')
 
@@ -530,16 +529,10 @@ class CustomCanvas(tk.Canvas):
             rect = patches.Rectangle((box.x / 100, 8 - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
                                      box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
             plt.text(box.x / 100 + box.size[0] / 2 / 100, 8 - box.y / 100 - box.size[1] / 2 / 100, box.label_text, horizontalalignment="center", verticalalignment="center")
-            print("Box")
-            print(f"x, y: {(box.x / 100, 8 - (box.y / 100 + box.size[1] / 100))}")
-            print(f"size: {(box.size[0] / 100, box.size[1] / 100)}")
             ax.add_patch(rect)
 
         for spider in self.spiders:
             circle = patches.Circle((spider.x / 100, 8 - spider.y / 100), spider.r / 100, color="black")
-            print("Spider")
-            print(f"x, y: {(spider.x / 100, 8 - spider.y / 100)}")
-            print(f"size: {spider.r / 100}")
             ax.add_patch(circle)
 
         for i_o in self.inputs + self.outputs:
@@ -558,14 +551,8 @@ class CustomCanvas(tk.Canvas):
                 x.append(x_coord)
                 y.append(x_y[x_coord])
 
-            # for x_coord, y_coord in x_y.keys():
-            # x.sort()
-            # y.sort()
-
             x = np.array(x)
             y = np.array(y)
-
-            print(x)
 
             x_linspace = np.linspace(x.min(), x.max(), 200)
             spl = make_interp_spline(x, y, k=3)
@@ -573,38 +560,14 @@ class CustomCanvas(tk.Canvas):
 
             plt.plot(x_linspace, y_line, color="black")
 
-        # box = self.boxes[0]
-        # rect = patches.Rectangle((box.x / 100, 8 - box.y / 100 - box.size[1] / 100), box.size[0] / 100, box.size[1] / 100, label="_nolegend_")
-        # # rect = patches.Rectangle((1, 6.4), 0.6, 0.6)
-        # ax.add_patch(rect)
-
-        # Below is for testing
-        # art = patches.Rectangle((0, 0), 1, 1, color='r', label='_nolegend_')
-        # # use add_patch instead, it's more clear what you are doing
-        # ax.add_patch(art)
-        #
-        # art = patches.Circle((0, 0), radius=0.1, color='b')
-        # ax.add_patch(art)
-
-        # set the limit of the axes to -3,3 both on x and y
         ax.set_xlim(0, 12.8)
         ax.set_ylim(0, 8)
-        # Test part ends
+        plt.axis('off')
 
-
-        # fig = plt.figure()
-        #
-        # ax = fig.add_subplot(1, 1, 1)
-        # data = patches.Rectangle((1,1), 10, 10, angle=0)
-        # ax.add_patch(data)
-
-        # plt.axis('off')
-
-        tikzplotlib.save("test.tex", figure=fig, standalone=True, encoding='utf-8')
+        tikzplotlib.clean_figure(fig=fig)
+        tikzplotlib.save("test.tex", figure=fig)
         plt.show()
         plt.close()
-        print("Done tikz")
-        # mpl.rcParams.update(mpl.rcParamsDefault)
 
     @staticmethod
     def get_upper_lower_edges(component):
