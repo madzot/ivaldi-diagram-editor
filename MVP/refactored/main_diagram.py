@@ -47,7 +47,7 @@ class MainDiagram(tk.Tk):
                                               command=self.custom_canvas.add_box, bg="white", width=18)
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.shape_dropdown_button = tk.Menubutton(self.control_frame, text="Select Shape", relief="raised")
+        self.shape_dropdown_button = tk.Menubutton(self.control_frame, text="Select Box Shape", relief="raised")
         self.shape_dropdown_menu = tk.Menu(self.shape_dropdown_button, tearoff=0)
         self.shape_dropdown_button.config(menu=self.shape_dropdown_menu)
         self.shape_dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
