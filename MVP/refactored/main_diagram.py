@@ -93,6 +93,7 @@ class MainDiagram(tk.Tk):
         buttons = {
             "Save project": self.save_to_file,
             "Save png": self.custom_canvas.save_as_png,
+            "Generate TikZ": self.custom_canvas.open_tikz_generator,
             "Remove input": self.custom_canvas.remove_diagram_input,
             "Remove output": self.custom_canvas.remove_diagram_output,
             "Add input": self.custom_canvas.add_diagram_input,

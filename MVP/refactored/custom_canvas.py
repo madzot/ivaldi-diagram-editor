@@ -1,20 +1,15 @@
 import os
-from itertools import tee
-
-from numpy import random
 import tkinter as tk
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import numpy as np
 from tkinter import filedialog
 from tkinter import messagebox as mb
+
 import matplotlib.patches as patches
-from scipy.interpolate import interp1d, make_interp_spline
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image, ImageTk
+from scipy.interpolate import make_interp_spline
 
 import tikzplotlib
-
-from PIL import Image
-
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
@@ -65,7 +60,6 @@ class CustomCanvas(tk.Canvas):
         self.bind("<ButtonRelease-1>", self.__select_release__)
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
-        self.bind("o", lambda event: self.create_tikz())
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -77,6 +71,10 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
+
+        self.copy_logo = (Image.open('../../assets/content-copy.png'))
+        self.copy_logo = self.copy_logo.resize((20, 20))
+        self.copy_logo = ImageTk.PhotoImage(self.copy_logo)
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -298,6 +296,32 @@ class CustomCanvas(tk.Canvas):
             img = Image.open('temp.ps')
             img.save(file_path, 'png')
             os.remove("temp.ps")
+
+    def open_tikz_generator(self):
+        tikz_window = tk.Toplevel(self)
+        tikz_window.title("TikZ Generator")
+
+        tk.Label(tikz_window, text="PGF/TikZ plot sizes can be manually changed in LaTeX with", justify="left").pack()
+
+        pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
+        pgfplotsset_text.insert(tk.END, "\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.config(state=tk.DISABLED)
+        pgfplotsset_text.pack()
+
+        tikz_text = tk.Text(tikz_window)
+        tikz_text.insert(tk.END, self.generate_tikz())
+        tikz_text.config(state="disabled")
+        tikz_text.pack(pady=10, fill=tk.BOTH, expand=True)
+        tikz_text.update()
+
+        tikz_copy_button = tk.Button(tikz_text, image=self.copy_logo,
+                                     command=lambda: self.copy_text(tikz_text.get("1.0", tk.END)),
+                                     bg="white", relief="flat")
+        tikz_copy_button.place(x=tikz_text.winfo_width() - 25, y=20, anchor=tk.CENTER)
+
+    def copy_text(self, text):
+        self.clipboard_clear()
+        self.clipboard_append(text)
 
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
@@ -521,14 +545,15 @@ class CustomCanvas(tk.Canvas):
         a = iter(iterable)
         return zip(a, a)
 
-    def create_tikz(self):
+    def generate_tikz(self):
         fig, ax = plt.subplots(1, figsize=(12.8, 8))
         ax.set_aspect('equal', adjustable='box')
 
         for box in self.boxes:
             rect = patches.Rectangle((box.x / 100, 8 - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
                                      box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
-            plt.text(box.x / 100 + box.size[0] / 2 / 100, 8 - box.y / 100 - box.size[1] / 2 / 100, box.label_text, horizontalalignment="center", verticalalignment="center")
+            plt.text(box.x / 100 + box.size[0] / 2 / 100, 8 - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
+                     horizontalalignment="center", verticalalignment="center")
             ax.add_patch(rect)
 
         for spider in self.spiders:
@@ -565,9 +590,10 @@ class CustomCanvas(tk.Canvas):
         plt.axis('off')
 
         tikzplotlib.clean_figure(fig=fig)
-        tikzplotlib.save("test.tex", figure=fig)
-        plt.show()
+        tikz = tikzplotlib.get_tikz_code(figure=fig)
         plt.close()
+        return tikz
+
 
     @staticmethod
     def get_upper_lower_edges(component):
