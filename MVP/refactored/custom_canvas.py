@@ -73,7 +73,7 @@ class CustomCanvas(tk.Canvas):
 
         button = ttk.Button(self, image=self.tree_logo,
                             command=lambda: self.master.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
-        button.place(relx=0.02, rely=0.025, anchor=tk.CENTER)
+        button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
         self.columns = {}
         self.box_shape = "rectangle"
 

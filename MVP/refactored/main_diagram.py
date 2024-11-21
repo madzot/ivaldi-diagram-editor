@@ -53,7 +53,7 @@ class MainDiagram(tk.Tk):
                                                bootstyle=(PRIMARY, OUTLINE))
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.shape_dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box Shape",
+        self.shape_dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box Shape", width=16,
                                                     bootstyle=(PRIMARY, OUTLINE))
         self.shape_dropdown_menu = ttk.Menu(self.shape_dropdown_button, tearoff=0)
         self.shape_dropdown_button.config(menu=self.shape_dropdown_menu)
