@@ -1,6 +1,5 @@
 from MVP.refactored.box import Box
 from MVP.refactored.spider import Spider
-from MVP.refactored.wire import Wire
 
 
 class Selector:
@@ -74,7 +73,7 @@ class Selector:
         event.x, event.y = x, y
 
         # Create a new box that will contain the sub-diagram
-        box = self.canvas.add_box((x, y))
+        box = self.canvas.add_box((x, y), shape="rectangle")
         box.on_drag(event)
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
@@ -100,9 +99,16 @@ class Selector:
         self.canvas.main_diagram.add_canvas(sub_diagram)
 
     def is_within_selection(self, rect, selection_coords):
-        x1, y1, x2, y2 = self.canvas.coords(rect)
-        x = (x1 + x2) / 2
-        y = (y1 + y2) / 2
+        if len(self.canvas.coords(rect)) == 4:
+            x1, y1, x2, y2 = self.canvas.coords(rect)
+            x = (x1 + x2) / 2
+            y = (y1 + y2) / 2
+        elif len(self.canvas.coords(rect)) == 6:
+            x1, y1, x2, y2, x3, y3 = self.canvas.coords(rect)
+            x = (x1 + x2 + x3) / 3
+            y = (y1 + y2 + y3) / 3
+        else:
+            return False
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def delete_selected_items(self):
