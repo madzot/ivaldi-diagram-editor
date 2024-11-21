@@ -522,21 +522,23 @@ class CustomCanvas(tk.Canvas):
         return zip(a, a)
 
     def create_tikz(self):
-        fig, ax = plt.subplots(1, figsize=(12.8, 8))
+        x_max, y_max = self.winfo_width() / 100, self.winfo_height() / 100
+        fig, ax = plt.subplots(1, figsize=(x_max, y_max))
         ax.set_aspect('equal', adjustable='box')
 
         for box in self.boxes:
-            rect = patches.Rectangle((box.x / 100, 8 - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
+            rect = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
                                      box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
-            plt.text(box.x / 100 + box.size[0] / 2 / 100, 8 - box.y / 100 - box.size[1] / 2 / 100, box.label_text, horizontalalignment="center", verticalalignment="center")
+            plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
+                     horizontalalignment="center", verticalalignment="center")
             ax.add_patch(rect)
 
         for spider in self.spiders:
-            circle = patches.Circle((spider.x / 100, 8 - spider.y / 100), spider.r / 100, color="black")
+            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black")
             ax.add_patch(circle)
 
         for i_o in self.inputs + self.outputs:
-            con = patches.Circle((i_o.location[0] / 100, 8 - i_o.location[1] / 100), i_o.r / 100, color="black")
+            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black")
             ax.add_patch(con)
 
         for wire in self.wires:
@@ -544,7 +546,7 @@ class CustomCanvas(tk.Canvas):
             y = []
             x_y = {}
             for x_coord, y_coord in self.pairwise(self.coords(wire.line)):
-                x_y[x_coord / 100] = 8 - y_coord / 100
+                x_y[x_coord / 100] = y_max - y_coord / 100
 
             x_y = dict(sorted(x_y.items()))
             for x_coord in x_y.keys():
@@ -560,8 +562,8 @@ class CustomCanvas(tk.Canvas):
 
             plt.plot(x_linspace, y_line, color="black")
 
-        ax.set_xlim(0, 12.8)
-        ax.set_ylim(0, 8)
+        ax.set_xlim(0, x_max)
+        ax.set_ylim(0, y_max)
         plt.axis('off')
 
         tikzplotlib.clean_figure(fig=fig)
