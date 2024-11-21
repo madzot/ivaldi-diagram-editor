@@ -65,6 +65,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
+        self.box_shape = "rectangle"
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -258,8 +259,10 @@ class CustomCanvas(tk.Canvas):
         self.current_wire_start = None
         self.current_wire = None
 
-    def add_box(self, loc=(100, 100), size=(60, 60), id_=None):
-        box = Box(self, *loc, self.receiver, size=size, id_=id_)
+    def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape=None):
+        if shape is None:
+            shape = self.box_shape
+        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape)
         self.boxes.append(box)
         return box
 
@@ -531,3 +534,6 @@ class CustomCanvas(tk.Canvas):
             else:
                 go_to_y = go_to_y_down
         return break_boolean, go_to_y
+
+    def change_box_shape(self, shape):
+        self.box_shape = shape
