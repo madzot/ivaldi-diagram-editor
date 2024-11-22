@@ -203,16 +203,53 @@ class CustomCanvas(tk.Canvas):
             scale /= self.delta
             self.total_scale /= self.delta
 
+
         if self.prev_scale < self.total_scale:
-            denominator = 0.75
+            denominator = self.delta
             self.zoom_history.append((event.x, event.y))
         else:
-            if len(self.zoom_history) == 0:
-                self.total_scale = self.prev_scale
+            # if len(self.zoom_history) == 0:
+            #     self.total_scale = self.prev_scale
+            #     return
+            denominator = 1 / self.delta
+            # self.zoom_history.pop()
+            # self.move_items(self.pan_history_x, self.pan_history_y)
+            is_allowed, x_offset, y_offset, end = self.check_max_zoom(event.x, event.y, denominator)
+            if end:
                 return
-            denominator = 4 / 3
-            event.x, event.y = self.zoom_history.pop()
-            self.move_items(self.pan_history_x, self.pan_history_y)
+            if not is_allowed:
+                event.x += x_offset
+                event.y += y_offset
+        # self.scale('all', event.x, event.y, scale, scale)
+        # print(self.coords(self.boxes[0].rect))
+        # for box in self.boxes:
+        # # box = self.boxes[0]
+        #     x, y, x1, y1 = self.coords(box.rect)
+        #     box.x = x
+        #     box.y = y
+        #     box.size = [x1 - x, y1 - y]
+        # for corner in self.corners:
+        #     next_location = (
+        #         self.calculate_zoom_dif(event.x, corner.location[0], denominator),
+        #         self.calculate_zoom_dif(event.y, corner.location[1], denominator)
+        #     )
+        #     # x, y, x1, y1 = self.coords(corner.circle)
+        #     # corner.location = [(x + x1) / 2, (y + y1) / 2]
+        #     print(next_location)
+        #     print(corner.location)
+        # for corner in self.corners:
+        #     next_location = (
+        #         self.calculate_zoom_dif(event.x, corner.location[0], denominator),
+        #         self.calculate_zoom_dif(event.y, corner.location[1], denominator)
+        #     )
+        #     # print(next_location)
+        #     if 0 < round(next_location[0]) < self.winfo_width():
+        #         # self.scale('all', event.x, event.y,  1/ scale, 1/scale)
+        #         return
+        #     if 0 < round(next_location[1]) < self.winfo_height():
+        #         # self.scale('all', event.x, event.y, 1/scale, 1/scale)
+        #         return
+
 
         for corner in self.corners:
             next_location = [
@@ -252,6 +289,34 @@ class CustomCanvas(tk.Canvas):
             wire.update()
         self.update_inputs_outputs()
         self.configure(scrollregion=self.bbox('all'))
+
+    def check_max_zoom(self, x, y, denominator):
+        x_offset = 0
+        y_offset = 0
+        for corner in self.corners:
+            next_location = [
+                self.calculate_zoom_dif(x, corner.location[0], denominator),
+                self.calculate_zoom_dif(y, corner.location[1], denominator)
+            ]
+            if 0 < round(next_location[0]) < self.winfo_width():
+                x_offset = -next_location[0] * 4
+                if round(next_location[0]) > self.winfo_width() / 2:
+                    x_offset = (self.winfo_width() - next_location[0]) * 4
+            if 0 < round(next_location[1]) < self.winfo_height():
+                y_offset = -next_location[1] * 4
+                if round(next_location[1]) > self.winfo_height() / 2:
+                    y_offset = (self.winfo_height() - next_location[1]) * 4
+        is_allowed = x_offset == 0 == y_offset
+        return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
+
+    def check_corner_start_locations(self):
+        count = 0
+        for corner in self.corners:
+            print(corner.location)
+            if corner.location in [[0, 0], [0, self.winfo_height()],
+                                   [self.winfo_width(), 0], [self.winfo_width(), self.winfo_height()]]:
+                count += 1
+        return count == 4
 
     def close_menu(self):
         if self.context_menu:
@@ -687,7 +752,7 @@ class CustomCanvas(tk.Canvas):
 
     @staticmethod
     def calculate_zoom_dif(zoom_coord, object_coord, denominator):
-        """Calculates how much an object needs to be moved when zooming."""
+        """Calculates how much an object will to be moved when zooming."""
         return round(zoom_coord - (zoom_coord - object_coord) / denominator, 4)
 
     @staticmethod
