@@ -250,7 +250,6 @@ class CustomCanvas(tk.Canvas):
         #         # self.scale('all', event.x, event.y, 1/scale, 1/scale)
         #         return
 
-
         for corner in self.corners:
             next_location = [
                 self.calculate_zoom_dif(event.x, corner.location[0], denominator),
@@ -311,11 +310,16 @@ class CustomCanvas(tk.Canvas):
 
     def check_corner_start_locations(self):
         count = 0
+        locations = [
+            [0, 0],
+            [0, self.winfo_height()],
+            [self.winfo_width(), 0],
+            [self.winfo_width(), self.winfo_height()]
+        ]
         for corner in self.corners:
-            print(corner.location)
-            if corner.location in [[0, 0], [0, self.winfo_height()],
-                                   [self.winfo_width(), 0], [self.winfo_width(), self.winfo_height()]]:
-                count += 1
+            for location in locations:
+                if round(corner.location[0]) == location[0] and round(corner.location[1]) == location[1]:
+                    count += 1
         return count == 4
 
     def close_menu(self):
