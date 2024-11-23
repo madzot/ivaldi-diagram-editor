@@ -194,6 +194,8 @@ class CustomCanvas(tk.Canvas):
             self.handle_connection_click(connection, event)
 
     def start_pulling_wire(self, event):
+        if self.focus_get() != self:
+            self.focus_set()
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
                 self.temp_wire.delete_self()
