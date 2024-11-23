@@ -90,8 +90,6 @@ class CustomCanvas(tk.Canvas):
 
         self.prev_scale = 1.0
 
-        self.zoom_history = []
-
         self.pan_history_x = 0
         self.pan_history_y = 0
         self.pan_speed = 20
@@ -203,52 +201,18 @@ class CustomCanvas(tk.Canvas):
             scale /= self.delta
             self.total_scale /= self.delta
 
-
         if self.prev_scale < self.total_scale:
             denominator = self.delta
-            self.zoom_history.append((event.x, event.y))
         else:
-            # if len(self.zoom_history) == 0:
-            #     self.total_scale = self.prev_scale
-            #     return
             denominator = 1 / self.delta
-            # self.zoom_history.pop()
-            # self.move_items(self.pan_history_x, self.pan_history_y)
             is_allowed, x_offset, y_offset, end = self.check_max_zoom(event.x, event.y, denominator)
             if end:
                 return
             if not is_allowed:
                 event.x += x_offset
                 event.y += y_offset
-        # self.scale('all', event.x, event.y, scale, scale)
-        # print(self.coords(self.boxes[0].rect))
-        # for box in self.boxes:
-        # # box = self.boxes[0]
-        #     x, y, x1, y1 = self.coords(box.rect)
-        #     box.x = x
-        #     box.y = y
-        #     box.size = [x1 - x, y1 - y]
-        # for corner in self.corners:
-        #     next_location = (
-        #         self.calculate_zoom_dif(event.x, corner.location[0], denominator),
-        #         self.calculate_zoom_dif(event.y, corner.location[1], denominator)
-        #     )
-        #     # x, y, x1, y1 = self.coords(corner.circle)
-        #     # corner.location = [(x + x1) / 2, (y + y1) / 2]
-        #     print(next_location)
-        #     print(corner.location)
-        # for corner in self.corners:
-        #     next_location = (
-        #         self.calculate_zoom_dif(event.x, corner.location[0], denominator),
-        #         self.calculate_zoom_dif(event.y, corner.location[1], denominator)
-        #     )
-        #     # print(next_location)
-        #     if 0 < round(next_location[0]) < self.winfo_width():
-        #         # self.scale('all', event.x, event.y,  1/ scale, 1/scale)
-        #         return
-        #     if 0 < round(next_location[1]) < self.winfo_height():
-        #         # self.scale('all', event.x, event.y, 1/scale, 1/scale)
-        #         return
+
+        self.scale('all', event.x, event.y, scale, scale)
 
         for corner in self.corners:
             next_location = [
@@ -256,8 +220,6 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(event.y, corner.location[1], denominator)
             ]
             corner.location = next_location
-            self.coords(corner.circle, next_location[0] - corner.r, corner.location[1] - corner.r,
-                        corner.location[0] + corner.r, corner.location[1] + corner.r)
 
         for i_o in self.inputs + self.outputs:
             i_o_location = [
@@ -266,8 +228,6 @@ class CustomCanvas(tk.Canvas):
             ]
             i_o.r *= scale
             i_o.location = i_o_location
-            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
-                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
 
         for box in self.boxes:
             box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
@@ -280,8 +240,6 @@ class CustomCanvas(tk.Canvas):
             spider.y = self.calculate_zoom_dif(event.y, spider.y, denominator)
             spider.location = spider.x, spider.y
             spider.r *= scale
-            self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
-                        spider.y + spider.r)
 
         for wire in self.wires:
             wire.wire_width *= scale
@@ -297,14 +255,15 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(x, corner.location[0], denominator),
                 self.calculate_zoom_dif(y, corner.location[1], denominator)
             ]
+            multiplier = 1 / (1 - self.delta)
             if 0 < round(next_location[0]) < self.winfo_width():
-                x_offset = -next_location[0] * 4
+                x_offset = -next_location[0] * multiplier
                 if round(next_location[0]) > self.winfo_width() / 2:
-                    x_offset = (self.winfo_width() - next_location[0]) * 4
+                    x_offset = (self.winfo_width() - next_location[0]) * multiplier
             if 0 < round(next_location[1]) < self.winfo_height():
-                y_offset = -next_location[1] * 4
+                y_offset = -next_location[1] * multiplier
                 if round(next_location[1]) > self.winfo_height() / 2:
-                    y_offset = (self.winfo_height() - next_location[1]) * 4
+                    y_offset = (self.winfo_height() - next_location[1]) * multiplier
         is_allowed = x_offset == 0 == y_offset
         return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
 
