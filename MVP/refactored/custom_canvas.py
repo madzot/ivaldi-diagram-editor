@@ -251,7 +251,7 @@ class CustomCanvas(tk.Canvas):
             for item in self.columns[column_x]:
                 item.snapped_x = new_x
             new_columns[new_x] = self.columns[column_x]
-        self.columns = {new_columns}
+        self.columns = new_columns
 
         self.update_inputs_outputs()
         self.configure(scrollregion=self.bbox('all'))
