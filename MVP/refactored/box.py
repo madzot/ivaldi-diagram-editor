@@ -214,7 +214,7 @@ class Box:
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
 
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
-                self.snapped_x = float(go_to_x + self.size[0] / 2)
+                self.snapped_x = round(float(go_to_x + self.size[0] / 2), 4)
 
                 col_preset = box
 
@@ -223,7 +223,7 @@ class Box:
 
             if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
                 go_to_x = spider.x - +self.size[0] / 2
-                self.snapped_x = float(spider.x)
+                self.snapped_x = round(float(spider.x), 4)
                 if self.prev_snapped is None:
                     self.prev_snapped = self.snapped_x
 
@@ -235,6 +235,7 @@ class Box:
 
             if self.snapped_x not in self.canvas.columns:
                 self.canvas.columns[self.snapped_x] = [col_preset]
+                col_preset.snapped_x = self.snapped_x
             if self not in self.canvas.columns[self.snapped_x]:
                 self.canvas.columns[self.snapped_x].append(self)
 
@@ -370,6 +371,8 @@ class Box:
         self.start_y = event.y
 
     def move(self, new_x, new_y):
+        new_x = round(new_x, 4)
+        new_y = round(new_y, 4)
         is_bad = False
         for connection in self.connections:
             if connection.has_wire and self.is_illegal_move(connection, new_x):

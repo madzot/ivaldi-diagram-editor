@@ -212,14 +212,20 @@ class CustomCanvas(tk.Canvas):
                 event.x += x_offset
                 event.y += y_offset
 
-        self.scale('all', event.x, event.y, scale, scale)
+        self.update_coordinates(denominator, event, scale)
 
+        self.update_inputs_outputs()
+        self.configure(scrollregion=self.bbox('all'))
+
+    def update_coordinates(self, denominator, event, scale):
         for corner in self.corners:
             next_location = [
                 self.calculate_zoom_dif(event.x, corner.location[0], denominator),
                 self.calculate_zoom_dif(event.y, corner.location[1], denominator)
             ]
             corner.location = next_location
+            self.coords(corner.circle, next_location[0] - corner.r, corner.location[1] - corner.r,
+                        corner.location[0] + corner.r, corner.location[1] + corner.r)
 
         for i_o in self.inputs + self.outputs:
             i_o_location = [
@@ -228,6 +234,8 @@ class CustomCanvas(tk.Canvas):
             ]
             i_o.r *= scale
             i_o.location = i_o_location
+            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
+                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
 
         for box in self.boxes:
             box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
@@ -240,6 +248,8 @@ class CustomCanvas(tk.Canvas):
             spider.y = self.calculate_zoom_dif(event.y, spider.y, denominator)
             spider.location = spider.x, spider.y
             spider.r *= scale
+            self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
+                        spider.y + spider.r)
 
         for wire in self.wires:
             wire.wire_width *= scale
@@ -249,12 +259,12 @@ class CustomCanvas(tk.Canvas):
         for column_x in self.columns.keys():
             new_x = self.calculate_zoom_dif(event.x, column_x, denominator)
             for item in self.columns[column_x]:
+                if item.prev_snapped:
+                    item.prev_snapped = self.calculate_zoom_dif(event.x, item.prev_snapped, denominator)
                 item.snapped_x = new_x
+
             new_columns[new_x] = self.columns[column_x]
         self.columns = new_columns
-
-        self.update_inputs_outputs()
-        self.configure(scrollregion=self.bbox('all'))
 
     def check_max_zoom(self, x, y, denominator):
         x_offset = 0
