@@ -245,12 +245,13 @@ class CustomCanvas(tk.Canvas):
             wire.wire_width *= scale
             wire.update()
 
+        new_columns = {}
         for column_x in self.columns.keys():
             new_x = self.calculate_zoom_dif(event.x, column_x, denominator)
-            for item in self.boxes + self.spiders:
+            for item in self.columns[column_x]:
                 item.snapped_x = new_x
-            self.columns[new_x] = self.columns[column_x]
-            del self.columns[column_x]
+            new_columns[new_x] = self.columns[column_x]
+        self.columns = {new_columns}
 
         self.update_inputs_outputs()
         self.configure(scrollregion=self.bbox('all'))
