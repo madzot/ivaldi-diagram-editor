@@ -1,4 +1,6 @@
 import hashlib
+import json
+import os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
@@ -115,6 +117,9 @@ class MainDiagram(tk.Tk):
             self.load_from_file()
         self.json_file_hash = self.calculate_json_file_hash()
         self.label_content = {}
+        if os.stat("conf/functions_conf.json").st_size != 0:
+            with open("conf/functions_conf.json", "r") as file:
+                self.label_content = json.load(file)
         self.mainloop()
 
     @staticmethod
