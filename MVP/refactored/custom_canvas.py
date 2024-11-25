@@ -85,6 +85,11 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.destroy()
 
     def show_context_menu(self, event):
+        for wire in self.wires:
+            if wire.isPressed:
+                self.close_menu()
+                wire.isPressed = False
+                return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         if not self.is_mouse_on_object(event):
             self.close_menu()
