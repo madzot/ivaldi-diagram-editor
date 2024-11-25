@@ -718,10 +718,13 @@ class CustomCanvas(tk.Canvas):
     def setup_column_removal(self, item, found):
         if not found and item.snapped_x:
             self.remove_from_column(item, item.snapped_x)
+            if item.prev_snapped and item.snapped_x != item.prev_snapped:
+                self.remove_from_column(item, item.prev_snapped)
             item.snapped_x = None
             item.prev_snapped = None
-        elif item.is_snapped and found and item.snapped_x != item.prev_snapped:
+        elif found and item.snapped_x != item.prev_snapped:
             self.remove_from_column(item, item.prev_snapped)
+
         item.is_snapped = found
         item.prev_snapped = item.snapped_x
 
