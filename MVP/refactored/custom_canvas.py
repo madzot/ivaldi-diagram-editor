@@ -554,11 +554,18 @@ class CustomCanvas(tk.Canvas):
         ax.set_aspect('equal', adjustable='box')
 
         for box in self.boxes:
-            rect = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
-                                     box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
+            if box.shape == "triangle":
+                polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
+                                           (box.x / 100, y_max - box.y / 100),
+                                           (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),
+                                          edgecolor="black", facecolor="none")
+            else:
+                polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
+                                            box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
+
             plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
                      horizontalalignment="center", verticalalignment="center")
-            ax.add_patch(rect)
+            ax.add_patch(polygon)
 
         for spider in self.spiders:
             circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black")
