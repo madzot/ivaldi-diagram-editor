@@ -215,6 +215,8 @@ class Box:
 
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
                 self.snapped_x = round(float(go_to_x + self.size[0] / 2), 4)
+                if self.prev_snapped is None:
+                    self.prev_snapped = self.snapped_x
 
                 col_preset = box
 
@@ -230,6 +232,11 @@ class Box:
                 col_preset = spider
 
                 found = True
+
+        for existing_snapped_x in self.canvas.columns.keys():
+            if self.snapped_x:
+                if abs(self.snapped_x - existing_snapped_x) < 0.5:
+                    self.snapped_x = existing_snapped_x
 
         if found:
 
