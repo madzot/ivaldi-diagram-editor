@@ -6,7 +6,8 @@ from MVP.refactored.connection import Connection
 
 
 class Box:
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None):
+    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
+        self.shape = shape
         self.canvas = canvas
         self.x = x
         self.y = y
@@ -24,8 +25,8 @@ class Box:
         else:
             self.id = id_
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.rect = self.canvas.create_rectangle(self.x, self.y, self.x + self.size[0], self.y + self.size[1],
-                                                 outline="black", fill="white")
+        self.rect = self.create_rect()
+
         self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                                                           self.x + self.size[0], self.y + self.size[1],
                                                           outline="black", fill="black")
@@ -75,6 +76,11 @@ class Box:
             for circle in self.connections:
                 self.context_menu.add_command(label=f"Remove {circle.side} connection nr {circle.index}",
                                               command=lambda bound_arg=circle: self.remove_connection(bound_arg))
+
+            sub_menu = tk.Menu(self.context_menu, tearoff=0)
+            self.context_menu.add_cascade(menu=sub_menu, label="Shape")
+            sub_menu.add_command(label="Rectangle", command=lambda shape="rectangle": self.change_shape(shape))
+            sub_menu.add_command(label="Triangle", command=lambda shape="triangle": self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -209,7 +215,6 @@ class Box:
                 continue
 
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
-
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
                 self.snapped_x = float(go_to_x + self.size[0] / 2)
 
@@ -415,7 +420,13 @@ class Box:
         self.update_wires()
 
     def update_position(self):
-        self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
+        if self.shape == "rectangle":
+            self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
+        if self.shape == "triangle":
+            self.canvas.coords(self.rect,
+                               self.x + self.size[0], self.y + self.size[1] / 2,
+                               self.x, self.y,
+                               self.x, self.y + self.size[1])
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                            self.x + self.size[0], self.y + self.size[1])
 
@@ -553,3 +564,22 @@ class Box:
         if not self.has_right_connections():
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
+
+    def create_rect(self):
+        w, h = self.size
+        if self.shape == "rectangle":
+            return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
+                                                outline="black", fill="white")
+        if self.shape == "triangle":
+            return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
+                                              self.x, self.y + h, outline="black", fill="white")
+
+    def change_shape(self, shape):
+        if shape == "rectangle":
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")
+        elif shape == "triangle":
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="triangle")
+        else:
+            return
+        self.canvas.copier.copy_box(self, new_box)
+        self.delete_box()
