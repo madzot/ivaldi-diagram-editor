@@ -87,6 +87,10 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.destroy()
 
     def show_context_menu(self, event):
+        if self.is_wire_pressed:
+            self.close_menu()
+            self.is_wire_pressed = False
+            return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         if not self.is_mouse_on_object(event):
             self.close_menu()
@@ -260,8 +264,10 @@ class CustomCanvas(tk.Canvas):
         self.current_wire_start = None
         self.current_wire = None
 
-    def add_box(self, loc=(100, 100), size=(60, 60), id_=None):
-        box = Box(self, *loc, self.receiver, size=size, id_=id_)
+    def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape=None):
+        if shape is None:
+            shape = self.box_shape
+        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape)
         self.boxes.append(box)
         return box
 
@@ -533,3 +539,6 @@ class CustomCanvas(tk.Canvas):
             else:
                 go_to_y = go_to_y_down
         return break_boolean, go_to_y
+
+    def change_box_shape(self, shape):
+        self.box_shape = shape
