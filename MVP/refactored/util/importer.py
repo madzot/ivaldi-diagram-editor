@@ -133,7 +133,8 @@ class Importer:
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box(loc)
+            if box["shape"]:
+                new_box = canvas.add_box(loc, shape=box["shape"])
             if box["label"]:
                 new_box.set_label(box["label"])
             for _ in range(box["left_c"]):

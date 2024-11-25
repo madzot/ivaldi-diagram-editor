@@ -118,6 +118,7 @@ class Exporter:
             "label": box.label_text,
             "left_c": left_connections,
             "right_c": right_connections,
+            "shape": box.shape,
             "sub_diagram": None,
         }
         if box.sub_diagram:

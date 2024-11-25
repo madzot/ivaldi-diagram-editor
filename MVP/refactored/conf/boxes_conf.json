@@ -3,6 +3,7 @@
         "label": "sub1",
         "left_c": 1,
         "right_c": 1,
+        "shape": "rectangle",
         "sub_diagram": {
             "boxes": [
                 {
@@ -348,12 +349,14 @@
         "label": "+",
         "left_c": 2,
         "right_c": 1,
+        "shape": "rectangle",
         "sub_diagram": null
     },
     "1to1": {
         "label": "1to1",
         "left_c": 1,
         "right_c": 1,
+        "shape": "rectangle",
         "sub_diagram": null
     }
 }
