@@ -1,5 +1,9 @@
 import tkinter as tk
 from tkinter import simpledialog
+from tkinter import messagebox
+import json
+import re
+import os
 
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.connection import Connection
@@ -17,6 +21,8 @@ class Box:
         self.x_dif = 0
         self.y_dif = 0
         self.connections: list[Connection] = []
+        self.left_connections = 0
+        self.right_connections = 0
         self.label = None
         self.label_text = ""
         self.wires = []
@@ -333,8 +339,19 @@ class Box:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def edit_label(self):
-        # TODO check if label is already in use and if definitions match
         self.label_text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        if os.stat("conf/functions_conf.json").st_size != 0:
+            with open("conf/functions_conf.json", "r") as file:
+                data = json.load(file)
+                for label, code in data.items():
+                    if label == self.label_text:
+                        if messagebox.askokcancel("Confirmation",
+                                                  "A box with this label already exists."
+                                                  " Do you want to use the existing box?"):
+                            self.update_io()
+                        else:
+                            return self.edit_label()
+
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
@@ -438,6 +455,33 @@ class Box:
     def update_wires(self):
         [wire.update() for wire in self.wires]
 
+    def update_io(self):
+        """Update inputs and outputs based on label and code."""
+        with open("conf/functions_conf.json", "r") as file:
+            data = json.load(file)
+            for label, code in data.items():
+                if label == self.label_text:
+                    inputs_amount, outputs_amount = self.get_input_output_amount_off_code(code)
+                    if inputs_amount > self.left_connections:
+                        for i in range(inputs_amount - self.left_connections):
+                            self.add_left_connection()
+                    elif inputs_amount < self.left_connections:
+                        for j in range(self.left_connections - inputs_amount):
+                            for con in self.connections[::-1]:
+                                if con.side == "left":
+                                    self.remove_connection(con)
+                                    break
+
+                    if outputs_amount > self.right_connections:
+                        for i in range(outputs_amount - self.right_connections):
+                            self.add_right_connection()
+                    elif outputs_amount < self.right_connections:
+                        for i in range(self.right_connections - outputs_amount):
+                            for con in self.connections[::-1]:
+                                if con.side == "right":
+                                    self.remove_connection(con)
+                                    break
+
     # ADD TO/REMOVE FROM CANVAS
     def add_wire(self, wire):
         self.wires.append(wire)
@@ -455,6 +499,7 @@ class Box:
                                             connection_id=connection.id)
 
         self.resize_by_connections()
+        self.left_connections += 1
         return connection
 
     def add_right_connection(self, id_=None):
@@ -469,6 +514,7 @@ class Box:
             self.receiver.receiver_callback("box_add_right", generator_id=self.id, connection_nr=i,
                                             connection_id=connection.id)
         self.resize_by_connections()
+        self.right_connections += 1
         return connection
 
     def remove_connection(self, circle):
@@ -478,6 +524,10 @@ class Box:
         if self.receiver.listener:
             self.receiver.receiver_callback("box_remove_connection", generator_id=self.id, connection_nr=circle.index,
                                             generator_side=circle.side)
+        if circle.side == "left":
+            self.left_connections -= 1
+        elif circle.side == "right":
+            self.right_connections -= 1
 
         self.connections.remove(circle)
         circle.delete_me()
@@ -583,3 +633,18 @@ class Box:
             return
         self.canvas.copier.copy_box(self, new_box)
         self.delete_box()
+
+    @staticmethod
+    def get_input_output_amount_off_code(code):
+        inputs = re.search(r"\((.*)\):", code).group(1)
+        outputs = re.search(r"return (.*)\n*", code).group(1)
+        inputs_amount = len(inputs.split(","))
+        if outputs[0] == "(":
+            outputs = outputs[1:-1]
+        outputs_amount = len(outputs.strip().split(","))
+        if not inputs:
+            inputs_amount = 0
+        if not outputs:
+            outputs_amount = 0
+        return inputs_amount, outputs_amount
+

@@ -73,6 +73,7 @@ class Wire:
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
 
     def show_context_menu(self, event):
+        self.canvas.is_wire_pressed = True
         if not self.is_temporary:
             self.close_menu()
             self.context_menu = tk.Menu(self.canvas, tearoff=0)

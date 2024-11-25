@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageTk
 from scipy.interpolate import make_interp_spline
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 
 import tikzplotlib
 from MVP.refactored.box import Box
@@ -70,8 +72,17 @@ class CustomCanvas(tk.Canvas):
                     self.add_diagram_output()
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
+
+        self.tree_logo = (Image.open("../../assets/file-tree-outline.png"))
+        self.tree_logo = self.tree_logo.resize((20, 15))
+        self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
+
+        button = ttk.Button(self, image=self.tree_logo,
+                            command=lambda: self.master.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
+        button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
         self.columns = {}
         self.box_shape = "rectangle"
+        self.is_wire_pressed = False
 
         self.copy_logo = (Image.open('../../assets/content-copy.png'))
         self.copy_logo = self.copy_logo.resize((20, 20))
@@ -96,6 +107,10 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.destroy()
 
     def show_context_menu(self, event):
+        if self.is_wire_pressed:
+            self.close_menu()
+            self.is_wire_pressed = False
+            return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         if not self.is_mouse_on_object(event):
             self.close_menu()
@@ -194,6 +209,8 @@ class CustomCanvas(tk.Canvas):
             self.handle_connection_click(connection, event)
 
     def start_pulling_wire(self, event):
+        if self.focus_get() != self:
+            self.focus_set()
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
                 self.temp_wire.delete_self()
@@ -261,7 +278,7 @@ class CustomCanvas(tk.Canvas):
             if self.quick_pull:
                 self.quick_pull = False
                 self.draw_wire_mode = False
-                self.main_diagram.draw_wire_button.config(bg="white")
+                self.main_diagram.draw_wire_button.config(bootstyle=(PRIMARY, OUTLINE))
 
     def nullify_wire_start(self):
         if self.current_wire_start:
@@ -332,11 +349,11 @@ class CustomCanvas(tk.Canvas):
             for item in self.selector.selected_items:
                 item.deselect()
             self.selector.selected_items.clear()
-            self.main_diagram.draw_wire_button.config(bg="lightgreen")
+            self.main_diagram.draw_wire_button.config(bootstyle=SUCCESS)
         else:
             self.nullify_wire_start()
             self.cancel_wire_pulling()
-            self.main_diagram.draw_wire_button.config(bg="white")
+            self.main_diagram.draw_wire_button.config(bootstyle=(PRIMARY, OUTLINE))
 
     # RESIZE/UPDATE
     def on_canvas_resize(self, _):
@@ -604,7 +621,6 @@ class CustomCanvas(tk.Canvas):
         tikz = tikzplotlib.get_tikz_code(figure=fig)
         plt.close()
         return tikz
-
 
     @staticmethod
     def get_upper_lower_edges(component):
