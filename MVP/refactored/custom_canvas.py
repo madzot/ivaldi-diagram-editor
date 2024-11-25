@@ -154,6 +154,7 @@ class CustomCanvas(tk.Canvas):
         for box in self.boxes:
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
             box.update_size(box.size[0], box.size[1])
+            box.move_label()
         for wire in self.wires:
             wire.update()
         if self.pulling_wire:
@@ -178,6 +179,7 @@ class CustomCanvas(tk.Canvas):
             box.x -= x_offset
             box.y -= y_offset
             box.update_size(box.size[0], box.size[1])
+            box.move_label()
         for spider in self.spiders:
             spider.x -= x_offset
             spider.y -= y_offset
