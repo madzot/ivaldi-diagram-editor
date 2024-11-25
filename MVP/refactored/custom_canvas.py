@@ -65,6 +65,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
+        self.box_shape = "rectangle"
         self.is_wire_pressed = False
 
     def handle_right_click(self, event):
@@ -86,10 +87,6 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.destroy()
 
     def show_context_menu(self, event):
-        if self.is_wire_pressed:
-            self.close_menu()
-            self.is_wire_pressed = False
-            return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         if not self.is_mouse_on_object(event):
             self.close_menu()
