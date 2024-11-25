@@ -269,7 +269,6 @@ class Box:
         self.is_snapped = found
         self.prev_snapped = self.snapped_x
 
-        print((go_to_x, go_to_y))
         self.move(go_to_x, go_to_y)
         self.move_label()
 

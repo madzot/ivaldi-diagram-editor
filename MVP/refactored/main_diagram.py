@@ -28,6 +28,8 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
+
         self.is_tree_visible = True
         self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)

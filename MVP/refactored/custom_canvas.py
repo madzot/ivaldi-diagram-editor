@@ -209,8 +209,6 @@ class CustomCanvas(tk.Canvas):
             self.handle_connection_click(connection, event)
 
     def start_pulling_wire(self, event):
-        if self.focus_get() != self:
-            self.focus_set()
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
                 self.temp_wire.delete_self()
@@ -334,10 +332,10 @@ class CustomCanvas(tk.Canvas):
         tikz_text.pack(pady=10, fill=tk.BOTH, expand=True)
         tikz_text.update()
 
-        tikz_copy_button = tk.Button(tikz_text, image=self.copy_logo,
-                                     command=lambda: self.copy_text(tikz_text.get("1.0", tk.END)),
-                                     bg="white", relief="flat")
-        tikz_copy_button.place(x=tikz_text.winfo_width() - 25, y=20, anchor=tk.CENTER)
+        tikz_copy_button = ttk.Button(tikz_text, image=self.copy_logo,
+                                      command=lambda: self.copy_text(tikz_text.get("1.0", tk.END)),
+                                      bootstyle=LIGHT)
+        tikz_copy_button.place(x=tikz_text.winfo_width() - 30, y=20, anchor=tk.CENTER)
 
     def copy_text(self, text):
         self.clipboard_clear()
