@@ -60,6 +60,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Left>", self.pan_horizontal)
         self.bind("<Down>", self.pan_vertical)
         self.bind("<Up>", self.pan_vertical)
+        self.bind("d", self.debug)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -93,6 +94,9 @@ class CustomCanvas(tk.Canvas):
         self.pan_history_x = 0
         self.pan_history_y = 0
         self.pan_speed = 20
+
+    def debug(self, event):
+        pass
 
     def pan_horizontal(self, event):
         if event.keysym == "Right":
@@ -729,6 +733,9 @@ class CustomCanvas(tk.Canvas):
         item.prev_snapped = item.snapped_x
 
     def remove_from_column(self, item, snapped_x):
+        for column_x in self.columns.keys():
+            if abs(column_x - snapped_x) < 0.01:
+                snapped_x = column_x
         self.columns[snapped_x].remove(item)
         if len(self.columns[snapped_x]) == 1:
             self.columns[snapped_x][0].snapped_x = None
