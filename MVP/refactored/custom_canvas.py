@@ -333,13 +333,9 @@ class CustomCanvas(tk.Canvas):
         tikz_text.update()
 
         tikz_copy_button = ttk.Button(tikz_text, image=self.copy_logo,
-                                      command=lambda: self.copy_text(tikz_text.get("1.0", tk.END)),
+                                      command=lambda: self.main_diagram.copy_to_clipboard(tikz_text),
                                       bootstyle=LIGHT)
         tikz_copy_button.place(x=tikz_text.winfo_width() - 30, y=20, anchor=tk.CENTER)
-
-    def copy_text(self, text):
-        self.clipboard_clear()
-        self.clipboard_append(text)
 
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
