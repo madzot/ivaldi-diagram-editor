@@ -44,7 +44,13 @@ class Box:
         self.is_snapped = False
         self.snapped_x = None
         self.prev_snapped = None
-        self.box_function = None
+        self.box_function: BoxFunction = None
+
+    def set_box_function(self, function: BoxFunction):
+        self.box_function = function
+
+    def get_box_function(self) -> BoxFunction:
+        return self.box_function
 
     def set_id(self, id_):
         if self.receiver.listener:
