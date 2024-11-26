@@ -3,12 +3,14 @@
         "label": "sub1",
         "left_c": 1,
         "right_c": 1,
+        "shape": "rectangle",
         "sub_diagram": {
             "boxes": [
                 {
                     "id": 2271383251600,
                     "x": 383,
                     "y": 238,
+                    "shape": "rectangle",
                     "size": [
                         60,
                         150
@@ -348,12 +350,14 @@
         "label": "+",
         "left_c": 2,
         "right_c": 1,
+        "shape": "rectangle",
         "sub_diagram": null
     },
     "1to1": {
         "label": "1to1",
         "left_c": 1,
         "right_c": 1,
+        "shape": "rectangle",
         "sub_diagram": null
     }
 }
