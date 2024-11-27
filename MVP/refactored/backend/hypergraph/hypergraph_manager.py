@@ -19,15 +19,16 @@ class HypergraphManager:
         return None
 
     @staticmethod
-    def get_graph_by_id(hypergraph_id: int) -> Hypergraph | None:
+    def get_graphs_by_canvas_id(canvas_id: int) -> set[Hypergraph]:
+        graphs: set[Hypergraph] = set()
         for graph in HypergraphManager.hypergraphs:
-            if graph.id == hypergraph_id:
-                return graph
-        return None
+            if graph.get_canvas_id() == canvas_id:
+                graphs.add(graph)
+        return graphs
 
     @staticmethod
     def modify_canvas_hypergraph(canvas: CustomCanvas) -> None:
-        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
+        hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
 
         if hypergraph:
             HypergraphManager.hypergraphs.remove(hypergraph)

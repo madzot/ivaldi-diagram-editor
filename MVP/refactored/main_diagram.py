@@ -173,7 +173,7 @@ class MainDiagram(tk.Tk):
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
-        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
+        hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
         if hypergraph is None:
             messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
             plot_window.destroy()

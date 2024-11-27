@@ -107,7 +107,7 @@ class CodeGenerator:
     @classmethod
     def construct_main_function(cls, canvas: CustomCanvas, renamed_functions: dict[BoxFunction, str]) -> str:
         main_function = ""
-        hypergraph: Hypergraph = HypergraphManager().get_graph_by_id(canvas.id)
+        hypergraph: Hypergraph = HypergraphManager().get_graphs_by_canvas_id(canvas.id)  # TODO if there many hypergraphs
         input_nodes: set[Node] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
         input_nodes = sorted(input_nodes, key=lambda input_node: canvas.get_box_by_id(input_node.id).y)
         main_function += cls.create_definition_of_main_function(input_nodes)
