@@ -16,7 +16,7 @@ class Copier:
     @staticmethod
     def copy_over_boxes(boxes, canvas):
         for old_box in boxes:
-            sub_diagram_box: Box = canvas.add_box((old_box.x, old_box.y), size=old_box.size)
+            sub_diagram_box: Box = canvas.create_new_box((old_box.x, old_box.y), size=old_box.size)
             sub_diagram_box.set_box_function(old_box.get_box_function())
             sub_diagram_box.set_id(old_box.id)
             for connection in old_box.connections:

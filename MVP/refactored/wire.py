@@ -38,7 +38,7 @@ class Wire:
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
         if not self.is_temporary:
-            self.canvas.wires.remove(self)
+            self.canvas.remove_wire(self)
         if not self.is_temporary:
             self.handle_wire_deletion_callback(action)
 

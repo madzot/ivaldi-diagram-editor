@@ -27,11 +27,11 @@ class CustomCanvas(tk.Canvas):
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
         self.master = master
-        self.boxes: list[Box] = []
+        self.boxes: set[Box] = set()
         self.outputs: list[Connection] = []
         self.inputs: list[Connection] = []
         self.spiders: list[Spider] = []
-        self.wires: list[Wire] = []
+        self.wires: set[Wire] = set()
         self.temp_wire = None
         self.temp_end_connection = None
         self.pulling_wire = False
@@ -81,6 +81,25 @@ class CustomCanvas(tk.Canvas):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(args)
 
+    def add_box(self, box: Box):
+        self.boxes.add(box)
+
+    def remove_box(self, box: Box):
+        if box in self.boxes:
+            self.boxes.remove(box)
+
+    def remove_all_boxes(self):
+        self.boxes = set()
+
+    def remove_wire(self, wire: Wire):
+        self.wires.remove(wire)
+
+    def add_wire(self, wire: Wire):
+        self.wires.add(wire)
+
+    def remove_all_wires(self):
+        self.wires = set()
+
     def handle_right_click(self, event):
         if self.selector.selecting:
             self.selector.finish_selection()
@@ -106,7 +125,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu = tk.Menu(self, tearoff=0)
 
             self.context_menu.add_command(label="Add undefined box",
-                                          command=lambda loc=(event.x, event.y): self.add_box(loc))
+                                          command=lambda loc=(event.x, event.y): self.create_new_box(loc))
 
             # noinspection PyUnresolvedReferences
             if len(self.master.quick_create_boxes) > 0:
@@ -252,7 +271,7 @@ class CustomCanvas(tk.Canvas):
                                                                               connection) or bypass_legality_check:
             self.cancel_wire_pulling()
             self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
-            self.wires.append(self.current_wire)
+            self.add_wire(self.current_wire)
 
             if self.current_wire_start.box is not None:
                 self.current_wire_start.box.add_wire(self.current_wire)
@@ -286,9 +305,9 @@ class CustomCanvas(tk.Canvas):
         self.current_wire_start = None
         self.current_wire = None
 
-    def add_box(self, loc=(100, 100), size=(60, 60), id_=None):
+    def create_new_box(self, loc=(100, 100), size=(60, 60), id_=None):
         box = Box(self, *loc, self.receiver, size=size, id_=id_)
-        self.boxes.append(box)
+        self.add_box(box)
         return box
 
     def get_box_by_id(self, box_id: int) -> Box | None:
@@ -369,8 +388,8 @@ class CustomCanvas(tk.Canvas):
             w.delete_self()
         for b in self.boxes:
             b.delete_box()
-        self.boxes = []
-        self.wires = []
+        self.remove_all_boxes()
+        self.remove_all_wires()
 
     # STATIC HELPERS
     @staticmethod

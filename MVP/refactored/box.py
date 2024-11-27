@@ -545,7 +545,7 @@ class Box:
                 self.canvas.columns.pop(self.snapped_x, None)
             self.snapped_x = None
         if self in self.canvas.boxes:
-            self.canvas.boxes.remove(self)
+            self.canvas.remove_box(self)
         self.canvas.delete(self.label)
         if self.sub_diagram and not keep_sub_diagram:
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
@@ -607,3 +607,13 @@ class Box:
         if not self.has_right_connections():
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
+
+

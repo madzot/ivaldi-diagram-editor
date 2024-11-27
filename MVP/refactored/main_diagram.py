@@ -48,7 +48,7 @@ class MainDiagram(tk.Tk):
         self.importer = Importer(self.custom_canvas)
         # Add undefined box
         self.undefined_box_button = tk.Button(self.control_frame, text="Add Undefined Box",
-                                              command=self.custom_canvas.add_box, bg="white", width=18)
+                                              command=self.custom_canvas.create_new_box, bg="white", width=18)
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
 
         self.boxes = {}
@@ -205,7 +205,7 @@ class MainDiagram(tk.Tk):
             self.open_children(child)  # recursively open children
 
     def bind_buttons(self):
-        self.undefined_box_button.configure(command=self.custom_canvas.add_box)
+        self.undefined_box_button.configure(command=self.custom_canvas.create_new_box)
         self.manage_boxes.configure(command=self.manage_boxes_method)
         self.spider_box.configure(command=self.custom_canvas.add_spider)
 
@@ -407,7 +407,7 @@ class MainDiagram(tk.Tk):
         # add undefined box button as well to make width greater
         self.dropdown_menu.delete(0, tk.END)
         self.dropdown_menu.add_command(label="Add Undefined Box",
-                                       command=self.custom_canvas.add_box)
+                                       command=self.custom_canvas.create_new_box)
         self.dropdown_menu.add_separator()
 
         # Add options to the dropdown menu

@@ -47,7 +47,7 @@ class HypergraphManager:
                     node.add_output(connection.wire.id)
             hypergraph.add_node(node)
 
-        if hypergraph.is_valid():
+        if hypergraph._is_valid():
             HypergraphManager.hypergraphs.append(hypergraph)
             print("Valid hypergraph created")
             print(hypergraph.__str__())

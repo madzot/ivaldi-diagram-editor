@@ -4,7 +4,7 @@ from importlib import import_module
 
 class Node:
 
-    def __init__(self, node_id=None, inputs=None, outputs=None):
+    def __init__(self, node_id=None, parent_nodes=None, children_nodes=None, inputs=None, outputs=None):
         if node_id is None:
             node_id = id(self)
         if inputs is None:
@@ -15,17 +15,75 @@ class Node:
         self.inputs = inputs
         self.outputs = outputs
 
-    def get_children(self):
+    def _get_children(self):
         module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")
         HypergraphManager = getattr(module, "HypergraphManager")
         hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
         return hypergraph.get_node_children_by_node(self)
 
-    def get_parents(self):
+    def _get_parents(self):
         module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")
         HypergraphManager = getattr(module, "HypergraphManager")
         hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
         return hypergraph.get_node_parents_by_node(self)
+
+    def get_children(self) -> set:
+        return set(self.children_nodes.keys())
+
+    def get_parents(self) -> set:
+        return set(self.parent_nodes.keys())
+
+    def get_child_by_node(self, child: Node) -> Node | None:
+        if child in self.children_nodes:
+            return self.children_nodes[child]
+        else:
+            return None
+
+    def get_parent_by_node(self, parent: Node) -> Node | None:
+        if parent in self.parent_nodes:
+            return self.parent_nodes[parent]
+        else:
+            return None
+
+    def get_child_by_id(self, child_id: int) -> Node | None:
+        for child in self.children_nodes.keys():
+            if child.id == child_id:
+                return child
+        return None
+
+    def get_parent_by_id(self, parent_id: int) -> Node | None:
+        for parent in self.parent_nodes.keys():
+            if parent.id == parent_id:
+                return parent
+        return None
+
+    def add_child(self, child: Node, edge_count=1):
+        if child in self.children_nodes:
+            self.children_nodes[child] += edge_count
+        else:
+            self.children_nodes[child] = edge_count
+        child.add_parent(self, edge_count)
+
+    def add_parent(self, parent: Node, edge_count=1):
+        if parent in self.parent_nodes:
+            self.parent_nodes[parent] += edge_count
+        else:
+            self.parent_nodes[parent] = edge_count
+        parent.add_child(self, edge_count)
+
+    def remove_child(self, child_to_remove: Node):
+        if child_to_remove in self.children_nodes:
+            del self.children_nodes[child_to_remove]
+
+    def remove_parent(self, parent_to_remove: Node):
+        if parent_to_remove in self.parent_nodes:
+            del self.parent_nodes[parent_to_remove]
+
+    def set_box_function(self, function: BoxFunction):
+        self.box_function = function
+
+    def get_box_function(self) -> BoxFunction:
+        return self.box_function
 
     def add_input(self, input_id: int) -> None:
         if input_id in self.inputs or input_id in self.outputs:
@@ -45,8 +103,11 @@ class Node:
     def remove_output(self, output_id: int) -> None:
         self.outputs.remove(output_id)
 
-    def is_valid(self) -> bool:
+    def _is_valid(self) -> bool:
         return len(self.inputs) > 0 and len(self.outputs) > 0
+
+    def is_valid(self) -> bool:
+        return self.children_nodes or self.parent_nodes
 
     def has_input(self, input_id) -> bool:
         return input_id in self.inputs

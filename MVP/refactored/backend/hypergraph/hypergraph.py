@@ -76,7 +76,7 @@ class Hypergraph(Node):
         self.inputs = list(all_inputs - all_outputs)
         self.outputs = list(all_outputs - all_inputs)
 
-    def is_valid(self) -> bool:
+    def _is_valid(self) -> bool:
         """Validate hypergraph structure by checking input/output consistency and cycles."""
         if not self.inputs or not self.outputs or not self.nodes:
             print("Inputs, outputs, or nodes are empty")
@@ -86,7 +86,7 @@ class Hypergraph(Node):
         node_outputs = set()
 
         for node in self.nodes:
-            if not node.is_valid():
+            if not node._is_valid():
                 print(f"Node {node.id} is not valid")
                 return False
 

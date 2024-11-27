@@ -207,7 +207,7 @@ class CodeGenerator:
         children = set()
 
         for node in current_level_nodes:
-            current_node_children = node.get_children()
+            current_node_children = node._get_children()
 
             for node_child in current_node_children:
                 connections_with_parent_node = 0
