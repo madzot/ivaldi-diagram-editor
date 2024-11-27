@@ -3,8 +3,8 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
-import ttkbootstrap as ttk
 from PIL import Image, ImageTk
+import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
 from MVP.refactored.box import Box
@@ -18,6 +18,7 @@ from MVP.refactored.wire import Wire
 class CustomCanvas(tk.Canvas):
     def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, **kwargs):
         super().__init__(master, **kwargs)
+
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
         self.configure(bg='white', width=screen_width_min, height=screen_height_min)
@@ -77,6 +78,10 @@ class CustomCanvas(tk.Canvas):
         self.columns = {}
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
+
+        self.copy_logo = (Image.open('../../assets/content-copy.png'))
+        self.copy_logo = self.copy_logo.resize((20, 20))
+        self.copy_logo = ImageTk.PhotoImage(self.copy_logo)
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -199,8 +204,6 @@ class CustomCanvas(tk.Canvas):
             self.handle_connection_click(connection, event)
 
     def start_pulling_wire(self, event):
-        if self.focus_get() != self:
-            self.focus_set()
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
                 self.temp_wire.delete_self()
@@ -306,6 +309,28 @@ class CustomCanvas(tk.Canvas):
             img = Image.open('temp.ps')
             img.save(file_path, 'png')
             os.remove("temp.ps")
+
+    def open_tikz_generator(self):
+        tikz_window = tk.Toplevel(self)
+        tikz_window.title("TikZ Generator")
+
+        tk.Label(tikz_window, text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.", justify="left").pack()
+
+        pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
+        pgfplotsset_text.insert(tk.END, "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.config(state=tk.DISABLED)
+        pgfplotsset_text.pack()
+
+        tikz_text = tk.Text(tikz_window)
+        tikz_text.insert(tk.END, self.main_diagram.generate_tikz(self))
+        tikz_text.config(state="disabled")
+        tikz_text.pack(pady=10, fill=tk.BOTH, expand=True)
+        tikz_text.update()
+
+        tikz_copy_button = ttk.Button(tikz_text, image=self.copy_logo,
+                                      command=lambda: self.main_diagram.copy_to_clipboard(tikz_text),
+                                      bootstyle=LIGHT)
+        tikz_copy_button.place(x=tikz_text.winfo_width() - 30, y=20, anchor=tk.CENTER)
 
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
