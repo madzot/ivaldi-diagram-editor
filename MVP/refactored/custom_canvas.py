@@ -319,10 +319,10 @@ class CustomCanvas(tk.Canvas):
         tikz_window = tk.Toplevel(self)
         tikz_window.title("TikZ Generator")
 
-        tk.Label(tikz_window, text="PGF/TikZ plot sizes can be manually changed in LaTeX with", justify="left").pack()
+        tk.Label(tikz_window, text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.", justify="left").pack()
 
         pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
-        pgfplotsset_text.insert(tk.END, "\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.insert(tk.END, "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
         pgfplotsset_text.config(state=tk.DISABLED)
         pgfplotsset_text.pack()
 
