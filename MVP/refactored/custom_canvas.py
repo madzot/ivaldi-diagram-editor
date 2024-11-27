@@ -60,6 +60,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Left>", self.pan_horizontal)
         self.bind("<Down>", self.pan_vertical)
         self.bind("<Up>", self.pan_vertical)
+        self.bind("d", self.debug)
         self.selecting = False
         self.copier = Copier()
         if add_boxes and diagram_source_box:
@@ -90,11 +91,12 @@ class CustomCanvas(tk.Canvas):
 
         self.prev_scale = 1.0
 
-        self.zoom_history = []
-
         self.pan_history_x = 0
         self.pan_history_y = 0
         self.pan_speed = 20
+
+    def debug(self, event):
+        pass
 
     def pan_horizontal(self, event):
         if event.keysym == "Right":
@@ -206,16 +208,22 @@ class CustomCanvas(tk.Canvas):
             self.total_scale /= self.delta
 
         if self.prev_scale < self.total_scale:
-            denominator = 0.75
-            self.zoom_history.append((event.x, event.y))
+            denominator = self.delta
         else:
-            if len(self.zoom_history) == 0:
-                self.total_scale = self.prev_scale
+            denominator = 1 / self.delta
+            is_allowed, x_offset, y_offset, end = self.check_max_zoom(event.x, event.y, denominator)
+            if end:
                 return
-            denominator = 4 / 3
-            event.x, event.y = self.zoom_history.pop()
-            self.move_items(self.pan_history_x, self.pan_history_y)
+            if not is_allowed:
+                event.x += x_offset
+                event.y += y_offset
 
+        self.update_coordinates(denominator, event, scale)
+
+        self.update_inputs_outputs()
+        self.configure(scrollregion=self.bbox('all'))
+
+    def update_coordinates(self, denominator, event, scale):
         for corner in self.corners:
             next_location = [
                 self.calculate_zoom_dif(event.x, corner.location[0], denominator),
@@ -252,8 +260,51 @@ class CustomCanvas(tk.Canvas):
         for wire in self.wires:
             wire.wire_width *= scale
             wire.update()
-        self.update_inputs_outputs()
-        self.configure(scrollregion=self.bbox('all'))
+
+        new_columns = {}
+        for column_x in self.columns.keys():
+            new_x = self.calculate_zoom_dif(event.x, column_x, denominator)
+            for item in self.columns[column_x]:
+                if item.prev_snapped:
+                    item.prev_snapped = self.calculate_zoom_dif(event.x, item.prev_snapped, denominator)
+                item.snapped_x = new_x
+
+            new_columns[new_x] = self.columns[column_x]
+        self.columns = new_columns
+
+    def check_max_zoom(self, x, y, denominator):
+        x_offset = 0
+        y_offset = 0
+        for corner in self.corners:
+            next_location = [
+                self.calculate_zoom_dif(x, corner.location[0], denominator),
+                self.calculate_zoom_dif(y, corner.location[1], denominator)
+            ]
+            multiplier = 1 / (1 - self.delta)
+            if 0 < round(next_location[0]) < self.winfo_width():
+                x_offset = -next_location[0] * multiplier
+                if round(next_location[0]) > self.winfo_width() / 2:
+                    x_offset = (self.winfo_width() - next_location[0]) * multiplier
+            if 0 < round(next_location[1]) < self.winfo_height():
+                y_offset = -next_location[1] * multiplier
+                if round(next_location[1]) > self.winfo_height() / 2:
+                    y_offset = (self.winfo_height() - next_location[1]) * multiplier
+        is_allowed = x_offset == 0 == y_offset
+        return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
+
+    def check_corner_start_locations(self):
+        count = 0
+        locations = [
+            [0, 0],
+            [0, self.winfo_height()],
+            [self.winfo_width(), 0],
+            [self.winfo_width(), self.winfo_height()]
+        ]
+        for corner in self.corners:
+            for location in locations:
+                if round(corner.location[0]) == location[0] and round(corner.location[1]) == location[1]:
+                    count += 1
+        return count == 4
 
     def close_menu(self):
         if self.context_menu:
@@ -673,14 +724,20 @@ class CustomCanvas(tk.Canvas):
     def setup_column_removal(self, item, found):
         if not found and item.snapped_x:
             self.remove_from_column(item, item.snapped_x)
+            if item.prev_snapped and item.snapped_x != item.prev_snapped:
+                self.remove_from_column(item, item.prev_snapped)
             item.snapped_x = None
             item.prev_snapped = None
-        elif item.is_snapped and found and item.snapped_x != item.prev_snapped:
+        elif found and item.snapped_x != item.prev_snapped:
             self.remove_from_column(item, item.prev_snapped)
+
         item.is_snapped = found
         item.prev_snapped = item.snapped_x
 
     def remove_from_column(self, item, snapped_x):
+        for column_x in self.columns.keys():
+            if abs(column_x - snapped_x) < 0.01:
+                snapped_x = column_x
         self.columns[snapped_x].remove(item)
         if len(self.columns[snapped_x]) == 1:
             self.columns[snapped_x][0].snapped_x = None
@@ -689,7 +746,7 @@ class CustomCanvas(tk.Canvas):
 
     @staticmethod
     def calculate_zoom_dif(zoom_coord, object_coord, denominator):
-        """Calculates how much an object needs to be moved when zooming."""
+        """Calculates how much an object will to be moved when zooming."""
         return round(zoom_coord - (zoom_coord - object_coord) / denominator, 4)
 
     @staticmethod
