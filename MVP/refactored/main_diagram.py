@@ -4,6 +4,11 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
+from scipy.interpolate import make_interp_spline
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+import tikzplotlib
 
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
@@ -196,6 +201,7 @@ class MainDiagram(tk.Tk):
             buttons = {
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
+                "Generate TikZ": self.custom_canvas.open_tikz_generator,
                 "Remove input": self.custom_canvas.remove_diagram_input,
                 "Remove output": self.custom_canvas.remove_diagram_output,
                 "Add input": self.custom_canvas.add_diagram_input,
@@ -205,6 +211,7 @@ class MainDiagram(tk.Tk):
             buttons = {
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
+                "Generate TikZ": self.custom_canvas.open_tikz_generator,
                 "Remove input": self.remove_diagram_input,
                 "Remove output": self.remove_diagram_output,
                 "Add input": self.add_diagram_input,
@@ -438,3 +445,66 @@ class MainDiagram(tk.Tk):
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
+
+    @staticmethod
+    def pairwise(iterable):
+        "s -> (s0, s1), (s2, s3), (s4, s5), ..."
+        a = iter(iterable)
+        return zip(a, a)
+
+    def generate_tikz(self, canvas):
+        x_max, y_max = canvas.winfo_width() / 100, canvas.winfo_height() / 100
+        fig, ax = plt.subplots(1, figsize=(x_max, y_max))
+        ax.set_aspect('equal', adjustable='box')
+
+        for box in canvas.boxes:
+            if box.shape == "triangle":
+                polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
+                                           (box.x / 100, y_max - box.y / 100),
+                                           (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),
+                                          edgecolor="black", facecolor="none")
+            else:
+                polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
+                                            box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
+
+            plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
+                     horizontalalignment="center", verticalalignment="center")
+            ax.add_patch(polygon)
+
+        for spider in canvas.spiders:
+            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black")
+            ax.add_patch(circle)
+
+        for i_o in canvas.inputs + canvas.outputs:
+            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black")
+            ax.add_patch(con)
+
+        for wire in canvas.wires:
+            x = []
+            y = []
+            x_y = {}
+            for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                x_y[x_coord / 100] = y_max - y_coord / 100
+
+            x_y = dict(sorted(x_y.items()))
+            for x_coord in x_y.keys():
+                x.append(x_coord)
+                y.append(x_y[x_coord])
+
+            x = np.array(x)
+            y = np.array(y)
+
+            x_linspace = np.linspace(x.min(), x.max(), 200)
+            spl = make_interp_spline(x, y, k=3)
+            y_line = spl(x_linspace)
+
+            plt.plot(x_linspace, y_line, color="black")
+
+        ax.set_xlim(0, x_max)
+        ax.set_ylim(0, y_max)
+        plt.axis('off')
+
+        tikzplotlib.clean_figure(fig=fig)
+        tikz = tikzplotlib.get_tikz_code(figure=fig)
+        plt.close()
+        return tikz

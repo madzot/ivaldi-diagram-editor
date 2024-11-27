@@ -3,15 +3,10 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
-import matplotlib.patches as patches
-import matplotlib.pyplot as plt
-import numpy as np
 from PIL import Image, ImageTk
-from scipy.interpolate import make_interp_spline
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
-import tikzplotlib
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
@@ -327,7 +322,7 @@ class CustomCanvas(tk.Canvas):
         pgfplotsset_text.pack()
 
         tikz_text = tk.Text(tikz_window)
-        tikz_text.insert(tk.END, self.generate_tikz())
+        tikz_text.insert(tk.END, self.main_diagram.generate_tikz(self))
         tikz_text.config(state="disabled")
         tikz_text.pack(pady=10, fill=tk.BOTH, expand=True)
         tikz_text.update()
@@ -552,69 +547,6 @@ class CustomCanvas(tk.Canvas):
             self.columns[snapped_x][0].snapped_x = None
             self.columns[snapped_x][0].is_snapped = False
             self.columns.pop(snapped_x, None)
-
-    @staticmethod
-    def pairwise(iterable):
-        "s -> (s0, s1), (s2, s3), (s4, s5), ..."
-        a = iter(iterable)
-        return zip(a, a)
-
-    def generate_tikz(self):
-        x_max, y_max = self.winfo_width() / 100, self.winfo_height() / 100
-        fig, ax = plt.subplots(1, figsize=(x_max, y_max))
-        ax.set_aspect('equal', adjustable='box')
-
-        for box in self.boxes:
-            if box.shape == "triangle":
-                polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
-                                           (box.x / 100, y_max - box.y / 100),
-                                           (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),
-                                          edgecolor="black", facecolor="none")
-            else:
-                polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
-                                            box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
-
-            plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
-                     horizontalalignment="center", verticalalignment="center")
-            ax.add_patch(polygon)
-
-        for spider in self.spiders:
-            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black")
-            ax.add_patch(circle)
-
-        for i_o in self.inputs + self.outputs:
-            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black")
-            ax.add_patch(con)
-
-        for wire in self.wires:
-            x = []
-            y = []
-            x_y = {}
-            for x_coord, y_coord in self.pairwise(self.coords(wire.line)):
-                x_y[x_coord / 100] = y_max - y_coord / 100
-
-            x_y = dict(sorted(x_y.items()))
-            for x_coord in x_y.keys():
-                x.append(x_coord)
-                y.append(x_y[x_coord])
-
-            x = np.array(x)
-            y = np.array(y)
-
-            x_linspace = np.linspace(x.min(), x.max(), 200)
-            spl = make_interp_spline(x, y, k=3)
-            y_line = spl(x_linspace)
-
-            plt.plot(x_linspace, y_line, color="black")
-
-        ax.set_xlim(0, x_max)
-        ax.set_ylim(0, y_max)
-        plt.axis('off')
-
-        tikzplotlib.clean_figure(fig=fig)
-        tikz = tikzplotlib.get_tikz_code(figure=fig)
-        plt.close()
-        return tikz
 
     @staticmethod
     def get_upper_lower_edges(component):
