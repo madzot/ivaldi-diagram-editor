@@ -2,16 +2,19 @@ from MVP.refactored.backend.hypergraph.node import Node
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from MVP.refactored.custom_canvas import CustomCanvas
+
 
 class Hypergraph(Node):
     """Hypergraph class."""
 
-    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, nodes=None):
+    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, nodes=None, canvas_id=None):
         super().__init__(hypergraph_id, inputs, outputs)
         if nodes is None:
             nodes = []
         self.nodes = nodes
         self.set_hypergraph_io()
+        self.canvas_id: int = canvas_id
 
     def add_node(self, node: Node) -> None:
         if node in self.nodes:
@@ -40,6 +43,12 @@ class Hypergraph(Node):
             if any(n in node.inputs for n in required_node.outputs): # If requiredNode outputs wire id contains another node inputs wire id
                 children.append(node)
         return children
+
+    def get_canvas_id(self) -> CustomCanvas:
+        return self.canvas_id
+
+    def set_canvas_id(self, canvas_id: int) -> None:
+        self.canvas_id = canvas_id
 
     def get_node_parents_by_id(self, node_id: int) -> list[Node]:
         return self.get_node_parents_by_node(self.get_node(node_id))
