@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from importlib import import_module
 
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
+
+
 class Node:
 
     def __init__(self, node_id=None, parent_nodes=None, children_nodes=None, inputs=None, outputs=None):
@@ -14,6 +17,16 @@ class Node:
         self.id = node_id
         self.inputs = inputs
         self.outputs = outputs
+        if parent_nodes is not None:
+            self.parent_nodes: dict[Node, int] = parent_nodes
+        if children_nodes is not None:
+            self.children_nodes: dict[Node, int] = children_nodes
+        # key is node, value is number of edges between self node and parent node
+        self.parent_nodes: dict[Node, int] = dict()
+        # same here
+        self.children_nodes: dict[Node, int] = dict()
+        # if box_function is null consider it as input/output in diagram
+        self.box_function: BoxFunction = None
 
     def _get_children(self):
         module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")

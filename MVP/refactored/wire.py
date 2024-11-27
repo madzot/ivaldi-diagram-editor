@@ -159,3 +159,11 @@ class Wire:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, None, connection.side],
                                             connection_id=connection.id)
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)

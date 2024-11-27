@@ -88,10 +88,10 @@ class Connection:
             self.wire.delete_self()
 
             if self.box and self.wire in self.box.wires:
-                self.box.wires.remove(self.wire)
+                self.box.remove_wire(self.wire)
 
             if self.wire in self.canvas.wires:
-                self.canvas.wires.remove(self.wire)
+                self.canvas.remove_wire(self.wire)
 
     def add_wire(self, wire):
         if not self.has_wire and self.wire is None:

@@ -5,6 +5,7 @@ from tkinter import simpledialog
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
 from MVP.refactored.connection import Connection
+from MVP.refactored.wire import Wire
 
 
 class Box:
@@ -51,6 +52,9 @@ class Box:
 
     def get_box_function(self) -> BoxFunction:
         return self.box_function
+
+    def remove_wire(self, wire: Wire):
+        self.wires.remove(wire)
 
     def set_id(self, id_):
         if self.receiver.listener:
