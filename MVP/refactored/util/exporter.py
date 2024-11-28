@@ -69,7 +69,8 @@ class Exporter:
                 "label": box.label_text,
                 "connections": self.get_connections(box.connections),
                 "sub_diagram": None,
-                "locked": box.locked
+                "locked": box.locked,
+                "shape" : box.shape
             }
             if box.sub_diagram:
                 d["sub_diagram"] = self.create_canvas_dict(box.sub_diagram)
@@ -118,6 +119,7 @@ class Exporter:
             "label": box.label_text,
             "left_c": left_connections,
             "right_c": right_connections,
+            "shape": box.shape,
             "sub_diagram": None,
         }
         if box.sub_diagram:
