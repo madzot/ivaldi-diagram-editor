@@ -230,6 +230,7 @@ class CustomCanvas(tk.Canvas):
             denominator = 1 / self.delta
             is_allowed, x_offset, y_offset, end = self.check_max_zoom(event.x, event.y, denominator)
             if end:
+                self.total_scale = self.prev_scale
                 return
             if not is_allowed:
                 event.x += x_offset
