@@ -64,6 +64,7 @@ class Box:
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
+        self.canvas.tag_bind(self.resize_handle, '<ButtonRelease-1>', lambda event: self.check_columns_after_resize())
         self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
 
     def show_context_menu(self, event):
@@ -324,6 +325,13 @@ class Box:
         new_size_y = max(20, self.size[1] + dy)
         self.update_size(new_size_x, new_size_y)
         self.move_label()
+
+    def check_columns_after_resize(self):
+        for column_x in self.canvas.columns.keys():
+            if self.x < column_x < self.x + self.size[0]:
+                self.canvas.setup_column_removal(self, True)
+                break
+        self.canvas.setup_column_removal(self, False)
 
     def resize_by_connections(self):
         # TODO resize by label too if needed
