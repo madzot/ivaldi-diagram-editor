@@ -219,8 +219,6 @@ class CustomCanvas(tk.Canvas):
             self.zoom(event)
 
     def zoom(self, event):
-        print(self.total_scale)
-        print(event)
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         scale = 1
 
