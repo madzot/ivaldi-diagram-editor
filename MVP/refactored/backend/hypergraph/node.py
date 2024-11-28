@@ -7,7 +7,7 @@ from MVP.refactored.backend.box_functions.box_function import BoxFunction
 
 class Node:
 
-    def __init__(self, node_id=None, parent_nodes=None, children_nodes=None, inputs=None, outputs=None):
+    def __init__(self, node_id=None, inputs=None, outputs=None, box_function: BoxFunction = None):
         if node_id is None:
             node_id = id(self)
         if inputs is None:
@@ -17,16 +17,12 @@ class Node:
         self.id = node_id
         self.inputs = inputs
         self.outputs = outputs
-        if parent_nodes is not None:
-            self.parent_nodes: dict[Node, int] = parent_nodes
-        if children_nodes is not None:
-            self.children_nodes: dict[Node, int] = children_nodes
         # key is node, value is number of edges between self node and parent node
         self.parent_nodes: dict[Node, int] = dict()
         # same here
         self.children_nodes: dict[Node, int] = dict()
-        # if box_function is null consider it as input/output in diagram
-        self.box_function: BoxFunction = None
+        # if box_function is null it can be input/output in diagram or user didn`t specified box function
+        self.box_function: BoxFunction|None = box_function
 
     def _get_children(self):
         module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")
@@ -46,17 +42,11 @@ class Node:
     def get_parents(self) -> set:
         return set(self.parent_nodes.keys())
 
-    def get_child_by_node(self, child: Node) -> Node | None:
-        if child in self.children_nodes:
-            return self.children_nodes[child]
-        else:
-            return None
+    def is_node_child(self, child: Node) -> bool:
+        return child in self.children_nodes
 
-    def get_parent_by_node(self, parent: Node) -> Node | None:
-        if parent in self.parent_nodes:
-            return self.parent_nodes[parent]
-        else:
-            return None
+    def is_node_parent(self, parent: Node) -> bool:
+        return parent in self.parent_nodes
 
     def get_child_by_id(self, child_id: int) -> Node | None:
         for child in self.children_nodes.keys():

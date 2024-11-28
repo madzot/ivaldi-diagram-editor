@@ -8,13 +8,17 @@ from MVP.refactored.custom_canvas import CustomCanvas
 class Hypergraph(Node):
     """Hypergraph class."""
 
-    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, nodes=None, canvas_id=None):
+    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, nodes: set=None, canvas_id=None):
         super().__init__(hypergraph_id, inputs, outputs)
         if nodes is None:
             nodes = []
-        self.nodes = nodes
+        self.nodes: list = nodes
         self.set_hypergraph_io()
         self.canvas_id: int = canvas_id
+
+
+    def contains_node(self, node: Node) -> bool:
+        return node in self.nodes
 
     def add_node(self, node: Node) -> None:
         if node in self.nodes:
@@ -35,7 +39,7 @@ class Hypergraph(Node):
         return None
 
     def get_node_children_by_id(self, node_id: int) -> list[Node]:
-        return self.get_node_children_by_node(self.get_node(node_id))
+        return self.get_node_children_by_node(self.get_node_by_id(node_id))
 
     def get_node_children_by_node(self, required_node: Node) -> list[Node]:
         children = []
@@ -51,7 +55,7 @@ class Hypergraph(Node):
         self.canvas_id = canvas_id
 
     def get_node_parents_by_id(self, node_id: int) -> list[Node]:
-        return self.get_node_parents_by_node(self.get_node(node_id))
+        return self.get_node_parents_by_node(self.get_node_by_id(node_id))
 
     def get_node_parents_by_node(self, required_node: Node) -> list[Node]:
         parents = []
@@ -64,7 +68,7 @@ class Hypergraph(Node):
         for node in nodes:
             self.add_node(node)
 
-    def get_node(self, node_id: int) -> Node | None:
+    def get_node_by_id(self, node_id: int) -> Node | None:
         for node in self.nodes:
             if node.id == node_id:
                 return node
@@ -235,3 +239,14 @@ class Hypergraph(Node):
                 f"Inputs: {self.inputs}\n"
                 f"Outputs: {self.outputs}\n"
                 f"Nodes:\n{nodes_str}")
+
+    def __eq__(self, other):
+        if not isinstance(other, Hypergraph):
+            return False
+        return other.id == self.id
+
+    def __hash__(self):
+        return super().__hash__()
+
+
+
