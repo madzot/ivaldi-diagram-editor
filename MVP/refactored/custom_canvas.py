@@ -599,17 +599,18 @@ class CustomCanvas(tk.Canvas):
     def update_inputs_outputs(self):
         x = self.corners[3].location[0]
         y = self.corners[3].location[1]
+        min_y = self.corners[0].location[1]
         output_index = max([o.index for o in self.outputs] + [0])
         for o in self.outputs:
             i = o.index
-            step = y / (output_index + 2)
-            o.move_to([x - 7, step * (i + 1)])
+            step = (y - self.corners[0].location[1]) / (output_index + 2)
+            o.move_to([x - 7, min_y + step * (i + 1)])
 
         input_index = max([o.index for o in self.inputs] + [0])
         for o in self.inputs:
             i = o.index
-            step = y / (input_index + 2)
-            o.move_to([6 + self.corners[0].location[0], step * (i + 1)])
+            step = (y - self.corners[0].location[1]) / (input_index + 2)
+            o.move_to([6 + self.corners[0].location[0], min_y + step * (i + 1)])
         [w.update() for w in self.wires]
 
     def delete_everything(self):
