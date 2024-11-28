@@ -9,6 +9,7 @@ from ttkbootstrap.constants import *
 
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
+from MVP.refactored.event import Event
 from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
@@ -212,7 +213,14 @@ class CustomCanvas(tk.Canvas):
         self.pan_history_x = 0
         self.pan_history_y = 0
 
+    def reset_zoom(self):
+        while self.total_scale - 1 > 0.01:
+            event = Event(self.winfo_width() / 2, self.winfo_height() / 2, 5, -120)
+            self.zoom(event)
+
     def zoom(self, event):
+        print(self.total_scale)
+        print(event)
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         scale = 1
 
@@ -540,6 +548,7 @@ class CustomCanvas(tk.Canvas):
             os.remove("temp.ps")
 
     def open_tikz_generator(self):
+        self.reset_zoom()
         tikz_window = tk.Toplevel(self)
         tikz_window.title("TikZ Generator")
 
