@@ -327,11 +327,14 @@ class Box:
         self.move_label()
 
     def check_columns_after_resize(self):
-        for column_x in self.canvas.columns.keys():
-            if self.x < column_x < self.x + self.size[0]:
-                self.canvas.setup_column_removal(self, True)
-                break
-        self.canvas.setup_column_removal(self, False)
+        if self.snapped_x:
+            found = False
+            for column_x in self.canvas.columns.keys():
+                if self.x < column_x < self.x + self.size[0]:
+                    found = True
+                    break
+            if not found:
+                self.canvas.setup_column_removal(self, False)
 
     def resize_by_connections(self):
         # TODO resize by label too if needed
