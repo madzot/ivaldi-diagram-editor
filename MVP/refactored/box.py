@@ -338,7 +338,9 @@ class Box:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def edit_label(self):
-        self.label_text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        if text is not None:
+            self.label_text = text
         if os.stat("conf/functions_conf.json").st_size != 0:
             with open("conf/functions_conf.json", "r") as file:
                 data = json.load(file)
@@ -646,4 +648,3 @@ class Box:
         if not outputs:
             outputs_amount = 0
         return inputs_amount, outputs_amount
-
