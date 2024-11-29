@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from importlib import import_module
+from os import remove
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 
@@ -77,10 +78,38 @@ class Node:
     def remove_child(self, child_to_remove: Node):
         if child_to_remove in self.children_nodes:
             del self.children_nodes[child_to_remove]
+            child_to_remove.remove_parent(self)
 
     def remove_parent(self, parent_to_remove: Node):
         if parent_to_remove in self.parent_nodes:
             del self.parent_nodes[parent_to_remove]
+            parent_to_remove.remove_child(self)
+
+    def remove_self(self):
+        for parent in self.parent_nodes.keys():
+            parent.remove_child(self)
+        for child in self.children_nodes.keys():
+            child.remove_parent(self)
+        self.parent_nodes.clear()
+        self.children_nodes.clear()
+
+    def remove_parent_edges(self, parent_to_remove: Node, edge_count=1):
+        if parent_to_remove in self.parent_nodes:
+            edge_count_with_parent = self.parent_nodes[parent_to_remove]
+            edge_count_with_parent -= edge_count
+            if edge_count_with_parent > 0:
+                self.parent_nodes[parent_to_remove] = edge_count_with_parent
+            else:
+                self.remove_parent(parent_to_remove)
+
+    def remove_child_edges(self, child_to_remove: Node, edge_count=1):
+        if child_to_remove in self.children_nodes:
+            edge_count_with_child = self.children_nodes[child_to_remove]
+            edge_count_with_child -= edge_count
+            if edge_count_with_child > 0:
+                self.children_nodes[child_to_remove] = edge_count_with_child
+            else:
+                self.remove_child(child_to_remove)
 
     def set_box_function(self, function: BoxFunction):
         self.box_function = function

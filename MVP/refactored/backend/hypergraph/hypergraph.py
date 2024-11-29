@@ -1,3 +1,5 @@
+from queue import Queue
+
 from MVP.refactored.backend.hypergraph.node import Node
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -8,17 +10,40 @@ from MVP.refactored.custom_canvas import CustomCanvas
 class Hypergraph(Node):
     """Hypergraph class."""
 
-    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, nodes: set=None, canvas_id=None):
+    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, source: set=None, nodes: list=None, canvas_id=None):
         super().__init__(hypergraph_id, inputs, outputs)
         if nodes is None:
             nodes = []
+        if source is None:
+            source = set()
+        self.source = source
         self.nodes: list = nodes
         self.set_hypergraph_io()
         self.canvas_id: int = canvas_id
 
+    def get_all_nodes(self) -> set:
+        visited = set()
+        all_nodes: set[Node] = set()
+
+        queue = Queue()
+        for source_node in self.source:
+            queue.put(source_node)
+
+        while not queue.empty():
+            node = queue.get()
+            visited.add(node)
+            all_nodes.add(node)
+            for child in node.children:
+                if child not in visited:
+                    queue.put(child)
+        return all_nodes
+
 
     def contains_node(self, node: Node) -> bool:
         return node in self.nodes
+
+    def add_source_node(self, node: Node):
+        self.source.add(node)
 
     def add_node(self, node: Node) -> None:
         if node in self.nodes:
@@ -48,7 +73,7 @@ class Hypergraph(Node):
                 children.append(node)
         return children
 
-    def get_canvas_id(self) -> CustomCanvas:
+    def get_canvas_id(self) -> int:
         return self.canvas_id
 
     def set_canvas_id(self, canvas_id: int) -> None:
@@ -69,9 +94,19 @@ class Hypergraph(Node):
             self.add_node(node)
 
     def get_node_by_id(self, node_id: int) -> Node | None:
-        for node in self.nodes:
-            if node.id == node_id:
-                return node
+        visited = set()
+
+        queue = Queue()
+        for source_node in self.source:
+            queue.put(source_node)
+
+        while not queue.empty():
+            node = queue.get()
+            if node.id == node_id: return node
+            visited.add(node)
+            for child in node.children:
+                if child not in visited:
+                    queue.put(child)
         return None
 
     def remove_node(self, node: Node) -> None:
