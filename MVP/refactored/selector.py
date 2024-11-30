@@ -71,18 +71,8 @@ class Selector:
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
         event.x, event.y = x, y
-
-        # Create a new box that will contain the sub-diagram
         box = self.canvas.add_box((x, y), shape="rectangle")
-        box.on_drag(event)
-        sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
-        prev_status = self.canvas.receiver.listener
-        self.canvas.receiver.listener = False
-        self.canvas.copier.copy_canvas_contents(
-            sub_diagram, wires, boxes, spiders, coordinates, box
-        )
-        box.lock_box()
-        self.canvas.receiver.listener = prev_status
+
         for wire in filter(lambda w: w in self.canvas.wires, wires):
             wire.delete_self("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, boxes):
@@ -93,6 +83,17 @@ class Selector:
                 self.canvas.receiver.receiver_callback(
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
                 )
+
+        # Create a new box that will contain the sub-diagram
+        box.on_drag(event)
+        sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
+        prev_status = self.canvas.receiver.listener
+        self.canvas.receiver.listener = False
+        self.canvas.copier.copy_canvas_contents(
+            sub_diagram, wires, boxes, spiders, coordinates, box
+        )
+        box.lock_box()
+        self.canvas.receiver.listener = prev_status
 
         sub_diagram.set_name(str(sub_diagram.id)[-6:])
         box.set_label(str(sub_diagram.id)[-6:])
