@@ -114,7 +114,7 @@ class CustomCanvas(tk.Canvas):
         self.pan_speed = 20
 
     def debug(self, event):
-        pass
+        print(f"{self.columns}")
 
     def pan_horizontal(self, event):
         if event.keysym == "Right":
@@ -586,8 +586,8 @@ class CustomCanvas(tk.Canvas):
         w = self.winfo_width()
         self.coords(self.name, w / 2, 10)
 
-        self.update_inputs_outputs()
         self.update_corners()
+        self.update_inputs_outputs()
         # TODO here or somewhere else limit resize if it would mess up output/input display
 
     def update_corners(self):
