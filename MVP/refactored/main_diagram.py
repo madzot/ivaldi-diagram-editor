@@ -27,7 +27,7 @@ class MainDiagram(tk.Tk):
         self.receiver = receiver
 
         self.titlebar = Titlebar(self, None)
-        self.titlebar.pack(side='top', fill='both', expand=True)
+        self.titlebar.pack(side='top', fill='both')
 
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
