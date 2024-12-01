@@ -10,7 +10,7 @@ from MVP.refactored.custom_canvas import CustomCanvas
 class Hypergraph(Node):
     """Hypergraph class."""
 
-    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, source: set=None, nodes: list=None, canvas_id=None):
+    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, source: set[Node]=None, nodes: list=None, canvas_id=None):
         super().__init__(hypergraph_id, inputs, outputs)
         if nodes is None:
             nodes = []
@@ -37,6 +37,31 @@ class Hypergraph(Node):
                 if child not in visited:
                     queue.put(child)
         return all_nodes
+
+    def get_source_nodes(self) -> set:
+        return self.source
+
+    def remove_node(self, node_to_remove_id: int):
+        visited = set()
+
+        queue = Queue()
+        for source_node in self.source:
+            if source_node == node_to_remove_id:
+                source_node.remove_self()
+                self.source.remove(source_node)
+                return
+            queue.put(source_node)
+
+        while not queue.empty():
+            node = queue.get()
+            if node.id == node_to_remove_id:
+                node.remove_self()
+                break
+            visited.add(node)
+            for child in node.children:
+                if child not in visited:
+                    queue.put(child)
+
 
 
     def contains_node(self, node: Node) -> bool:

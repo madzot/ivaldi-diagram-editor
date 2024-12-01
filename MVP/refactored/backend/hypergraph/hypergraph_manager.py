@@ -22,8 +22,16 @@ class HypergraphManager:
     @staticmethod
     def get_graph_by_node_id(node_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
-            for node in hypergraph.nodes:
+            for node in hypergraph.get_all_nodes():
                 if node.id == node_id:
+                    return hypergraph
+        return None
+
+    @staticmethod
+    def get_graph_by_source_node_id(source_node_id: int) -> Hypergraph | None:
+        for hypergraph in HypergraphManager.hypergraphs:
+            for source_node in hypergraph.get_source_nodes():
+                if source_node.id == source_node_id:
                     return hypergraph
         return None
 
@@ -41,6 +49,10 @@ class HypergraphManager:
         HypergraphManager.hypergraphs.add(hypergraph)
 
     @staticmethod
+    def remove_hypergraph(hypergraph: Hypergraph):
+        HypergraphManager.hypergraphs.remove(hypergraph)
+
+    @staticmethod
     def modify_canvas_hypergraph(canvas: CustomCanvas) -> None:
         # TODO
         hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
@@ -49,6 +61,13 @@ class HypergraphManager:
             HypergraphManager.hypergraphs.remove(hypergraph)
 
         HypergraphManager._create_hypergraphs_from_canvas(canvas)
+
+    @staticmethod
+    def remove_hypergraph_source_node(source_node_id: int):
+        hypergraph = HypergraphManager.get_graph_by_source_node_id(source_node_id.id)
+        hypergraph.remove_node(source_node_id.id)
+        if len(hypergraph.get_source_nodes()) == 0:
+            HypergraphManager.remove_hypergraph(hypergraph)
 
     @staticmethod
     def _create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:

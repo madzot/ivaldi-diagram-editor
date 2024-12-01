@@ -5,8 +5,10 @@ from tkinter import messagebox as mb
 
 from PIL import Image
 
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
@@ -490,6 +492,10 @@ class CustomCanvas(tk.Canvas):
                                             connection_id=new_input.id)
         self.inputs.append(new_input)
         self.update_inputs_outputs()
+
+        new_hypergraph = Hypergraph(canvas_id=self.id, source={Node(node_id=new_input.id)})
+        HypergraphManager.add_hypergraph(new_hypergraph)
+
         return new_input
 
     def remove_diagram_input(self):
@@ -500,6 +506,9 @@ class CustomCanvas(tk.Canvas):
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_input")
+
+        HypergraphManager.remove_hypergraph_source_node(to_be_removed.id)
+
 
     def remove_specific_diagram_input(self, con):
         if not self.inputs:
@@ -517,6 +526,8 @@ class CustomCanvas(tk.Canvas):
         self.inputs.remove(con)
         con.delete_me()
         self.update_inputs_outputs()
+
+        HypergraphManager.remove_hypergraph_source_node(con.id)
 
     def remove_specific_diagram_output(self, con):
         if not self.outputs:
