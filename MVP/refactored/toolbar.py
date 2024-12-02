@@ -22,7 +22,6 @@ class Titlebar(ttk.Frame):
         self.generate_submenu = tk.Menu(self.file_menu, tearoff=False)
         self.generate_submenu.add_command(label="TikZ", command=lambda: self.custom_canvas.open_tikz_generator())
         self.generate_submenu.add_command(label="code", command=lambda: self.main_diagram.generate_code())
-        # Code generation goes here after issue #34 is merged
 
         self.file_menu.add_cascade(menu=self.save_submenu, label="Save as")
         self.file_menu.add_cascade(menu=self.generate_submenu, label="Generate")
