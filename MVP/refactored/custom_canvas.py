@@ -7,16 +7,20 @@ from PIL import Image, ImageTk
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
+from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from MVP.refactored.wire import Wire
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, **kwargs):
+    def __init__(self, master, diagram_source_box, receiver, main_diagram,
+                 parent_diagram, add_boxes, id_=None, **kwargs):
         super().__init__(master, **kwargs)
 
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
@@ -44,7 +48,12 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Button-1>', self.on_canvas_click)
         self.bind("<Configure>", self.on_canvas_resize)
         self.diagram_source_box = diagram_source_box  # Only here if canvas is sub-diagram
-        self.id = id(self)
+
+        if not id_:
+            self.id = id(self)
+        else:
+            self.id = id_
+
         self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
@@ -59,6 +68,8 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.selecting = False
         self.copier = Copier()
+        self.hypergraph_exporter = HypergraphExporter(self)
+
         if add_boxes and diagram_source_box:
             for connection in diagram_source_box.connections:
                 if connection.side == "left":
@@ -82,6 +93,10 @@ class CustomCanvas(tk.Canvas):
         self.copy_logo = (Image.open('../../assets/content-copy.png'))
         self.copy_logo = self.copy_logo.resize((20, 20))
         self.copy_logo = ImageTk.PhotoImage(self.copy_logo)
+
+    def delete(self, *args):
+        HypergraphManager.modify_canvas_hypergraph(self)
+        super().delete(*args)
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -259,6 +274,8 @@ class CustomCanvas(tk.Canvas):
             self.current_wire.update()
             self.nullify_wire_start()
 
+        HypergraphManager.modify_canvas_hypergraph(self)
+
     def cancel_wire_pulling(self, event=None):
         if event:
             self.nullify_wire_start()
@@ -285,6 +302,18 @@ class CustomCanvas(tk.Canvas):
         box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape)
         self.boxes.append(box)
         return box
+
+    def get_box_by_id(self, box_id: int) -> Box | None:
+        for box in self.boxes:
+            if box.id == box_id:
+                return box
+        return None
+
+    def get_box_function(self, box_id) -> BoxFunction | None:
+        box = self.get_box_by_id(box_id)
+        if box:
+            return box.box_function
+        return None
 
     def add_spider(self, loc=(100, 100), id_=None):
         spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
@@ -530,6 +559,9 @@ class CustomCanvas(tk.Canvas):
                 c_max = connection.index
                 c = connection
         return c
+
+    def export_hypergraph(self):
+        self.hypergraph_exporter.export()
 
     def setup_column_removal(self, item, found):
         if not found and item.snapped_x:
