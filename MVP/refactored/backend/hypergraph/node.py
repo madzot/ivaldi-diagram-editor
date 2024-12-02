@@ -19,9 +19,9 @@ class Node:
         self.inputs = inputs
         self.outputs = outputs
         # key is node, value is number of edges between self node and parent node
-        self.parent_nodes: dict[Node, int] = dict()
+        self._parent_nodes: dict[Node, int] = dict()
         # same here
-        self.children_nodes: dict[Node, int] = dict()
+        self._children_nodes: dict[Node, int] = dict()
         # if box_function is null it can be input/output in diagram or user didn`t specified box function
         self.box_function: BoxFunction|None = box_function
 
@@ -37,77 +37,80 @@ class Node:
         hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
         return hypergraph.get_node_parents_by_node(self)
 
-    def get_children(self) -> set:
-        return set(self.children_nodes.keys())
+    def get_children(self) -> list:
+        return list(self._children_nodes.keys())
 
     def get_parents(self) -> set:
-        return set(self.parent_nodes.keys())
+        return set(self._parent_nodes.keys())
 
     def is_node_child(self, child: Node) -> bool:
-        return child in self.children_nodes
+        return child in self._children_nodes
 
     def is_node_parent(self, parent: Node) -> bool:
-        return parent in self.parent_nodes
+        return parent in self._parent_nodes
 
     def get_child_by_id(self, child_id: int) -> Node | None:
-        for child in self.children_nodes.keys():
+        for child in self._children_nodes.keys():
             if child.id == child_id:
                 return child
         return None
 
     def get_parent_by_id(self, parent_id: int) -> Node | None:
-        for parent in self.parent_nodes.keys():
+        for parent in self._parent_nodes.keys():
             if parent.id == parent_id:
                 return parent
         return None
 
     def add_child(self, child: Node, edge_count=1):
-        if child in self.children_nodes:
-            self.children_nodes[child] += edge_count
+        if child in self._children_nodes:
+            self._children_nodes[child] += edge_count
+            child._parent_nodes[self] += edge_count
         else:
-            self.children_nodes[child] = edge_count
-        child.add_parent(self, edge_count)
+            self._children_nodes[child] = edge_count
+            child._parent_nodes[self] = edge_count
 
     def add_parent(self, parent: Node, edge_count=1):
-        if parent in self.parent_nodes:
-            self.parent_nodes[parent] += edge_count
+        if parent in self._parent_nodes:
+            self._parent_nodes[parent] += edge_count
+            parent._children_nodes[self] += edge_count
         else:
-            self.parent_nodes[parent] = edge_count
-        parent.add_child(self, edge_count)
+            self._parent_nodes[parent] = edge_count
+            parent._children_nodes[self] = edge_count
+
 
     def remove_child(self, child_to_remove: Node):
-        if child_to_remove in self.children_nodes:
-            del self.children_nodes[child_to_remove]
+        if child_to_remove in self._children_nodes:
+            del self._children_nodes[child_to_remove]
             child_to_remove.remove_parent(self)
 
     def remove_parent(self, parent_to_remove: Node):
-        if parent_to_remove in self.parent_nodes:
-            del self.parent_nodes[parent_to_remove]
+        if parent_to_remove in self._parent_nodes:
+            del self._parent_nodes[parent_to_remove]
             parent_to_remove.remove_child(self)
 
     def remove_self(self):
-        for parent in self.parent_nodes.keys():
+        for parent in self._parent_nodes.keys():
             parent.remove_child(self)
-        for child in self.children_nodes.keys():
+        for child in self._children_nodes.keys():
             child.remove_parent(self)
-        self.parent_nodes.clear()
-        self.children_nodes.clear()
+        self._parent_nodes.clear()
+        self._children_nodes.clear()
 
     def remove_parent_edges(self, parent_to_remove: Node, edge_count=1):
-        if parent_to_remove in self.parent_nodes:
-            edge_count_with_parent = self.parent_nodes[parent_to_remove]
+        if parent_to_remove in self._parent_nodes:
+            edge_count_with_parent = self._parent_nodes[parent_to_remove]
             edge_count_with_parent -= edge_count
             if edge_count_with_parent > 0:
-                self.parent_nodes[parent_to_remove] = edge_count_with_parent
+                self._parent_nodes[parent_to_remove] = edge_count_with_parent
             else:
                 self.remove_parent(parent_to_remove)
 
     def remove_child_edges(self, child_to_remove: Node, edge_count=1):
-        if child_to_remove in self.children_nodes:
-            edge_count_with_child = self.children_nodes[child_to_remove]
+        if child_to_remove in self._children_nodes:
+            edge_count_with_child = self._children_nodes[child_to_remove]
             edge_count_with_child -= edge_count
             if edge_count_with_child > 0:
-                self.children_nodes[child_to_remove] = edge_count_with_child
+                self._children_nodes[child_to_remove] = edge_count_with_child
             else:
                 self.remove_child(child_to_remove)
 
@@ -139,7 +142,7 @@ class Node:
         return len(self.inputs) > 0 and len(self.outputs) > 0
 
     def is_valid(self) -> bool:
-        return self.children_nodes or self.parent_nodes
+        return self._children_nodes or self._parent_nodes
 
     def has_input(self, input_id) -> bool:
         return input_id in self.inputs

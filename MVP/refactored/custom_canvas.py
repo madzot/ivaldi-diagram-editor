@@ -5,6 +5,7 @@ from tkinter import messagebox as mb
 
 from PIL import Image
 
+from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
@@ -527,6 +528,7 @@ class CustomCanvas(tk.Canvas):
         con.delete_me()
         self.update_inputs_outputs()
 
+        BoxToNodeMapping.remove_pair(con.id)
         HypergraphManager.remove_hypergraph_source_node(con.id)
 
     def remove_specific_diagram_output(self, con):
@@ -546,6 +548,9 @@ class CustomCanvas(tk.Canvas):
 
         con.delete_me()
         self.update_inputs_outputs()
+
+        BoxToNodeMapping.remove_pair(con.id)
+
 
     def find_connection_to_remove(self, side):
         c_max = 0

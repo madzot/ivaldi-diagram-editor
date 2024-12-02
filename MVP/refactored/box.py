@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import simpledialog
 
+from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
+from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
 from MVP.refactored.connection import Connection
@@ -47,6 +49,8 @@ class Box:
         self.prev_snapped = None
         self.box_function: BoxFunction = None
 
+        BoxToNodeMapping.add_new_pair(self.id, Node(self.id))
+
     def set_box_function(self, function: BoxFunction):
         self.box_function = function
 
@@ -62,8 +66,9 @@ class Box:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
+        BoxToNodeMapping.add_new_pair(id_, BoxToNodeMapping.get_node_by_box_id(self.id))
+        BoxToNodeMapping.remove_pair(self.id)
         self.id = id_
-        # TODO if box changes id, so corresponding node should also change id
 
     def bind_events(self):
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
@@ -556,6 +561,10 @@ class Box:
         if self.receiver.listener:
             if action != "sub_diagram":
                 self.receiver.receiver_callback("box_delete", generator_id=self.id)
+
+        box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
+        box_node.remove_self()
+        BoxToNodeMapping.remove_pair(self.id)
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x):
