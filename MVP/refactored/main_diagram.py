@@ -13,9 +13,13 @@ import tikzplotlib
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
-from MVP.refactored.util.exporter import Exporter
+from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
 
 
@@ -54,7 +58,7 @@ class MainDiagram(tk.Tk):
         self.wm_minsize(screen_width_min, screen_height_min)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
-        self.exporter = Exporter(self.custom_canvas)
+        self.project_exporter = ProjectExporter(self.custom_canvas)
         self.importer = Importer(self.custom_canvas)
         # Add undefined box
         self.undefined_box_button = ttk.Button(self.control_frame, text="Add Undefined Box",
@@ -114,9 +118,12 @@ class MainDiagram(tk.Tk):
 
         # Bottom buttons
         buttons = {
+            "Generate code": self.generate_code,
+            "Visualize as graph": lambda: self.visualize_as_graph(self.custom_canvas),
             "Save project": self.save_to_file,
             "Save png": self.custom_canvas.save_as_png,
             "Generate TikZ": self.custom_canvas.open_tikz_generator,
+            "Export hypergraph": self.custom_canvas.export_hypergraph,
             "Remove input": self.custom_canvas.remove_diagram_input,
             "Remove output": self.custom_canvas.remove_diagram_output,
             "Add input": self.custom_canvas.add_diagram_input,
@@ -142,6 +149,12 @@ class MainDiagram(tk.Tk):
         with open("conf/boxes_conf.json", "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
+
+    def generate_code(self):
+        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)
+        # The print below can be toggled in and out for debugging
+        # until our code editor system is implemented into code generation
+        # print("-----------------------\ncode is:\n", code, sep="", end="")
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
@@ -177,6 +190,29 @@ class MainDiagram(tk.Tk):
                 copy_button = tk.Button(frame, text="Copy", command=lambda tb=text_box: self.copy_to_clipboard(tb))
                 copy_button.pack(pady=5)
 
+    def visualize_as_graph(self, canvas):
+        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
+        if hypergraph is None:
+            messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
+            return
+
+        plot_window = tk.Toplevel(self)
+        plot_window.title("Graph Visualization")
+
+        try:
+            figure = hypergraph.visualize()
+        except Exception as e:
+            messagebox.showerror("Error", "Failed to generate the visualization." +
+                                 f"Error during visualization: {e}")
+            plot_window.destroy()
+            return
+
+        figure_canvas = FigureCanvasTkAgg(figure, master=plot_window)
+        figure_canvas.draw()
+        figure_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        plot_window.update_idletasks()
+        plot_window.deiconify()
+
     def copy_to_clipboard(self, text_box):
         self.clipboard_clear()  # Clear the clipboard
         text = text_box.get("1.0", tk.END)  # Get the content of the text box
@@ -199,9 +235,12 @@ class MainDiagram(tk.Tk):
         # TODO figure out why this is needed! and change it!
         if not self.custom_canvas.diagram_source_box:
             buttons = {
+                "Generate code": self.generate_code,
+                "Visualize as graph": lambda: self.visualize_as_graph(self.custom_canvas),
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
                 "Generate TikZ": self.custom_canvas.open_tikz_generator,
+                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.custom_canvas.remove_diagram_input,
                 "Remove output": self.custom_canvas.remove_diagram_output,
                 "Add input": self.custom_canvas.add_diagram_input,
@@ -209,9 +248,12 @@ class MainDiagram(tk.Tk):
             }
         else:
             buttons = {
+                "Generate code": self.generate_code,
+                "Visualize as graph": lambda: self.visualize_as_graph(self.custom_canvas),
                 "Save project": self.save_to_file,
                 "Save png": self.custom_canvas.save_as_png,
                 "Generate TikZ": self.custom_canvas.open_tikz_generator,
+                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.remove_diagram_input,
                 "Remove output": self.remove_diagram_output,
                 "Add input": self.add_diagram_input,
@@ -231,6 +273,9 @@ class MainDiagram(tk.Tk):
 
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
+
+    def get_canvas_by_id(self, canvas_id):
+        return self.canvasses[canvas_id]
 
     def change_canvas_name(self, canvas):
         self.tree.item(str(canvas.id), text=canvas.name_text)
@@ -394,7 +439,7 @@ class MainDiagram(tk.Tk):
             self.dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
 
     def remove_option(self, option):
-        self.exporter.del_box_menu_option(option)
+        self.project_exporter.del_box_menu_option(option)
         self.update_dropdown_menu()
 
     def get_boxes_from_file(self):
@@ -408,7 +453,7 @@ class MainDiagram(tk.Tk):
         self.importer.add_box_from_menu(canvas, name)
 
     def save_box_to_diagram_menu(self, box):
-        self.exporter.export_box_to_menu(box)
+        self.project_exporter.export_box_to_menu(box)
         self.update_dropdown_menu()
 
     def set_title(self, filename):
@@ -419,7 +464,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
-        filename = self.exporter.export()
+        filename = self.project_exporter.export()
         self.set_title(filename)
 
     def load_from_file(self):
