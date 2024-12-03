@@ -95,10 +95,10 @@ class MainDiagram(tk.Tk):
                                               command=self.manage_quick_create, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.manage_quick_create.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.manage_method_button = ttk.Button(self.control_frame, text="Manage Methods",
-                                               command=self.open_manage_methods_window, width=20,
-                                               bootstyle=(PRIMARY, OUTLINE))
-        self.manage_method_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.manage_methods_button = ttk.Button(self.control_frame, text="Manage Methods",
+                                                command=self.open_manage_methods_window, width=20,
+                                                bootstyle=(PRIMARY, OUTLINE))
+        self.manage_methods_button.pack(side=tk.TOP, padx=5, pady=5)
 
         # Add Spider
         self.spider_box = ttk.Button(self.control_frame, text="Add Spider",
@@ -146,9 +146,7 @@ class MainDiagram(tk.Tk):
             self.load_from_file()
         self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
-        if os.stat("conf/functions_conf.json").st_size != 0:
-            with open("conf/functions_conf.json", "r") as file:
-                self.label_content = json.load(file)
+        self.load_functions()
         self.mainloop()
 
     @staticmethod
@@ -156,6 +154,11 @@ class MainDiagram(tk.Tk):
         with open("conf/boxes_conf.json", "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
+
+    def load_functions(self):
+        if os.stat("conf/functions_conf.json").st_size != 0:
+            with open("conf/functions_conf.json", "r") as file:
+                self.label_content = json.load(file)
 
     def generate_code(self):
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)
