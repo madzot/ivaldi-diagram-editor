@@ -12,6 +12,7 @@
                     60
                 ],
                 "label": "sub1",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523653062080,
@@ -43,6 +44,7 @@
                                 150
                             ],
                             "label": "",
+                            "shape": "rectangle",
                             "connections": [
                                 {
                                     "id": "bcdbe65ce1fa1917cee30c27df97c7a61e8181ce98ec688eaf91ea32fc9e0d43",
@@ -383,6 +385,7 @@
                     60
                 ],
                 "label": "",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523653255280,
@@ -424,6 +427,7 @@
                     100
                 ],
                 "label": "F",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523653256720,
@@ -492,6 +496,7 @@
                     60
                 ],
                 "label": "1to1",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523666011952,
@@ -524,6 +529,7 @@
                     60
                 ],
                 "label": "+",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523666013968,
@@ -565,6 +571,7 @@
                     60
                 ],
                 "label": "K",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523666044240,
@@ -597,6 +604,7 @@
                     60
                 ],
                 "label": null,
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523666045104,
@@ -629,6 +637,7 @@
                     60
                 ],
                 "label": "K",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2523666090448,
