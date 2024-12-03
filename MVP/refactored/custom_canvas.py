@@ -312,7 +312,7 @@ class CustomCanvas(tk.Canvas):
     def get_box_function(self, box_id) -> BoxFunction | None:
         box = self.get_box_by_id(box_id)
         if box:
-            return box.box_function
+            return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
         return None
 
     def add_spider(self, loc=(100, 100), id_=None):
