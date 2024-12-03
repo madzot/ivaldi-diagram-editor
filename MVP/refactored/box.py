@@ -562,9 +562,10 @@ class Box:
             if action != "sub_diagram":
                 self.receiver.receiver_callback("box_delete", generator_id=self.id)
 
-        box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
-        box_node.remove_self()
-        BoxToNodeMapping.remove_pair(self.id)
+        if action != "sub_diagram":
+            box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
+            box_node.remove_self()
+            BoxToNodeMapping.remove_pair(self.id)
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x):
