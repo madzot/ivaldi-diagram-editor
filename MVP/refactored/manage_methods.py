@@ -2,7 +2,7 @@ import ttkbootstrap as ttk
 import tkinter as tk
 
 
-class ManageMethods(ttk.Frame):
+class ManageMethods(tk.Toplevel):
     def __init__(self, main_diagram, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.main_diagram = main_diagram
@@ -11,16 +11,13 @@ class ManageMethods(ttk.Frame):
 
         self.window_size = 30
 
-        self.window = ttk.Toplevel(self.main_diagram,
-                                   width=self.aspect_ratio_x * self.window_size,
-                                   height=self.aspect_ratio_y * self.window_size)
-        self.window.title('Manage Methods')
+        self.title('Manage Methods')
 
-        self.listbox = tk.Listbox(self.window, selectmode=tk.SINGLE, width=100, height=16)
+        self.listbox = tk.Listbox(self, selectmode=tk.SINGLE, width=100, height=16)
         self.add_methods()
         self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
-        self.button_frame = ttk.Frame(self.window)
+        self.button_frame = ttk.Frame(self)
         self.button_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
         self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=lambda: self.destroy())
