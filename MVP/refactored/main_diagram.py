@@ -18,6 +18,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
@@ -93,6 +94,12 @@ class MainDiagram(tk.Tk):
         self.manage_quick_create = ttk.Button(self.control_frame, text="Manage Quick Create",
                                               command=self.manage_quick_create, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.manage_quick_create.pack(side=tk.TOP, padx=5, pady=5)
+
+        self.manage_method_button = ttk.Button(self.control_frame, text="Manage Methods",
+                                               command=self.open_manage_methods_window, width=20,
+                                               bootstyle=(PRIMARY, OUTLINE))
+        self.manage_method_button.pack(side=tk.TOP, padx=5, pady=5)
+
         # Add Spider
         self.spider_box = ttk.Button(self.control_frame, text="Add Spider",
                                      command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
@@ -137,7 +144,7 @@ class MainDiagram(tk.Tk):
 
         if load:
             self.load_from_file()
-        self.json_file_hash = self.calculate_json_file_hash()
+        self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
         if os.stat("conf/functions_conf.json").st_size != 0:
             with open("conf/functions_conf.json", "r") as file:
@@ -145,7 +152,7 @@ class MainDiagram(tk.Tk):
         self.mainloop()
 
     @staticmethod
-    def calculate_json_file_hash():
+    def calculate_boxes_json_file_hash():
         with open("conf/boxes_conf.json", "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
@@ -155,6 +162,9 @@ class MainDiagram(tk.Tk):
         # The print below can be toggled in and out for debugging
         # until our code editor system is implemented into code generation
         # print("-----------------------\ncode is:\n", code, sep="", end="")
+
+    def open_manage_methods_window(self):
+        ManageMethods(self)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
@@ -394,7 +404,7 @@ class MainDiagram(tk.Tk):
         list_window.minsize(100, 150)
         list_window.title("List of Boxes")
 
-        if self.calculate_json_file_hash() != self.json_file_hash:
+        if self.calculate_boxes_json_file_hash() != self.json_file_hash:
             self.get_boxes_from_file()
 
         checkbox_frame = tk.Frame(list_window)
