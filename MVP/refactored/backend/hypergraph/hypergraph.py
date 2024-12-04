@@ -4,8 +4,6 @@ from MVP.refactored.backend.hypergraph.node import Node
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from MVP.refactored.custom_canvas import CustomCanvas
-
 
 class Hypergraph(Node):
     """Hypergraph class."""
@@ -61,8 +59,6 @@ class Hypergraph(Node):
             for child in node.children:
                 if child not in visited:
                     queue.put(child)
-
-
 
     def contains_node(self, node: Node) -> bool:
         return node in self.nodes

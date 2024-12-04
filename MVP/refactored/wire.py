@@ -1,5 +1,7 @@
 import tkinter as tk
 
+from MVP.refactored.connection import Connection
+
 
 def curved_line(start, end, det=15):
     sx = start[0]
@@ -19,8 +21,8 @@ class Wire:
     def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False):
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.start_connection = start_connection
-        self.end_connection = end_connection
+        self.start_connection: Connection = start_connection
+        self.end_connection: Connection = end_connection
         self.line = None
         self.wire_width = 3
         if not id_:

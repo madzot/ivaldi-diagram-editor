@@ -54,6 +54,7 @@ class HypergraphManager:
 
     @staticmethod
     def modify_canvas_hypergraph(canvas: CustomCanvas) -> None:
+        return
         # TODO
         hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
 
@@ -72,6 +73,7 @@ class HypergraphManager:
     @staticmethod
     def _create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
         # TODO: fix this hypergraph creation to note that many hypergraphs can be created from one canvas
+        pass
         hypergraph = Hypergraph(canvas.id)
         for box in canvas.boxes:
             node = Node(box.id)

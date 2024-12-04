@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from importlib import import_module
-from os import remove
-
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 
 
@@ -24,18 +21,6 @@ class Node:
         self._children_nodes: dict[Node, int] = dict()
         # if box_function is null it can be input/output in diagram or user didn`t specified box function
         self.box_function: BoxFunction|None = box_function
-
-    def _get_children(self):
-        module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")
-        HypergraphManager = getattr(module, "HypergraphManager")
-        hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
-        return hypergraph.get_node_children_by_node(self)
-
-    def _get_parents(self):
-        module = import_module("MVP.refactored.backend.hypergraph.hypergraph_manager")
-        HypergraphManager = getattr(module, "HypergraphManager")
-        hypergraph = HypergraphManager.get_graph_by_node_id(self.id)
-        return hypergraph.get_node_parents_by_node(self)
 
     def get_children(self) -> list:
         return list(self._children_nodes.keys())
@@ -102,6 +87,8 @@ class Node:
             edge_count_with_parent -= edge_count
             if edge_count_with_parent > 0:
                 self._parent_nodes[parent_to_remove] = edge_count_with_parent
+
+                parent_to_remove._children_nodes[self] = edge_count_with_parent
             else:
                 self.remove_parent(parent_to_remove)
 
@@ -111,6 +98,8 @@ class Node:
             edge_count_with_child -= edge_count
             if edge_count_with_child > 0:
                 self._children_nodes[child_to_remove] = edge_count_with_child
+
+                child_to_remove._parent_nodes[self] = edge_count_with_child
             else:
                 self.remove_child(child_to_remove)
 

@@ -459,6 +459,9 @@ class CustomCanvas(tk.Canvas):
 
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
+
+        BoxToNodeMapping.add_new_pair(connection_output_new.id, Node(connection_output_new.id))
+
         return connection_output_new
 
     def add_diagram_input_for_sub_d_wire(self, id_=None):
@@ -479,6 +482,10 @@ class CustomCanvas(tk.Canvas):
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_output")
+
+        node_to_remove = BoxToNodeMapping.get_node_by_box_id(to_be_removed.id)
+        node_to_remove.remove_self()
+        BoxToNodeMapping.remove_pair(to_be_removed.id)
 
     def add_diagram_input(self, id_=None):
         input_index = max([o.index for o in self.inputs] + [0])
@@ -549,6 +556,8 @@ class CustomCanvas(tk.Canvas):
         con.delete_me()
         self.update_inputs_outputs()
 
+        node_to_remove = BoxToNodeMapping.get_node_by_box_id(con.id)
+        node_to_remove.remove_self()
         BoxToNodeMapping.remove_pair(con.id)
 
 

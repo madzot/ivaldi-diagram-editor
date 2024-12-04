@@ -180,7 +180,7 @@ class MainDiagram(tk.Tk):
             return
 
         try:
-            figure = hypergraph.visualize()
+            figure = next(iter(hypergraph)).visualize()
         except Exception as e:
             print(f"Error during visualization: {e}")
             messagebox.showerror("Error", "Failed to generate the visualization.")

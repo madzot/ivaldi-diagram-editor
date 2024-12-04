@@ -1,13 +1,20 @@
+from __future__ import annotations
+
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import simpledialog
+
+from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
 from MVP.refactored.connection import Connection
-from MVP.refactored.wire import Wire
+
+if TYPE_CHECKING:
+    from MVP.refactored.spider import Spider
+    from MVP.refactored.wire import Wire
 
 
 class Box:
@@ -54,11 +61,54 @@ class Box:
     def set_box_function(self, function: BoxFunction):
         self.box_function = function
 
+        node = BoxToNodeMapping.get_node_by_box_id(self.id)
+        node.set_box_function(self.box_function)
+
     def get_box_function(self) -> BoxFunction:
         return self.box_function
 
     def remove_wire(self, wire: Wire):
+        box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
+
+        if wire.end_connection.box.id == self.id:
+            all_right_connected_nodes = self._get_all_left_connected_nodes(wire.start_connection)
+            for right_connected_node in all_right_connected_nodes:
+                box_node.remove_parent_edges(right_connected_node)
+
+        else:
+            all_right_connected_nodes = self._get_all_right_connected_nodes(wire.end_connection)
+            for right_connected_node in all_right_connected_nodes:
+                box_node.remove_child_edges(right_connected_node)
+
         self.wires.remove(wire)
+
+    def _get_all_left_connected_nodes(self, connection: Connection) -> list[Node]:
+        if connection.box is not None:
+            return [BoxToNodeMapping.get_node_by_box_id(connection.box.id)]
+
+        if isinstance(connection, Spider):
+            output = list()
+            for conn in connection.connections:
+                if conn.side == "left":
+                    if conn.wire is not None and conn.wire.start_connection is not None:
+                        output.extend(self._get_all_left_connected_nodes(conn.wire.start_connection))
+            return output
+        else:
+            return [BoxToNodeMapping.get_node_by_box_id(connection.id)] # it is diagram input
+
+    def _get_all_right_connected_nodes(self, connection: Connection) -> list[Node]:
+        if connection.box is not None:
+            return [BoxToNodeMapping.get_node_by_box_id(connection.box.id)]
+
+        if isinstance(connection, Spider):
+            output = list()
+            for conn in connection.connections:
+                if conn.side == "right":
+                    if conn.wire is not None and conn.wire.end_connection is not None:
+                        output.extend(self._get_all_right_connected_nodes(conn.wire.end_connection))
+            return output
+        else:
+            return [BoxToNodeMapping.get_node_by_box_id(connection.id)] # it is diagram output
 
     def set_id(self, id_):
         if self.receiver.listener:
@@ -123,6 +173,9 @@ class Box:
 
     def set_function(self, name, code=None):
         self.box_function = BoxFunction(name, code)
+
+        node = BoxToNodeMapping.get_node_by_box_id(self.id)
+        node.set_box_function(self.box_function)
 
     def count_inputs(self) -> int:
         count = 0
