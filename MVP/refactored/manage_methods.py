@@ -7,7 +7,6 @@ import tkinter as tk
 
 class ManageMethods(tk.Toplevel):
     def __init__(self, main_diagram, *args, **kwargs):
-        # TODO: look into using treeview instead of listbox
         super().__init__(*args, **kwargs)
         self.main_diagram = main_diagram
         self.aspect_ratio_x = 16
