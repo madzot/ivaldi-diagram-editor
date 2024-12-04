@@ -48,6 +48,7 @@ class MainDiagram(tk.Tk):
 
         self.is_tree_visible = True
         self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
+        self.tree.bind("<Motion>", "break")
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows

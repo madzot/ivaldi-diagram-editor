@@ -16,27 +16,30 @@ class ManageMethods(tk.Toplevel):
 
         self.window_size = 30
 
+        self.minsize(400, 100)
+
         self.title('Manage Methods')
 
         self.treeview = ttk.Treeview(self, columns="Function", bootstyle=ttk.PRIMARY)
         self.treeview.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        self.treeview.bind("<Motion>", "break")
 
-        self.treeview.column("#0", stretch=False, width=100, minwidth=100)
-        self.treeview.heading("#0", text="Label")
-        self.treeview.column("Function", stretch=False, width=400, minwidth=400)
-        self.treeview.heading('Function', text='Function')
+        self.treeview.column("#0", width=100, minwidth=100, anchor=tk.W)
+        self.treeview.heading("#0", text="Label", anchor=tk.W)
+        self.treeview.column("Function", width=400, minwidth=400, anchor=tk.W)
+        self.treeview.heading('Function', text='Function', anchor=tk.W)
 
         self.button_frame = ttk.Frame(self)
         self.button_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
         self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=lambda: self.destroy())
-        self.cancel_button.pack(side=tk.RIGHT, fill=tk.BOTH)
+        self.cancel_button.pack(side=tk.RIGHT, fill=tk.X)
 
         self.edit_button = ttk.Button(self.button_frame, text="Edit code", command=self.open_code_editor)
-        self.edit_button.pack(padx=5, side=tk.RIGHT, fill=tk.BOTH)
+        self.edit_button.pack(padx=5, side=tk.RIGHT, fill=tk.X)
 
         self.edit_label_button = ttk.Button(self.button_frame, text="Edit label", command=self.open_label_editor)
-        self.edit_label_button.pack(padx=5, side=tk.RIGHT, fill=tk.BOTH)
+        self.edit_label_button.pack(padx=5, side=tk.RIGHT, fill=tk.X)
 
         self.main_diagram.load_functions()
 
