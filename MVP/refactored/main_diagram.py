@@ -147,6 +147,7 @@ class MainDiagram(tk.Tk):
         self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
         self.load_functions()
+        self.manage_methods = None
         self.mainloop()
 
     @staticmethod
@@ -167,7 +168,7 @@ class MainDiagram(tk.Tk):
         # print("-----------------------\ncode is:\n", code, sep="", end="")
 
     def open_manage_methods_window(self):
-        ManageMethods(self)
+        self.manage_methods = ManageMethods(self)
 
     def change_function_label(self, old_label, new_label):
         if old_label in self.label_content.keys():
@@ -177,7 +178,6 @@ class MainDiagram(tk.Tk):
             for canvas in self.canvasses.values():
                 for box in canvas.boxes:
                     box.edit_label(new_label)
-
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):

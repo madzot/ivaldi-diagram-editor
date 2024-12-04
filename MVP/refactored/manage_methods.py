@@ -4,6 +4,8 @@ from tkinter import simpledialog
 import ttkbootstrap as ttk
 import tkinter as tk
 
+from MVP.refactored.code_editor import CodeEditor
+
 
 class ManageMethods(tk.Toplevel):
     def __init__(self, main_diagram, *args, **kwargs):
@@ -43,12 +45,13 @@ class ManageMethods(tk.Toplevel):
     def add_methods(self):
         self.treeview.delete(*self.treeview.get_children())
         for label, method in self.main_diagram.label_content.items():
-            method = method.replace("\n", "")
-            self.treeview.insert('', tk.END, 'functions', text=label, values=(method, ))
+            self.treeview.insert('', tk.END, text=label, values=(method.replace('\n', ''), ))
             # The tuple with a comma in values is necessary to prevent tkinter splitting string.
 
     def open_code_editor(self):
-        pass
+        label = self.treeview.item(self.treeview.focus())["text"]
+        code = self.main_diagram.label_content[label]
+        CodeEditor(self.main_diagram, label=label, code=code)
 
     def open_label_editor(self):
         label = self.treeview.item(self.treeview.focus())["text"]
