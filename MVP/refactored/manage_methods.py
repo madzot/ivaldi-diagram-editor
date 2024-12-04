@@ -24,15 +24,13 @@ class ManageMethods(tk.Toplevel):
         self.treeview.column("Function", stretch=False, width=400, minwidth=400)
         self.treeview.heading('Function', text='Function')
 
-        # self.listbox = tk.Listbox(self, selectmode=tk.SINGLE, width=100, height=16)
-
         self.button_frame = ttk.Frame(self)
         self.button_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
         self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=lambda: self.destroy())
         self.cancel_button.pack(side=tk.RIGHT, fill=tk.BOTH)
 
-        self.edit_button = ttk.Button(self.button_frame, text="Edit", command=self.open_code_editor)
+        self.edit_button = ttk.Button(self.button_frame, text="Edit code", command=self.open_code_editor)
         self.edit_button.pack(padx=5, side=tk.RIGHT, fill=tk.BOTH)
 
         self.edit_label_button = ttk.Button(self.button_frame, text="Edit label", command=self.open_label_editor)
