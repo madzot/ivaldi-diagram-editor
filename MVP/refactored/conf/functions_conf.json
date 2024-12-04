@@ -1,0 +1,4 @@
+{
+    "method2": "def method2(x2):\n    return (x2)",
+    "method1": "def method1(x1):\n    return (x1)"
+}
