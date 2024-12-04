@@ -338,21 +338,24 @@ class Box:
         if self.label:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
-    def edit_label(self):
-        text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
-        if text is not None:
-            self.label_text = text
-        if os.stat("conf/functions_conf.json").st_size != 0:
-            with open("conf/functions_conf.json", "r") as file:
-                data = json.load(file)
-                for label, code in data.items():
-                    if label == self.label_text:
-                        if messagebox.askokcancel("Confirmation",
-                                                  "A box with this label already exists."
-                                                  " Do you want to use the existing box?"):
-                            self.update_io()
-                        else:
-                            return self.edit_label()
+    def edit_label(self, new_label=None):
+        if not new_label:
+            text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+            if text is not None:
+                self.label_text = text
+            if os.stat("conf/functions_conf.json").st_size != 0:
+                with open("conf/functions_conf.json", "r") as file:
+                    data = json.load(file)
+                    for label, code in data.items():
+                        if label == self.label_text:
+                            if messagebox.askokcancel("Confirmation",
+                                                      "A box with this label already exists."
+                                                      " Do you want to use the existing box?"):
+                                self.update_io()
+                            else:
+                                return self.edit_label()
+        else:
+            self.label_text = new_label
 
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)

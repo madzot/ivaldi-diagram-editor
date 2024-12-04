@@ -169,6 +169,16 @@ class MainDiagram(tk.Tk):
     def open_manage_methods_window(self):
         ManageMethods(self)
 
+    def change_function_label(self, old_label, new_label):
+        if old_label in self.label_content.keys():
+            code = self.label_content[old_label]
+            self.label_content[new_label] = code
+            del self.label_content[old_label]
+            for canvas in self.canvasses.values():
+                for box in canvas.boxes:
+                    box.edit_label(new_label)
+
+
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
             text = "Diagram is incomplete!"
