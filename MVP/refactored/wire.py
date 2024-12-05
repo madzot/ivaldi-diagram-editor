@@ -1,5 +1,7 @@
 import tkinter as tk
 
+from MVP.refactored.connection import Connection
+
 
 def curved_line(start, end, det=15):
     sx = start[0]
@@ -19,8 +21,8 @@ class Wire:
     def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False):
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.start_connection = start_connection
-        self.end_connection = end_connection
+        self.start_connection: Connection = start_connection
+        self.end_connection: Connection = end_connection
         self.line = None
         self.wire_width = 3
         if not id_:
@@ -38,7 +40,7 @@ class Wire:
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
         if not self.is_temporary:
-            self.canvas.wires.remove(self)
+            self.canvas.remove_wire(self)
         if not self.is_temporary:
             self.handle_wire_deletion_callback(action)
 
@@ -159,3 +161,11 @@ class Wire:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, None, connection.side],
                                             connection_id=connection.id)
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)

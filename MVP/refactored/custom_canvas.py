@@ -5,8 +5,11 @@ from tkinter import messagebox as mb
 
 from PIL import Image
 
+from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
@@ -27,11 +30,11 @@ class CustomCanvas(tk.Canvas):
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
         self.master = master
-        self.boxes: list[Box] = []
+        self.boxes: set[Box] = set()
         self.outputs: list[Connection] = []
         self.inputs: list[Connection] = []
         self.spiders: list[Spider] = []
-        self.wires: list[Wire] = []
+        self.wires: set[Wire] = set()
         self.temp_wire = None
         self.temp_end_connection = None
         self.pulling_wire = False
@@ -81,6 +84,25 @@ class CustomCanvas(tk.Canvas):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(args)
 
+    def add_box(self, box: Box):
+        self.boxes.add(box)
+
+    def remove_box(self, box: Box):
+        if box in self.boxes:
+            self.boxes.remove(box)
+
+    def remove_all_boxes(self):
+        self.boxes = set()
+
+    def remove_wire(self, wire: Wire):
+        self.wires.remove(wire)
+
+    def add_wire(self, wire: Wire):
+        self.wires.add(wire)
+
+    def remove_all_wires(self):
+        self.wires = set()
+
     def handle_right_click(self, event):
         if self.selector.selecting:
             self.selector.finish_selection()
@@ -106,7 +128,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu = tk.Menu(self, tearoff=0)
 
             self.context_menu.add_command(label="Add undefined box",
-                                          command=lambda loc=(event.x, event.y): self.add_box(loc))
+                                          command=lambda loc=(event.x, event.y): self.create_new_box(loc))
 
             # noinspection PyUnresolvedReferences
             if len(self.master.quick_create_boxes) > 0:
@@ -252,7 +274,7 @@ class CustomCanvas(tk.Canvas):
                                                                               connection) or bypass_legality_check:
             self.cancel_wire_pulling()
             self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
-            self.wires.append(self.current_wire)
+            self.add_wire(self.current_wire)
 
             if self.current_wire_start.box is not None:
                 self.current_wire_start.box.add_wire(self.current_wire)
@@ -286,9 +308,9 @@ class CustomCanvas(tk.Canvas):
         self.current_wire_start = None
         self.current_wire = None
 
-    def add_box(self, loc=(100, 100), size=(60, 60), id_=None):
+    def create_new_box(self, loc=(100, 100), size=(60, 60), id_=None):
         box = Box(self, *loc, self.receiver, size=size, id_=id_)
-        self.boxes.append(box)
+        self.add_box(box)
         return box
 
     def get_box_by_id(self, box_id: int) -> Box | None:
@@ -369,8 +391,8 @@ class CustomCanvas(tk.Canvas):
             w.delete_self()
         for b in self.boxes:
             b.delete_box()
-        self.boxes = []
-        self.wires = []
+        self.remove_all_boxes()
+        self.remove_all_wires()
 
     # STATIC HELPERS
     @staticmethod
@@ -437,6 +459,9 @@ class CustomCanvas(tk.Canvas):
 
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
+
+        BoxToNodeMapping.add_new_pair(connection_output_new.id, Node(connection_output_new.id))
+
         return connection_output_new
 
     def add_diagram_input_for_sub_d_wire(self, id_=None):
@@ -458,6 +483,10 @@ class CustomCanvas(tk.Canvas):
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_output")
 
+        node_to_remove = BoxToNodeMapping.get_node_by_box_id(to_be_removed.id)
+        node_to_remove.remove_self()
+        BoxToNodeMapping.remove_pair(to_be_removed.id)
+
     def add_diagram_input(self, id_=None):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
@@ -471,6 +500,10 @@ class CustomCanvas(tk.Canvas):
                                             connection_id=new_input.id)
         self.inputs.append(new_input)
         self.update_inputs_outputs()
+
+        new_hypergraph = Hypergraph(canvas_id=self.id, source={Node(node_id=new_input.id)})
+        HypergraphManager.add_hypergraph(new_hypergraph)
+
         return new_input
 
     def remove_diagram_input(self):
@@ -481,6 +514,9 @@ class CustomCanvas(tk.Canvas):
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_input")
+
+        HypergraphManager.remove_hypergraph_source_node(to_be_removed.id)
+
 
     def remove_specific_diagram_input(self, con):
         if not self.inputs:
@@ -499,6 +535,9 @@ class CustomCanvas(tk.Canvas):
         con.delete_me()
         self.update_inputs_outputs()
 
+        BoxToNodeMapping.remove_pair(con.id)
+        HypergraphManager.remove_hypergraph_source_node(con.id)
+
     def remove_specific_diagram_output(self, con):
         if not self.outputs:
             return
@@ -516,6 +555,11 @@ class CustomCanvas(tk.Canvas):
 
         con.delete_me()
         self.update_inputs_outputs()
+
+        node_to_remove = BoxToNodeMapping.get_node_by_box_id(con.id)
+        node_to_remove.remove_self()
+        BoxToNodeMapping.remove_pair(con.id)
+
 
     def find_connection_to_remove(self, side):
         c_max = 0

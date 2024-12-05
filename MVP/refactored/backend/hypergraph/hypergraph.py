@@ -1,3 +1,5 @@
+from queue import Queue
+
 from MVP.refactored.backend.hypergraph.node import Node
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -6,12 +8,63 @@ import matplotlib.pyplot as plt
 class Hypergraph(Node):
     """Hypergraph class."""
 
-    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, nodes=None):
+    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, source: set[Node]=None, nodes: list=None, canvas_id=None):
         super().__init__(hypergraph_id, inputs, outputs)
         if nodes is None:
             nodes = []
-        self.nodes = nodes
+        if source is None:
+            source = set()
+        self.source = source
+        self.nodes: list = nodes
         self.set_hypergraph_io()
+        self.canvas_id: int = canvas_id
+
+    def get_all_nodes(self) -> set:
+        visited = set()
+        all_nodes: set[Node] = set()
+
+        queue = Queue()
+        for source_node in self.source:
+            queue.put(source_node)
+
+        while not queue.empty():
+            node = queue.get()
+            visited.add(node)
+            all_nodes.add(node)
+            for child in node.children:
+                if child not in visited:
+                    queue.put(child)
+        return all_nodes
+
+    def get_source_nodes(self) -> set:
+        return self.source
+
+    def remove_node(self, node_to_remove_id: int):
+        visited = set()
+
+        queue = Queue()
+        for source_node in self.source:
+            if source_node == node_to_remove_id:
+                source_node.remove_self()
+                self.source.remove(source_node)
+                return
+            queue.put(source_node)
+
+        while not queue.empty():
+            node = queue.get()
+            if node.id == node_to_remove_id:
+                node.remove_self()
+                break
+            visited.add(node)
+            for child in node.children:
+                if child not in visited:
+                    queue.put(child)
+
+    def contains_node(self, node: Node) -> bool:
+        return node in self.nodes
+
+    def add_source_node(self, node: Node):
+        self.source.add(node)
 
     def add_node(self, node: Node) -> None:
         if node in self.nodes:
@@ -32,7 +85,7 @@ class Hypergraph(Node):
         return None
 
     def get_node_children_by_id(self, node_id: int) -> list[Node]:
-        return self.get_node_children_by_node(self.get_node(node_id))
+        return self.get_node_children_by_node(self.get_node_by_id(node_id))
 
     def get_node_children_by_node(self, required_node: Node) -> list[Node]:
         children = []
@@ -41,8 +94,14 @@ class Hypergraph(Node):
                 children.append(node)
         return children
 
+    def get_canvas_id(self) -> int:
+        return self.canvas_id
+
+    def set_canvas_id(self, canvas_id: int) -> None:
+        self.canvas_id = canvas_id
+
     def get_node_parents_by_id(self, node_id: int) -> list[Node]:
-        return self.get_node_parents_by_node(self.get_node(node_id))
+        return self.get_node_parents_by_node(self.get_node_by_id(node_id))
 
     def get_node_parents_by_node(self, required_node: Node) -> list[Node]:
         parents = []
@@ -55,10 +114,20 @@ class Hypergraph(Node):
         for node in nodes:
             self.add_node(node)
 
-    def get_node(self, node_id: int) -> Node | None:
-        for node in self.nodes:
-            if node.id == node_id:
-                return node
+    def get_node_by_id(self, node_id: int) -> Node | None:
+        visited = set()
+
+        queue = Queue()
+        for source_node in self.source:
+            queue.put(source_node)
+
+        while not queue.empty():
+            node = queue.get()
+            if node.id == node_id: return node
+            visited.add(node)
+            for child in node.children:
+                if child not in visited:
+                    queue.put(child)
         return None
 
     def remove_node(self, node: Node) -> None:
@@ -76,7 +145,7 @@ class Hypergraph(Node):
         self.inputs = list(all_inputs - all_outputs)
         self.outputs = list(all_outputs - all_inputs)
 
-    def is_valid(self) -> bool:
+    def _is_valid(self) -> bool:
         """Validate hypergraph structure by checking input/output consistency and cycles."""
         if not self.inputs or not self.outputs or not self.nodes:
             print("Inputs, outputs, or nodes are empty")
@@ -86,7 +155,7 @@ class Hypergraph(Node):
         node_outputs = set()
 
         for node in self.nodes:
-            if not node.is_valid():
+            if not node._is_valid():
                 print(f"Node {node.id} is not valid")
                 return False
 
@@ -226,3 +295,14 @@ class Hypergraph(Node):
                 f"Inputs: {self.inputs}\n"
                 f"Outputs: {self.outputs}\n"
                 f"Nodes:\n{nodes_str}")
+
+    def __eq__(self, other):
+        if not isinstance(other, Hypergraph):
+            return False
+        return other.id == self.id
+
+    def __hash__(self):
+        return super().__hash__()
+
+
+

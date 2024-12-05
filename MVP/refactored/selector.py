@@ -74,7 +74,7 @@ class Selector:
         event.x, event.y = x, y
 
         # Create a new box that will contain the sub-diagram
-        box = self.canvas.add_box((x, y))
+        box = self.canvas.create_new_box((x, y))
         box.on_drag(event)
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener

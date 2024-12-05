@@ -1,5 +1,8 @@
 import tkinter as tk
 
+from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
+from MVP.refactored.backend.hypergraph.node import Node
+
 
 class Connection:
     def __init__(self, box, index, side, location, canvas, r=5, id_=None):
@@ -23,6 +26,9 @@ class Connection:
                                               location[1] + self.r, fill="black", outline="black")
         self.width_between_boxes = 1  # px
         self.bind_events()
+
+        if self.box is None: # if it diagram`s inputs/output it should be a node
+            BoxToNodeMapping.add_new_pair(self.id, Node(self.id))
 
     def bind_events(self):
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
@@ -88,10 +94,10 @@ class Connection:
             self.wire.delete_self()
 
             if self.box and self.wire in self.box.wires:
-                self.box.wires.remove(self.wire)
+                self.box.remove_wire(self.wire)
 
             if self.wire in self.canvas.wires:
-                self.canvas.wires.remove(self.wire)
+                self.canvas.remove_wire(self.wire)
 
     def add_wire(self, wire):
         if not self.has_wire and self.wire is None:
