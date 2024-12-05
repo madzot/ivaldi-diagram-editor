@@ -1,5 +1,6 @@
-import ttkbootstrap as ttk
 import tkinter as tk
+
+import ttkbootstrap as ttk
 
 
 class Titlebar(ttk.Frame):
@@ -27,6 +28,8 @@ class Titlebar(ttk.Frame):
         self.file_menu.add_cascade(menu=self.generate_submenu, label="Generate")
         self.file_button.pack(side=ttk.LEFT)
 
+        self.file_menu.add_command(label="New", command=self.handle_new_graph)
+
         self.view_button = tk.Menubutton(self, text="View",
                                          width=5, indicatoron=False)
         self.view_menu = tk.Menu(self.view_button, tearoff=False)
@@ -38,3 +41,10 @@ class Titlebar(ttk.Frame):
 
     def set_custom_canvas(self, custom_canvas):
         self.custom_canvas = custom_canvas
+
+    def handle_new_graph(self):
+        root_canvas = list(self.main_diagram.canvasses.items())[0][1]
+        self.main_diagram.switch_canvas(root_canvas)
+        root_canvas.delete_everything()
+
+

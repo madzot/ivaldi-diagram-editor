@@ -309,12 +309,6 @@ class CustomCanvas(tk.Canvas):
                 return box
         return None
 
-    def get_box_function(self, box_id) -> BoxFunction | None:
-        box = self.get_box_by_id(box_id)
-        if box:
-            return box.box_function
-        return None
-
     def add_spider(self, loc=(100, 100), id_=None):
         spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
         self.spiders.append(spider)
@@ -399,10 +393,28 @@ class CustomCanvas(tk.Canvas):
         [w.update() for w in self.wires]
 
     def delete_everything(self):
-        for w in self.wires:
-            w.delete_self()
-        for b in self.boxes:
-            b.delete_box()
+        while len(self.wires) > 0:
+            print("wire")
+            self.wires[0].delete_self()
+        while len(self.boxes) > 0:
+            print("box")
+            self.boxes[0].delete_box()
+        while len(self.spiders) > 0:
+            print("spider")
+            self.spiders[0].delete_spider()
+        while len(self.outputs) > 0:
+            print("out")
+            print(self.outputs[0])
+            print(self.outputs)
+            self.outputs[0].delete_me()
+        while len(self.inputs) > 0:
+            print("in")
+            self.inputs[0].delete_me()
+        print(self.wires)
+        print(self.boxes)
+        print(self.spiders)
+        print(self.outputs)
+        print(self.inputs)
         self.boxes = []
         self.wires = []
 
