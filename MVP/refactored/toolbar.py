@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 import ttkbootstrap as ttk
 
@@ -44,7 +45,16 @@ class Titlebar(ttk.Frame):
 
     def handle_new_graph(self):
         root_canvas = list(self.main_diagram.canvasses.items())[0][1]
-        self.main_diagram.switch_canvas(root_canvas)
-        root_canvas.delete_everything()
+        if root_canvas.boxes or root_canvas.spiders or root_canvas.wires or root_canvas.outputs or root_canvas.inputs:
+            dialog = messagebox.askyesnocancel(title="Warning",
+                                               message="All unsaved progress will be deleted. Do you wish to save?")
+            if dialog == tk.NO:
+                pass
+            elif dialog == tk.YES:
+                self.main_diagram.save_to_file()
+            else:
+                return
+            self.main_diagram.switch_canvas(root_canvas)
+            root_canvas.delete_everything()
 
 

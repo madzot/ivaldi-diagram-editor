@@ -95,12 +95,6 @@ class Connection:
             if self.wire in self.canvas.wires:
                 self.canvas.wires.remove(self.wire)
 
-        if not self.box and self.side != "spider":
-            if self.side == "left":
-                self.canvas.inputs.remove(self)
-            elif self.side == "right":
-                self.canvas.outputs.remove(self)
-
     def add_wire(self, wire):
         if not self.has_wire and self.wire is None:
             self.wire = wire

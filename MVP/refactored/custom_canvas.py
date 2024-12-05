@@ -3,12 +3,11 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
-from PIL import Image, ImageTk
 import ttkbootstrap as ttk
+from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
@@ -394,29 +393,15 @@ class CustomCanvas(tk.Canvas):
 
     def delete_everything(self):
         while len(self.wires) > 0:
-            print("wire")
             self.wires[0].delete_self()
         while len(self.boxes) > 0:
-            print("box")
             self.boxes[0].delete_box()
         while len(self.spiders) > 0:
-            print("spider")
             self.spiders[0].delete_spider()
         while len(self.outputs) > 0:
-            print("out")
-            print(self.outputs[0])
-            print(self.outputs)
-            self.outputs[0].delete_me()
+            self.remove_diagram_output()
         while len(self.inputs) > 0:
-            print("in")
-            self.inputs[0].delete_me()
-        print(self.wires)
-        print(self.boxes)
-        print(self.spiders)
-        print(self.outputs)
-        print(self.inputs)
-        self.boxes = []
-        self.wires = []
+            self.remove_diagram_input()
 
     # STATIC HELPERS
     @staticmethod
