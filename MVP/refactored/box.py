@@ -31,6 +31,7 @@ class Box:
             self.id = id(self)
         else:
             self.id = id_
+        self.node = None
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.rect = self.create_rect()
 
@@ -172,7 +173,7 @@ class Box:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
-                                            self.canvas, add_boxes, highlightthickness=0)
+                                            self.canvas, add_boxes, self.id, highlightthickness=0)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text
@@ -350,7 +351,9 @@ class Box:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def edit_label(self):
-        self.label_text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        if text is not None:
+            self.label_text = text
         if os.stat("conf/functions_conf.json").st_size != 0:
             with open("conf/functions_conf.json", "r") as file:
                 data = json.load(file)
@@ -660,4 +663,3 @@ class Box:
         if not outputs:
             outputs_amount = 0
         return inputs_amount, outputs_amount
-
