@@ -7,17 +7,21 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
+from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from MVP.refactored.wire import Wire
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, **kwargs):
+    def __init__(self, master, diagram_source_box, receiver, main_diagram,
+                 parent_diagram, add_boxes, id_=None, **kwargs):
         super().__init__(master, **kwargs)
+
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
         self.configure(bg='white', width=screen_width_min, height=screen_height_min)
@@ -43,7 +47,12 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Button-1>', self.on_canvas_click)
         self.bind("<Configure>", self.on_canvas_resize)
         self.diagram_source_box = diagram_source_box  # Only here if canvas is sub-diagram
-        self.id = id(self)
+
+        if not id_:
+            self.id = id(self)
+        else:
+            self.id = id_
+
         self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
@@ -58,6 +67,8 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.selecting = False
         self.copier = Copier()
+        self.hypergraph_exporter = HypergraphExporter(self)
+
         if add_boxes and diagram_source_box:
             for connection in diagram_source_box.connections:
                 if connection.side == "left":
@@ -77,6 +88,14 @@ class CustomCanvas(tk.Canvas):
         self.columns = {}
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
+
+        self.copy_logo = (Image.open('../../assets/content-copy.png'))
+        self.copy_logo = self.copy_logo.resize((20, 20))
+        self.copy_logo = ImageTk.PhotoImage(self.copy_logo)
+
+    def delete(self, *args):
+        HypergraphManager.modify_canvas_hypergraph(self)
+        super().delete(*args)
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -199,8 +218,6 @@ class CustomCanvas(tk.Canvas):
             self.handle_connection_click(connection, event)
 
     def start_pulling_wire(self, event):
-        if self.focus_get() != self:
-            self.focus_set()
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
                 self.temp_wire.delete_self()
@@ -256,6 +273,8 @@ class CustomCanvas(tk.Canvas):
             self.current_wire.update()
             self.nullify_wire_start()
 
+        HypergraphManager.modify_canvas_hypergraph(self)
+
     def cancel_wire_pulling(self, event=None):
         if event:
             self.nullify_wire_start()
@@ -283,6 +302,12 @@ class CustomCanvas(tk.Canvas):
         self.boxes.append(box)
         return box
 
+    def get_box_by_id(self, box_id: int) -> Box | None:
+        for box in self.boxes:
+            if box.id == box_id:
+                return box
+        return None
+
     def add_spider(self, loc=(100, 100), id_=None):
         spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
         self.spiders.append(spider)
@@ -306,6 +331,28 @@ class CustomCanvas(tk.Canvas):
             img = Image.open('temp.ps')
             img.save(file_path, 'png')
             os.remove("temp.ps")
+
+    def open_tikz_generator(self):
+        tikz_window = tk.Toplevel(self)
+        tikz_window.title("TikZ Generator")
+
+        tk.Label(tikz_window, text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.", justify="left").pack()
+
+        pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
+        pgfplotsset_text.insert(tk.END, "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.config(state=tk.DISABLED)
+        pgfplotsset_text.pack()
+
+        tikz_text = tk.Text(tikz_window)
+        tikz_text.insert(tk.END, self.main_diagram.generate_tikz(self))
+        tikz_text.config(state="disabled")
+        tikz_text.pack(pady=10, fill=tk.BOTH, expand=True)
+        tikz_text.update()
+
+        tikz_copy_button = ttk.Button(tikz_text, image=self.copy_logo,
+                                      command=lambda: self.main_diagram.copy_to_clipboard(tikz_text),
+                                      bootstyle=LIGHT)
+        tikz_copy_button.place(x=tikz_text.winfo_width() - 30, y=20, anchor=tk.CENTER)
 
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
@@ -345,12 +392,16 @@ class CustomCanvas(tk.Canvas):
         [w.update() for w in self.wires]
 
     def delete_everything(self):
-        for w in self.wires:
-            w.delete_self()
-        for b in self.boxes:
-            b.delete_box()
-        self.boxes = []
-        self.wires = []
+        while len(self.wires) > 0:
+            self.wires[0].delete_self()
+        while len(self.boxes) > 0:
+            self.boxes[0].delete_box()
+        while len(self.spiders) > 0:
+            self.spiders[0].delete_spider()
+        while len(self.outputs) > 0:
+            self.remove_diagram_output()
+        while len(self.inputs) > 0:
+            self.remove_diagram_input()
 
     # STATIC HELPERS
     @staticmethod
@@ -505,6 +556,9 @@ class CustomCanvas(tk.Canvas):
                 c_max = connection.index
                 c = connection
         return c
+
+    def export_hypergraph(self):
+        self.hypergraph_exporter.export()
 
     def setup_column_removal(self, item, found):
         if not found and item.snapped_x:

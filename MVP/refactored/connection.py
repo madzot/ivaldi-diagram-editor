@@ -17,6 +17,7 @@ class Connection:
 
         else:
             self.id = id_
+        self.node = None
 
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
