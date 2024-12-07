@@ -19,6 +19,7 @@ from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
+from MVP.refactored.toolbar import Titlebar
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
 
@@ -29,13 +30,18 @@ class MainDiagram(tk.Tk):
         self.title("Dynamic String Diagram Canvas")
         self.receiver = receiver
 
+        self.titlebar = Titlebar(self, None)
+        self.titlebar.pack(side='top', fill='both')
+
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
+        self.wm_minsize(screen_width_min, screen_height_min)
 
-        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False, width=screen_width_min,
-                                          height=screen_height_min, bg="white")
+        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
 
@@ -55,7 +61,6 @@ class MainDiagram(tk.Tk):
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
-        self.wm_minsize(screen_width_min, screen_height_min)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
@@ -118,12 +123,6 @@ class MainDiagram(tk.Tk):
 
         # Bottom buttons
         buttons = {
-            "Generate code": self.generate_code,
-            "Visualize as graph": lambda: self.visualize_as_graph(self.custom_canvas),
-            "Save project": self.save_to_file,
-            "Save png": self.custom_canvas.save_as_png,
-            "Generate TikZ": self.custom_canvas.open_tikz_generator,
-            "Export hypergraph": self.custom_canvas.export_hypergraph,
             "Remove input": self.custom_canvas.remove_diagram_input,
             "Remove output": self.custom_canvas.remove_diagram_output,
             "Add input": self.custom_canvas.add_diagram_input,
@@ -237,12 +236,6 @@ class MainDiagram(tk.Tk):
         # TODO figure out why this is needed! and change it!
         if not self.custom_canvas.diagram_source_box:
             buttons = {
-                "Generate code": self.generate_code,
-                "Visualize as graph": lambda: self.visualize_as_graph(self.custom_canvas),
-                "Save project": self.save_to_file,
-                "Save png": self.custom_canvas.save_as_png,
-                "Generate TikZ": self.custom_canvas.open_tikz_generator,
-                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.custom_canvas.remove_diagram_input,
                 "Remove output": self.custom_canvas.remove_diagram_output,
                 "Add input": self.custom_canvas.add_diagram_input,
@@ -250,12 +243,6 @@ class MainDiagram(tk.Tk):
             }
         else:
             buttons = {
-                "Generate code": self.generate_code,
-                "Visualize as graph": lambda: self.visualize_as_graph(self.custom_canvas),
-                "Save project": self.save_to_file,
-                "Save png": self.custom_canvas.save_as_png,
-                "Generate TikZ": self.custom_canvas.open_tikz_generator,
-                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.remove_diagram_input,
                 "Remove output": self.remove_diagram_output,
                 "Add input": self.add_diagram_input,
@@ -305,6 +292,8 @@ class MainDiagram(tk.Tk):
         # Show the selected canvas
         self.custom_canvas.pack(fill='both', expand=True)
         self.bind_buttons()
+
+        self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.tree.selection_remove(self.tree.selection())
 
