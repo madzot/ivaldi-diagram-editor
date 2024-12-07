@@ -245,6 +245,8 @@ class Box:
 
             if self.snapped_x not in self.canvas.columns:
                 self.canvas.columns[self.snapped_x] = [col_preset]
+                col_preset.is_snapped = True
+                col_preset.snapped_x = self.snapped_x
             if self not in self.canvas.columns[self.snapped_x]:
                 self.canvas.columns[self.snapped_x].append(self)
 
