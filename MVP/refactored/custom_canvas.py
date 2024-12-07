@@ -3,20 +3,21 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
-from PIL import Image, ImageTk
 import ttkbootstrap as ttk
+from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
+from MVP.refactored.corner import Corner
 from MVP.refactored.event import Event
 from MVP.refactored.selector import Selector
 from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from MVP.refactored.wire import Wire
+from threading import Timer
 
 
 class CustomCanvas(tk.Canvas):
@@ -27,6 +28,7 @@ class CustomCanvas(tk.Canvas):
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
         self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+        self.update()
 
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
@@ -36,7 +38,7 @@ class CustomCanvas(tk.Canvas):
         self.inputs: list[Connection] = []
         self.spiders: list[Spider] = []
         self.wires: list[Wire] = []
-        self.corners: list[Connection] = []
+        self.corners: list[Corner] = []
         self.temp_wire = None
         self.temp_end_connection = None
         self.pulling_wire = False
@@ -108,21 +110,42 @@ class CustomCanvas(tk.Canvas):
         box = Box(self, 0, 0, self.receiver)
         self.boxes.append(box)
 
-        c1 = Connection(None, None, "left", [0, 0], self, 0)
-        c2 = Connection(None, None, "left", [0, 0], self, 0)
-        c3 = Connection(None, None, "left", [0, 0], self, 0)
-        c4 = Connection(None, None, "left", [0, 0], self, 0)
+        self.prev_width_max = self.canvasx(self.winfo_width())
+        self.prev_height_max = self.canvasy(self.winfo_height())
+        self.prev_width_min = self.canvasx(0)
+        self.prev_height_min = self.canvasy(0)
+        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        c1 = Corner(None, None, "left", [0, 0], self, 0)
+        c2 = Corner(None, None, "left", [0, self.winfo_height()], self, 0)
+        c3 = Corner(None, None, "left", [self.winfo_width(), 0], self, 0)
+        c4 = Corner(None, None, "left", [self.winfo_width(), self.winfo_height()], self, 0)
+        print(self.winfo_width())
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
         self.corners.append(c4)
-        self.update_corners()
+        self.init_corners()
 
         self.prev_scale = 1.0
 
         self.pan_history_x = 0
         self.pan_history_y = 0
         self.pan_speed = 20
+
+        self.resize_timer = None
+
+    def update_prev_winfo_size(self):
+        print("Updating prev")
+        print(f"TOTAL _ WIDTH: {self.winfo_width()}")
+        print(f"LEFT: {self.canvasx(0) - self.prev_width_min}")
+        print(f"RIGHT: {self.canvasx(self.winfo_width()) - self.prev_width_max}")
+        print(f"UP: {self.canvasy(0) - self.prev_height_min}")
+        print(f"DOWN: {self.canvasy(self.winfo_height()) - self.prev_height_max}")
+        self.prev_width_max = self.canvasx(self.winfo_width())
+        self.prev_height_max = self.canvasy(self.winfo_height())
+        self.prev_width_min = self.canvasx(0)
+        self.prev_height_min = self.canvasy(0)
 
     def debug(self, event):
         print(f"{self.columns}")
@@ -196,12 +219,14 @@ class CustomCanvas(tk.Canvas):
         super().delete(*args)
 
     def handle_right_click(self, event):
-        if self.selector.selecting:
-            self.selector.finish_selection()
-        if self.draw_wire_mode:
-            self.cancel_wire_pulling(event)
-        else:
-            self.show_context_menu(event)
+        print(f"Event canvas coords: {self.canvasx(event.x)}, {self.canvasy(event.y)}")
+        print(f"Top left corner: {self.corners[0].location}")
+        # if self.selector.selecting:
+        #     self.selector.finish_selection()
+        # if self.draw_wire_mode:
+        #     self.cancel_wire_pulling(event)
+        # else:
+        #     self.show_context_menu(event)
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -209,7 +234,7 @@ class CustomCanvas(tk.Canvas):
         self.itemconfig(self.name, text=name)
         self.name_text = name
 
-    def move_items(self, x_offset, y_offset):
+    def offset_items(self, x_offset, y_offset):
         for box in self.boxes:
             box.x -= x_offset
             box.y -= y_offset
@@ -260,6 +285,9 @@ class CustomCanvas(tk.Canvas):
         self.update_coordinates(denominator, event, scale)
 
         self.update_inputs_outputs()
+        if self.total_scale - 1 < 0.1:
+            print("Update corners")
+            self.init_corners()
         self.configure(scrollregion=self.bbox('all'))
 
     def update_coordinates(self, denominator, event, scale):
@@ -320,30 +348,53 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(y, corner.location[1], denominator)
             ]
             multiplier = 1 / (1 - self.delta)
-            if 0 < round(next_location[0]) < self.winfo_width():
+            if self.canvasx(0) < round(next_location[0]) < self.canvasx(self.winfo_width()):
                 x_offset = -next_location[0] * multiplier
-                if round(next_location[0]) > self.winfo_width() / 2:
-                    x_offset = (self.winfo_width() - next_location[0]) * multiplier
-            if 0 < round(next_location[1]) < self.winfo_height():
+                if round(next_location[0]) > self.canvasx(self.winfo_width()) / 2:
+                    x_offset = (self.canvasx(self.winfo_width()) - next_location[0]) * multiplier
+            if self.canvasy(0) < round(next_location[1]) < self.canvasy(self.winfo_height()):
                 y_offset = -next_location[1] * multiplier
-                if round(next_location[1]) > self.winfo_height() / 2:
-                    y_offset = (self.winfo_height() - next_location[1]) * multiplier
+                if round(next_location[1]) > self.canvasy(self.winfo_height()) / 2:
+                    y_offset = (self.canvasy(self.winfo_height()) - next_location[1]) * multiplier
+            # TODO does this part also need canvas coords
+            # if 0 < round(next_location[0]) < self.winfo_width():
+            #     x_offset = -next_location[0] * multiplier
+            #     if round(next_location[0]) > self.winfo_width() / 2:
+            #         x_offset = (self.winfo_width() - next_location[0]) * multiplier
+            # if 0 < round(next_location[1]) < self.winfo_height():
+            #     y_offset = -next_location[1] * multiplier
+            #     if round(next_location[1]) > self.winfo_height() / 2:
+            #         y_offset = (self.winfo_height() - next_location[1]) * multiplier
         is_allowed = x_offset == 0 == y_offset
         return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
 
     def check_corner_start_locations(self):
+        min_x = self.canvasx(0)
+        min_y = self.canvasy(0)
+        max_x = self.canvasx(self.winfo_width())
+        max_y = self.canvasy(self.winfo_height())
+        # min_x = 0
+        # min_y = 0
+        # max_x = self.winfo_width()
+        # max_y = self.winfo_height()
         count = 0
         locations = [
-            [0, 0],
-            [0, self.winfo_height()],
-            [self.winfo_width(), 0],
-            [self.winfo_width(), self.winfo_height()]
+            [min_x, min_y],
+            [min_x, max_y],
+            [max_x, min_y],
+            [max_x, max_y]
+
         ]
+        print("---")
         for corner in self.corners:
             for location in locations:
-                if round(corner.location[0]) == location[0] and round(corner.location[1]) == location[1]:
+                print(f"Corner and location on canvas: {[self.canvasx(corner.location[0]), self.canvasy(corner.location[1])]} <=> {location}")
+                print(f"Corner and location: {corner.location} <=> {location}")
+                if (abs(round(self.canvasx(corner.location[0])) - location[0]) < 2 and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)\
+                        or (abs(round(corner.location[0]) - location[0]) < 2 and abs(round(corner.location[1]) - location[1]) < 2):
                     count += 1
-        return count == 4
+        print(f"Count: {count}")
+        return count >= 4
 
     def close_menu(self):
         if self.context_menu:
@@ -544,12 +595,6 @@ class CustomCanvas(tk.Canvas):
                 return box
         return None
 
-    def get_box_function(self, box_id) -> BoxFunction | None:
-        box = self.get_box_by_id(box_id)
-        if box:
-            return box.box_function
-        return None
-
     def add_spider(self, loc=(100, 100), id_=None):
         spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
         self.spiders.append(spider)
@@ -612,18 +657,76 @@ class CustomCanvas(tk.Canvas):
     # RESIZE/UPDATE
     def on_canvas_resize(self, _):
         # update label loc
-        w = self.winfo_width()
-        self.coords(self.name, w / 2, 10)
+        w = self.canvasx(self.winfo_width())
+        self.coords(self.name, w / 2, self.canvasy(10))
 
-        self.update_corners()
+        print(f"Total scale: {self.total_scale}")
+        if self.total_scale - 1 > 0.1:
+            self.update_corners()
+        else:
+            print("Init corners")
+            self.init_corners()
+
         self.update_inputs_outputs()
+        self.update_prev_winfo_size()
+        # self.offset_items(self.corners[0].location[0], self.corners[0].location[1])
         # TODO here or somewhere else limit resize if it would mess up output/input display
 
+    @staticmethod
+    def debounce(wait_time):
+        """
+        Decorator that will debounce a function so that it is called after wait_time seconds
+        If it is called multiple times, will wait for the last call to be debounced and run only this one.
+        """
+
+        def decorator(function):
+            def debounced(*args, **kwargs):
+                def call_function():
+                    debounced._timer = None
+                    return function(*args, **kwargs)
+
+                # if we already have a call to the function currently waiting to be executed, reset the timer
+                if debounced._timer is not None:
+                    debounced._timer.cancel()
+
+                # after wait_time, call the function provided to the decorator with its arguments
+                debounced._timer = Timer(wait_time, call_function)
+                debounced._timer.start()
+
+            debounced._timer = None
+            return debounced
+
+        return decorator
+
+    def init_corners(self):
+        min_x = self.canvasx(0)
+        min_y = self.canvasy(0)
+        max_x = self.canvasx(self.winfo_width())
+        max_y = self.canvasy(self.winfo_height())
+        self.corners[0].move_to([min_x, min_y])
+        self.corners[1].move_to([min_x, max_y])
+        self.corners[2].move_to([max_x, min_y])
+        self.corners[3].move_to([max_x, max_y])
+        self.update_inputs_outputs()
+
+    @debounce(1)
     def update_corners(self):
-        self.corners[0].move_to([0, 0])
-        self.corners[1].move_to([0, self.winfo_height()])
-        self.corners[2].move_to([self.winfo_width(), 0])
-        self.corners[3].move_to([self.winfo_width(), self.winfo_height()])
+        min_x = self.canvasx(0)
+        min_y = self.canvasy(0)
+        max_x = self.canvasx(self.winfo_width())
+        max_y = self.canvasy(self.winfo_height())
+        self.corners[0].move_to([(self.corners[0].location[0] + (min_x - self.prev_width_min) / self.delta),
+                                 (self.corners[0].location[1] + (min_y - self.prev_height_min) / self.delta)])
+
+        self.corners[1].move_to([(self.corners[1].location[0] + (min_x - self.prev_width_min) / self.delta),
+                                 (self.corners[1].location[1] + (max_y - self.prev_height_max) / self.delta)])
+
+        self.corners[2].move_to([(self.corners[2].location[0] + (max_x - self.prev_width_max) / self.delta),
+                                 (self.corners[2].location[1] + (min_y - self.prev_height_min) / self.delta)])
+
+        self.corners[3].move_to([(self.corners[3].location[0] + (max_x - self.prev_width_max) / self.delta),
+                                 (self.corners[3].location[1] + (max_y - self.prev_height_max) / self.delta)])
+
 
     def update_inputs_outputs(self):
         x = self.corners[3].location[0]

@@ -38,10 +38,9 @@ class MainDiagram(tk.Tk):
 
         self.configure(width=screen_width_min, height=screen_height_min)
 
-        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False, width=screen_width_min,
-                                          height=screen_height_min, bg="white")
+        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
-        self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        # self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.titlebar.set_custom_canvas(self.custom_canvas)
 
