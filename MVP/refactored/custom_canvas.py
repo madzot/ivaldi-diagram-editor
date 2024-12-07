@@ -746,12 +746,16 @@ class CustomCanvas(tk.Canvas):
         [w.update() for w in self.wires]
 
     def delete_everything(self):
-        for w in self.wires:
-            w.delete_self()
-        for b in self.boxes:
-            b.delete_box()
-        self.boxes = []
-        self.wires = []
+        while len(self.wires) > 0:
+            self.wires[0].delete_self()
+        while len(self.boxes) > 0:
+            self.boxes[0].delete_box()
+        while len(self.spiders) > 0:
+            self.spiders[0].delete_spider()
+        while len(self.outputs) > 0:
+            self.remove_diagram_output()
+        while len(self.inputs) > 0:
+            self.remove_diagram_input()
 
     # STATIC HELPERS
     @staticmethod

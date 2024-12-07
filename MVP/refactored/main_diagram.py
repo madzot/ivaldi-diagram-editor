@@ -35,8 +35,7 @@ class MainDiagram(tk.Tk):
 
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
-
-        self.configure(width=screen_width_min, height=screen_height_min)
+        self.wm_minsize(screen_width_min, screen_height_min)
 
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
@@ -63,7 +62,6 @@ class MainDiagram(tk.Tk):
         self.tree.update()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
-        self.wm_minsize(screen_width_min, screen_height_min)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
