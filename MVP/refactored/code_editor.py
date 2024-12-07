@@ -12,9 +12,8 @@ class CodeEditor:
         self.box = box
         if label:
             self.label = label
-        else:
+        elif box:
             self.label = self.box.label_text
-        self.code = code
 
         self.window = tk.Toplevel()
         self.window.title('Code Editor')
@@ -57,7 +56,7 @@ class CodeEditor:
             if self.box.label_text in self.box.canvas.master.label_content.keys():
                 text = self.box.canvas.master.label_content[self.box.label_text].strip()
         else:
-            text = self.code
+            text = code
 
         self.code_view.insert('1.0', text)
 

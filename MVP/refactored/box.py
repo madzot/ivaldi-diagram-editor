@@ -102,7 +102,7 @@ class Box:
         self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def open_editor(self):
-        CodeEditor(self)
+        CodeEditor(self.canvas.main_diagram, box=self)
 
     def save_box_to_menu(self):
         if not self.label_text:
