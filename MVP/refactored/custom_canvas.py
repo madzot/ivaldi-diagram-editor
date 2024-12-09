@@ -221,12 +221,12 @@ class CustomCanvas(tk.Canvas):
     def handle_right_click(self, event):
         print(f"Event canvas coords: {self.canvasx(event.x)}, {self.canvasy(event.y)}")
         print(f"Top left corner: {self.corners[0].location}")
-        # if self.selector.selecting:
-        #     self.selector.finish_selection()
-        # if self.draw_wire_mode:
-        #     self.cancel_wire_pulling(event)
-        # else:
-        #     self.show_context_menu(event)
+        if self.selector.selecting:
+            self.selector.finish_selection()
+        if self.draw_wire_mode:
+            self.cancel_wire_pulling(event)
+        else:
+            self.show_context_menu(event)
 
     def set_name(self, name):
         w = self.winfo_width()
@@ -283,7 +283,6 @@ class CustomCanvas(tk.Canvas):
                 event.y += y_offset
 
         self.update_coordinates(denominator, event, scale)
-
         self.update_inputs_outputs()
         if self.total_scale - 1 < 0.1:
             print("Update corners")
@@ -327,6 +326,7 @@ class CustomCanvas(tk.Canvas):
         for wire in self.wires:
             wire.wire_width *= scale
             wire.update()
+        self.temp_wire.update()
 
         new_columns = {}
         for column_x in self.columns.keys():
