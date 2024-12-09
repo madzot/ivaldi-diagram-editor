@@ -326,7 +326,8 @@ class CustomCanvas(tk.Canvas):
         for wire in self.wires:
             wire.wire_width *= scale
             wire.update()
-        self.temp_wire.update()
+        if self.temp_wire:
+            self.temp_wire.update()
 
         new_columns = {}
         for column_x in self.columns.keys():
