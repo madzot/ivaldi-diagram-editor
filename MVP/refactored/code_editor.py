@@ -1,59 +1,81 @@
+import json
 import os
 import tkinter as tk
-import re
-import json
-import chlorophyll
-from chlorophyll import CodeView
+
 import pygments.lexers
+from chlorophyll import CodeView
 
 
 class CodeEditor:
-    def __init__(self, box):
+    def __init__(self, main_diagram, box=None, label=None, code=None):
+        self.main_diagram = main_diagram
         self.box = box
+        if label:
+            self.label = label
+        elif box:
+            self.label = self.box.label_text
+
         self.window = tk.Toplevel()
         self.window.title('Code Editor')
         self.window.geometry("1000x750")
-        self.code_view = CodeView(self.window, lexer=pygments.lexers.PythonLexer, tab_width=4)
+        self.code_view = CodeView(self.window, lexer=pygments.lexers.PythonLexer,
+                                  tab_width=4,
+                                  font="Courier")
+
         self.code_view.pack(fill=tk.BOTH, expand=True)
         self.previous_text = ""
 
         self.save_button = tk.Button(
             self.code_view,
             text="Save",
-            command=self.save,
+            command=self.save_handler,
         )
         self.save_button.pack(
             anchor=tk.E
         )
 
-        param_list = []
-        return_list = []
-        input_count = 0
-        output_count = 0
-        for i in self.box.connections:
-            if i.side == "left":
-                param_list.append(f"x{input_count}")
-                input_count += 1
-            else:
-                return_list.append(f"y{output_count}")
-                output_count += 1
-        param_str = tuple(param_list).__str__().replace("'", "")
-        return_str = tuple(return_list).__str__().replace("'", "")
-        if len(param_list) == 1:
-            param_str = param_str.replace(",", "")
-        if len(return_list) == 1:
-            return_str = return_str.replace(",", "")
-        text = f"def {self.box.label_text}{param_str}:\n    return {return_str}"
-        if self.box.label_text in self.box.canvas.master.label_content.keys():
-            text = self.box.canvas.master.label_content[self.box.label_text].strip()
+        if box:
+            param_list = []
+            return_list = []
+            input_count = 0
+            output_count = 0
+            for i in self.box.connections:
+                if i.side == "left":
+                    param_list.append(f"x{input_count}")
+                    input_count += 1
+                else:
+                    return_list.append(f"y{output_count}")
+                    output_count += 1
+            param_str = tuple(param_list).__str__().replace("'", "")
+            return_str = tuple(return_list).__str__().replace("'", "")
+            if len(param_list) == 1:
+                param_str = param_str.replace(",", "")
+            if len(return_list) == 1:
+                return_str = return_str.replace(",", "")
+            text = f"def {self.box.label_text}{param_str}:\n    return {return_str}"
+            if self.box.label_text in self.box.canvas.master.label_content.keys():
+                text = self.box.canvas.master.label_content[self.box.label_text].strip()
+        else:
+            text = code
 
         self.code_view.insert('1.0', text)
 
-    def save(self):
+    def save_handler(self):
+        if self.box:
+            self.save_to_file()
+            self.main_diagram.load_functions()
+            self.update_boxes()
+        else:
+            self.save_to_file()
+            self.main_diagram.load_functions()
+            self.main_diagram.manage_methods.add_methods()
+        self.window.destroy()
+
+    def save_to_file(self):
         if os.stat("conf/functions_conf.json").st_size != 0:
             with open("conf/functions_conf.json", "r+") as file:
                 existing_json = json.load(file)
-                existing_json[self.box.label_text] = self.code_view.get('1.0', tk.END).strip()
+                existing_json[self.label] = self.code_view.get('1.0', tk.END).strip()
                 json_object = json.dumps(existing_json, indent=4)
                 file.seek(0)
                 file.truncate(0)
@@ -61,12 +83,13 @@ class CodeEditor:
         else:
             with open("conf/functions_conf.json", "w") as file:
                 json_object = json.dumps(
-                    {f"{self.box.label_text}": self.code_view.get('1.0', tk.END).strip()},
+                    {f"{self.label}": self.code_view.get('1.0', tk.END).strip()},
                     indent=4
                 )
                 file.write(json_object)
-        for box in self.box.canvas.boxes:
+
+    def update_boxes(self):
+        for box in self.main_diagram.custom_canvas.boxes:
             if box.label_text in self.box.label_text:
                 box.update_io()
-        self.box.canvas.master.label_content[self.box.label_text] = self.code_view.get("1.0", tk.END)
-        self.window.destroy()
+        self.main_diagram.label_content[self.label] = self.code_view.get('1.0', tk.END)

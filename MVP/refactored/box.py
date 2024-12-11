@@ -66,6 +66,7 @@ class Box:
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
+        self.canvas.tag_bind(self.resize_handle, '<ButtonRelease-1>', lambda event: self.check_columns_after_resize())
         self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
 
     def show_context_menu(self, event):
@@ -103,7 +104,7 @@ class Box:
         self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def open_editor(self):
-        CodeEditor(self)
+        CodeEditor(self.canvas.main_diagram, box=self)
 
     def save_box_to_menu(self):
         if not self.label_text:
@@ -255,6 +256,7 @@ class Box:
             if self.snapped_x not in self.canvas.columns:
                 self.canvas.columns[self.snapped_x] = [col_preset]
                 col_preset.snapped_x = self.snapped_x
+                col_preset.is_snapped = True
             if self not in self.canvas.columns[self.snapped_x]:
                 self.canvas.columns[self.snapped_x].append(self)
 
@@ -338,6 +340,16 @@ class Box:
         self.update_size(new_size_x, new_size_y)
         self.move_label()
 
+    def check_columns_after_resize(self):
+        if self.snapped_x:
+            found = False
+            for column_x in self.canvas.columns.keys():
+                if self.x < column_x < self.x + self.size[0]:
+                    found = True
+                    break
+            if not found:
+                self.canvas.setup_column_removal(self, False)
+
     def resize_by_connections(self):
         # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
@@ -350,21 +362,24 @@ class Box:
         if self.label:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
-    def edit_label(self):
-        text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
-        if text is not None:
-            self.label_text = text
-        if os.stat("conf/functions_conf.json").st_size != 0:
-            with open("conf/functions_conf.json", "r") as file:
-                data = json.load(file)
-                for label, code in data.items():
-                    if label == self.label_text:
-                        if messagebox.askokcancel("Confirmation",
-                                                  "A box with this label already exists."
-                                                  " Do you want to use the existing box?"):
-                            self.update_io()
-                        else:
-                            return self.edit_label()
+    def edit_label(self, new_label=None):
+        if not new_label:
+            text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+            if text is not None:
+                self.label_text = text
+            if os.stat("conf/functions_conf.json").st_size != 0:
+                with open("conf/functions_conf.json", "r") as file:
+                    data = json.load(file)
+                    for label, code in data.items():
+                        if label == self.label_text:
+                            if messagebox.askokcancel("Confirmation",
+                                                      "A box with this label already exists."
+                                                      " Do you want to use the existing box?"):
+                                self.update_io()
+                            else:
+                                return self.edit_label()
+        else:
+            self.label_text = new_label
 
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
@@ -652,7 +667,7 @@ class Box:
 
     @staticmethod
     def get_input_output_amount_off_code(code):
-        inputs = re.search(r"\((.*)\):", code).group(1)
+        inputs = re.search(r"\((.*)\)", code).group(1)
         outputs = re.search(r"return (.*)\n*", code).group(1)
         inputs_amount = len(inputs.split(","))
         if outputs[0] == "(":
