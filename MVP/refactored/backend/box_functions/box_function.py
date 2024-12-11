@@ -9,9 +9,9 @@ def get_predefined_functions() -> dict:
     for name in dirs_and_files:
         full_path = os.path.join(functions_path, name)
         if os.path.isfile(full_path):
-            file = open(full_path, "r")
-            function_name = name.replace(".py", "").replace("_", " ")
-            predefined_functions[function_name] = file.read()
+            with open(full_path, "r") as file:
+                function_name = name.replace(".py", "").replace("_", " ")
+                predefined_functions[function_name] = file.read()
     return predefined_functions
 
 

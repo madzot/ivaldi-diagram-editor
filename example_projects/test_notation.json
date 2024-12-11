@@ -12,6 +12,7 @@
                     60
                 ],
                 "label": "1to1",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 1525951605392,

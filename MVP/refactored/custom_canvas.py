@@ -3,12 +3,12 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
-from PIL import Image, ImageTk
 import ttkbootstrap as ttk
+from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.selector import Selector
@@ -312,7 +312,7 @@ class CustomCanvas(tk.Canvas):
     def get_box_function(self, box_id) -> BoxFunction | None:
         box = self.get_box_by_id(box_id)
         if box:
-            return box.box_function
+            return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
         return None
 
     def add_spider(self, loc=(100, 100), id_=None):
@@ -399,12 +399,16 @@ class CustomCanvas(tk.Canvas):
         [w.update() for w in self.wires]
 
     def delete_everything(self):
-        for w in self.wires:
-            w.delete_self()
-        for b in self.boxes:
-            b.delete_box()
-        self.boxes = []
-        self.wires = []
+        while len(self.wires) > 0:
+            self.wires[0].delete_self()
+        while len(self.boxes) > 0:
+            self.boxes[0].delete_box()
+        while len(self.spiders) > 0:
+            self.spiders[0].delete_spider()
+        while len(self.outputs) > 0:
+            self.remove_diagram_output()
+        while len(self.inputs) > 0:
+            self.remove_diagram_input()
 
     # STATIC HELPERS
     @staticmethod

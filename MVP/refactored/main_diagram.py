@@ -36,9 +36,9 @@ class MainDiagram(tk.Tk):
 
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
+        self.wm_minsize(screen_width_min, screen_height_min)
 
-        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False, width=screen_width_min,
-                                          height=screen_height_min, bg="white")
+        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -63,7 +63,6 @@ class MainDiagram(tk.Tk):
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
-        self.wm_minsize(screen_width_min, screen_height_min)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
@@ -163,7 +162,8 @@ class MainDiagram(tk.Tk):
                 self.label_content = json.load(file)
 
     def generate_code(self):
-        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)
+        print("File needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
+        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         # The print below can be toggled in and out for debugging
         # until our code editor system is implemented into code generation
         # print("-----------------------\ncode is:\n", code, sep="", end="")

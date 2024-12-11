@@ -13,8 +13,8 @@ from MVP.refactored.custom_canvas import CustomCanvas
 
 class CodeGenerator:
     @classmethod
-    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
-        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
+    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> str:
+        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses, main_diagram)
         file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n\n"
 
         box_functions: dict[BoxFunction, set[str]] = {}
@@ -40,17 +40,18 @@ class CodeGenerator:
         return autopep8.fix_code(file_content)
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[
+    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> dict[
                             BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         for box in canvas.boxes:
             if str(box.id) in canvasses:
-                code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses))
+                code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses, main_diagram))
             else:
-                if box.box_function in code_parts:
-                    code_parts[box.box_function].append(box.id)
+                box_function = BoxFunction(box.label_text, code=main_diagram.label_content[box.label_text])
+                if box_function in code_parts:
+                    code_parts[box_function].append(box.id)
                 else:
-                    code_parts[box.box_function] = [box.id]
+                    code_parts[box_function] = [box.id]
         return code_parts
 
     @classmethod
