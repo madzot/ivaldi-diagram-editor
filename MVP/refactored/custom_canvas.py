@@ -7,6 +7,7 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
