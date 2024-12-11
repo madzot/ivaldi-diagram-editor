@@ -115,7 +115,6 @@ class CustomCanvas(tk.Canvas):
         self.prev_height_max = self.canvasy(self.winfo_height())
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
-        self.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         c1 = Corner(None, None, "left", [0, 0], self, 0)
         c2 = Corner(None, None, "left", [0, self.winfo_height()], self, 0)
@@ -711,6 +710,10 @@ class CustomCanvas(tk.Canvas):
         min_y = self.canvasy(0)
         max_x = self.canvasx(self.winfo_width())
         max_y = self.canvasy(self.winfo_height())
+        print(min_x)
+        print(min_y)
+        print(max_x)
+        print(max_y)
         self.corners[0].move_to([min_x, min_y])
         self.corners[1].move_to([min_x, max_y])
         self.corners[2].move_to([max_x, min_y])
