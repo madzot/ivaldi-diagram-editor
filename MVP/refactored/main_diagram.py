@@ -151,7 +151,7 @@ class MainDiagram(tk.Tk):
         return file_hash
 
     def generate_code(self):
-        print("File needs to have a method named invoke and a 'meta' dictionary with fields subtract, min_args and max_args")
+        print("File needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         # The print below can be toggled in and out for debugging
         # until our code editor system is implemented into code generation
