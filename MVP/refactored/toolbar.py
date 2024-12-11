@@ -32,7 +32,7 @@ class Titlebar(ttk.Frame):
         self.file_menu.add_cascade(menu=self.save_submenu, label="Save as")
         self.file_menu.add_cascade(menu=self.generate_submenu, label="Generate")
         self.file_menu.add_command(label="New", command=self.handle_new_graph)
-        self.file_menu.add_command(label="Import new diagram", command=self.handle_import_diagram)
+        self.file_menu.add_command(label="Import new diagram", command=lambda: self.handle_new_graph(empty=False))
         self.file_button.pack(side=ttk.LEFT)
 
         # View button
@@ -61,31 +61,15 @@ class Titlebar(ttk.Frame):
         else:
             return tk.NONE
 
-    def handle_import_diagram(self):
+    def handle_new_graph(self, empty=True):
         root_canvas = list(self.main_diagram.canvasses.items())[0][1]
         if root_canvas.boxes or root_canvas.spiders or root_canvas.wires or root_canvas.outputs or root_canvas.inputs:
             dialog_result = self.ask_deletion_confirmation()
-            if dialog_result == tk.NO:
-                pass
-            elif dialog_result == tk.YES:
-                self.main_diagram.save_to_file()
-            else:
+            if dialog_result == tk.NONE:
                 return
             self.main_diagram.switch_canvas(root_canvas)
             root_canvas.delete_everything()
-        self.main_diagram.load_from_file()
-
-    def handle_new_graph(self):
-        root_canvas = list(self.main_diagram.canvasses.items())[0][1]
-        if root_canvas.boxes or root_canvas.spiders or root_canvas.wires or root_canvas.outputs or root_canvas.inputs:
-            dialog_result = self.ask_deletion_confirmation()
-            if dialog_result == tk.NO:
-                pass
-            elif dialog_result == tk.YES:
-                self.main_diagram.save_to_file()
-            else:
-                return
-            self.main_diagram.switch_canvas(root_canvas)
-            root_canvas.delete_everything()
+        if not empty:
+            self.main_diagram.load_from_file()
 
 
