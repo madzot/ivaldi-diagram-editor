@@ -178,7 +178,8 @@ class MainDiagram(tk.Tk):
             del self.label_content[old_label]
             for canvas in self.canvasses.values():
                 for box in canvas.boxes:
-                    box.edit_label(new_label)
+                    if box.label_text == old_label:
+                        box.edit_label(new_label)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
