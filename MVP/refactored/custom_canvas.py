@@ -7,6 +7,7 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
@@ -306,6 +307,12 @@ class CustomCanvas(tk.Canvas):
         for box in self.boxes:
             if box.id == box_id:
                 return box
+        return None
+
+    def get_box_function(self, box_id) -> BoxFunction | None:
+        box = self.get_box_by_id(box_id)
+        if box:
+            return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
         return None
 
     def add_spider(self, loc=(100, 100), id_=None):

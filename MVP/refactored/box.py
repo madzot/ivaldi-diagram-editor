@@ -651,7 +651,7 @@ class Box:
 
     @staticmethod
     def get_input_output_amount_off_code(code):
-        inputs = re.search(r"\((.*)\):", code).group(1)
+        inputs = re.search(r"\((.*)\)", code).group(1)
         outputs = re.search(r"return (.*)\n*", code).group(1)
         inputs_amount = len(inputs.split(","))
         if outputs[0] == "(":
