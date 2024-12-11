@@ -11,46 +11,77 @@ class Titlebar(ttk.Frame):
         self.custom_canvas = custom_canvas
         self.config(bootstyle=ttk.LIGHT)
 
+        # File button
         self.file_button = tk.Menubutton(self, text="File",
                                          width=5, indicatoron=False)
         self.file_menu = ttk.Menu(self.file_button, tearoff=False)
         self.file_button.config(menu=self.file_menu)
 
+        # File -> Save as
         self.save_submenu = tk.Menu(self.file_menu, tearoff=False)
         self.save_submenu.add_command(label="png file", command=lambda: self.custom_canvas.save_as_png())
         self.save_submenu.add_command(label="project", command=lambda: self.main_diagram.save_to_file())
         self.save_submenu.add_command(label="hypergraph", command=lambda: self.custom_canvas.export_hypergraph())
 
+        # File -> Generate
         self.generate_submenu = tk.Menu(self.file_menu, tearoff=False)
         self.generate_submenu.add_command(label="TikZ", command=lambda: self.custom_canvas.open_tikz_generator())
         self.generate_submenu.add_command(label="code", command=lambda: self.main_diagram.generate_code())
 
+        # File menu buttons
         self.file_menu.add_cascade(menu=self.save_submenu, label="Save as")
         self.file_menu.add_cascade(menu=self.generate_submenu, label="Generate")
+        self.file_menu.add_command(label="New", command=self.handle_new_graph)
+        self.file_menu.add_command(label="Import new diagram", command=self.handle_import_diagram)
         self.file_button.pack(side=ttk.LEFT)
 
-        self.file_menu.add_command(label="New", command=self.handle_new_graph)
-
+        # View button
         self.view_button = tk.Menubutton(self, text="View",
                                          width=5, indicatoron=False)
         self.view_menu = tk.Menu(self.view_button, tearoff=False)
         self.view_button.config(menu=self.view_menu)
 
+        # View menu buttons
         self.view_menu.add_command(label="Visualize hypergraph",
                                    command=lambda: self.main_diagram.visualize_as_graph(self.custom_canvas))
+
         self.view_button.pack(side=ttk.LEFT)
 
     def set_custom_canvas(self, custom_canvas):
         self.custom_canvas = custom_canvas
 
+    def ask_deletion_confirmation(self):
+        dialog = messagebox.askyesnocancel(title="Warning",
+                                           message="All unsaved progress will be deleted. Do you wish to save?")
+        if dialog == tk.NO:
+            return tk.NO
+        elif dialog == tk.YES:
+            self.main_diagram.save_to_file()
+            return tk.YES
+        else:
+            return tk.NONE
+
+    def handle_import_diagram(self):
+        root_canvas = list(self.main_diagram.canvasses.items())[0][1]
+        if root_canvas.boxes or root_canvas.spiders or root_canvas.wires or root_canvas.outputs or root_canvas.inputs:
+            dialog_result = self.ask_deletion_confirmation()
+            if dialog_result == tk.NO:
+                pass
+            elif dialog_result == tk.YES:
+                self.main_diagram.save_to_file()
+            else:
+                return
+            self.main_diagram.switch_canvas(root_canvas)
+            root_canvas.delete_everything()
+        self.main_diagram.load_from_file()
+
     def handle_new_graph(self):
         root_canvas = list(self.main_diagram.canvasses.items())[0][1]
         if root_canvas.boxes or root_canvas.spiders or root_canvas.wires or root_canvas.outputs or root_canvas.inputs:
-            dialog = messagebox.askyesnocancel(title="Warning",
-                                               message="All unsaved progress will be deleted. Do you wish to save?")
-            if dialog == tk.NO:
+            dialog_result = self.ask_deletion_confirmation()
+            if dialog_result == tk.NO:
                 pass
-            elif dialog == tk.YES:
+            elif dialog_result == tk.YES:
                 self.main_diagram.save_to_file()
             else:
                 return
