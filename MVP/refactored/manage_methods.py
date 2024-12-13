@@ -23,6 +23,7 @@ class ManageMethods(tk.Toplevel):
         self.treeview = ttk.Treeview(self, columns="Function", bootstyle=ttk.PRIMARY)
         self.treeview.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         self.treeview.bind("<Motion>", "break")
+        self.treeview.bind("<ButtonRelease-1>", lambda event: self.check_selection())
 
         self.treeview.column("#0", width=100, minwidth=100, anchor=tk.W)
         self.treeview.heading("#0", text="Label", anchor=tk.W)
@@ -36,14 +37,24 @@ class ManageMethods(tk.Toplevel):
         self.cancel_button.pack(side=tk.RIGHT, fill=tk.X)
 
         self.edit_button = ttk.Button(self.button_frame, text="Edit code", command=self.open_code_editor)
-        self.edit_button.pack(padx=5, side=tk.RIGHT, fill=tk.X)
 
         self.edit_label_button = ttk.Button(self.button_frame, text="Edit label", command=self.open_label_editor)
-        self.edit_label_button.pack(padx=5, side=tk.RIGHT, fill=tk.X)
 
         self.main_diagram.load_functions()
 
         self.add_methods()
+
+        self.buttons_hidden = True
+
+    def check_selection(self):
+        if self.treeview.selection() and self.buttons_hidden:
+            self.buttons_hidden = False
+            self.edit_button.pack(padx=5, side=tk.LEFT, fill=tk.X)
+            self.edit_label_button.pack(padx=5, side=tk.LEFT, fill=tk.X)
+        elif not self.treeview.selection() and not self.buttons_hidden:
+            self.buttons_hidden = True
+            self.edit_button.pack_forget()
+            self.edit_label_button.pack_forget()
 
     def add_methods(self):
         self.treeview.delete(*self.treeview.get_children())
