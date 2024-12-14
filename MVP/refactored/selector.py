@@ -13,7 +13,8 @@ class Selector:
         self.origin_x = None
         self.origin_y = None
         self.connection_mapping = {}
-        self.copied_items = {"boxes": [], "spiders": [], "wires": []}  # Initialize copied_items
+        self.copied_items = []
+        self.copied_wire_list = []
 
     def start_selection(self, event):
         for item in self.selected_items:
@@ -128,75 +129,87 @@ class Selector:
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def copy_selected_items(self):
-        """Store the selected items for later pasting."""
-        self.copied_items = {
-            "boxes": [box for box in self.selected_items if isinstance(box, Box)],
-            "spiders": [spider for spider in self.selected_items if isinstance(spider, Spider)],
-            "wires": [
-                {
-                    "wire": wire,
-                    "start_connection": wire.start_connection,
-                    "end_connection": wire.end_connection,
-                }
-                for wire in self.selected_items if isinstance(wire, Wire)
-            ],
-        }
+        if len(self.selected_items) > 0:
+            self.copied_items.clear()
+            self.copied_wire_list.clear()
+            wire_list = []
+            for item in self.selected_items:
+                if isinstance(item, Box) or isinstance(item, Spider):
+                    for wire in item.wires:
+                        if wire not in wire_list:
+                            wire_list.append(wire)
+                        else:
+                            wire_list.remove(wire)
+                            self.copied_wire_list.append({
+                                'wire': wire,
+                                'start_connection': wire.start_connection,
+                                'end_connection': wire.end_connection,
+                                'original_start_connection': wire.start_connection,
+                                'original_end_connection': wire.end_connection
+                                })
 
-    def paste_copied_items(self, offset_x=50, offset_y=50):
-        """Recreate the copied items on the canvas at an offset."""
-        new_items = {"boxes": [], "spiders": [], "wires": []}
-        connection_mapping = {}
+                self.copied_items.append(item)
 
-        # Step 1: Paste boxes and remap connections
-        for box in self.copied_items["boxes"]:
-            # Correct the parameter names for the `add_box` method
-            new_box = self.canvas.add_box(
-                loc=(box.x + offset_x, box.y + offset_y),
-                size=box.size,
-                id_=None
-            )
-            for connection in box.connections:
-                if connection.side == "left":
-                    new_conn = new_box.add_left_connection()
-                else:
-                    new_conn = new_box.add_right_connection()
-                connection_mapping[connection] = new_conn
-            new_items["boxes"].append(new_box)
+    def paste_copied_items(self, event_x=50, event_y=50):
+        if len(self.copied_items) > 0:
 
-        # Step 2: Paste spiders and map them
-        for spider in self.copied_items["spiders"]:
-            new_spider = self.canvas.add_spider(
-                loc=(spider.location[0] + offset_x, spider.location[1] + offset_y),
-                id_=None
-            )
-            connection_mapping[spider] = new_spider
-            new_items["spiders"].append(new_spider)
+            wire_list = self.copied_wire_list
 
-        # Step 3: Recreate wires
-        for wire_info in self.copied_items["wires"]:
-            original_wire = wire_info["wire"]
-            start_conn = connection_mapping.get(wire_info["start_connection"])
-            end_conn = connection_mapping.get(wire_info["end_connection"])
+            middle_point = self.find_middle_point()
 
-            if start_conn and end_conn:
-                new_wire = Wire(
-                    self.canvas,
-                    start_connection=start_conn,
-                    receiver=self.canvas.receiver,
-                    end_connection=end_conn,
-                )
-                new_items["wires"].append(new_wire)
-            else:
-                print(
-                    f"Failed to recreate wire {original_wire.id}: "
-                    f"Start: {start_conn}, End: {end_conn}"
-                )
+            for item in self.copied_items:
+                if isinstance(item, Box):
+                    new_box = self.canvas.add_box((event_x+(item.x-middle_point[0]), event_y+(item.y-middle_point[1])),
+                                                  size=item.size, shape=item.shape)
+                    self.canvas.copier.copy_box(item, new_box, False)
 
-        self.canvas.update()
-        print(f"Pasted items: {new_items}")
+                    for wire in wire_list:
+                        if wire['original_start_connection'].box == item:
+                            for connection in new_box.connections:
+                                if (connection.side == wire['original_start_connection'].side
+                                        and connection.index == wire['original_start_connection'].index):
+                                    wire['start_connection'] = connection
+                        if wire['original_end_connection'].box == item:
+                            for connection in new_box.connections:
+                                if (connection.side == wire['original_end_connection'].side
+                                        and connection.index == wire['original_end_connection'].index):
+                                    wire['end_connection'] = connection
 
+                if isinstance(item, Spider):
+                    new_spider = self.canvas.add_spider((event_x+(item.x-middle_point[0]),
+                                                        event_y+(item.y-middle_point[1])))
+                    for wire in wire_list:
+                        if wire['original_start_connection'] is item:
+                            wire['start_connection'] = new_spider
+                        if wire['original_end_connection'] is item:
+                            wire['end_connection'] = new_spider
 
+            for wire in wire_list:
+                self.canvas.start_wire_from_connection(wire['start_connection'])
+                self.canvas.end_wire_to_connection(wire['end_connection'])
 
-
-
-
+    def find_middle_point(self):
+        most_left = self.canvas.winfo_width()
+        most_right = 0
+        most_up = self.canvas.winfo_height()
+        most_down = 0
+        for item in self.copied_items:
+            if isinstance(item, Box):
+                if item.x < most_left:
+                    most_left = item.x
+                if item.y < most_up:
+                    most_up = item.y
+                if item.x + item.size[0] > most_right:
+                    most_right = item.x + item.size[0]
+                if item.y + item.size[1] > most_down:
+                    most_down = item.y + item.size[1]
+            if isinstance(item, Spider):
+                if item.x - item.r < most_left:
+                    most_left = item.x - item.r
+                if item.y - item.r < most_up:
+                    most_up = item.y - item.r
+                if item.x + item.r > most_right:
+                    most_right = item.x + item.r
+                if item.y + item.r > most_down:
+                    most_down = item.y + item.r
+        return (most_left + most_right) / 2, (most_up + most_down) / 2

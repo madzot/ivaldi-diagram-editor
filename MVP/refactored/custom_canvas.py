@@ -66,6 +66,8 @@ class CustomCanvas(tk.Canvas):
         self.bind("<ButtonRelease-1>", self.__select_release__)
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
+        self.bind_all("<Control-c>", lambda event: self.copy_selected_items())
+        self.bind_all("<Control-v>", self.paste_copied_items)
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
@@ -97,10 +99,6 @@ class CustomCanvas(tk.Canvas):
     def delete(self, *args):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
-
-        # Add copy-paste bindings
-        self.bind_all("<Control-c>", self.copy_selected_items)
-        self.bind_all("<Control-v>", self.paste_copied_items)
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -620,10 +618,8 @@ class CustomCanvas(tk.Canvas):
     def change_box_shape(self, shape):
         self.box_shape = shape
 
-    def copy_selected_items(self, event=None):  # Add event argument
+    def copy_selected_items(self):  # Add event argument
         self.selector.copy_selected_items()
 
     def paste_copied_items(self, event):
-        offset_x = event.x - self.selector.origin_x
-        offset_y = event.y - self.selector.origin_y
-        self.selector.paste_copied_items(offset_x, offset_y)
+        self.selector.paste_copied_items(event.x, event.y)

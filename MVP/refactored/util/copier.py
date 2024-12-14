@@ -58,31 +58,7 @@ class Copier:
             end_c = wire.end_connection
             # wire start is a box
             # Find wire start box with filter and loop through connections to find the correct one
-            if list(filter(lambda x: (start_c.box and x.id == start_c.box.id), canvas.boxes)):
-                for c in (list(filter(lambda x: (start_c.box and x.id == start_c.box.id),
-                                      canvas.boxes))[0].connections):
-                    if c.side == start_c.side and c.index == start_c.index:
-                        canvas.start_wire_from_connection(c)
-                        break
-            # wire start is a spider
-            else:
-                for spider in canvas.spiders:
-                    if start_c.is_spider() and start_c.id == spider.id:
-                        canvas.start_wire_from_connection(spider)
-                        break
-
-            # wire end is a box
-            if list(filter(lambda x: (end_c.box and x.id == end_c.box.id), canvas.boxes)):
-                for c in list(filter(lambda x: (end_c.box and x.id == end_c.box.id), canvas.boxes))[0].connections:
-                    if c.side == end_c.side and c.index == end_c.index:
-                        canvas.end_wire_to_connection(c)
-                        break
-            # wire end is a spider
-            else:
-                for spider in canvas.spiders:
-                    if end_c.is_spider() and end_c.id == spider.id:
-                        canvas.end_wire_to_connection(spider)
-                        break
+            self.copy_wire_within_selection(start_c, end_c, canvas)
 
             # Add wires with start connection in the selected are and end connection outside
         for wire in half_in:
@@ -173,12 +149,42 @@ class Copier:
                 break
 
     @staticmethod
-    def copy_box(old_box, new_box):
+    def copy_box(old_box, new_box, remember_connections=True):
         for connection in old_box.connections:
             if connection.side == "right":
                 new_connection = new_box.add_right_connection()
-                new_connection.id = connection.id
+                if remember_connections:
+                    new_connection.id = connection.id
             if connection.side == "left":
                 new_connection = new_box.add_left_connection()
-                new_connection.id = connection.id
+                if remember_connections:
+                    new_connection.id = connection.id
         new_box.set_label(old_box.label_text)
+
+    @staticmethod
+    def copy_wire_within_selection(start_c, end_c, canvas):
+        if list(filter(lambda x: (start_c.box and x.id == start_c.box.id), canvas.boxes)):
+            for c in (list(filter(lambda x: (start_c.box and x.id == start_c.box.id),
+                                  canvas.boxes))[0].connections):
+                if c.side == start_c.side and c.index == start_c.index:
+                    canvas.start_wire_from_connection(c)
+                    break
+        # wire start is a spider
+        else:
+            for spider in canvas.spiders:
+                if start_c.is_spider() and start_c.id == spider.id:
+                    canvas.start_wire_from_connection(spider)
+                    break
+
+        # wire end is a box
+        if list(filter(lambda x: (end_c.box and x.id == end_c.box.id), canvas.boxes)):
+            for c in list(filter(lambda x: (end_c.box and x.id == end_c.box.id), canvas.boxes))[0].connections:
+                if c.side == end_c.side and c.index == end_c.index:
+                    canvas.end_wire_to_connection(c)
+                    break
+        # wire end is a spider
+        else:
+            for spider in canvas.spiders:
+                if end_c.is_spider() and end_c.id == spider.id:
+                    canvas.end_wire_to_connection(spider)
+                    break
