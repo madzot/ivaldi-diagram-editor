@@ -12,3 +12,7 @@ class Importer(ABC):
     @abstractmethod
     def start_import(self, file: TextIO):
         pass
+
+    @abstractmethod
+    def load_everything_to_canvas(self, data, canvas):
+        pass
