@@ -43,7 +43,7 @@ class Importer:
 
     def load_boxes_to_canvas(self, d, canvas):
         for box in d["boxes"]:
-            new_box = canvas.add_box((box["x"], box["y"]), box["size"], self.get_id(box["id"]))
+            new_box = canvas.add_box((box["x"], box["y"]), box["size"], self.get_id(box["id"]), shape=box["shape"])
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
@@ -53,7 +53,7 @@ class Importer:
                     new_box.add_right_connection(self.get_id(c["id"]))
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False,add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:
                     name = box["label"]
@@ -133,7 +133,7 @@ class Importer:
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box(loc)
+            new_box = canvas.add_box(loc, shape=box["shape"])
             if box["label"]:
                 new_box.set_label(box["label"])
             for _ in range(box["left_c"]):

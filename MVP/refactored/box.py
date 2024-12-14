@@ -1,12 +1,17 @@
 import tkinter as tk
 from tkinter import simpledialog
+from tkinter import messagebox
+import json
+import re
+import os
 
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.connection import Connection
 
 
 class Box:
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None):
+    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
+        self.shape = shape
         self.canvas = canvas
         self.x = x
         self.y = y
@@ -16,6 +21,8 @@ class Box:
         self.x_dif = 0
         self.y_dif = 0
         self.connections: list[Connection] = []
+        self.left_connections = 0
+        self.right_connections = 0
         self.label = None
         self.label_text = ""
         self.wires = []
@@ -23,9 +30,10 @@ class Box:
             self.id = id(self)
         else:
             self.id = id_
+        self.node = None
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.rect = self.canvas.create_rectangle(self.x, self.y, self.x + self.size[0], self.y + self.size[1],
-                                                 outline="black", fill="white")
+        self.rect = self.create_rect()
+
         self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                                                           self.x + self.size[0], self.y + self.size[1],
                                                           outline="black", fill="black")
@@ -57,6 +65,7 @@ class Box:
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
+        self.canvas.tag_bind(self.resize_handle, '<ButtonRelease-1>', lambda event: self.check_columns_after_resize())
         self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
 
     def show_context_menu(self, event):
@@ -75,6 +84,11 @@ class Box:
             for circle in self.connections:
                 self.context_menu.add_command(label=f"Remove {circle.side} connection nr {circle.index}",
                                               command=lambda bound_arg=circle: self.remove_connection(bound_arg))
+
+            sub_menu = tk.Menu(self.context_menu, tearoff=0)
+            self.context_menu.add_cascade(menu=sub_menu, label="Shape")
+            sub_menu.add_command(label="Rectangle", command=lambda shape="rectangle": self.change_shape(shape))
+            sub_menu.add_command(label="Triangle", command=lambda shape="triangle": self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -159,7 +173,7 @@ class Box:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
-                                            self.canvas, add_boxes, highlightthickness=0)
+                                            self.canvas, add_boxes, self.id, highlightthickness=0)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text
@@ -209,7 +223,6 @@ class Box:
                 continue
 
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
-
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
                 self.snapped_x = float(go_to_x + self.size[0] / 2)
 
@@ -232,6 +245,8 @@ class Box:
 
             if self.snapped_x not in self.canvas.columns:
                 self.canvas.columns[self.snapped_x] = [col_preset]
+                col_preset.is_snapped = True
+                col_preset.snapped_x = self.snapped_x
             if self not in self.canvas.columns[self.snapped_x]:
                 self.canvas.columns[self.snapped_x].append(self)
 
@@ -314,6 +329,16 @@ class Box:
         self.update_size(new_size_x, new_size_y)
         self.move_label()
 
+    def check_columns_after_resize(self):
+        if self.snapped_x:
+            found = False
+            for column_x in self.canvas.columns.keys():
+                if self.x < column_x < self.x + self.size[0]:
+                    found = True
+                    break
+            if not found:
+                self.canvas.setup_column_removal(self, False)
+
     def resize_by_connections(self):
         # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
@@ -327,8 +352,21 @@ class Box:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def edit_label(self):
-        # TODO check if label is already in use and if definitions match
-        self.label_text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
+        if text is not None:
+            self.label_text = text
+        if os.stat("conf/functions_conf.json").st_size != 0:
+            with open("conf/functions_conf.json", "r") as file:
+                data = json.load(file)
+                for label, code in data.items():
+                    if label == self.label_text:
+                        if messagebox.askokcancel("Confirmation",
+                                                  "A box with this label already exists."
+                                                  " Do you want to use the existing box?"):
+                            self.update_io()
+                        else:
+                            return self.edit_label()
+
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
@@ -414,7 +452,13 @@ class Box:
         self.update_wires()
 
     def update_position(self):
-        self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
+        if self.shape == "rectangle":
+            self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
+        if self.shape == "triangle":
+            self.canvas.coords(self.rect,
+                               self.x + self.size[0], self.y + self.size[1] / 2,
+                               self.x, self.y,
+                               self.x, self.y + self.size[1])
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                            self.x + self.size[0], self.y + self.size[1])
 
@@ -425,6 +469,33 @@ class Box:
 
     def update_wires(self):
         [wire.update() for wire in self.wires]
+
+    def update_io(self):
+        """Update inputs and outputs based on label and code."""
+        with open("conf/functions_conf.json", "r") as file:
+            data = json.load(file)
+            for label, code in data.items():
+                if label == self.label_text:
+                    inputs_amount, outputs_amount = self.get_input_output_amount_off_code(code)
+                    if inputs_amount > self.left_connections:
+                        for i in range(inputs_amount - self.left_connections):
+                            self.add_left_connection()
+                    elif inputs_amount < self.left_connections:
+                        for j in range(self.left_connections - inputs_amount):
+                            for con in self.connections[::-1]:
+                                if con.side == "left":
+                                    self.remove_connection(con)
+                                    break
+
+                    if outputs_amount > self.right_connections:
+                        for i in range(outputs_amount - self.right_connections):
+                            self.add_right_connection()
+                    elif outputs_amount < self.right_connections:
+                        for i in range(self.right_connections - outputs_amount):
+                            for con in self.connections[::-1]:
+                                if con.side == "right":
+                                    self.remove_connection(con)
+                                    break
 
     # ADD TO/REMOVE FROM CANVAS
     def add_wire(self, wire):
@@ -443,6 +514,7 @@ class Box:
                                             connection_id=connection.id)
 
         self.resize_by_connections()
+        self.left_connections += 1
         return connection
 
     def add_right_connection(self, id_=None):
@@ -457,6 +529,7 @@ class Box:
             self.receiver.receiver_callback("box_add_right", generator_id=self.id, connection_nr=i,
                                             connection_id=connection.id)
         self.resize_by_connections()
+        self.right_connections += 1
         return connection
 
     def remove_connection(self, circle):
@@ -466,6 +539,10 @@ class Box:
         if self.receiver.listener:
             self.receiver.receiver_callback("box_remove_connection", generator_id=self.id, connection_nr=circle.index,
                                             generator_side=circle.side)
+        if circle.side == "left":
+            self.left_connections -= 1
+        elif circle.side == "right":
+            self.right_connections -= 1
 
         self.connections.remove(circle)
         circle.delete_me()
@@ -552,3 +629,36 @@ class Box:
         if not self.has_right_connections():
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
+
+    def create_rect(self):
+        w, h = self.size
+        if self.shape == "rectangle":
+            return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
+                                                outline="black", fill="white")
+        if self.shape == "triangle":
+            return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
+                                              self.x, self.y + h, outline="black", fill="white")
+
+    def change_shape(self, shape):
+        if shape == "rectangle":
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")
+        elif shape == "triangle":
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="triangle")
+        else:
+            return
+        self.canvas.copier.copy_box(self, new_box)
+        self.delete_box()
+
+    @staticmethod
+    def get_input_output_amount_off_code(code):
+        inputs = re.search(r"\((.*)\)", code).group(1)
+        outputs = re.search(r"return (.*)\n*", code).group(1)
+        inputs_amount = len(inputs.split(","))
+        if outputs[0] == "(":
+            outputs = outputs[1:-1]
+        outputs_amount = len(outputs.strip().split(","))
+        if not inputs:
+            inputs_amount = 0
+        if not outputs:
+            outputs_amount = 0
+        return inputs_amount, outputs_amount
