@@ -139,7 +139,7 @@ class CustomCanvas(tk.Canvas):
                     # noinspection PyUnresolvedReferences
                     sub_menu.add_command(label=box,
                                          command=lambda loc=(event.x, event.y), name=box:
-                                         self.master.importer.add_box_from_menu(self, name, loc))
+                                         self.master.json_importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))

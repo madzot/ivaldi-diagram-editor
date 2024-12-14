@@ -1,6 +1,8 @@
 import hashlib
+import json
+import os
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from tkinter import simpledialog
 from tkinter import ttk
 
@@ -11,7 +13,8 @@ from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManag
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
-from MVP.refactored.util.importer import Importer
+from MVP.refactored.util.importer.json_importer import JsonImporter
+from MVP.refactored.util.importer.python_importer import PythonImporter
 
 
 class MainDiagram(tk.Tk):
@@ -45,7 +48,10 @@ class MainDiagram(tk.Tk):
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
-        self.importer = Importer(self.custom_canvas)
+
+        self.json_importer = JsonImporter(self.custom_canvas)
+        self.python_importer = PythonImporter(self.custom_canvas)
+
         # Add undefined box
         self.undefined_box_button = tk.Button(self.control_frame, text="Add Undefined Box",
                                               command=self.custom_canvas.create_new_box, bg="white", width=18)
@@ -132,7 +138,8 @@ class MainDiagram(tk.Tk):
         return file_hash
 
     def generate_code(self):
-        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses)  # TODO if user in sub diagram, should use another canvas
+        code = CodeGenerator.generate_code(self.custom_canvas,
+                                           self.canvasses)  # TODO if user in sub diagram, should use another canvas
         print("-----------------------\ncode is:\n", code, sep="", end="")
 
     def create_algebraic_notation(self):
@@ -419,14 +426,14 @@ class MainDiagram(tk.Tk):
         self.update_dropdown_menu()
 
     def get_boxes_from_file(self):
-        d = self.importer.load_boxes_to_menu()
+        d = self.json_importer.load_boxes_to_menu()
         self.quick_create_booleans = []
         for k in d:
             self.boxes[k] = self.add_custom_box
             self.quick_create_booleans.append(tk.BooleanVar())
 
     def add_custom_box(self, name, canvas):
-        self.importer.add_box_from_menu(canvas, name)
+        self.json_importer.add_box_from_menu(canvas, name)
 
     def save_box_to_diagram_menu(self, box):
         self.project_exporter.export_box_to_menu(box)
@@ -444,6 +451,23 @@ class MainDiagram(tk.Tk):
         self.set_title(filename)
 
     def load_from_file(self):
-        filename = self.importer.import_diagram()
-        if filename:
-            self.set_title(filename.replace(".json", ""))
+        filetypes = (("JSON files", "*.json"), ("Python files", "*.py"), ("All files", "*.*"))
+        file_path = filedialog.askopenfilename(title="Select JSON / Python file", filetypes=filetypes)
+
+        if not file_path:
+            return
+
+        importers = {".json": self.json_importer, ".py": self.python_importer}
+
+        try:
+            with open(file_path, 'r') as json_file:
+
+                file_name, file_extension = os.path.splitext(file_path)
+                importer = importers.get(file_extension)
+                importer.start_import(json_file)
+
+                messagebox.showinfo("Info", "Imported successfully")
+                self.set_title(file_name)
+
+        except FileNotFoundError or IOError or json.JSONDecodeError:
+            messagebox.showerror("Error", "File import failed, loading new empty canvas.")

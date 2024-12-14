@@ -2,37 +2,26 @@ import hashlib
 import json
 import random
 import string
-from tkinter import filedialog
 from tkinter import messagebox
-
+from typing import TextIO
 
 from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.util.importer.importer import Importer
 
 
-class Importer:
-    def __init__(self, canvas):
-        self.canvas: CustomCanvas = canvas
-        self.boxes_json_conf = "./MVP/refactored/conf/boxes_conf.json"
+class JsonImporter(Importer):
+
+    def __init__(self, canvas: CustomCanvas):
+        super().__init__(canvas)
         self.id_randomize = {}
         self.seed = ""
         self.random_id = False
+        self.boxes_json_conf = "./MVP/refactored/conf/boxes_conf.json"
 
-    def get_id(self, id_):
-        if not self.random_id:
-            return id_
-        if id_ in self.id_randomize:
-            return self.id_randomize[id_]
-        else:
-            input_string = str(id_) + self.seed
-            hash_object = hashlib.sha256()
-            hash_object.update(input_string.encode('utf-8'))
-            hex_dig = hash_object.hexdigest()
-            self.id_randomize[id_] = hex_dig
-            return hex_dig
-
-    def start_import(self, d):
-        d = d["main_canvas"]
-        self.load_everything_to_canvas(d, self.canvas)
+    def start_import(self, json_file: TextIO):
+        data = json.load(json_file)
+        data = data["main_canvas"]
+        self.load_everything_to_canvas(data, self.canvas)
 
     def load_everything_to_canvas(self, d, canvas):
 
@@ -65,22 +54,6 @@ class Importer:
 
             new_box.lock_box()
 
-    def import_diagram(self):
-        file_path = filedialog.askopenfilename(
-            title="Select JSON file",
-            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
-        )
-        if file_path:
-            try:
-                with open(file_path, 'r') as json_file:
-                    data = json.load(json_file)
-                    self.start_import(data)
-                    messagebox.showinfo("Info", "Imported successfully")
-                    return file_path
-
-            except FileNotFoundError or IOError or json.JSONDecodeError:
-                messagebox.showerror("Error", "File import failed, loading new empty canvas.")
-
     def load_spiders_to_canvas(self, d, canvas):
         for s in d["spiders"]:
             canvas.add_spider((s["x"], s["y"]), self.get_id(s["id"]))
@@ -110,6 +83,27 @@ class Importer:
                         con, True)
                     break
 
+    @staticmethod
+    def generate_random_string(length):
+        # Define the possible characters for the random string
+        characters = string.ascii_letters + string.digits + string.punctuation
+        # Generate a random string using the specified characters
+        random_string = ''.join(random.choice(characters) for _ in range(length))
+        return random_string
+
+    def get_id(self, id_):
+        if not self.random_id:
+            return id_
+        if id_ in self.id_randomize:
+            return self.id_randomize[id_]
+        else:
+            input_string = str(id_) + self.seed
+            hash_object = hashlib.sha256()
+            hash_object.update(input_string.encode('utf-8'))
+            hex_dig = hash_object.hexdigest()
+            self.id_randomize[id_] = hex_dig
+            return hex_dig
+
     def load_boxes_to_menu(self):
         try:
             with open(self.boxes_json_conf, 'r') as json_file:
@@ -118,14 +112,6 @@ class Importer:
         except FileNotFoundError or IOError or json.JSONDecodeError:
             messagebox.showinfo("Info", "Loading custom boxes failed!")
             return {}
-
-    @staticmethod
-    def generate_random_string(length):
-        # Define the possible characters for the random string
-        characters = string.ascii_letters + string.digits + string.punctuation
-        # Generate a random string using the specified characters
-        random_string = ''.join(random.choice(characters) for _ in range(length))
-        return random_string
 
     def add_box_from_menu(self, canvas, box_name, loc=(100, 100)):
         with open(self.boxes_json_conf, 'r') as json_file:
