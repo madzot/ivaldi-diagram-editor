@@ -513,6 +513,19 @@ class MainDiagram(tk.Tk):
         return zip(a, a)
 
     def generate_tikz(self, canvas):
+        fig, ax = self.generate_matplot(canvas)
+
+        tikzplotlib.clean_figure(fig=fig)
+        tikz = tikzplotlib.get_tikz_code(figure=fig)
+        plt.close()
+        return tikz
+
+    def generate_png(self, canvas, file_path):
+        fig, ax = self.generate_matplot(canvas, True)
+        fig.savefig(file_path, format='png', dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def generate_matplot(self, canvas, show_connections=False):
         x_max, y_max = canvas.winfo_width() / 100, canvas.winfo_height() / 100
         fig, ax = plt.subplots(1, figsize=(x_max, y_max))
         ax.set_aspect('equal', adjustable='box')
@@ -526,6 +539,11 @@ class MainDiagram(tk.Tk):
             else:
                 polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
                                             box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
+            if show_connections:
+                for connection in box.connections:
+                    circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
+                                            connection.r / 100, color="black")
+                    ax.add_patch(circle)
 
             plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
                      horizontalalignment="center", verticalalignment="center")
@@ -564,7 +582,4 @@ class MainDiagram(tk.Tk):
         ax.set_ylim(0, y_max)
         plt.axis('off')
 
-        tikzplotlib.clean_figure(fig=fig)
-        tikz = tikzplotlib.get_tikz_code(figure=fig)
-        plt.close()
-        return tikz
+        return fig, ax

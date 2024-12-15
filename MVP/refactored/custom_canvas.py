@@ -334,10 +334,7 @@ class CustomCanvas(tk.Canvas):
         file_path = filedialog.asksaveasfilename(defaultextension='.png', filetypes=filetypes,
                                                  title="Save png file")
         if file_path:
-            self.postscript(file='temp.ps', colormode="color")
-            img = Image.open('temp.ps')
-            img.save(file_path, 'png')
-            os.remove("temp.ps")
+            self.main_diagram.generate_png(self, file_path)
 
     def open_tikz_generator(self):
         tikz_window = tk.Toplevel(self)
