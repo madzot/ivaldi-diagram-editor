@@ -402,7 +402,11 @@ class CustomCanvas(tk.Canvas):
         while len(self.wires) > 0:
             self.wires[0].delete_self()
         while len(self.boxes) > 0:
-            self.boxes[0].delete_box()
+            if self.boxes[0].sub_diagram:
+                sub_diagram = 'sub_diagram'
+            else:
+                sub_diagram = None
+            self.boxes[0].delete_box(action=sub_diagram)
         while len(self.spiders) > 0:
             self.spiders[0].delete_spider()
         while len(self.outputs) > 0:
