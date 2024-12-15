@@ -1,5 +1,6 @@
 from MVP.refactored.box import Box
 from MVP.refactored.spider import Spider
+from MVP.refactored.wire import Wire
 
 
 class Selector:
@@ -132,28 +133,34 @@ class Selector:
         if len(self.selected_items) > 0:
             self.copied_items.clear()
             self.copied_wire_list.clear()
-            wire_list = []
+            connection_list = []
             for item in self.selected_items:
-                if isinstance(item, Box) or isinstance(item, Spider):
+                if isinstance(item, Box):
+                    connection_list += item.connections
+                if isinstance(item, Spider):
                     for wire in item.wires:
-                        if wire not in wire_list:
-                            wire_list.append(wire)
+                        if wire.start_connection == item:
+                            connection_list.append(wire.start_connection)
                         else:
-                            wire_list.remove(wire)
-                            self.copied_wire_list.append({
-                                'wire': wire,
-                                'start_connection': wire.start_connection,
-                                'end_connection': wire.end_connection,
-                                'original_start_connection': wire.start_connection,
-                                'original_end_connection': wire.end_connection
-                                })
-
-                self.copied_items.append(item)
+                            connection_list.append(wire.end_connection)
+            for item in self.selected_items:
+                if isinstance(item, Wire):
+                    if item.start_connection in connection_list and item.end_connection in connection_list:
+                        self.copied_wire_list.append({
+                            'wire': item,
+                            'start_connection': item.start_connection,
+                            'end_connection': item.end_connection,
+                            'original_start_connection': item.start_connection,
+                            'original_end_connection': item.end_connection
+                        })
+                else:
+                    self.copied_items.append(item)
 
     def paste_copied_items(self, event_x=50, event_y=50):
         if len(self.copied_items) > 0:
 
             wire_list = self.copied_wire_list
+            print(len(wire_list))
 
             middle_point = self.find_middle_point()
 

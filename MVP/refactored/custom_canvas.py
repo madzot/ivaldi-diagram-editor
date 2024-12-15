@@ -618,7 +618,7 @@ class CustomCanvas(tk.Canvas):
     def change_box_shape(self, shape):
         self.box_shape = shape
 
-    def copy_selected_items(self):  # Add event argument
+    def copy_selected_items(self):
         self.selector.copy_selected_items()
 
     def paste_copied_items(self, event):
