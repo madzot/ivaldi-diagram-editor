@@ -13,6 +13,9 @@ class PythonImporter(Importer):
         for stmt in nodes:
             func_call = stmt.value
             func_name = func_call.func.id if isinstance(func_call.func, ast.Name) else None
+            if func_name == "print":
+                continue
+
             args = [
                 arg.id if isinstance(arg, ast.Name) else ast.dump(arg)
                 for arg in func_call.args
@@ -88,7 +91,7 @@ class PythonImporter(Importer):
             for assigned_variable in function_call["assigned_variables"]:
                 possible_outputs[assigned_variable] = function_call["function_name"]
 
-            new_box = canvas.create_new_box(loc=(box_x, 250))
+            new_box = canvas.create_new_box(loc=(box_x, 300))
             new_box.set_label(function_call["function_name"])
 
             for arg in args:
