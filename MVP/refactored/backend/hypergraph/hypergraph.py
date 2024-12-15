@@ -1,27 +1,20 @@
 from queue import Queue
 
-from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 import networkx as nx
 import matplotlib.pyplot as plt
 
 
-class Hypergraph(Node):
+class Hypergraph(HyperEdge):
     """Hypergraph class."""
 
-    def __init__(self, hypergraph_id=None, inputs=None, outputs=None, source: set[Node]=None, nodes: list=None, canvas_id=None):
-        super().__init__(hypergraph_id, inputs, outputs)
-        if nodes is None:
-            nodes = []
-        if source is None:
-            source = set()
-        self.source = source
-        self.nodes: list = nodes
-        self.set_hypergraph_io()
-        self.canvas_id: int = canvas_id
+    def __init__(self, hypergraph_id=None, canvas_id=None):
+        super().__init__(hypergraph_id)
+        self.canvas_id = canvas_id
 
     def get_all_nodes(self) -> set:
         visited = set()
-        all_nodes: set[Node] = set()
+        all_nodes: set[HyperEdge] = set()
 
         queue = Queue()
         for source_node in self.source:
@@ -45,7 +38,7 @@ class Hypergraph(Node):
         queue = Queue()
         for source_node in self.source:
             if source_node == node_to_remove_id:
-                source_node.remove_self()
+                source_node._remove_self()
                 self.source.remove(source_node)
                 return
             queue.put(source_node)
@@ -53,41 +46,41 @@ class Hypergraph(Node):
         while not queue.empty():
             node = queue.get()
             if node.id == node_to_remove_id:
-                node.remove_self()
+                node._remove_self()
                 break
             visited.add(node)
             for child in node.children:
                 if child not in visited:
                     queue.put(child)
 
-    def contains_node(self, node: Node) -> bool:
+    def contains_node(self, node: HyperEdge) -> bool:
         return node in self.nodes
 
-    def add_source_node(self, node: Node):
+    def add_source_node(self, node: HyperEdge):
         self.source.add(node)
 
-    def add_node(self, node: Node) -> None:
+    def add_node(self, node: HyperEdge) -> None:
         if node in self.nodes:
             raise ValueError("Node already exists")
         self.nodes.append(node)
         self.set_hypergraph_io()
 
-    def get_node_by_input(self, input_id: int) -> Node | None:
+    def get_node_by_input(self, input_id: int) -> HyperEdge | None:
         for node in self.nodes:
             if input_id in node.inputs:
                 return node
         return None
 
-    def get_node_by_output(self, output_id: int) -> Node | None:
+    def get_node_by_output(self, output_id: int) -> HyperEdge | None:
         for node in self.nodes:
             if output_id in node.outputs:
                 return node
         return None
 
-    def get_node_children_by_id(self, node_id: int) -> list[Node]:
+    def get_node_children_by_id(self, node_id: int) -> list[HyperEdge]:
         return self.get_node_children_by_node(self.get_node_by_id(node_id))
 
-    def get_node_children_by_node(self, required_node: Node) -> list[Node]:
+    def get_node_children_by_node(self, required_node: HyperEdge) -> list[HyperEdge]:
         children = []
         for node in self.nodes:
             if any(n in node.inputs for n in required_node.outputs): # If requiredNode outputs wire id contains another node inputs wire id
@@ -100,21 +93,21 @@ class Hypergraph(Node):
     def set_canvas_id(self, canvas_id: int) -> None:
         self.canvas_id = canvas_id
 
-    def get_node_parents_by_id(self, node_id: int) -> list[Node]:
+    def get_node_parents_by_id(self, node_id: int) -> list[HyperEdge]:
         return self.get_node_parents_by_node(self.get_node_by_id(node_id))
 
-    def get_node_parents_by_node(self, required_node: Node) -> list[Node]:
+    def get_node_parents_by_node(self, required_node: HyperEdge) -> list[HyperEdge]:
         parents = []
         for node in self.nodes:
             if any(n in node.outputs for n in required_node.inputs):  # If requiredNode outputs wire id contains another node inputs wire id
                 parents.append(node)
         return parents
 
-    def add_nodes(self, nodes: [Node]) -> None:
+    def add_nodes(self, nodes: [HyperEdge]) -> None:
         for node in nodes:
             self.add_node(node)
 
-    def get_node_by_id(self, node_id: int) -> Node | None:
+    def get_node_by_id(self, node_id: int) -> HyperEdge | None:
         visited = set()
 
         queue = Queue()
@@ -130,7 +123,7 @@ class Hypergraph(Node):
                     queue.put(child)
         return None
 
-    def remove_node(self, node: Node) -> None:
+    def remove_node(self, node: HyperEdge) -> None:
         self.nodes.remove(node)
 
     def set_hypergraph_io(self) -> None:

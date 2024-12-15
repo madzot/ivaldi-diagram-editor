@@ -1,5 +1,7 @@
 import tkinter as tk
 
+from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
 from MVP.refactored.connection import Connection
 
 
@@ -161,6 +163,14 @@ class Wire:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, None, connection.side],
                                             connection_id=connection.id)
+
+        # node: Node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(self.id)
+        # if node is None:
+        #     node = Node(self.id)
+        #     WireAndSpiderToNodeMapping.add_new_pair(self.id, node)
+        #
+        # node.
+
 
     def __eq__(self, other):
         if type(self) is type(other):

@@ -8,8 +8,8 @@ class Diagram:
         self.input = []
         self.output = []
         self.boxes = []
-        self.resources = []
-        self.spiders = []
+        self.resources: list[Resource] = []
+        self.spiders: list[Resource] = []
 
     def add_resource(self, resource):
         self.resources.append(resource)

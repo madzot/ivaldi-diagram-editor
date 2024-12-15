@@ -1,7 +1,7 @@
-import tkinter as tk
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
-from MVP.refactored.backend.hypergraph.node import Node
+import tkinter as tk
 
 
 class Connection:
@@ -27,8 +27,8 @@ class Connection:
         self.width_between_boxes = 1  # px
         self.bind_events()
 
-        if self.box is None: # if it diagram`s inputs/output it should be a node
-            BoxToNodeMapping.add_new_pair(self.id, Node(self.id))
+        # if self.box is None: # if it diagram`s inputs/output it should be a node
+        #     BoxToHyperEdgeMapping.add_new_pair(self.id, HyperEdge(self.id))
 
     def bind_events(self):
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
@@ -117,3 +117,13 @@ class Connection:
 
     def deselect(self):
         self.canvas.itemconfig(self.circle, fill="black")
+
+    def __eq__(self, __value):
+        if isinstance(__value, Connection):
+            return self.id == __value.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
+
+

@@ -2,6 +2,10 @@ import logging
 
 from MVP.refactored.backend.diagram import Diagram
 from MVP.refactored.backend.generator import Generator
+from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
 from MVP.refactored.backend.resource import Resource
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -48,6 +52,11 @@ class Receiver:
             parent.spiders.remove(wire_id)
         self.wire_handle_delete_resource(spider)
 
+        node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(spider.id)
+        node.remove_self()
+        WireAndSpiderToNodeMapping.remove_pair(spider.id)
+
+
     def spider_parent(self, id, generator_id=None):
         spider = self.spider_get_resource_by_connection_id(id)
         spider.parent = generator_id
@@ -66,6 +75,10 @@ class Receiver:
         # self.diagram.add_resource(resource)
         self.diagram.spiders.append(resource)
         logger.info(f"Spider created and added to diagram: {resource}")
+
+        new_node = Node(id)
+        WireAndSpiderToNodeMapping.add_new_pair(id, new_node)
+
 
     def wire_callback(self, wire_id, action=None, start_connection=None, connection_id=None, end_connection=None):
         logger.info(
@@ -235,6 +248,9 @@ class Receiver:
                 box.remove_all_right()
             elif action == 'box_delete':
                 self.generator_delete_box(box)
+                hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+                hyper_edge.remove_self()
+                BoxToHyperEdgeMapping.remove_pair(box.id)
             elif action == 'compound':
                 box.add_type(1)
                 logger.info(f"created sub diagram: {box.type}")
@@ -263,9 +279,15 @@ class Receiver:
         elif action == 'remove_diagram_output':
             self.remove_main_diagram_output()
         elif action == 'box_swap_id':
+            hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+            BoxToHyperEdgeMapping.remove_pair(box.id)
+            BoxToHyperEdgeMapping.add_new_pair(connection_id, hyper_edge)
+
             box.id = connection_id
         else:
             self.generator_create_new_box(id)
+
+            BoxToHyperEdgeMapping.add_new_pair(id, HyperEdge(id))
 
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
