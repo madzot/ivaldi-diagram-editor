@@ -79,6 +79,8 @@ class PythonImporter(Importer):
         main_logic = data["main_logic"]
 
         possible_outputs = {}
+        boxes_gap = 1000 / (len(main_logic) - 1)
+        box_x = 100
 
         for function_call in main_logic:
             args = function_call["args"]
@@ -86,7 +88,7 @@ class PythonImporter(Importer):
             for assigned_variable in function_call["assigned_variables"]:
                 possible_outputs[assigned_variable] = function_call["function_name"]
 
-            new_box = canvas.create_new_box()
+            new_box = canvas.create_new_box(loc=(box_x, 250))
             new_box.set_label(function_call["function_name"])
 
             for arg in args:
@@ -113,6 +115,7 @@ class PythonImporter(Importer):
                     canvas.end_wire_to_connection(diagram_input, True)
 
             new_box.lock_box()
+            box_x += boxes_gap
 
         for diagram_output_variable, box_label in possible_outputs.items():
             for box in canvas.boxes:
