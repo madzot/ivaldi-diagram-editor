@@ -355,7 +355,7 @@ class Box:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def edit_label(self, new_label=None):
-        if not new_label:
+        if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
                 self.label_text = text
