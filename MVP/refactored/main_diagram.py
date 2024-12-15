@@ -133,7 +133,7 @@ class MainDiagram(tk.Tk):
 
     @staticmethod
     def calculate_json_file_hash():
-        with open("conf/boxes_conf.json", "r") as file:
+        with open("MVP/refactored/conf/boxes_conf.json", "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 

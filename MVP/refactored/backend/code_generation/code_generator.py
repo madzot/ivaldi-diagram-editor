@@ -7,7 +7,7 @@ from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.code_generation.renamer import Renamer
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.custom_canvas import CustomCanvas
 
 
@@ -108,10 +108,10 @@ class CodeGenerator:
     def construct_main_function(cls, canvas: CustomCanvas, renamed_functions: dict[BoxFunction, str]) -> str:
         main_function = ""
         hypergraph: Hypergraph = HypergraphManager().get_graphs_by_canvas_id(canvas.id)  # TODO if there many hypergraphs
-        input_nodes: set[Node] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
+        input_nodes: set[HyperEdge] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
         input_nodes = sorted(input_nodes, key=lambda input_node: canvas.get_box_by_id(input_node.id).y)
         main_function += cls.create_definition_of_main_function(input_nodes)
-        nodes_queue: Queue[Node] = Queue()
+        nodes_queue: Queue[HyperEdge] = Queue()
         node_input_count_check: dict[int, int] = dict()
 
         for node in input_nodes:
@@ -138,7 +138,7 @@ class CodeGenerator:
         return main_function
 
     @classmethod
-    def create_definition_of_main_function(cls, input_nodes: set[Node]) -> str:
+    def create_definition_of_main_function(cls, input_nodes: set[HyperEdge]) -> str:
 
         definition = "def main("
         variables_count = sum(map(lambda node: len(node.inputs), input_nodes))
@@ -152,7 +152,7 @@ class CodeGenerator:
         return definition
 
     @classmethod
-    def create_main_function_content(cls, canvas: CustomCanvas, nodes_queue: Queue[Node],
+    def create_main_function_content(cls, canvas: CustomCanvas, nodes_queue: Queue[HyperEdge],
                                      renamed_functions: dict[BoxFunction, str], hypergraph: Hypergraph
                                      ) -> list[str, dict[int, str]]:
 
@@ -203,7 +203,7 @@ class CodeGenerator:
         return return_statement[:-2]
 
     @classmethod
-    def get_children_nodes(cls, current_level_nodes: list[Node], node_input_count_check: dict[int, int]) -> set:
+    def get_children_nodes(cls, current_level_nodes: list[HyperEdge], node_input_count_check: dict[int, int]) -> set:
         children = set()
 
         for node in current_level_nodes:

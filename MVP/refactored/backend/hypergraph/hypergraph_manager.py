@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from networkx.algorithms.components import is_connected
 
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.spider import Spider
@@ -76,7 +76,7 @@ class HypergraphManager:
         pass
         hypergraph = Hypergraph(canvas.id)
         for box in canvas.boxes:
-            node = Node(box.id)
+            node = HyperEdge(box.id)
             for connection in box.connections:
                 if connection.side == "left" and connection.has_wire:
                     node.add_input(connection.wire.id)
@@ -94,7 +94,7 @@ class HypergraphManager:
     @staticmethod
     def create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
         hypergraphs_on_canvas = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-        all_existing_nodes: set[tuple[Node, Hypergraph]] = set()
+        all_existing_nodes: set[tuple[HyperEdge, Hypergraph]] = set()
         for hypergraph in hypergraphs_on_canvas:
             for node in hypergraph.get_all_nodes():
                 all_existing_nodes.add((node, hypergraph))
@@ -103,17 +103,17 @@ class HypergraphManager:
         hypergraph = Hypergraph(canvas.id)
         for canvas_input in canvas.inputs:
             if canvas_input.box is None: # None if connection is diagram input/output
-                source_node = Node(canvas_input.id)
+                source_node = HyperEdge(canvas_input.id)
                 hypergraph.add_source_node(source_node)
 
-                boxes_to_visit: Queue[tuple[Node, Box|Connection]] = Queue()
+                boxes_to_visit: Queue[tuple[HyperEdge, Box | Connection]] = Queue()
                 for end_connection in HypergraphManager._get_end_connections(canvas_input):  # iterating children of input (might be the output of diagram or box)
                     boxes_to_visit.put((source_node, end_connection))
 
                 while not boxes_to_visit.empty():
                     node_from, node_to = boxes_to_visit.get()
 
-                    node = Node(node_to.id, box_function=node_to.box_function)
+                    node = HyperEdge(node_to.id, box_function=node_to.box_function)
                     is_all_children_are_explored = False
 
                     for existing_node, existing_node_hypergraph in all_existing_nodes:

@@ -6,8 +6,8 @@ from tkinter import simpledialog
 
 from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
-from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
 from MVP.refactored.connection import Connection
@@ -56,35 +56,35 @@ class Box:
         self.prev_snapped = None
         self.box_function: BoxFunction = None
 
-        BoxToNodeMapping.add_new_pair(self.id, Node(self.id))
+        BoxToHyperEdgeMapping.add_new_pair(self.id, HyperEdge(self.id))
 
     def set_box_function(self, function: BoxFunction):
         self.box_function = function
 
-        node = BoxToNodeMapping.get_node_by_box_id(self.id)
+        node = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(self.id)
         node.set_box_function(self.box_function)
 
     def get_box_function(self) -> BoxFunction:
         return self.box_function
 
     def remove_wire(self, wire: Wire):
-        box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
-
-        if wire.end_connection.box.id == self.id:
-            all_right_connected_nodes = self._get_all_left_connected_nodes(wire.start_connection)
-            for right_connected_node in all_right_connected_nodes:
-                box_node.remove_parent_edges(right_connected_node)
-
-        else:
-            all_right_connected_nodes = self._get_all_right_connected_nodes(wire.end_connection)
-            for right_connected_node in all_right_connected_nodes:
-                box_node.remove_child_edges(right_connected_node)
+        # box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
+        #
+        # if wire.end_connection.box.id == self.id:
+        #     all_right_connected_nodes = self._get_all_left_connected_nodes(wire.start_connection)
+        #     for right_connected_node in all_right_connected_nodes:
+        #         box_node.remove_parent_edges(right_connected_node)
+        #
+        # else:
+        #     all_right_connected_nodes = self._get_all_right_connected_nodes(wire.end_connection)
+        #     for right_connected_node in all_right_connected_nodes:
+        #         box_node.remove_child_edges(right_connected_node)
 
         self.wires.remove(wire)
 
-    def _get_all_left_connected_nodes(self, connection: Connection) -> list[Node]:
+    def _get_all_left_connected_nodes(self, connection: Connection) -> list[HyperEdge]:
         if connection.box is not None:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.box.id)]
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.box.id)]
 
         if isinstance(connection, Spider):
             output = list()
@@ -94,11 +94,11 @@ class Box:
                         output.extend(self._get_all_left_connected_nodes(conn.wire.start_connection))
             return output
         else:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.id)] # it is diagram input
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.id)] # it is diagram input
 
-    def _get_all_right_connected_nodes(self, connection: Connection) -> list[Node]:
+    def _get_all_right_connected_nodes(self, connection: Connection) -> list[HyperEdge]:
         if connection.box is not None:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.box.id)]
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.box.id)]
 
         if isinstance(connection, Spider):
             output = list()
@@ -108,7 +108,7 @@ class Box:
                         output.extend(self._get_all_right_connected_nodes(conn.wire.end_connection))
             return output
         else:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.id)] # it is diagram output
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.id)] # it is diagram output
 
     def set_id(self, id_):
         if self.receiver.listener:
@@ -116,9 +116,9 @@ class Box:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
                                                 connection_id=self.canvas.diagram_source_box.id)
-        BoxToNodeMapping.add_new_pair(id_, BoxToNodeMapping.get_node_by_box_id(self.id))
-        BoxToNodeMapping.remove_pair(self.id)
-        self.id = id_
+        # BoxToHyperEdgeMapping.add_new_pair(id_, BoxToHyperEdgeMapping.get_node_by_box_id(self.id))
+        # BoxToHyperEdgeMapping.remove_pair(self.id)
+        # self.id = id_
 
     def bind_events(self):
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
@@ -174,7 +174,7 @@ class Box:
     def set_function(self, name, code=None):
         self.box_function = BoxFunction(name, code)
 
-        node = BoxToNodeMapping.get_node_by_box_id(self.id)
+        node = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(self.id)
         node.set_box_function(self.box_function)
 
     def count_inputs(self) -> int:
@@ -615,10 +615,10 @@ class Box:
             if action != "sub_diagram":
                 self.receiver.receiver_callback("box_delete", generator_id=self.id)
 
-        if action != "sub_diagram":
-            box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
-            box_node.remove_self()
-            BoxToNodeMapping.remove_pair(self.id)
+        # if action != "sub_diagram":
+        #     box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
+        #     box_node.remove_self()
+        #     BoxToHyperEdgeMapping.remove_pair(self.id)
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x):
