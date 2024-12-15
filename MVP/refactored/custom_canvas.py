@@ -66,8 +66,8 @@ class CustomCanvas(tk.Canvas):
         self.bind("<ButtonRelease-1>", self.__select_release__)
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
-        self.bind_all("<Control-c>", lambda event: self.copy_selected_items())
-        self.bind_all("<Control-v>", self.paste_copied_items)
+        self.bind("<Control-c>", lambda event: self.copy_selected_items())
+        self.bind("<Control-v>", self.paste_copied_items)
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)

@@ -127,7 +127,7 @@ class Importer:
         random_string = ''.join(random.choice(characters) for _ in range(length))
         return random_string
 
-    def add_box_from_menu(self, canvas, box_name, loc=(100, 100)):
+    def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
         with open(self.boxes_json_conf, 'r') as json_file:
             self.seed = self.generate_random_string(10)
             self.random_id = True
@@ -155,3 +155,5 @@ class Importer:
             new_box.lock_box()
             self.random_id = False
             self.id_randomize = {}
+            if return_box:
+                return new_box

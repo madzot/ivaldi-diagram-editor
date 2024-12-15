@@ -166,9 +166,28 @@ class Selector:
 
             for item in self.copied_items:
                 if isinstance(item, Box):
-                    new_box = self.canvas.add_box((event_x+(item.x-middle_point[0]), event_y+(item.y-middle_point[1])),
+                    if item.sub_diagram:
+                        self.canvas.master.save_box_to_diagram_menu(item)
+                        new_box = self.canvas.master.importer.add_box_from_menu(self.canvas, item.label_text,
+                                                                        (event_x+(item.x-middle_point[0]),
+                                                                        event_y+(item.y-middle_point[1])), True)
+                        self.canvas.master.remove_option(item.label_text)
+
+                    else:
+                        new_box = self.canvas.add_box((event_x+(item.x-middle_point[0]), event_y+(item.y-middle_point[1])),
                                                   size=item.size, shape=item.shape)
-                    self.canvas.copier.copy_box(item, new_box, False)
+                        self.canvas.copier.copy_box(item, new_box, False)
+                    """if item.sub_diagram:
+                        sub_diagram = new_box.edit_sub_diagram(save_to_canvasses=False)
+                        sub_diagram.set_name(new_box.label_text)
+                        self.canvas.copier.copy_canvas_contents(
+                            sub_diagram, item.sub_diagram.wires, item.sub_diagram.boxes, item.sub_diagram.spiders,
+                            (0, 0, self.canvas.winfo_height(), self.canvas.winfo_height()), new_box)
+
+                        self.canvas.itemconfig(new_box.rect, fill="#dfecf2")
+                        self.canvas.main_diagram.add_canvas(sub_diagram)
+
+                    new_box.locked = item.locked"""
 
                     for wire in wire_list:
                         if wire['original_start_connection'].box == item:
