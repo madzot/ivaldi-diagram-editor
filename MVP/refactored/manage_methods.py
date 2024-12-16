@@ -41,7 +41,6 @@ class ManageMethods(tk.Toplevel):
         self.edit_label_button = ttk.Button(self.button_frame, text="Edit label", command=self.open_label_editor)
 
         self.delete_button = ttk.Button(self.button_frame, text="Delete", command=self.delete_method, bootstyle=ttk.DANGER)
-        self.delete_button.pack(padx=5, side=tk.LEFT, fill=tk.X)
 
         self.main_diagram.load_functions()
 
@@ -59,6 +58,7 @@ class ManageMethods(tk.Toplevel):
             self.buttons_hidden = True
             self.edit_button.pack_forget()
             self.edit_label_button.pack_forget()
+            self.delete_button.pack_forget()
 
     def add_methods(self):
         self.table.delete(*self.table.get_children())
@@ -76,6 +76,7 @@ class ManageMethods(tk.Toplevel):
             for box in canvas.boxes:
                 if box.label_text == label:
                     box.edit_label(new_label="")
+        self.check_selection()
 
     def open_code_editor(self):
         label = self.table.item(self.table.focus())["text"]
