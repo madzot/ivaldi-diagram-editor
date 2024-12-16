@@ -501,8 +501,8 @@ class CustomCanvas(tk.Canvas):
         self.inputs.append(new_input)
         self.update_inputs_outputs()
 
-        new_hypergraph = Hypergraph(canvas_id=self.id, source={HyperEdge(hyper_edge_id=new_input.id)})
-        HypergraphManager.add_hypergraph(new_hypergraph)
+        # new_hypergraph = Hypergraph(canvas_id=self.id, source={HyperEdge(hyper_edge_id=new_input.id)})
+        # HypergraphManager.add_hypergraph(new_hypergraph)
 
         return new_input
 

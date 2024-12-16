@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
@@ -16,27 +17,53 @@ class HyperEdge:
         # if box_function is null it can be input/output in diagram or user didn`t specified box function
         self.box_function: BoxFunction|None = box_function
 
-        self.source_nodes: dict[Connection, Node] = dict()
-        self.target_nodes: dict[Connection, Node] = dict()
+        self.source_nodes: dict[int, Node] = dict() # key is connection index, it neede for keeping the right queue
+        self.target_nodes: dict[int, Node] = dict()
 
 
     def get_source_nodes(self) -> list[Node]:
         """
         :return Ordered list of source nodes(vertices):
         """
-        return [item[1] for item in sorted(self.source_nodes.items(), key=lambda item: item[0].index)]
+        return [item[1] for item in sorted(self.source_nodes.items(), key=lambda item: item[0])]
 
     def get_target_nodes(self) -> list[Node]:
         """
         :return Ordered list of target nodes(vertices):
         """
-        return [item[1] for item in sorted(self.target_nodes.items(), key=lambda item: item[0].index)]
+        return [item[1] for item in sorted(self.target_nodes.items(), key=lambda item: item[0])]
 
-    def set_source_node(self, connection: Connection, node: Node):
-        self.source_nodes[connection] = node
+    def set_source_node(self, conn_index: int, node: Node):
+        self.source_nodes[conn_index] = node
 
-    def set_target_node(self, connection: Connection, node: Node):
-        self.target_nodes[connection] = node
+    def set_target_node(self, conn_index: int, node: Node):
+        self.target_nodes[conn_index] = node
+
+    # def get_source_nodes_with_conn_indexes(self) -> dict_items[int, Node]:
+    #     return self.source_nodes.items()
+    #
+    # def get_target_nodes_with_conn_indexes(self) -> dict_items[int, Node]:
+    #     return self.target_nodes.items()
+
+    def get_source_node_connection_index(self, node: Node) -> int|None:
+        for conn_index, source_node in self.source_nodes.items():
+            if source_node == node:
+                return conn_index
+        return None
+
+    def get_target_node_connection_index(self, node: Node) -> int|None:
+        for conn_index, target_node in self.target_nodes.items():
+            if target_node == node:
+                return conn_index
+        return None
+
+    def remove_source_node(self, conn_index: int):
+        if conn_index in self.source_nodes:
+            del self.source_nodes[conn_index]
+
+    def remove_target_node(self, conn_index: int):
+        if conn_index in self.target_nodes:
+            del self.target_nodes[conn_index]
 
     def remove_self(self):
         pass

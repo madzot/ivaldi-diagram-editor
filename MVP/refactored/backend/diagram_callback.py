@@ -52,9 +52,7 @@ class Receiver:
             parent.spiders.remove(wire_id)
         self.wire_handle_delete_resource(spider)
 
-        node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(spider.id)
-        node.remove_self()
-        WireAndSpiderToNodeMapping.remove_pair(spider.id)
+        self._remove_node(spider.id)
 
 
     def spider_parent(self, id, generator_id=None):
@@ -94,7 +92,9 @@ class Receiver:
                 resource = self.wire_get_resource_by_id(wire_id)
                 self.wire_handle_delete_resource(resource)
         else:
-            if end_connection:
+            # TODO Create node when wire connected to spider. Spider node and new node should be united.
+            if end_connection: # HAS end_connection if connection between spider and something
+                print("HAS END CONNECTION______________________________")
                 if start_connection[2] == 'spider':
                     spider = self.spider_get_resource_by_connection_id(connection_id)
                     spider.add_connection(end_connection)
@@ -107,6 +107,10 @@ class Receiver:
                             self.wire_add_to_atomic_box(connection_nr, box, connection_side, spider.id)
                         else:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
+
+                    # Add hyper edge to new node or union nodes
+                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, end_connection[3])
+
                 elif end_connection[2] == 'spider':
                     spider = self.spider_get_resource_by_connection_id(connection_id)
                     spider.add_connection(start_connection)
@@ -119,22 +123,65 @@ class Receiver:
                             self.wire_add_to_atomic_box(connection_nr, box, connection_side, spider.id)
                         else:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
-            else:
+
+                    # Add hyper edge to new node or union nodes
+                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, start_connection[3])
+            else: # if it connection not between spider and smt
+                print("NO END CONNECTION__________________________________")
                 connection_nr = start_connection[0]
                 connection_box_id = start_connection[1]
                 connection_side = start_connection[2]
-                resource = self.wire_get_resource_by_id(wire_id)
+                resource: Resource = self.wire_get_resource_by_id(wire_id)
                 if resource:
                     self.wire_handle_resource_action(resource, wire_id, connection_nr, connection_box_id,
                                                      connection_side,
                                                      connection_id)
+
+                    new_node = Node(resource.id)
+                    should_be_united_with: list[tuple[int, Node]] = [] # in tuple first is conn_id
+                    for connection in resource.connections:
+                        conn_index, box_id, side, conn_id = connection
+                        if box_id is not None: # Wire connection with box
+                            hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box_id)
+                            if side == "right":
+                                new_node.append_input(hyper_edge)
+                                hyper_edge.set_target_node(conn_index, new_node)
+                            elif side == "left":
+                                new_node.append_output(hyper_edge)
+                                hyper_edge.set_source_node(conn_index, new_node)
+                        else: # Wire connection with diagram input/output
+                            node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(conn_id) # input/output id
+                            should_be_united_with.append((conn_id, node))
+                    for conn_id, node_to_union in should_be_united_with:
+                        new_node.union(node_to_union)
+
+                    WireAndSpiderToNodeMapping.add_new_pair(resource.id, new_node)
+
                 else:
-                    self.wire_create_new_resource(wire_id, connection_nr, connection_box_id, connection_side,
+                    resource = self.wire_create_new_resource(wire_id, connection_nr, connection_box_id, connection_side,
                                                   connection_id)
+
+
+
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Spiders: {self.diagram.spiders}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
+
+    def add_hyper_edge_or_union_with_nodes(self, new_node_id: int, spider_id: int, box: Resource | None, other_connection_id: int):
+        # Add hyper edge to new node or union nodes
+        new_node = Node(new_node_id)
+        WireAndSpiderToNodeMapping.add_new_pair(new_node_id, new_node)
+
+        one_connection_node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(spider_id)
+        new_node.union(one_connection_node)
+
+        if box:
+            hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+            new_node.append_input(hyper_edge)
+        else:  # it is output or spider, doesn`t make sense
+            other_connection_node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(other_connection_id)
+            new_node.union(other_connection_node)
 
     def spider_handle_delete_connection(self, spider, connection):
         if spider:
@@ -224,7 +271,15 @@ class Receiver:
                     self.wire_add_to_compound_box(id, connection_nr, box, connection_id)
         resource.add_connection([connection_nr, connection_box_id, connection_side] + [connection_id])
 
-    def wire_create_new_resource(self, id, connection_nr, connection_box_id, connection_side, connection_id):
+    def wire_create_new_resource(self, id, connection_nr, connection_box_id, connection_side, connection_id)-> Resource:
+        """
+        :param id:
+        :param connection_nr:
+        :param connection_box_id:
+        :param connection_side:
+        :param connection_id:
+        :return created resource:
+        """
         logger.info(f"Creating new resource with id: {id}")
         resource = Resource(id)
         self.wire_handle_resource_action(resource, id, connection_nr, connection_box_id, connection_side,
@@ -234,6 +289,7 @@ class Receiver:
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
+        return resource
 
     def box_callback(self, id, action=None, connection_id=None, generator_side=None, connection_nr=None, operator=None):
         box = self.generator_get_box_by_id(id)
@@ -270,14 +326,19 @@ class Receiver:
                     box.left[-1] = connection_id
                 else:
                     box.right[-1] = connection_id
+        # TODO create or delete nodes when diagram input/output added/removed
         elif action == 'add_diagram_output':
             self.add_main_diagram_output()
+            self._create_new_special_node(connection_id)
         elif action == 'add_diagram_input':
             self.add_main_diagram_input()
+            self._create_new_special_node(connection_id)
         elif action == 'remove_diagram_input':
             self.remove_main_diagram_input()
+            self._remove_node(connection_id)
         elif action == 'remove_diagram_output':
             self.remove_main_diagram_output()
+            self._remove_node(connection_id)
         elif action == 'box_swap_id':
             hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
             BoxToHyperEdgeMapping.remove_pair(box.id)
@@ -292,6 +353,15 @@ class Receiver:
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Number of Boxes: {len(self.diagram.boxes)}")
+
+    def _create_new_special_node(self, _id: int):
+        node = Node(_id, is_special=True)
+        WireAndSpiderToNodeMapping.add_new_pair(_id, node)
+
+    def _remove_node(self, _id: int):
+        node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(_id)
+        node.remove_self()
+        WireAndSpiderToNodeMapping.remove_pair(_id)
 
     def add_main_diagram_input(self):
         self.diagram.input.append([len(self.diagram.input), None])
