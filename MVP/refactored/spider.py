@@ -124,6 +124,8 @@ class Spider(Connection):
 
             if self.snapped_x not in self.canvas.columns:
                 self.canvas.columns[self.snapped_x] = [col_preset]
+                col_preset.snapped_x = self.snapped_x
+                col_preset.is_snapped = True
             if self not in self.canvas.columns[self.snapped_x]:
                 self.canvas.columns[self.snapped_x].append(self)
 

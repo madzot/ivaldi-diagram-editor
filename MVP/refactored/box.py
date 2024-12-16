@@ -97,7 +97,10 @@ class Box:
             self.context_menu.add_command(label="Edit Sub-Diagram", command=self.edit_sub_diagram)
             self.context_menu.add_command(label="Lock Box", command=self.lock_box)
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
-        self.context_menu.add_command(label="Delete Box", command=self.delete_box)
+        if self.sub_diagram:
+            self.context_menu.add_command(label="Delete Box", command=lambda: self.delete_box(action="sub_diagram"))
+        else:
+            self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_separator()
         self.context_menu.add_command(label="Cancel")
         self.context_menu.tk_popup(event.x_root, event.y_root)
@@ -245,8 +248,8 @@ class Box:
 
             if self.snapped_x not in self.canvas.columns:
                 self.canvas.columns[self.snapped_x] = [col_preset]
-                col_preset.is_snapped = True
                 col_preset.snapped_x = self.snapped_x
+                col_preset.is_snapped = True
             if self not in self.canvas.columns[self.snapped_x]:
                 self.canvas.columns[self.snapped_x].append(self)
 
@@ -352,7 +355,7 @@ class Box:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def edit_label(self, new_label=None):
-        if not new_label:
+        if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
                 self.label_text = text
