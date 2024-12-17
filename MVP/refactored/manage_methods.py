@@ -54,7 +54,7 @@ class ManageMethods(tk.Toplevel):
             messagebox.showerror(title="Error", message="Label is empty or already exists")
             self.add_new_function()
             return
-        CodeEditor(self.main_diagram, label=label)
+        CodeEditor(self.main_diagram, label=label, code="")
 
     def add_methods(self):
         self.treeview.delete(*self.treeview.get_children())
