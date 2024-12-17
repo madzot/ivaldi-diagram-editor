@@ -578,7 +578,6 @@ class Box:
             self.canvas.boxes.remove(self)
         self.canvas.delete(self.label)
         if self.sub_diagram and not keep_sub_diagram:
-            print("del from canvas")
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
         if self.receiver.listener:
             if action != "sub_diagram":

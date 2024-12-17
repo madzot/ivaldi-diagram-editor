@@ -55,6 +55,10 @@ class Titlebar(ttk.Frame):
         main_canvas = self.main_diagram.importer.canvas
         self.main_diagram.importer.canvas = sub_diagram
         is_importing = self.main_diagram.importer.import_diagram()
+        for _ in range(len(sub_diagram.inputs)):
+            box.add_left_connection()
+        for _ in range(len(sub_diagram.outputs)):
+            box.add_right_connection()
         self.main_diagram.importer.canvas = main_canvas
         if not is_importing:
             box.delete_box()
