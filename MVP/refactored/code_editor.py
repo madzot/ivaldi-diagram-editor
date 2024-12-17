@@ -1,6 +1,7 @@
 import json
 import os
 import tkinter as tk
+from tkinter import messagebox
 
 import pygments.lexers
 from chlorophyll import CodeView
@@ -17,6 +18,7 @@ class CodeEditor:
 
         self.window = tk.Toplevel()
         self.window.title('Code Editor')
+        self.window.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         self.window.geometry("1000x750")
         self.code_view = CodeView(self.window, lexer=pygments.lexers.PythonLexer,
                                   tab_width=4,
@@ -59,6 +61,10 @@ class CodeEditor:
             text = code
 
         self.code_view.insert('1.0', text)
+
+    def confirm_exit(self):
+        if messagebox.askokcancel("Warning", "Unsaved changes will be lost. Are you sure you want to exit?"):
+            self.window.destroy()
 
     def save_handler(self):
         if self.box:

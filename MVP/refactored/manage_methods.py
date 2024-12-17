@@ -1,5 +1,5 @@
 import json
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
 
 import ttkbootstrap as ttk
 import tkinter as tk
@@ -36,6 +36,9 @@ class ManageMethods(tk.Toplevel):
         self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=self.destroy)
         self.cancel_button.pack(side=tk.RIGHT, fill=tk.X)
 
+        self.add_new_button = ttk.Button(self.button_frame, text="Add new", command=self.add_new_function)
+        self.add_new_button.pack(padx=5, side=tk.RIGHT, fill=tk.X)
+
         self.edit_button = ttk.Button(self.button_frame, text="Edit code", command=self.open_code_editor)
 
         self.edit_label_button = ttk.Button(self.button_frame, text="Edit label", command=self.open_label_editor)
@@ -59,6 +62,14 @@ class ManageMethods(tk.Toplevel):
             self.edit_button.pack_forget()
             self.edit_label_button.pack_forget()
             self.delete_button.pack_forget()
+
+    def add_new_function(self):
+        label = simpledialog.askstring("Add label", "Please enter new label").strip()
+        if not label or label in self.main_diagram.label_content.keys():
+            messagebox.showerror(title="Error", message="Label is empty or already exists")
+            self.add_new_function()
+            return
+        CodeEditor(self.main_diagram, label=label, code="")
 
     def add_methods(self):
         self.table.delete(*self.table.get_children())
