@@ -326,6 +326,7 @@ class MainDiagram(tk.Tk):
 
     def del_from_canvasses(self, canvas):
         self.tree.delete(str(canvas.id))
+        del self.canvasses[str(canvas.id)]
 
     def on_tree_select(self, _):
         # Get the selected item
