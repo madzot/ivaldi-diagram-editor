@@ -1,6 +1,7 @@
 from MVP.refactored.box import Box
 from MVP.refactored.spider import Spider
 from MVP.refactored.wire import Wire
+import copy
 
 
 class Selector:
@@ -134,83 +135,104 @@ class Selector:
             self.copied_items.clear()
             self.copied_wire_list.clear()
             connection_list = []
+
             for item in self.selected_items:
                 if isinstance(item, Box):
-                    connection_list += item.connections
+                    connections_copy = []
+                    for connection in item.connections:
+                        connection_list.append(connection)
+                        connections_copy.append({
+                            'id': copy.deepcopy(connection.id),
+                            'side': copy.deepcopy(connection.side),
+                            'index': copy.deepcopy(connection.index)
+                        })
+
+                    self.copied_items.append({
+                        'component': "Box",
+                        'id': copy.deepcopy(item.id),
+                        'label': copy.deepcopy(item.label_text),
+                        'location': (item.x, item.y),
+                        'size': copy.deepcopy(item.size),
+                        'shape': copy.deepcopy(item.shape),
+                        'connections': connections_copy,
+                        'sub-diagram': copy.deepcopy(item.sub_diagram.id) if item.sub_diagram else None
+                    })
+                    if item.sub_diagram:
+                        if item.label_text not in self.canvas.master.project_exporter.get_current_d():
+                            self.canvas.master.save_box_to_diagram_menu(item)
+
                 if isinstance(item, Spider):
                     for wire in item.wires:
                         if wire.start_connection == item:
                             connection_list.append(wire.start_connection)
                         else:
                             connection_list.append(wire.end_connection)
+                    self.copied_items.append({
+                        'component': "Spider",
+                        'id': copy.deepcopy(item.id),
+                        'location': (item.x, item.y),
+                        'size': copy.deepcopy(item.r),
+                    })
+
             for item in self.selected_items:
                 if isinstance(item, Wire):
                     if item.start_connection in connection_list and item.end_connection in connection_list:
                         self.copied_wire_list.append({
-                            'wire': item,
-                            'start_connection': item.start_connection,
-                            'end_connection': item.end_connection,
-                            'original_start_connection': item.start_connection,
-                            'original_end_connection': item.end_connection
+                            'wire': "Wire",
+                            'start_connection': None,
+                            'end_connection': None,
+                            'original_start_connection': copy.deepcopy(item.start_connection.id),
+                            'original_start_index': copy.deepcopy(item.start_connection.index),
+                            'original_start_side': copy.deepcopy(item.start_connection.side),
+                            'original_end_connection': copy.deepcopy(item.end_connection.id),
+                            'original_end_index': copy.deepcopy(item.end_connection.index),
+                            'original_end_side': copy.deepcopy(item.end_connection.side)
                         })
-                else:
-                    self.copied_items.append(item)
 
     def paste_copied_items(self, event_x=50, event_y=50):
         if len(self.copied_items) > 0:
 
-            wire_list = self.copied_wire_list
-            print(len(wire_list))
-
             middle_point = self.find_middle_point()
 
             for item in self.copied_items:
-                if isinstance(item, Box):
-                    if item.sub_diagram:
-                        self.canvas.master.save_box_to_diagram_menu(item)
-                        new_box = self.canvas.master.importer.add_box_from_menu(self.canvas, item.label_text,
-                                                                        (event_x+(item.x-middle_point[0]),
-                                                                        event_y+(item.y-middle_point[1])), True)
-                        self.canvas.master.remove_option(item.label_text)
-
+                if item['component'] == "Box":
+                    if item["sub-diagram"]:
+                        new_box = self.canvas.master.importer.add_box_from_menu(
+                                self.canvas, item['label'], (event_x+(item['location'][0] - middle_point[0]),
+                                                             event_y+(item['location'][1] - middle_point[1])), True)
                     else:
-                        new_box = self.canvas.add_box((event_x+(item.x-middle_point[0]), event_y+(item.y-middle_point[1])),
-                                                  size=item.size, shape=item.shape)
-                        self.canvas.copier.copy_box(item, new_box, False)
-                    """if item.sub_diagram:
-                        sub_diagram = new_box.edit_sub_diagram(save_to_canvasses=False)
-                        sub_diagram.set_name(new_box.label_text)
-                        self.canvas.copier.copy_canvas_contents(
-                            sub_diagram, item.sub_diagram.wires, item.sub_diagram.boxes, item.sub_diagram.spiders,
-                            (0, 0, self.canvas.winfo_height(), self.canvas.winfo_height()), new_box)
+                        new_box = self.canvas.add_box((event_x+(item['location'][0]-middle_point[0]),
+                                                       event_y+(item['location'][1]-middle_point[1])),
+                                                      size=item['size'], shape=item['shape'])
+                        for c in item['connections']:
+                            if c['side'] == "right":
+                                new_box.add_right_connection()
+                            if c['side'] == "left":
+                                new_box.add_left_connection()
+                        new_box.set_label(item['label'])
 
-                        self.canvas.itemconfig(new_box.rect, fill="#dfecf2")
-                        self.canvas.main_diagram.add_canvas(sub_diagram)
+                    for wire in self.copied_wire_list:
+                        for box_connection in item['connections']:
+                            if (wire['original_start_connection'] == box_connection['id'] or
+                                    (wire['original_end_connection'] == box_connection['id'])):
+                                for connection in new_box.connections:
+                                    if (connection.side == wire['original_start_side']
+                                            and connection.index == wire['original_start_index']):
+                                        wire['start_connection'] = connection
+                                    if (box_connection['side'] == wire['original_end_side']
+                                            and box_connection['index'] == wire['original_end_index']):
+                                        wire['end_connection'] = connection
 
-                    new_box.locked = item.locked"""
-
-                    for wire in wire_list:
-                        if wire['original_start_connection'].box == item:
-                            for connection in new_box.connections:
-                                if (connection.side == wire['original_start_connection'].side
-                                        and connection.index == wire['original_start_connection'].index):
-                                    wire['start_connection'] = connection
-                        if wire['original_end_connection'].box == item:
-                            for connection in new_box.connections:
-                                if (connection.side == wire['original_end_connection'].side
-                                        and connection.index == wire['original_end_connection'].index):
-                                    wire['end_connection'] = connection
-
-                if isinstance(item, Spider):
-                    new_spider = self.canvas.add_spider((event_x+(item.x-middle_point[0]),
-                                                        event_y+(item.y-middle_point[1])))
-                    for wire in wire_list:
-                        if wire['original_start_connection'] is item:
+                if item['component'] == "Spider":
+                    new_spider = self.canvas.add_spider((event_x+(item['location'][0]-middle_point[0]),
+                                                        event_y+(item['location'][1]-middle_point[1])))
+                    for wire in self.copied_wire_list:
+                        if wire['original_start_connection'] == item['id']:
                             wire['start_connection'] = new_spider
-                        if wire['original_end_connection'] is item:
+                        if wire['original_end_connection'] == item['id']:
                             wire['end_connection'] = new_spider
 
-            for wire in wire_list:
+            for wire in self.copied_wire_list:
                 self.canvas.start_wire_from_connection(wire['start_connection'])
                 self.canvas.end_wire_to_connection(wire['end_connection'])
 
@@ -220,22 +242,22 @@ class Selector:
         most_up = self.canvas.winfo_height()
         most_down = 0
         for item in self.copied_items:
-            if isinstance(item, Box):
-                if item.x < most_left:
-                    most_left = item.x
-                if item.y < most_up:
-                    most_up = item.y
-                if item.x + item.size[0] > most_right:
-                    most_right = item.x + item.size[0]
-                if item.y + item.size[1] > most_down:
-                    most_down = item.y + item.size[1]
-            if isinstance(item, Spider):
-                if item.x - item.r < most_left:
-                    most_left = item.x - item.r
-                if item.y - item.r < most_up:
-                    most_up = item.y - item.r
-                if item.x + item.r > most_right:
-                    most_right = item.x + item.r
-                if item.y + item.r > most_down:
-                    most_down = item.y + item.r
+            if item['component'] == "Box":
+                if item['location'][0] < most_left:
+                    most_left = item['location'][0]
+                if item['location'][1] < most_up:
+                    most_up = item['location'][1]
+                if item['location'][0] + item['size'][0] > most_right:
+                    most_right = item['location'][0] + item['size'][0]
+                if item['location'][1] + item['size'][1] > most_down:
+                    most_down = item['location'][1] + item['size'][1]
+            if item['component'] == "Spider":
+                if item['location'][0] - item['size'] < most_left:
+                    most_left = item['location'][0] - item['size']
+                if item['location'][1] - item['size'] < most_up:
+                    most_up = item['location'][1] - item['size']
+                if item['location'][0] + item['size'] > most_right:
+                    most_right = item['location'][0] + item['size']
+                if item['location'][1] + item['size'] > most_down:
+                    most_down = item['location'][1] + item['size']
         return (most_left + most_right) / 2, (most_up + most_down) / 2
