@@ -80,6 +80,8 @@ class Importer:
 
             except FileNotFoundError or IOError or json.JSONDecodeError:
                 messagebox.showerror("Error", "File import failed, loading new empty canvas.")
+        else:
+            return False
 
     def load_spiders_to_canvas(self, d, canvas):
         for s in d["spiders"]:

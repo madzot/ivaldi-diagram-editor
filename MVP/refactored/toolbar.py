@@ -33,6 +33,7 @@ class Titlebar(ttk.Frame):
         self.file_menu.add_cascade(menu=self.generate_submenu, label="Generate")
         self.file_menu.add_command(label="New", command=self.handle_new_graph)
         self.file_menu.add_command(label="Import new diagram", command=lambda: self.handle_new_graph(empty=False))
+        self.file_menu.add_command(label="Import as sub-diagram", command=self.import_sub_diagram)
         self.file_button.pack(side=ttk.LEFT)
 
         # View button
@@ -46,6 +47,17 @@ class Titlebar(ttk.Frame):
                                    command=lambda: self.main_diagram.visualize_as_graph(self.custom_canvas))
 
         self.view_button.pack(side=ttk.LEFT)
+
+    def import_sub_diagram(self):
+        box = self.custom_canvas.add_box(loc=(200, 100))
+        sub_diagram = box.edit_sub_diagram(switch=False)
+
+        main_canvas = self.main_diagram.importer.canvas
+        self.main_diagram.importer.canvas = sub_diagram
+        is_importing = self.main_diagram.importer.import_diagram()
+        self.main_diagram.importer.canvas = main_canvas
+        if not is_importing:
+            box.delete_box()
 
     def set_custom_canvas(self, custom_canvas):
         self.custom_canvas = custom_canvas
