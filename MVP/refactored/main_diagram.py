@@ -61,6 +61,7 @@ class MainDiagram(tk.Tk):
         self.tree_root_id = str(self.custom_canvas.id)
         # Bind the treeview to the click event
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
+        self.tree.update()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
@@ -72,6 +73,7 @@ class MainDiagram(tk.Tk):
                                                command=self.custom_canvas.add_box, width=20,
                                                bootstyle=(PRIMARY, OUTLINE))
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.undefined_box_button.update()
 
         self.shape_dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box Shape", width=16,
                                                     bootstyle=(PRIMARY, OUTLINE))

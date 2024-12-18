@@ -13,6 +13,7 @@ class Box:
     def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
         self.shape = shape
         self.canvas = canvas
+        x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
         self.start_x = x
@@ -199,6 +200,7 @@ class Box:
 
     # MOVING, CLICKING ETC.
     def on_press(self, event):
+        event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         for item in self.canvas.selector.selected_items:
             item.deselect()
         self.canvas.selector.selected_items.clear()
@@ -210,6 +212,7 @@ class Box:
         self.y_dif = event.y - self.y
 
     def on_drag(self, event):
+        event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
         self.start_x = event.x
         self.start_y = event.y
@@ -227,7 +230,9 @@ class Box:
 
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
-                self.snapped_x = float(go_to_x + self.size[0] / 2)
+                self.snapped_x = round(float(go_to_x + self.size[0] / 2), 4)
+                if self.prev_snapped is None:
+                    self.prev_snapped = self.snapped_x
 
                 col_preset = box
 
@@ -236,13 +241,18 @@ class Box:
 
             if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
                 go_to_x = spider.x - +self.size[0] / 2
-                self.snapped_x = float(spider.x)
+                self.snapped_x = round(float(spider.x), 4)
                 if self.prev_snapped is None:
                     self.prev_snapped = self.snapped_x
 
                 col_preset = spider
 
                 found = True
+
+        for existing_snapped_x in self.canvas.columns.keys():
+            if self.snapped_x:
+                if abs(self.snapped_x - existing_snapped_x) < 0.5:
+                    self.snapped_x = existing_snapped_x
 
         if found:
 
@@ -314,6 +324,7 @@ class Box:
         return go_to_y
 
     def on_resize_drag(self, event):
+        event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         resize_x = self.x + self.size[0] - 10
         resize_y = self.y + self.size[1] - 10
         dx = event.x - self.start_x
@@ -410,6 +421,8 @@ class Box:
         self.start_y = event.y
 
     def move(self, new_x, new_y):
+        new_x = round(new_x, 4)
+        new_y = round(new_y, 4)
         is_bad = False
         for connection in self.connections:
             if connection.has_wire and self.is_illegal_move(connection, new_x):
