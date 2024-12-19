@@ -148,6 +148,7 @@ class MainDiagram(tk.Tk):
         self.label_content = {}
         self.load_functions()
         self.manage_methods = None
+        self.import_counter = 0
         self.mainloop()
 
     @staticmethod
@@ -279,8 +280,14 @@ class MainDiagram(tk.Tk):
         # Add some items to the tree
         try:
             self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
-        except tk.TclError:
-            self.tree.insert(str(self.custom_canvas.id), "end", str(canvas.id), text=canvas.name_text)
+        except tk.TclError as e:
+            if "already exists" in str(e):
+                self.import_counter += 1
+                canvas.id += self.import_counter
+            try:
+                self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
+            except tk.TclError:
+                self.tree.insert(str(self.custom_canvas.id), "end", str(canvas.id), text=canvas.name_text)
         self.canvasses[str(canvas.id)] = canvas
         for box in canvas.boxes:
             if box.sub_diagram:
