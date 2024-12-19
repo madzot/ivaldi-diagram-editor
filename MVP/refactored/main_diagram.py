@@ -164,7 +164,7 @@ class MainDiagram(tk.Tk):
                 self.label_content = json.load(file)
 
     def generate_code(self):
-        print("File needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
+        print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         # The print below can be toggled in and out for debugging
         # until our code editor system is implemented into code generation

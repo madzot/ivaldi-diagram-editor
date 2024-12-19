@@ -76,7 +76,6 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Left>", self.pan_horizontal)
         self.bind("<Down>", self.pan_vertical)
         self.bind("<Up>", self.pan_vertical)
-        self.bind("d", self.debug)
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
@@ -108,9 +107,6 @@ class CustomCanvas(tk.Canvas):
         self.total_scale = 1.0
         self.delta = 0.75
 
-        box = Box(self, 0, 0, self.receiver)
-        self.boxes.append(box)
-
         self.prev_width_max = self.canvasx(self.winfo_width())
         self.prev_height_max = self.canvasy(self.winfo_height())
         self.prev_width_min = self.canvasx(0)
@@ -120,7 +116,6 @@ class CustomCanvas(tk.Canvas):
         c2 = Corner(None, None, "left", [0, self.winfo_height()], self, 0)
         c3 = Corner(None, None, "left", [self.winfo_width(), 0], self, 0)
         c4 = Corner(None, None, "left", [self.winfo_width(), self.winfo_height()], self, 0)
-        print(self.winfo_width())
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
@@ -136,19 +131,10 @@ class CustomCanvas(tk.Canvas):
         self.resize_timer = None
 
     def update_prev_winfo_size(self):
-        print("Updating prev")
-        print(f"TOTAL _ WIDTH: {self.winfo_width()}")
-        print(f"LEFT: {self.canvasx(0) - self.prev_width_min}")
-        print(f"RIGHT: {self.canvasx(self.winfo_width()) - self.prev_width_max}")
-        print(f"UP: {self.canvasy(0) - self.prev_height_min}")
-        print(f"DOWN: {self.canvasy(self.winfo_height()) - self.prev_height_max}")
         self.prev_width_max = self.canvasx(self.winfo_width())
         self.prev_height_max = self.canvasy(self.winfo_height())
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
-
-    def debug(self, event):
-        print(f"{self.columns}")
 
     def pan_horizontal(self, event):
         if event.keysym == "Right":
@@ -219,8 +205,6 @@ class CustomCanvas(tk.Canvas):
         super().delete(*args)
 
     def handle_right_click(self, event):
-        print(f"Event canvas coords: {self.canvasx(event.x)}, {self.canvasy(event.y)}")
-        print(f"Top left corner: {self.corners[0].location}")
         if self.selector.selecting:
             self.selector.finish_selection()
         if self.draw_wire_mode:
@@ -285,7 +269,6 @@ class CustomCanvas(tk.Canvas):
         self.update_coordinates(denominator, event, scale)
         self.update_inputs_outputs()
         if self.total_scale - 1 < 0.1:
-            print("Update corners")
             self.init_corners()
         self.configure(scrollregion=self.bbox('all'))
 
@@ -386,15 +369,11 @@ class CustomCanvas(tk.Canvas):
             [max_x, max_y]
 
         ]
-        print("---")
         for corner in self.corners:
             for location in locations:
-                print(f"Corner and location on canvas: {[self.canvasx(corner.location[0]), self.canvasy(corner.location[1])]} <=> {location}")
-                print(f"Corner and location: {corner.location} <=> {location}")
                 if (abs(round(self.canvasx(corner.location[0])) - location[0]) < 2 and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)\
                         or (abs(round(corner.location[0]) - location[0]) < 2 and abs(round(corner.location[1]) - location[1]) < 2):
                     count += 1
-        print(f"Count: {count}")
         return count >= 4
 
     def close_menu(self):
@@ -664,11 +643,9 @@ class CustomCanvas(tk.Canvas):
         w = self.canvasx(self.winfo_width())
         self.coords(self.name, w / 2, self.canvasy(10))
 
-        print(f"Total scale: {self.total_scale}")
         if self.total_scale - 1 > 0.1:
             self.update_corners()
         else:
-            print("Init corners")
             self.init_corners()
 
         self.update_inputs_outputs()
@@ -707,10 +684,6 @@ class CustomCanvas(tk.Canvas):
         min_y = self.canvasy(0)
         max_x = self.canvasx(self.winfo_width())
         max_y = self.canvasy(self.winfo_height())
-        print(min_x)
-        print(min_y)
-        print(max_x)
-        print(max_y)
         self.corners[0].move_to([min_x, min_y])
         self.corners[1].move_to([min_x, max_y])
         self.corners[2].move_to([max_x, min_y])
