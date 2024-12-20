@@ -18,6 +18,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.toolbar import Titlebar
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
@@ -47,6 +48,7 @@ class MainDiagram(tk.Tk):
 
         self.is_tree_visible = True
         self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
+        self.tree.bind("<Motion>", "break")
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
@@ -59,6 +61,7 @@ class MainDiagram(tk.Tk):
         self.tree_root_id = str(self.custom_canvas.id)
         # Bind the treeview to the click event
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
+        self.tree.update()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
@@ -70,6 +73,7 @@ class MainDiagram(tk.Tk):
                                                command=self.custom_canvas.add_box, width=20,
                                                bootstyle=(PRIMARY, OUTLINE))
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.undefined_box_button.update()
 
         self.shape_dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box Shape", width=16,
                                                     bootstyle=(PRIMARY, OUTLINE))
@@ -98,6 +102,12 @@ class MainDiagram(tk.Tk):
         self.manage_quick_create = ttk.Button(self.control_frame, text="Manage Quick Create",
                                               command=self.manage_quick_create, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.manage_quick_create.pack(side=tk.TOP, padx=5, pady=5)
+
+        self.manage_methods_button = ttk.Button(self.control_frame, text="Manage Methods",
+                                                command=self.open_manage_methods_window, width=20,
+                                                bootstyle=(PRIMARY, OUTLINE))
+        self.manage_methods_button.pack(side=tk.TOP, padx=5, pady=5)
+
         # Add Spider
         self.spider_box = ttk.Button(self.control_frame, text="Add Spider",
                                      command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
@@ -136,26 +146,42 @@ class MainDiagram(tk.Tk):
 
         if load:
             self.load_from_file()
-        self.json_file_hash = self.calculate_json_file_hash()
+        self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
-        self.box_function = {}
-        if os.stat("conf/functions_conf.json").st_size != 0:
-            with open("conf/functions_conf.json", "r") as file:
-                self.label_content = json.load(file)
+        self.load_functions()
+        self.manage_methods = None
         self.mainloop()
 
     @staticmethod
-    def calculate_json_file_hash():
+    def calculate_boxes_json_file_hash():
         with open("conf/boxes_conf.json", "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
+    def load_functions(self):
+        if os.stat("conf/functions_conf.json").st_size != 0:
+            with open("conf/functions_conf.json", "r") as file:
+                self.label_content = json.load(file)
+
     def generate_code(self):
-        print("File needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
+        print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         # The print below can be toggled in and out for debugging
         # until our code editor system is implemented into code generation
         # print("-----------------------\ncode is:\n", code, sep="", end="")
+
+    def open_manage_methods_window(self):
+        self.manage_methods = ManageMethods(self)
+
+    def change_function_label(self, old_label, new_label):
+        if old_label in self.label_content.keys():
+            code = self.label_content[old_label]
+            self.label_content[new_label] = code
+            del self.label_content[old_label]
+            for canvas in self.canvasses.values():
+                for box in canvas.boxes:
+                    if box.label_text == old_label:
+                        box.edit_label(new_label)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
@@ -385,7 +411,7 @@ class MainDiagram(tk.Tk):
         list_window.minsize(100, 150)
         list_window.title("List of Boxes")
 
-        if self.calculate_json_file_hash() != self.json_file_hash:
+        if self.calculate_boxes_json_file_hash() != self.json_file_hash:
             self.get_boxes_from_file()
 
         checkbox_frame = tk.Frame(list_window)
@@ -489,6 +515,19 @@ class MainDiagram(tk.Tk):
         return zip(a, a)
 
     def generate_tikz(self, canvas):
+        fig, ax = self.generate_matplot(canvas)
+
+        tikzplotlib.clean_figure(fig=fig)
+        tikz = tikzplotlib.get_tikz_code(figure=fig)
+        plt.close()
+        return tikz
+
+    def generate_png(self, canvas, file_path):
+        fig, ax = self.generate_matplot(canvas, True)
+        fig.savefig(file_path, format='png', dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def generate_matplot(self, canvas, show_connections=False):
         x_max, y_max = canvas.winfo_width() / 100, canvas.winfo_height() / 100
         fig, ax = plt.subplots(1, figsize=(x_max, y_max))
         ax.set_aspect('equal', adjustable='box')
@@ -502,6 +541,11 @@ class MainDiagram(tk.Tk):
             else:
                 polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
                                             box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
+            if show_connections:
+                for connection in box.connections:
+                    circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
+                                            connection.r / 100, color="black")
+                    ax.add_patch(circle)
 
             plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
                      horizontalalignment="center", verticalalignment="center")
@@ -540,7 +584,4 @@ class MainDiagram(tk.Tk):
         ax.set_ylim(0, y_max)
         plt.axis('off')
 
-        tikzplotlib.clean_figure(fig=fig)
-        tikz = tikzplotlib.get_tikz_code(figure=fig)
-        plt.close()
-        return tikz
+        return fig, ax

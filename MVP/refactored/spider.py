@@ -96,7 +96,9 @@ class Spider(Connection):
         for box in self.canvas.boxes:
             if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
                 go_to_x = box.x + box.size[0] / 2
-                self.snapped_x = float(go_to_x)
+                self.snapped_x = round(float(go_to_x), 4)
+                if self.prev_snapped is None:
+                    self.prev_snapped = self.snapped_x
 
                 col_preset = box
 
@@ -114,16 +116,25 @@ class Spider(Connection):
 
             if abs(spider.location[0] - go_to_x) < self.r + spider.r and move_legal:
                 go_to_x = spider.location[0]
-                self.snapped_x = float(go_to_x)
+                self.snapped_x = round(float(go_to_x), 4)
+                if self.prev_snapped is None:
+                    self.prev_snapped = self.snapped_x
 
                 col_preset = spider
 
                 found = True
 
+        for existing_snapped_x in self.canvas.columns.keys():
+            if self.snapped_x:
+                if abs(self.snapped_x - existing_snapped_x) < 0.5:
+                    self.snapped_x = existing_snapped_x
+
         if found:
 
             if self.snapped_x not in self.canvas.columns:
                 self.canvas.columns[self.snapped_x] = [col_preset]
+                col_preset.snapped_x = self.snapped_x
+                col_preset.is_snapped = True
             if self not in self.canvas.columns[self.snapped_x]:
                 self.canvas.columns[self.snapped_x].append(self)
 
