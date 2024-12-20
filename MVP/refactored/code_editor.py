@@ -8,7 +8,7 @@ from chlorophyll import CodeView
 
 
 class CodeEditor:
-    def __init__(self, main_diagram, box=None, label=None, code=None):
+    def __init__(self, main_diagram, box=None, label=None, code=None, is_generated=False):
         self.main_diagram = main_diagram
         self.box = box
         if label:
@@ -27,14 +27,15 @@ class CodeEditor:
         self.code_view.pack(fill=tk.BOTH, expand=True)
         self.previous_text = ""
 
-        self.save_button = tk.Button(
-            self.code_view,
-            text="Save",
-            command=self.save_handler,
-        )
-        self.save_button.pack(
-            anchor=tk.E
-        )
+        if not is_generated:
+            self.save_button = tk.Button(
+                self.code_view,
+                text="Save",
+                command=self.save_handler,
+            )
+            self.save_button.pack(
+                anchor=tk.E
+            )
 
         if box:
             param_list = []
