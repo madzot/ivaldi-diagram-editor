@@ -120,7 +120,11 @@ class Selector:
     def delete_selected_items(self):
         for item in self.selected_items:
             if isinstance(item, Box):
-                item.delete_box()
+                if item.sub_diagram:
+                    action_param = "sub_diagram"
+                else:
+                    action_param = None
+                item.delete_box(action=action_param)
             if isinstance(item, Spider):
                 item.delete_spider()
         self.selected_items.clear()

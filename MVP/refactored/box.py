@@ -171,7 +171,7 @@ class Box:
             for _ in range(int(inputs)):
                 self.add_left_connection()
 
-    def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True):
+    def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True, switch=True):
         from MVP.refactored.custom_canvas import CustomCanvas
         if self.receiver.listener:
             self.receiver.receiver_callback("compound", generator_id=self.id)
@@ -187,11 +187,13 @@ class Box:
                 self.sub_diagram.set_name(name)
                 self.canvas.main_diagram.add_canvas(self.sub_diagram)
                 self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
-                self.canvas.main_diagram.switch_canvas(self.sub_diagram)
+                if switch:
+                    self.canvas.main_diagram.switch_canvas(self.sub_diagram)
 
             return self.sub_diagram
         else:
-            self.canvas.main_diagram.switch_canvas(self.sub_diagram)
+            if switch:
+                self.canvas.main_diagram.switch_canvas(self.sub_diagram)
             return self.sub_diagram
 
     def close_menu(self):
