@@ -214,14 +214,15 @@ class Selector:
 
                     for wire in self.copied_wire_list:
                         for box_connection in item['connections']:
-                            if (wire['original_start_connection'] == box_connection['id'] or
-                                    (wire['original_end_connection'] == box_connection['id'])):
+                            if wire['original_start_connection'] == box_connection['id']:
                                 for connection in new_box.connections:
                                     if (connection.side == wire['original_start_side']
                                             and connection.index == wire['original_start_index']):
                                         wire['start_connection'] = connection
-                                    if (box_connection['side'] == wire['original_end_side']
-                                            and box_connection['index'] == wire['original_end_index']):
+                            if wire['original_end_connection'] == box_connection['id']:
+                                for connection in new_box.connections:
+                                    if (connection.side == wire['original_end_side']
+                                            and connection.index == wire['original_end_index']):
                                         wire['end_connection'] = connection
 
                 if item['component'] == "Spider":
