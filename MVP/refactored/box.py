@@ -56,7 +56,7 @@ class Box:
         self.prev_snapped = None
         self.box_function: BoxFunction = None
 
-        BoxToHyperEdgeMapping.add_new_pair(self.id, HyperEdge(self.id))
+        # BoxToHyperEdgeMapping.add_new_pair(self.id, HyperEdge(self.id))
 
     def set_box_function(self, function: BoxFunction):
         self.box_function = function

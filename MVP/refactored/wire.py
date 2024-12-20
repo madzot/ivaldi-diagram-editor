@@ -137,17 +137,17 @@ class Wire:
             start_conn_data, end_conn_data = self.connection_data_optimizer()
             if self.start_connection.side == 'spider':
                 if self.end_connection.box is None:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.start_connection.id,
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, start_connection=start_conn_data,
                                                     end_connection=end_conn_data)
                 else:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.start_connection.id,
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, start_connection=start_conn_data,
                                                     end_connection=end_conn_data)
             elif self.end_connection.side == 'spider':
                 if self.start_connection.box is None:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.end_connection.id,
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, end_connection=start_conn_data,
                                                     start_connection=start_conn_data)
                 else:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.end_connection.id,
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, end_connection=start_conn_data,
                                                     start_connection=start_conn_data)
             else:
                 self.receiver.receiver_callback("wire_delete", wire_id=self.id)

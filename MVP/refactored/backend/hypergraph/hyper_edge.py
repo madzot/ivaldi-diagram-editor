@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+from collections import defaultdict
+from queue import Queue
 from typing import TYPE_CHECKING
 
+from networkx.algorithms.components import connected_components
+
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.connection import Connection
 
 if TYPE_CHECKING:
@@ -20,6 +26,36 @@ class HyperEdge:
         self.source_nodes: dict[int, Node] = dict() # key is connection index, it neede for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
 
+    def set_id(self, hyper_edge_id):
+        self.id = hyper_edge_id
+
+    def remove_all_source_nodes(self):
+        self.source_nodes.clear()
+
+    def remove_all_target_nodes(self):
+        self.target_nodes.clear()
+
+    def remove_source_connection_by_index(self, conn_index: int):
+        """NB! It deletes connection and all connection with index more that current connection index,
+        their connection decreases.
+        """
+        if conn_index in self.source_nodes:
+            del self.source_nodes[conn_index]
+        for key in self.source_nodes.keys():
+            if key > conn_index:
+                self.source_nodes[key - 1] = self.source_nodes[key]
+                del self.source_nodes[key]
+
+    def remove_target_connection_by_index(self, conn_index: int):
+        """NB! It deletes connection and all connection with index more that current connection index,
+        their connection decreases.
+        """
+        if conn_index in self.source_nodes:
+            del self.target_nodes[conn_index]
+        for key in self.target_nodes.keys():
+            if key > conn_index:
+                self.target_nodes[key - 1] = self.target_nodes[key]
+                del self.target_nodes[key]
 
     def get_source_nodes(self) -> list[Node]:
         """
@@ -34,16 +70,24 @@ class HyperEdge:
         return [item[1] for item in sorted(self.target_nodes.items(), key=lambda item: item[0])]
 
     def set_source_node(self, conn_index: int, node: Node):
+        if conn_index not in self.source_nodes:
+            self.set_source_node(conn_index + 1, self.source_nodes[conn_index])
         self.source_nodes[conn_index] = node
 
     def set_target_node(self, conn_index: int, node: Node):
+        if conn_index in self.target_nodes:
+            self.set_target_node(conn_index + 1, self.target_nodes[conn_index])
         self.target_nodes[conn_index] = node
 
-    # def get_source_nodes_with_conn_indexes(self) -> dict_items[int, Node]:
-    #     return self.source_nodes.items()
-    #
-    # def get_target_nodes_with_conn_indexes(self) -> dict_items[int, Node]:
-    #     return self.target_nodes.items()
+    def append_target_node(self, node: Node):
+        self.target_nodes[len(self.target_nodes)] = node
+
+    def append_source_node(self, node: Node):
+        self.source_nodes[len(self.source_nodes)] = node
+
+    def append_source_nodes(self, nodes: list[Node]):
+        for node in nodes:
+            self.append_source_node(node)
 
     def get_source_node_connection_index(self, node: Node) -> int|None:
         for conn_index, source_node in self.source_nodes.items():
@@ -57,100 +101,48 @@ class HyperEdge:
                 return conn_index
         return None
 
-    def remove_source_node(self, conn_index: int):
+    def remove_source_node_by_connection_index(self, conn_index: int):
         if conn_index in self.source_nodes:
             del self.source_nodes[conn_index]
 
-    def remove_target_node(self, conn_index: int):
+    def remove_target_node_by_connection_index(self, conn_index: int):
         if conn_index in self.target_nodes:
             del self.target_nodes[conn_index]
 
+    def remove_source_node_by_reference(self, node: Node):
+        connection_index = self.get_source_node_connection_index(node)
+        if connection_index:
+            del self.source_nodes[connection_index]
+
+    def remove_target_node_by_reference(self, node: Node):
+        connection_index = self.get_target_node_connection_index(node)
+        if connection_index:
+            del self.target_nodes[connection_index]
+
     def remove_self(self):
-        pass
+        hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(self.id)
+        HypergraphManager.remove_hypergraph(hypergraph)
+        source_nodes: list[Node] = self.get_source_nodes()
+        target_nodes: list[Node] = self.get_target_nodes()
+        for source_node in self.source_nodes.values():
+            source_node.remove_output(self)
+        for target_node in self.target_nodes.values():
+            target_node.remove_input(self)
 
+        connected_nodes: dict[Node, list[Node]] = defaultdict(list)
+        for source_node in source_nodes:
+            for target_node in target_nodes:
+                if source_node.is_connected_to(target_node):
+                    connected_nodes[source_node].append(target_node)
+                    connected_nodes[target_node].append(source_node)
+        connectivity: list[list[Node]] = find_connected_component(connected_nodes)
+        for nodes in connectivity:
+            new_hypergraph: Hypergraph = Hypergraph(hypergraph.get_canvas_id())
+            new_hypergraph.append_source_nodes(nodes[0].get_source_nodes())
+            HypergraphManager.add_hypergraph(new_hypergraph)
 
-
-
-    def get_children(self) -> list:
-        return list(self._children_nodes.keys())
-
-    def get_parents(self) -> set:
-        return set(self._parent_nodes.keys())
-
-    def is_node_child(self, child: HyperEdge) -> bool:
-        return child in self._children_nodes
-
-    def is_node_parent(self, parent: HyperEdge) -> bool:
-        return parent in self._parent_nodes
-
-    def get_child_by_id(self, child_id: int) -> HyperEdge | None:
-        for child in self._children_nodes.keys():
-            if child.id == child_id:
-                return child
-        return None
-
-    def get_parent_by_id(self, parent_id: int) -> HyperEdge | None:
-        for parent in self._parent_nodes.keys():
-            if parent.id == parent_id:
-                return parent
-        return None
-
-    def add_child(self, child: HyperEdge, edge_count=1):
-        if child in self._children_nodes:
-            self._children_nodes[child] += edge_count
-            child._parent_nodes[self] += edge_count
-        else:
-            self._children_nodes[child] = edge_count
-            child._parent_nodes[self] = edge_count
-
-    def add_parent(self, parent: HyperEdge, edge_count=1):
-        if parent in self._parent_nodes:
-            self._parent_nodes[parent] += edge_count
-            parent._children_nodes[self] += edge_count
-        else:
-            self._parent_nodes[parent] = edge_count
-            parent._children_nodes[self] = edge_count
-
-
-    def remove_child(self, child_to_remove: HyperEdge):
-        if child_to_remove in self._children_nodes:
-            del self._children_nodes[child_to_remove]
-            child_to_remove.remove_parent(self)
-
-    def remove_parent(self, parent_to_remove: HyperEdge):
-        if parent_to_remove in self._parent_nodes:
-            del self._parent_nodes[parent_to_remove]
-            parent_to_remove.remove_child(self)
-
-    def _remove_self(self):
-        for parent in self._parent_nodes.keys():
-            parent.remove_child(self)
-        for child in self._children_nodes.keys():
-            child.remove_parent(self)
-        self._parent_nodes.clear()
-        self._children_nodes.clear()
-
-    def remove_parent_edges(self, parent_to_remove: HyperEdge, edge_count=1):
-        if parent_to_remove in self._parent_nodes:
-            edge_count_with_parent = self._parent_nodes[parent_to_remove]
-            edge_count_with_parent -= edge_count
-            if edge_count_with_parent > 0:
-                self._parent_nodes[parent_to_remove] = edge_count_with_parent
-
-                parent_to_remove._children_nodes[self] = edge_count_with_parent
-            else:
-                self.remove_parent(parent_to_remove)
-
-    def remove_child_edges(self, child_to_remove: HyperEdge, edge_count=1):
-        if child_to_remove in self._children_nodes:
-            edge_count_with_child = self._children_nodes[child_to_remove]
-            edge_count_with_child -= edge_count
-            if edge_count_with_child > 0:
-                self._children_nodes[child_to_remove] = edge_count_with_child
-
-                child_to_remove._parent_nodes[self] = edge_count_with_child
-            else:
-                self.remove_child(child_to_remove)
+        self.source_nodes.clear()
+        self.target_nodes.clear()
 
     def set_box_function(self, function: BoxFunction):
         self.box_function = function
@@ -173,8 +165,8 @@ class HyperEdge:
     def __str__(self) -> str:
         """Return a string representation of the node."""
         return (f"Node ID: {self.id}\n"
-                f"Inputs: {self.inputs}\n"
-                f"Outputs: {self.outputs}")
+                f"Inputs: {self.get_source_nodes()}\n"
+                f"Outputs: {self.get_target_nodes()}")
 
     def __eq__(self, other):
         if not isinstance(other, HyperEdge):
@@ -185,7 +177,22 @@ class HyperEdge:
         return hash(self.id)
 
 
-def test_node_str():
-    # Create sample nodes
-    node1 = HyperEdge(hyper_edge_id=0)
-    print(str(node1))
+def find_connected_component(connected_nodes: dict[Node, list[Node]]) -> list[list[Node]]:
+    connected_components: list[list[Node]] = list()
+    queue: Queue[Node] = Queue()
+    visited: set[Node] = set()
+    for node, connected_nodes in connected_nodes.items():
+        connected_component: list[Node] = list()
+        if node not in visited:
+            connected_component.append(node)
+        visited.add(node)
+        for connected_node in connected_nodes:
+            queue.put(connected_node)
+        while not queue.empty():
+            connected_node = queue.get()
+            if connected_node not in visited:
+                connected_component.append(connected_node)
+                for connected_node_connected_node in connected_nodes[connected_node]:
+                    queue.put(connected_node_connected_node)
+        connected_components.append(connected_component)
+    return connected_components

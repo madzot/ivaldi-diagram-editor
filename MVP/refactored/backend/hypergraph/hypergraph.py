@@ -4,6 +4,8 @@ from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from MVP.refactored.backend.hypergraph.node import Node
+
 
 class Hypergraph(HyperEdge):
     """Hypergraph class."""
@@ -11,35 +13,37 @@ class Hypergraph(HyperEdge):
     def __init__(self, hypergraph_id=None, canvas_id=None):
         super().__init__(hypergraph_id)
         self.canvas_id = canvas_id
+        self.hypergraph_source: list[Node] = []
 
-    def get_all_nodes(self) -> set:
-        visited = set()
+    def get_all_hyper_edges(self) -> set:
+        visited: set[HyperEdge] = set()
         all_nodes: set[HyperEdge] = set()
 
         queue = Queue()
-        for source_node in self.source:
-            queue.put(source_node)
+        for source_node in self.hypergraph_source:
+            for output in source_node.get_outputs():
+                queue.put(output)
 
         while not queue.empty():
-            node = queue.get()
-            visited.add(node)
-            all_nodes.add(node)
-            for child in node.children:
-                if child not in visited:
-                    queue.put(child)
+            hyper_edge: HyperEdge = queue.get()
+            visited.add(hyper_edge)
+            all_nodes.add(hyper_edge)
+            for output in [node_hyper_edge for node in hyper_edge.get_target_nodes() for node_hyper_edge in node.get_outputs()]:
+                if output not in visited:
+                    queue.put(output)
         return all_nodes
 
-    def get_source_nodes(self) -> set:
-        return self.source
+    def get_hypergraph_source(self) -> list[Node]:
+        return self.hypergraph_source
 
     def remove_node(self, node_to_remove_id: int):
         visited = set()
 
         queue = Queue()
-        for source_node in self.source:
+        for source_node in self.hypergraph_source:
             if source_node == node_to_remove_id:
                 source_node._remove_self()
-                self.source.remove(source_node)
+                self.hypergraph_source.remove(source_node)
                 return
             queue.put(source_node)
 
@@ -56,8 +60,8 @@ class Hypergraph(HyperEdge):
     def contains_node(self, node: HyperEdge) -> bool:
         return node in self.nodes
 
-    def add_source_node(self, node: HyperEdge):
-        self.source.add(node)
+    def add_hypergraph_source(self, node: HyperEdge):
+        self.hypergraph_source.add(node)
 
     def add_node(self, node: HyperEdge) -> None:
         if node in self.nodes:
@@ -111,7 +115,7 @@ class Hypergraph(HyperEdge):
         visited = set()
 
         queue = Queue()
-        for source_node in self.source:
+        for source_node in self.hypergraph_source:
             queue.put(source_node)
 
         while not queue.empty():

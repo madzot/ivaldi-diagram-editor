@@ -20,17 +20,17 @@ class HypergraphManager:
     hypergraphs: set[Hypergraph] = set()
 
     @staticmethod
-    def get_graph_by_node_id(node_id: int) -> Hypergraph | None:
+    def get_graph_by_hyper_edge_id(hyper_edge_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
-            for node in hypergraph.get_all_nodes():
-                if node.id == node_id:
+            for hyper_edge in hypergraph.get_all_hyper_edges():
+                if hyper_edge.id == hyper_edge_id:
                     return hypergraph
         return None
 
     @staticmethod
     def get_graph_by_source_node_id(source_node_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
-            for source_node in hypergraph.get_source_nodes():
+            for source_node in hypergraph.get_hypergraph_source():
                 if source_node.id == source_node_id:
                     return hypergraph
         return None
@@ -67,7 +67,7 @@ class HypergraphManager:
     def remove_hypergraph_source_node(source_node_id: int):
         hypergraph = HypergraphManager.get_graph_by_source_node_id(source_node_id.id)
         hypergraph.remove_node(source_node_id.id)
-        if len(hypergraph.get_source_nodes()) == 0:
+        if len(hypergraph.get_hypergraph_source()) == 0:
             HypergraphManager.remove_hypergraph(hypergraph)
 
     @staticmethod
@@ -104,7 +104,7 @@ class HypergraphManager:
         for canvas_input in canvas.inputs:
             if canvas_input.box is None: # None if connection is diagram input/output
                 source_node = HyperEdge(canvas_input.id)
-                hypergraph.add_source_node(source_node)
+                hypergraph.add_hypergraph_source(source_node)
 
                 boxes_to_visit: Queue[tuple[HyperEdge, Box | Connection]] = Queue()
                 for end_connection in HypergraphManager._get_end_connections(canvas_input):  # iterating children of input (might be the output of diagram or box)
@@ -118,7 +118,7 @@ class HypergraphManager:
 
                     for existing_node, existing_node_hypergraph in all_existing_nodes:
                         if existing_node == node:
-                            existing_node_hypergraph.add_source_node(source_node)
+                            existing_node_hypergraph.add_hypergraph_source(source_node)
                             node = existing_node
                             is_all_children_are_explored = True
                             is_independent_graph = False

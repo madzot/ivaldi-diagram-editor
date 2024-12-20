@@ -460,7 +460,6 @@ class CustomCanvas(tk.Canvas):
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
 
-        BoxToHyperEdgeMapping.add_new_pair(connection_output_new.id, HyperEdge(connection_output_new.id))
 
         return connection_output_new
 

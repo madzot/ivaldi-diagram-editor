@@ -82,15 +82,16 @@ class Receiver:
         logger.info(
             f"wire_callback invoked with wire_id: {wire_id}, action: {action}, start_connection: {start_connection}, connection_id: {connection_id}")
         if action == 'wire_delete':
-            if start_connection:
-                spider = self.spider_get_resource_by_connection_id(wire_id)
+            if start_connection[2] == "spider":
+                spider = self.spider_get_resource_by_connection_id(start_connection[3])
                 spider.remove_connection(start_connection)
-            elif end_connection:
-                spider = self.spider_get_resource_by_connection_id(wire_id)
+            elif end_connection[2] == "spider":
+                spider = self.spider_get_resource_by_connection_id(end_connection[3])
                 spider.remove_connection(end_connection)
             else:
                 resource = self.wire_get_resource_by_id(wire_id)
                 self.wire_handle_delete_resource(resource)
+            self._remove_node(wire_id)
         else:
             # TODO Create node when wire connected to spider. Spider node and new node should be united.
             if end_connection: # HAS end_connection if connection between spider and something
@@ -109,7 +110,8 @@ class Receiver:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
 
                     # Add hyper edge to new node or union nodes
-                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, end_connection[3])
+                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, end_connection[3], end_connection[2])
+                    print(f"Added wire - {wire_id}")
 
                 elif end_connection[2] == 'spider':
                     spider = self.spider_get_resource_by_connection_id(connection_id)
@@ -125,7 +127,7 @@ class Receiver:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
 
                     # Add hyper edge to new node or union nodes
-                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, start_connection[3])
+                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, start_connection[3], start_connection[2])
             else: # if it connection not between spider and smt
                 print("NO END CONNECTION__________________________________")
                 connection_nr = start_connection[0]
@@ -168,7 +170,7 @@ class Receiver:
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
 
-    def add_hyper_edge_or_union_with_nodes(self, new_node_id: int, spider_id: int, box: Resource | None, other_connection_id: int):
+    def add_hyper_edge_or_union_with_nodes(self, new_node_id: int, spider_id: int, box: Resource | None, other_connection_id: int, side: str):
         # Add hyper edge to new node or union nodes
         new_node = Node(new_node_id)
         WireAndSpiderToNodeMapping.add_new_pair(new_node_id, new_node)
@@ -178,7 +180,12 @@ class Receiver:
 
         if box:
             hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
-            new_node.append_input(hyper_edge)
+            if side == "left":
+                new_node.append_input(hyper_edge)
+                hyper_edge.append_target_node(new_node)
+            elif side  == "right":
+                new_node.append_output(hyper_edge)
+                hyper_edge.append_source_node(new_node)
         else:  # it is output or spider, doesn`t make sense
             other_connection_node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(other_connection_id)
             new_node.union(other_connection_node)
@@ -299,9 +306,17 @@ class Receiver:
                 self.generator_handle_inner_connection(box, action, connection_id)
             elif action in ['box_add_left', 'box_add_right', 'box_remove_connection']:
                 self.generator_handle_box_connection(box, action, connection_nr, connection_id, generator_side)
+                hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+                if generator_side == "left":
+                    hyper_edge.remove_source_connection_by_index(connection_nr)
+                elif generator_side == "right":
+                    hyper_edge.remove_target_connection_by_index(connection_nr)
             elif action == 'box_remove_connection_all':
                 box.remove_all_left()
                 box.remove_all_right()
+                hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+                hyper_edge.remove_all_source_nodes()
+                hyper_edge.remove_all_target_nodes()
             elif action == 'box_delete':
                 self.generator_delete_box(box)
                 hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
@@ -320,6 +335,10 @@ class Receiver:
             elif action == "box_add_operator":
                 box.operand = operator
             elif action == 'box_swap_id':
+                hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+                hyper_edge.set_id(connection_id)
+                BoxToHyperEdgeMapping.remove_pair(box.id)
+                BoxToHyperEdgeMapping.add_new_pair(connection_id)
                 box.id = connection_id
             elif action == "change_connection_id":
                 if generator_side == "left":
@@ -339,12 +358,12 @@ class Receiver:
         elif action == 'remove_diagram_output':
             self.remove_main_diagram_output()
             self._remove_node(connection_id)
-        elif action == 'box_swap_id':
-            hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
-            BoxToHyperEdgeMapping.remove_pair(box.id)
-            BoxToHyperEdgeMapping.add_new_pair(connection_id, hyper_edge)
-
-            box.id = connection_id
+        # elif action == 'box_swap_id':   PROGRAMM CAN`T REACH THAT?
+        #     hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+        #     BoxToHyperEdgeMapping.remove_pair(box.id)
+        #     BoxToHyperEdgeMapping.add_new_pair(connection_id, hyper_edge)
+        #
+        #     box.id = connection_id
         else:
             self.generator_create_new_box(id)
 
