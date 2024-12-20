@@ -76,6 +76,8 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Left>", self.pan_horizontal)
         self.bind("<Down>", self.pan_vertical)
         self.bind("<Up>", self.pan_vertical)
+        self.bind("<Control-c>", lambda event: self.copy_selected_items())
+        self.bind("<Control-v>", self.paste_copied_items)
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
@@ -958,3 +960,9 @@ class CustomCanvas(tk.Canvas):
 
     def change_box_shape(self, shape):
         self.box_shape = shape
+
+    def copy_selected_items(self):
+        self.selector.copy_selected_items()
+
+    def paste_copied_items(self, event):
+        self.selector.paste_copied_items(event.x, event.y)
