@@ -169,9 +169,6 @@ class MainDiagram(tk.Tk):
         print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         CodeEditor(self, code=code, is_generated=True)
-        # The print below can be toggled in and out for debugging
-        # until our code editor system is implemented into code generation
-        # print("-----------------------\ncode is:\n", code, sep="", end="")
 
     def open_manage_methods_window(self):
         self.manage_methods = ManageMethods(self)
