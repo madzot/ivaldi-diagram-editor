@@ -4,15 +4,13 @@ from collections import defaultdict
 from queue import Queue
 from typing import TYPE_CHECKING
 
-from networkx.algorithms.components import connected_components
-
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.connection import Connection
 
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
+    from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+
 
 class HyperEdge:
 
@@ -70,7 +68,7 @@ class HyperEdge:
         return [item[1] for item in sorted(self.target_nodes.items(), key=lambda item: item[0])]
 
     def set_source_node(self, conn_index: int, node: Node):
-        if conn_index not in self.source_nodes:
+        if conn_index in self.source_nodes:
             self.set_source_node(conn_index + 1, self.source_nodes[conn_index])
         self.source_nodes[conn_index] = node
 

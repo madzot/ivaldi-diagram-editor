@@ -1,21 +1,25 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from queue import Queue
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge, find_connected_component
-from typing import Self
+from typing_extensions import Self
+from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+if TYPE_CHECKING:
+    from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+    from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
 
 class Node:
-    def __init__(self, node_id: int=None, is_special=False):
+    def __init__(self, node_id: int = None, is_special=False):
         if node_id is None:
             node_id = id(self)
         self.id = node_id
         self.inputs: list[HyperEdge] = []
         self.outputs: list[HyperEdge] = []
-        self.is_special = is_special # if it diagram input/output
-        self.is_compound = False # if it is several nodes, for example input/output and wire => two nodes in one, spider and wire.
+        self.is_special = is_special  # if it diagram input/output
+        self.is_compound = False  # if it is several nodes, for example input/output and wire => two nodes in one, spider and wire.
         self.directly_connected_to: list[Node] = []
         # Should be modified that we can determine how each node connected to another
 
@@ -64,6 +68,7 @@ class Node:
         return target_nodes
 
     def remove_self(self):
+        # TODO check if this method works correctly
         source_nodes: list[Self] = self.get_source_nodes()
         target_nodes: list[Self] = self.get_target_nodes()
         hypergraph: Hypergraph = HypergraphManager.get_graph_by_source_node_id(source_nodes[0].id)
@@ -194,3 +199,23 @@ class Node:
     def __hash__(self):
         return hash(self.id)
 
+
+def find_connected_component(connected_nodes: dict[Node, list[Node]]) -> list[list[Node]]:
+    connected_components: list[list[Node]] = list()
+    queue: Queue[Node] = Queue()
+    visited: set[Node] = set()
+    for node, connected_nodes in connected_nodes.items():
+        connected_component: list[Node] = list()
+        if node not in visited:
+            connected_component.append(node)
+        visited.add(node)
+        for connected_node in connected_nodes:
+            queue.put(connected_node)
+        while not queue.empty():
+            connected_node = queue.get()
+            if connected_node not in visited:
+                connected_component.append(connected_node)
+                for connected_node_connected_node in connected_nodes[connected_node]:
+                    queue.put(connected_node_connected_node)
+        connected_components.append(connected_component)
+    return connected_components

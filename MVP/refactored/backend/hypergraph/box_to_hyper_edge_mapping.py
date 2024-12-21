@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 
 class BoxToHyperEdgeMapping:
     _box_to_hyper_edge_mapping: dict[int, HyperEdge] = {}
+
     @classmethod
     def add_new_pair(cls, box_id: int, hyper_edge: HyperEdge):
         cls._box_to_hyper_edge_mapping[box_id] = hyper_edge

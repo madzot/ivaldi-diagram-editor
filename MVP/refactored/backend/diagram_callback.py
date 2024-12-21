@@ -31,20 +31,20 @@ class Receiver:
         logger.info(f"receiver_callback invoked with action: {action}, kwargs: {kwargs}")
         if action in ['wire_add', 'wire_delete']:
             logger.info(f"Routing to wire_callback with action: {action}")
-            self.wire_callback(wire_id, action, start_connection, connection_id, end_connection)
+            self.wire_callback(wire_id, action, start_connection, connection_id, end_connection, canvas_id)
         elif action == 'create_spider':
             logger.info("Routing to create_spider")
-            self.create_spider(wire_id, connection_id, generator_id)
+            self.create_spider(wire_id, connection_id, generator_id, canvas_id)
         elif action == "create_spider_parent":
-            self.spider_parent(wire_id, generator_id)
+            self.spider_parent(wire_id, generator_id, canvas_id)
         elif action == 'delete_spider':
             logger.info("Routing to create_spider")
-            self.delete_spider_be(wire_id)
+            self.delete_spider_be(wire_id, canvas_id)
         else:
             logger.info("Routing to box_callback")
-            self.box_callback(generator_id, action, connection_id, generator_side, connection_nr, operator)
+            self.box_callback(generator_id, action, connection_id, generator_side, connection_nr, operator, canvas_id)
 
-    def delete_spider_be(self, wire_id):
+    def delete_spider_be(self, wire_id, canvas_id):
         logger.info(f"Routing to delete_spider")
         spider = self.spider_get_resource_by_connection_id(wire_id)
         if spider.parent:
@@ -54,14 +54,13 @@ class Receiver:
 
         self._remove_node(spider.id)
 
-
-    def spider_parent(self, id, generator_id=None):
+    def spider_parent(self, id, generator_id=None, canvas_id=None):
         spider = self.spider_get_resource_by_connection_id(id)
         spider.parent = generator_id
         parent = self.generator_get_box_by_id(generator_id)
         parent.spiders.append(spider.id)
 
-    def create_spider(self, id, connection_id, generator_id=None):
+    def create_spider(self, id, connection_id, generator_id=None, canvas_id=None):
         logger.info(f"Creating spider with id: {id}")
         resource = Resource(id)
         resource.spider = True
@@ -75,10 +74,13 @@ class Receiver:
         logger.info(f"Spider created and added to diagram: {resource}")
 
         new_node = Node(id)
+
         WireAndSpiderToNodeMapping.add_new_pair(id, new_node)
+        new_hypergraph = Hypergraph(canvas_id=canvas_id)
+        HypergraphManager.add_hypergraph(new_hypergraph)
 
-
-    def wire_callback(self, wire_id, action=None, start_connection=None, connection_id=None, end_connection=None):
+    def wire_callback(self, wire_id, action=None, start_connection=None, connection_id=None, end_connection=None,
+                      canvas_id=None):
         logger.info(
             f"wire_callback invoked with wire_id: {wire_id}, action: {action}, start_connection: {start_connection}, connection_id: {connection_id}")
         if action == 'wire_delete':
@@ -94,8 +96,7 @@ class Receiver:
             self._remove_node(wire_id)
         else:
             # TODO Create node when wire connected to spider. Spider node and new node should be united.
-            if end_connection: # HAS end_connection if connection between spider and something
-                print("HAS END CONNECTION______________________________")
+            if end_connection:  # HAS end_connection if connection between spider and something
                 if start_connection[2] == 'spider':
                     spider = self.spider_get_resource_by_connection_id(connection_id)
                     spider.add_connection(end_connection)
@@ -110,7 +111,8 @@ class Receiver:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
 
                     # Add hyper edge to new node or union nodes
-                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, end_connection[3], end_connection[2])
+                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, end_connection[3],
+                                                            end_connection[2], canvas_id)
                     print(f"Added wire - {wire_id}")
 
                 elif end_connection[2] == 'spider':
@@ -140,20 +142,30 @@ class Receiver:
                                                      connection_id)
 
                     new_node = Node(resource.id)
-                    should_be_united_with: list[tuple[int, Node]] = [] # in tuple first is conn_id
+                    should_be_united_with: list[tuple[int, Node]] = []  # in tuple first is conn_id
+                    hyper_edge_s_nodes: set[Node] = set()
                     for connection in resource.connections:
                         conn_index, box_id, side, conn_id = connection
-                        if box_id is not None: # Wire connection with box
+                        if box_id is not None:  # Wire connection with box
                             hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box_id)
                             if side == "right":
                                 new_node.append_input(hyper_edge)
                                 hyper_edge.set_target_node(conn_index, new_node)
+
                             elif side == "left":
                                 new_node.append_output(hyper_edge)
                                 hyper_edge.set_source_node(conn_index, new_node)
-                        else: # Wire connection with diagram input/output
-                            node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(conn_id) # input/output id
+
+                            for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
+                                hyper_edge_s_nodes.add(node)
+                        else:  # Wire connection with diagram input/output
+                            node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(conn_id)  # input/output id
                             should_be_united_with.append((conn_id, node))
+
+                    new_hypergraph_source_nodes: list[Node] = new_node.get_source_nodes()
+                    print(len(hyper_edge_s_nodes))
+                    print(len(new_hypergraph_source_nodes))
+                    self.create_hypergraph(new_hypergraph_source_nodes, canvas_id, hyper_edge_s_nodes)
                     for conn_id, node_to_union in should_be_united_with:
                         new_node.union(node_to_union)
 
@@ -161,16 +173,15 @@ class Receiver:
 
                 else:
                     resource = self.wire_create_new_resource(wire_id, connection_nr, connection_box_id, connection_side,
-                                                  connection_id)
-
-
+                                                             connection_id)
 
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Spiders: {self.diagram.spiders}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
 
-    def add_hyper_edge_or_union_with_nodes(self, new_node_id: int, spider_id: int, box: Resource | None, other_connection_id: int, side: str):
+    def add_hyper_edge_or_union_with_nodes(self, new_node_id: int, spider_id: int, box: Resource | None,
+                                           other_connection_id: int, side: str, canvas_id: int):
         # Add hyper edge to new node or union nodes
         new_node = Node(new_node_id)
         WireAndSpiderToNodeMapping.add_new_pair(new_node_id, new_node)
@@ -183,12 +194,48 @@ class Receiver:
             if side == "left":
                 new_node.append_input(hyper_edge)
                 hyper_edge.append_target_node(new_node)
-            elif side  == "right":
+            elif side == "right":
                 new_node.append_output(hyper_edge)
                 hyper_edge.append_source_node(new_node)
         else:  # it is output or spider, doesn`t make sense
             other_connection_node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(other_connection_id)
             new_node.union(other_connection_node)
+        self.create_hypergraph_united_with_spider(new_node.get_source_nodes(), canvas_id, spider_id)
+
+    @classmethod
+    def create_hypergraph_united_with_spider(cls, hypergraph_source_nodes: list[Node], canvas_id: int,
+                                             spider_id: int) -> Hypergraph:
+        hypergraphs_to_remove: set[Hypergraph] = set()
+        spider_hypergraph = HypergraphManager.get_graph_by_source_node_id(spider_id)
+        if spider_hypergraph:
+            hypergraphs_to_remove.add(spider_hypergraph)
+        for source_node in hypergraph_source_nodes:
+            source_hypergraph = HypergraphManager.get_graph_by_source_node_id(source_node.id)
+            if source_hypergraph:
+                hypergraphs_to_remove.add(source_hypergraph)
+        for hypergraph in hypergraphs_to_remove:
+            HypergraphManager.remove_hypergraph(hypergraph)
+        hypergraph: Hypergraph = Hypergraph(canvas_id)
+        hypergraph.set_hypergraph_sources(hypergraph_source_nodes)
+        HypergraphManager.add_hypergraph(hypergraph)
+
+    @classmethod
+    def create_hypergraph(cls, hypergraph_source_nodes: list[Node], canvas_id: int,
+                          hyper_edge_s_nodes: list[Node]):
+        hypergraphs_to_remove: set[Hypergraph] = set()
+        for node in hyper_edge_s_nodes:
+            hypergraph = HypergraphManager.get_graph_by_source_node_id(node.id)
+            if hypergraph:
+                hypergraphs_to_remove.add(hypergraph)
+        for node in hypergraph_source_nodes:
+            hypergraph = HypergraphManager.get_graph_by_source_node_id(node.id)
+            if hypergraph:
+                hypergraphs_to_remove.add(hypergraph)
+        for hypergraph in hypergraphs_to_remove:
+            HypergraphManager.remove_hypergraph(hypergraph)
+        hypergraph: Hypergraph = Hypergraph(canvas_id)
+        hypergraph.set_hypergraph_sources(hypergraph_source_nodes)
+        HypergraphManager.add_hypergraph(hypergraph)
 
     def spider_handle_delete_connection(self, spider, connection):
         if spider:
@@ -278,7 +325,8 @@ class Receiver:
                     self.wire_add_to_compound_box(id, connection_nr, box, connection_id)
         resource.add_connection([connection_nr, connection_box_id, connection_side] + [connection_id])
 
-    def wire_create_new_resource(self, id, connection_nr, connection_box_id, connection_side, connection_id)-> Resource:
+    def wire_create_new_resource(self, id, connection_nr, connection_box_id, connection_side,
+                                 connection_id) -> Resource:
         """
         :param id:
         :param connection_nr:
@@ -298,7 +346,8 @@ class Receiver:
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
         return resource
 
-    def box_callback(self, id, action=None, connection_id=None, generator_side=None, connection_nr=None, operator=None):
+    def box_callback(self, id, action=None, connection_id=None, generator_side=None, connection_nr=None, operator=None,
+                     canvas_id=None):
         box = self.generator_get_box_by_id(id)
 
         if box:

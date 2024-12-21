@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from pickle import NEXT_BUFFER
 from queue import Queue
 from typing import TYPE_CHECKING
 
-from networkx.algorithms.components import is_connected
 
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.box import Box
 from MVP.refactored.connection import Connection
 from MVP.refactored.spider import Spider
 
 if TYPE_CHECKING:
     from MVP.refactored.custom_canvas import CustomCanvas
+    from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+    from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+    from MVP.refactored.backend.hypergraph.node import Node
 
 
 class HypergraphManager:
@@ -34,7 +33,6 @@ class HypergraphManager:
                 if source_node.id == source_node_id:
                     return hypergraph
         return None
-
 
     @staticmethod
     def get_graphs_by_canvas_id(canvas_id: int) -> set[Hypergraph]:
@@ -65,78 +63,77 @@ class HypergraphManager:
 
     @staticmethod
     def remove_hypergraph_source_node(source_node_id: int):
-        hypergraph = HypergraphManager.get_graph_by_source_node_id(source_node_id.id)
-        hypergraph.remove_node(source_node_id.id)
+        hypergraph = HypergraphManager.get_graph_by_source_node_id(source_node_id)
+        hypergraph.remove_node(source_node_id)
         if len(hypergraph.get_hypergraph_source()) == 0:
             HypergraphManager.remove_hypergraph(hypergraph)
 
-    @staticmethod
-    def _create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
-        # TODO: fix this hypergraph creation to note that many hypergraphs can be created from one canvas
-        pass
-        hypergraph = Hypergraph(canvas.id)
-        for box in canvas.boxes:
-            node = HyperEdge(box.id)
-            for connection in box.connections:
-                if connection.side == "left" and connection.has_wire:
-                    node.add_input(connection.wire.id)
-                elif connection.has_wire:
-                    node.add_output(connection.wire.id)
-            hypergraph.add_node(node)
+    # @staticmethod
+    # def _create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
+    #     # TODO: fix this hypergraph creation to note that many hypergraphs can be created from one canvas
+    #     pass
+    #     hypergraph = Hypergraph(canvas.id)
+    #     for box in canvas.boxes:
+    #         node = HyperEdge(box.id)
+    #         for connection in box.connections:
+    #             if connection.side == "left" and connection.has_wire:
+    #                 node.add_input(connection.wire.id)
+    #             elif connection.has_wire:
+    #                 node.add_output(connection.wire.id)
+    #         hypergraph.add_node(node)
+    #
+    #     if hypergraph._is_valid():
+    #         HypergraphManager.hypergraphs.add(hypergraph)
+    #         print("Valid hypergraph created")
+    #         print(hypergraph.__str__())
+    #     else:
+    #         print("Invalid hypergraph not created")
 
-        if hypergraph._is_valid():
-            HypergraphManager.hypergraphs.add(hypergraph)
-            print("Valid hypergraph created")
-            print(hypergraph.__str__())
-        else:
-            print("Invalid hypergraph not created")
-
-    @staticmethod
-    def create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
-        hypergraphs_on_canvas = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-        all_existing_nodes: set[tuple[HyperEdge, Hypergraph]] = set()
-        for hypergraph in hypergraphs_on_canvas:
-            for node in hypergraph.get_all_nodes():
-                all_existing_nodes.add((node, hypergraph))
-
-        is_independent_graph = True
-        hypergraph = Hypergraph(canvas.id)
-        for canvas_input in canvas.inputs:
-            if canvas_input.box is None: # None if connection is diagram input/output
-                source_node = HyperEdge(canvas_input.id)
-                hypergraph.add_hypergraph_source(source_node)
-
-                boxes_to_visit: Queue[tuple[HyperEdge, Box | Connection]] = Queue()
-                for end_connection in HypergraphManager._get_end_connections(canvas_input):  # iterating children of input (might be the output of diagram or box)
-                    boxes_to_visit.put((source_node, end_connection))
-
-                while not boxes_to_visit.empty():
-                    node_from, node_to = boxes_to_visit.get()
-
-                    node = HyperEdge(node_to.id, box_function=node_to.box_function)
-                    is_all_children_are_explored = False
-
-                    for existing_node, existing_node_hypergraph in all_existing_nodes:
-                        if existing_node == node:
-                            existing_node_hypergraph.add_hypergraph_source(source_node)
-                            node = existing_node
-                            is_all_children_are_explored = True
-                            is_independent_graph = False
-                            break
-
-                    node.add_parent(node_from)
-                    node_from.add_child(node)
-
-                    if isinstance(node_to, Box) and not is_all_children_are_explored: # If this node already exists in other graph,
-                        # we don`t need to add his children because they already exists
-                        for connection in node_to.connections:
-                            if connection.side == "right":
-                                for end_connection in HypergraphManager._get_end_connections(connection):
-                                    boxes_to_visit.put((node, end_connection))
-
-        if is_independent_graph:
-            HypergraphManager.add_hypergraph(hypergraph)
-
+    # @staticmethod
+    # def create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
+    #     hypergraphs_on_canvas = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
+    #     all_existing_nodes: set[tuple[HyperEdge, Hypergraph]] = set()
+    #     for hypergraph in hypergraphs_on_canvas:
+    #         for node in hypergraph.get_all_nodes():
+    #             all_existing_nodes.add((node, hypergraph))
+    #
+    #     is_independent_graph = True
+    #     hypergraph = Hypergraph(canvas.id)
+    #     for canvas_input in canvas.inputs:
+    #         if canvas_input.box is None:  # None if connection is diagram input/output
+    #             source_node = HyperEdge(canvas_input.id)
+    #             hypergraph.add_hypergraph_source(source_node)
+    #
+    #             boxes_to_visit: Queue[tuple[HyperEdge, Box | Connection]] = Queue()
+    #             for end_connection in HypergraphManager._get_end_connections(canvas_input):  # iterating children of input (might be the output of diagram or box)
+    #                 boxes_to_visit.put((source_node, end_connection))
+    #
+    #             while not boxes_to_visit.empty():
+    #                 node_from, node_to = boxes_to_visit.get()
+    #
+    #                 node = HyperEdge(node_to.id, box_function=node_to.box_function)
+    #                 is_all_children_are_explored = False
+    #
+    #                 for existing_node, existing_node_hypergraph in all_existing_nodes:
+    #                     if existing_node == node:
+    #                         existing_node_hypergraph.add_hypergraph_source(source_node)
+    #                         node = existing_node
+    #                         is_all_children_are_explored = True
+    #                         is_independent_graph = False
+    #                         break
+    #
+    #                 node.add_parent(node_from)
+    #                 node_from.add_child(node)
+    #
+    #                 if isinstance(node_to, Box) and not is_all_children_are_explored: # If this node already exists in other graph,
+    #                     # we don`t need to add his children because they already exists
+    #                     for connection in node_to.connections:
+    #                         if connection.side == "right":
+    #                             for end_connection in HypergraphManager._get_end_connections(connection):
+    #                                 boxes_to_visit.put((node, end_connection))
+    #
+    #     if is_independent_graph:
+    #         HypergraphManager.add_hypergraph(hypergraph)
 
     @staticmethod
     def _get_end_connections(connection: Connection) -> list[Box | Connection]:

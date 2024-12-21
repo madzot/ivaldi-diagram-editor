@@ -336,7 +336,8 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.remove_diagram_input()
             if self.receiver.listener:
                 self.receiver.receiver_callback("remove_inner_left",
-                                                generator_id=self.custom_canvas.diagram_source_box.id)
+                                                generator_id=self.custom_canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
         else:
             self.custom_canvas.remove_diagram_input()
 
@@ -349,7 +350,7 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.remove_diagram_output()
             if self.receiver.listener:
                 self.receiver.receiver_callback("remove_inner_right",
-                                                generator_id=self.custom_canvas.diagram_source_box.id)
+                                                generator_id=self.custom_canvas.diagram_source_box.id, canvas_id=self.canvas.id)
         else:
             self.custom_canvas.remove_diagram_input()
 
