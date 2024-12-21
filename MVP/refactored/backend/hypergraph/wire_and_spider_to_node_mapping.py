@@ -8,7 +8,6 @@ class WireAndSpiderToNodeMapping:
     @classmethod
     def add_new_pair(cls, wire_or_spider_id: int, node: Node):
         cls._wire_Spider_to_node_mapping[wire_or_spider_id] = node
-        cls._node_to_wire_spider_mapping[node].add(wire_or_spider_id)
 
     @classmethod
     def remove_pair(cls, wire_or_spider_id: int):

@@ -25,9 +25,9 @@ class Spider(Connection):
         if self.receiver.listener:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
-                                                generator_id=self.canvas.diagram_source_box.id)
+                                                generator_id=self.canvas.diagram_source_box.id, canvas_id=canvas.id)
             else:
-                self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id)
+                self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id, canvas_id=canvas.id)
 
         self.is_snapped = False
         self.snapped_x = None
@@ -56,7 +56,7 @@ class Spider(Connection):
         self.delete_me()
         if self.receiver.listener:
             if action != "sub_diagram":
-                self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id)
+                self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id, canvas_id=self.canvas.id)
 
     def close_menu(self):
         if self.context_menu:

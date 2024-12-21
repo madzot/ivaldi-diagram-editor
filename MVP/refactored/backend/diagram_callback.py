@@ -4,6 +4,8 @@ from MVP.refactored.backend.diagram import Diagram
 from MVP.refactored.backend.generator import Generator
 from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
 from MVP.refactored.backend.resource import Resource
@@ -27,6 +29,7 @@ class Receiver:
         generator_side = kwargs.get('generator_side')
         connection_nr = kwargs.get('connection_nr')
         operator = kwargs.get('operator')
+        canvas_id = kwargs.get('canvas_id')
 
         logger.info(f"receiver_callback invoked with action: {action}, kwargs: {kwargs}")
         if action in ['wire_add', 'wire_delete']:
@@ -129,9 +132,9 @@ class Receiver:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
 
                     # Add hyper edge to new node or union nodes
-                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, start_connection[3], start_connection[2])
-            else: # if it connection not between spider and smt
-                print("NO END CONNECTION__________________________________")
+                    self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, start_connection[3],
+                                                            start_connection[2], canvas_id)
+            else:  # if it connection not between spider and smt
                 connection_nr = start_connection[0]
                 connection_box_id = start_connection[1]
                 connection_side = start_connection[2]
