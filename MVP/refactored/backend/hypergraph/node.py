@@ -1,9 +1,10 @@
+from collections import defaultdict
 from queue import Queue
-
-from fontTools.ttLib.ttVisitor import visit
-
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge, find_connected_component
 from typing import Self
+
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
 
 class Node:
@@ -25,7 +26,6 @@ class Node:
         visited.add(self)
         if len(self.get_inputs()) == 0:
             source_nodes.append(self)
-            return source_nodes
         for hyper_edge in self.get_inputs() + self.get_outputs():
             for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                 queue.put(node)
@@ -41,7 +41,32 @@ class Node:
                             queue.put(hyper_edge_node)
         return source_nodes
 
+    def get_target_nodes(self) -> list[Self]:
+        visited: set[Node] = set()
+        target_nodes: list[Node] = list()
+        queue: Queue[Node] = Queue()
+        visited.add(self)
+        if len(self.get_outputs()) == 0:
+            target_nodes.append(self)
+        for hyper_edge in self.get_inputs() + self.get_outputs():
+            for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
+                queue.put(node)
+        while not queue.empty():
+            node: Node = queue.get()
+            visited.add(node)
+            if len(node.get_outputs()) == 0:
+                target_nodes.append(node)
+            else:
+                for hyper_edge in self.get_inputs() + self.get_outputs():
+                    for hyper_edge_node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
+                        if hyper_edge_node not in visited:
+                            queue.put(hyper_edge_node)
+        return target_nodes
+
     def remove_self(self):
+        source_nodes: list[Self] = self.get_source_nodes()
+        target_nodes: list[Self] = self.get_target_nodes()
+        hypergraph: Hypergraph = HypergraphManager.get_graph_by_source_node_id(source_nodes[0].id)
         for connected_to_node in self.directly_connected_to:
             connected_to_node.directly_connected_to.remove(self)
         self.directly_connected_to.clear()
@@ -50,7 +75,17 @@ class Node:
         for output in self.outputs:
             output.remove_source_node_by_reference(self)
 
-        # TODO create new hypergraphs like in hyper edge
+        connected_nodes: dict[Node, list[Node]] = defaultdict(list)
+        for source_node in source_nodes:
+            for target_node in target_nodes:
+                if source_node.is_connected_to(target_node):
+                    connected_nodes[source_node].append(target_node)
+                    connected_nodes[target_node].append(source_node)
+        connectivity: list[list[Node]] = find_connected_component(connected_nodes)
+        for nodes in connectivity:
+            new_hypergraph: Hypergraph = Hypergraph(hypergraph.get_canvas_id())
+            new_hypergraph.append_source_nodes(nodes[0].get_source_nodes())
+            HypergraphManager.add_hypergraph(new_hypergraph)
 
         self.inputs.clear()
         self.outputs.clear()
