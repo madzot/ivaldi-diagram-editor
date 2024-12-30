@@ -49,8 +49,9 @@ class Box:
                                                 connection_id=self.canvas.diagram_source_box.id)
 
         self.is_snapped = False
-        self.snapped_x = None
-        self.prev_snapped = None
+
+        coords = self.canvas.coords(self.rect)
+        self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])
 
     def set_id(self, id_):
         if self.receiver.listener:
@@ -66,7 +67,6 @@ class Box:
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
-        self.canvas.tag_bind(self.resize_handle, '<ButtonRelease-1>', lambda event: self.check_columns_after_resize())
         self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
 
     def show_context_menu(self, event):
@@ -222,8 +222,6 @@ class Box:
         go_to_x = event.x - self.x_dif
         go_to_y = event.y - self.y_dif
 
-        col_preset = None
-
         # snapping into place
         found = False
         for box in self.canvas.boxes:
@@ -232,98 +230,46 @@ class Box:
 
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
-                self.snapped_x = round(float(go_to_x + self.size[0] / 2), 4)
-                if self.prev_snapped is None:
-                    self.prev_snapped = self.snapped_x
-
-                col_preset = box
 
                 found = True
         for spider in self.canvas.spiders:
 
             if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
                 go_to_x = spider.x - +self.size[0] / 2
-                self.snapped_x = round(float(spider.x), 4)
-                if self.prev_snapped is None:
-                    self.prev_snapped = self.snapped_x
-
-                col_preset = spider
 
                 found = True
 
-        for existing_snapped_x in self.canvas.columns.keys():
-            if self.snapped_x:
-                if abs(self.snapped_x - existing_snapped_x) < 0.5:
-                    self.snapped_x = existing_snapped_x
-
         if found:
+            collision = self.find_collisions(go_to_x, go_to_y)
 
-            if self.snapped_x not in self.canvas.columns:
-                self.canvas.columns[self.snapped_x] = [col_preset]
-                col_preset.snapped_x = self.snapped_x
-                col_preset.is_snapped = True
-            if self not in self.canvas.columns[self.snapped_x]:
-                self.canvas.columns[self.snapped_x].append(self)
+            if len(collision) != 0:
+                if self.is_snapped:
+                    return
 
-            for column_item in self.canvas.columns[self.snapped_x]:
-                if column_item == self:
-                    continue
-                if isinstance(column_item, Box):
-                    if (go_to_y + self.size[1] >= column_item.y
-                            and go_to_y <= column_item.y + column_item.size[1]):
-                        if not self.is_snapped:
-                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
-                        else:
-                            return
-                else:
-                    if (go_to_y + self.size[1] >= column_item.y - column_item.r
-                            and go_to_y <= column_item.y + column_item.r):
-                        if not self.is_snapped:
-                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
-                        else:
-                            return
+                jump_size = 10
+                counter = 0
+                while collision:
+                    if counter % 2 == 0:
+                        go_to_y += counter * jump_size
+                    else:
+                        go_to_y -= counter * jump_size
 
-        self.canvas.setup_column_removal(self, found)
+                    collision = self.find_collisions(go_to_x, go_to_y)
+
+                    counter += 1
 
         self.is_snapped = found
-        self.prev_snapped = self.snapped_x
 
         self.move(go_to_x, go_to_y)
         self.move_label()
 
-    def find_space_y(self, go_to_x, go_to_y):
-        objects_by_distance = sorted(self.canvas.columns[float(go_to_x)], key=lambda x: abs(self.y - x.y))
-        for item in objects_by_distance:
-            if item == self:
-                continue
-            y_up = True
-            y_down = True
-
-            if isinstance(item, Box):
-                go_to_y_up = item.y - self.size[1] - 1
-                go_to_y_down = item.y + item.size[1] + 1
-            else:
-                go_to_y_up = item.y - item.r - self.size[1] - 1
-                go_to_y_down = item.y + item.r + 1
-
-            for component in objects_by_distance:
-                if component == self or component == item:
-                    continue
-
-                upper_y, lower_y = self.canvas.get_upper_lower_edges(component)
-
-                if go_to_y_up + self.size[1] >= upper_y and go_to_y_up <= lower_y:
-                    y_up = False
-                if go_to_y_down + self.size[1] >= upper_y and go_to_y_down <= lower_y:
-                    y_down = False
-
-            up_or_down = self.canvas.check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, self)
-            if up_or_down[0]:
-                go_to_y = up_or_down[1]
-                break
-            else:
-                continue
-        return go_to_y
+    def find_collisions(self, go_to_x, go_to_y):
+        collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
+        collision = list(collision)
+        for index in self.collision_ids:
+            if index in collision:
+                collision.remove(index)
+        return collision
 
     def on_resize_drag(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
@@ -344,16 +290,6 @@ class Box:
         new_size_y = max(20, self.size[1] + dy)
         self.update_size(new_size_x, new_size_y)
         self.move_label()
-
-    def check_columns_after_resize(self):
-        if self.snapped_x:
-            found = False
-            for column_x in self.canvas.columns.keys():
-                if self.x < column_x < self.x + self.size[0]:
-                    found = True
-                    break
-            if not found:
-                self.canvas.setup_column_removal(self, False)
 
     def resize_by_connections(self):
         # TODO resize by label too if needed
@@ -580,13 +516,6 @@ class Box:
         self.canvas.delete(self.rect)
         self.canvas.delete(self.resize_handle)
 
-        if self.snapped_x and self.snapped_x in self.canvas.columns:
-            self.canvas.columns[self.snapped_x].remove(self)
-            if len(self.canvas.columns[self.snapped_x]) == 1:
-                self.canvas.columns[self.snapped_x][0].snapped_x = None
-                self.canvas.columns[self.snapped_x][0].is_snapped = False
-                self.canvas.columns.pop(self.snapped_x, None)
-            self.snapped_x = None
         if self in self.canvas.boxes:
             self.canvas.boxes.remove(self)
         self.canvas.delete(self.label)
