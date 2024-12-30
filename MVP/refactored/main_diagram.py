@@ -17,6 +17,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
@@ -167,9 +168,7 @@ class MainDiagram(tk.Tk):
     def generate_code(self):
         print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
-        # The print below can be toggled in and out for debugging
-        # until our code editor system is implemented into code generation
-        # print("-----------------------\ncode is:\n", code, sep="", end="")
+        CodeEditor(self, code=code, is_generated=True)
 
     def open_manage_methods_window(self):
         self.manage_methods = ManageMethods(self)
