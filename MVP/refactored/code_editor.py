@@ -54,13 +54,26 @@ class CodeEditor:
                 param_str = param_str.replace(",", "")
             if len(return_list) == 1:
                 return_str = return_str.replace(",", "")
-            text = f"def {self.box.label_text}{param_str}:\n    return {return_str}"
+            function_name = self.generate_function_name_from_label()
+            text = f"def {function_name}{param_str}:\n    return {return_str}"
             if self.box.label_text in self.box.canvas.master.label_content.keys():
                 text = self.box.canvas.master.label_content[self.box.label_text].strip()
         else:
             text = code
 
         self.code_view.insert('1.0', text)
+
+    def generate_function_name_from_label(self):
+        base = self.box.label_text.strip()
+        result = base
+        for char in base:
+            if not (char.isalpha() or char == "_"):
+                if char.isnumeric():
+                    if result.index(char) == 0:
+                        result = result.replace(char, "", 1)
+                else:
+                    result = result.replace(char, "")
+        return result.strip()
 
     def confirm_exit(self):
         if messagebox.askokcancel("Warning", "Unsaved changes will be lost. Are you sure you want to exit?"):
