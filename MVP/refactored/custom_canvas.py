@@ -1,4 +1,3 @@
-import os
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox as mb
@@ -78,6 +77,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Up>", self.pan_vertical)
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
+        self.bind("<Control-x>", lambda event: self.cut_selected_items())
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
@@ -710,7 +710,6 @@ class CustomCanvas(tk.Canvas):
         self.corners[3].move_to([(self.corners[3].location[0] + (max_x - self.prev_width_max) / self.delta),
                                  (self.corners[3].location[1] + (max_y - self.prev_height_max) / self.delta)])
 
-
     def update_inputs_outputs(self):
         x = self.corners[3].location[0]
         y = self.corners[3].location[1]
@@ -966,3 +965,7 @@ class CustomCanvas(tk.Canvas):
 
     def paste_copied_items(self, event):
         self.selector.paste_copied_items(event.x, event.y)
+
+    def cut_selected_items(self):
+        self.copy_selected_items()
+        self.delete_selected_items()
