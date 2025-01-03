@@ -51,7 +51,7 @@ class Box:
         self.is_snapped = False
 
         coords = self.canvas.coords(self.rect)
-        self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])
+        self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-2:]
 
     def set_id(self, id_):
         if self.receiver.listener:

@@ -31,7 +31,7 @@ class Spider(Connection):
         self.is_snapped = False
 
         coords = self.canvas.coords(self.circle)
-        self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])
+        self.collision_id = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-1]
 
     def is_spider(self):
         return True
@@ -142,9 +142,8 @@ class Spider(Connection):
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
                                                  go_to_y + self.r)
         collision = list(collision)
-        for index in self.collision_ids:
-            if index in collision:
-                collision.remove(index)
+        if self.collision_id in collision:
+            collision.remove(self.collision_id)
         return collision
 
     def is_illegal_move(self, new_x):
