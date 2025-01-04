@@ -197,17 +197,17 @@ class Selector:
     def paste_copied_items(self, event_x=50, event_y=50):
         if len(self.copied_items) > 0:
 
-            middle_point = self.find_middle_point()
+            middle_point = self.find_middle_point(event_x, event_y)
 
             for item in self.copied_items:
                 if item['component'] == "Box":
                     if item["sub-diagram"]:
                         new_box = self.canvas.master.importer.add_box_from_menu(
-                                self.canvas, item['label'], (event_x+(item['location'][0] - middle_point[0]),
-                                                             event_y+(item['location'][1] - middle_point[1])), True)
+                            self.canvas, item['label'], (event_x + item['location'][0] - middle_point[0],
+                                                         event_y + item['location'][1] - middle_point[1]), True)
                     else:
-                        new_box = self.canvas.add_box((event_x+(item['location'][0]-middle_point[0]),
-                                                       event_y+(item['location'][1]-middle_point[1])),
+                        new_box = self.canvas.add_box((event_x + item['location'][0] - middle_point[0],
+                                                       event_y + item['location'][1] - middle_point[1]),
                                                       size=item['size'], shape=item['shape'])
                         for c in item['connections']:
                             if c['side'] == "right":
@@ -230,8 +230,8 @@ class Selector:
                                         wire['end_connection'] = connection
 
                 if item['component'] == "Spider":
-                    new_spider = self.canvas.add_spider((event_x+(item['location'][0]-middle_point[0]),
-                                                        event_y+(item['location'][1]-middle_point[1])))
+                    new_spider = self.canvas.add_spider((event_x + item['location'][0] - middle_point[0],
+                                                         event_y + item['location'][1] - middle_point[1]))
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
                             wire['start_connection'] = new_spider
@@ -242,7 +242,7 @@ class Selector:
                 self.canvas.start_wire_from_connection(wire['start_connection'])
                 self.canvas.end_wire_to_connection(wire['end_connection'])
 
-    def find_middle_point(self):
+    def find_middle_point(self, event_x, event_y):
         most_left = self.canvas.winfo_width()
         most_right = 0
         most_up = self.canvas.winfo_height()
@@ -266,4 +266,21 @@ class Selector:
                     most_right = item['location'][0] + item['size']
                 if item['location'][1] + item['size'] > most_down:
                     most_down = item['location'][1] + item['size']
-        return (most_left + most_right) / 2, (most_up + most_down) / 2
+
+        middle_x = (most_left + most_right) / 2
+        middle_y = (most_up + most_down) / 2
+
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+
+        if most_left - (middle_x - event_x) < 0:
+            middle_x = event_x + most_left
+        if most_right - (middle_x - event_x) > canvas_width:
+            middle_x = event_x - (canvas_width - most_right)
+
+        if most_up - (middle_y - event_y) < 0:
+            middle_y = event_y + most_up
+        if most_down - (middle_y - event_y) > canvas_height:
+            middle_y = event_y - (canvas_height - most_down)
+
+        return middle_x, middle_y
