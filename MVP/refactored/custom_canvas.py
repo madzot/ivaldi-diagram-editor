@@ -22,12 +22,15 @@ from MVP.refactored.wire import Wire
 
 class CustomCanvas(tk.Canvas):
     def __init__(self, master, diagram_source_box, receiver, main_diagram,
-                 parent_diagram, add_boxes, id_=None, **kwargs):
+                 parent_diagram, add_boxes, id_=None, search=False, **kwargs):
         super().__init__(master, **kwargs)
 
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
-        self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+        if not search:
+            self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+        else:
+            self.configure(bg='white', width=500, height=500)
         self.update()
 
         self.parent_diagram = parent_diagram
@@ -91,13 +94,14 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
-        self.tree_logo = (Image.open("../../assets/file-tree-outline.png"))
-        self.tree_logo = self.tree_logo.resize((20, 15))
-        self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
+        if not search:
+            self.tree_logo = (Image.open("../../assets/file-tree-outline.png"))
+            self.tree_logo = self.tree_logo.resize((20, 15))
+            self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
 
-        button = ttk.Button(self, image=self.tree_logo,
-                            command=lambda: self.master.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
-        button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
+            button = ttk.Button(self, image=self.tree_logo,
+                                command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
+            button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
 
@@ -387,15 +391,15 @@ class CustomCanvas(tk.Canvas):
                                           command=lambda loc=(event.x, event.y): self.add_box(loc))
 
             # noinspection PyUnresolvedReferences
-            if len(self.master.quick_create_boxes) > 0:
+            if len(self.main_diagram.quick_create_boxes) > 0:
                 sub_menu = tk.Menu(self.context_menu, tearoff=0)
                 self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
                 # noinspection PyUnresolvedReferences
-                for box in self.master.quick_create_boxes:
+                for box in self.main_diagram.quick_create_boxes:
                     # noinspection PyUnresolvedReferences
                     sub_menu.add_command(label=box,
                                          command=lambda loc=(event.x, event.y), name=box:
-                                         self.master.importer.add_box_from_menu(self, name, loc))
+                                         self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))

@@ -21,6 +21,7 @@ from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
+from MVP.refactored.search_window import SearchWindow
 from MVP.refactored.toolbar import Titlebar
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
@@ -46,6 +47,7 @@ class MainDiagram(tk.Tk):
         self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
+        self.bind("<Control-f>", lambda event: self.open_search_window())
 
         self.is_tree_visible = True
         self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
@@ -172,6 +174,9 @@ class MainDiagram(tk.Tk):
 
     def open_manage_methods_window(self):
         self.manage_methods = ManageMethods(self)
+
+    def open_search_window(self):
+        SearchWindow(self)
 
     def change_function_label(self, old_label, new_label):
         if old_label in self.label_content.keys():
