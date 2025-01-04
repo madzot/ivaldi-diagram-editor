@@ -6,6 +6,8 @@ from tkinter import messagebox
 import pygments.lexers
 from chlorophyll import CodeView
 
+from MVP.refactored.util.exporter.code_exporter import CodeExporter
+
 
 class CodeEditor:
     def __init__(self, main_diagram, box=None, label=None, code=None, is_generated=False):
@@ -26,6 +28,16 @@ class CodeEditor:
 
         self.code_view.pack(fill=tk.BOTH, expand=True)
         self.previous_text = ""
+
+        self.save_as_button = tk.Button(
+            self.code_view,
+            text="Save as",
+            command=self.save_as,
+        )
+        self.save_as_button.pack(
+            anchor=tk.E,
+            pady=5
+        )
 
         if not is_generated:
             self.save_button = tk.Button(
@@ -64,6 +76,8 @@ class CodeEditor:
 
         self.code_view.insert('1.0', text)
 
+        self.code_exporter = CodeExporter(self)
+
     def generate_function_name_from_label(self):
         base = self.box.label_text.strip()
         result = base
@@ -80,7 +94,7 @@ class CodeEditor:
         if messagebox.askokcancel("Warning", "Unsaved changes will be lost. Are you sure you want to exit?"):
             self.window.destroy()
 
-    def save_handler(self):
+    def save_handler(self, destroy=True):
         if self.box:
             self.save_to_file()
             self.main_diagram.load_functions()
@@ -89,7 +103,12 @@ class CodeEditor:
             self.save_to_file()
             self.main_diagram.load_functions()
             self.main_diagram.manage_methods.add_methods()
-        self.window.destroy()
+        if destroy:
+            self.window.destroy()
+
+    def save_as(self):
+        self.code_exporter.export()
+        self.save_handler(destroy=False)
 
     def save_to_file(self):
         if os.stat("conf/functions_conf.json").st_size != 0:

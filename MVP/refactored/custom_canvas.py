@@ -1,5 +1,5 @@
-import os
 import tkinter as tk
+from threading import Timer
 from tkinter import filedialog
 
 
@@ -18,7 +18,6 @@ from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from MVP.refactored.wire import Wire
-from threading import Timer
 
 
 class CustomCanvas(tk.Canvas):
@@ -78,6 +77,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Up>", self.pan_vertical)
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
+        self.bind("<Control-x>", lambda event: self.cut_selected_items())
         self.bind("<Control-s>", lambda event: self.create_sub_diagram())
         self.selecting = False
         self.copier = Copier()
@@ -99,7 +99,6 @@ class CustomCanvas(tk.Canvas):
         button = ttk.Button(self, image=self.tree_logo,
                             command=lambda: self.master.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
         button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
-        self.columns = {}
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
 
@@ -315,17 +314,6 @@ class CustomCanvas(tk.Canvas):
         if self.temp_wire:
             self.temp_wire.update()
 
-        new_columns = {}
-        for column_x in self.columns.keys():
-            new_x = self.calculate_zoom_dif(event.x, column_x, denominator)
-            for item in self.columns[column_x]:
-                if item.prev_snapped:
-                    item.prev_snapped = self.calculate_zoom_dif(event.x, item.prev_snapped, denominator)
-                item.snapped_x = new_x
-
-            new_columns[new_x] = self.columns[column_x]
-        self.columns = new_columns
-
     def check_max_zoom(self, x, y, denominator):
         x_offset = 0
         y_offset = 0
@@ -374,8 +362,11 @@ class CustomCanvas(tk.Canvas):
         ]
         for corner in self.corners:
             for location in locations:
-                if (abs(round(self.canvasx(corner.location[0])) - location[0]) < 2 and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)\
-                        or (abs(round(corner.location[0]) - location[0]) < 2 and abs(round(corner.location[1]) - location[1]) < 2):
+                if ((abs(round(self.canvasx(corner.location[0])) - location[0]) < 2
+                    and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
+                        or
+                    (abs(round(corner.location[0]) - location[0]) < 2
+                        and abs(round(corner.location[1]) - location[1]) < 2)):
                     count += 1
         return count >= 4
 
@@ -706,7 +697,6 @@ class CustomCanvas(tk.Canvas):
         self.corners[3].move_to([(self.corners[3].location[0] + (max_x - self.prev_width_max) / self.delta),
                                  (self.corners[3].location[1] + (max_y - self.prev_height_max) / self.delta)])
 
-
     def update_inputs_outputs(self):
         x = self.corners[3].location[0]
         y = self.corners[3].location[1]
@@ -794,7 +784,9 @@ class CustomCanvas(tk.Canvas):
         output_index = max([o.index for o in self.outputs] + [0])
         if len(self.outputs) != 0:
             output_index += 1
-        connection_output_new = Connection(self.diagram_source_box, output_index, "left", [0, 0], self, r=5*self.total_scale, id_=id_)
+        connection_output_new = Connection(self.diagram_source_box, output_index,
+                                           "left", [0, 0], self,
+                                           r=5*self.total_scale, id_=id_)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -830,7 +822,8 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self, r=5*self.total_scale, id_=id_)
+        new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
+                               r=5*self.total_scale, id_=id_)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id)
@@ -897,29 +890,6 @@ class CustomCanvas(tk.Canvas):
     def export_hypergraph(self):
         self.hypergraph_exporter.export()
 
-    def setup_column_removal(self, item, found):
-        if not found and item.snapped_x:
-            self.remove_from_column(item, item.snapped_x)
-            if item.prev_snapped and item.snapped_x != item.prev_snapped:
-                self.remove_from_column(item, item.prev_snapped)
-            item.snapped_x = None
-            item.prev_snapped = None
-        elif found and item.snapped_x != item.prev_snapped:
-            self.remove_from_column(item, item.prev_snapped)
-
-        item.is_snapped = found
-        item.prev_snapped = item.snapped_x
-
-    def remove_from_column(self, item, snapped_x):
-        for column_x in self.columns.keys():
-            if abs(column_x - snapped_x) < 0.01:
-                snapped_x = column_x
-        self.columns[snapped_x].remove(item)
-        if len(self.columns[snapped_x]) == 1:
-            self.columns[snapped_x][0].snapped_x = None
-            self.columns[snapped_x][0].is_snapped = False
-            self.columns.pop(snapped_x, None)
-
     @staticmethod
     def calculate_zoom_dif(zoom_coord, object_coord, denominator):
         """Calculates how much an object will to be moved when zooming."""
@@ -962,6 +932,10 @@ class CustomCanvas(tk.Canvas):
 
     def paste_copied_items(self, event):
         self.selector.paste_copied_items(event.x, event.y)
+
+    def cut_selected_items(self):
+        self.copy_selected_items()
+        self.delete_selected_items()
 
     def create_sub_diagram(self):
         if len(self.selector.selected_items) > 1:
