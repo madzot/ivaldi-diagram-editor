@@ -78,7 +78,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
         self.bind("<Control-x>", lambda event: self.cut_selected_items())
-        self.bind("<Control-s>", lambda event: self.create_sub_diagram())
+        self.bind("<Control-n>", lambda event: self.create_sub_diagram())
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
