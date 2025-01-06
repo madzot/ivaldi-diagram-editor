@@ -2,6 +2,7 @@ import tkinter as tk
 import ttkbootstrap as tkk
 
 from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.search_algorithm import SearchAlgorithm
 
 
 class SearchWindow(tk.Toplevel):
@@ -29,5 +30,10 @@ class SearchWindow(tk.Toplevel):
         self.result_frame = tkk.Frame(self, bootstyle=tkk.LIGHT)
         self.result_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.search_button = tkk.Button(self.result_frame, text="Search")
+        self.search_button = tkk.Button(self.result_frame, text="Search", command=self.search)
         self.search_button.pack(side=tk.LEFT)
+
+    def search(self):
+        algorithm = SearchAlgorithm(self.search_canvas, self.main_diagram.custom_canvas)
+        print(algorithm.contains_searchable())
+
