@@ -1,7 +1,7 @@
 import tkinter as tk
 from threading import Timer
 from tkinter import filedialog
-from tkinter import messagebox as mb
+
 
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
@@ -67,7 +67,7 @@ class CustomCanvas(tk.Canvas):
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
-        self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.bind("<MouseWheel>", self.zoom)
@@ -78,6 +78,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
         self.bind("<Control-x>", lambda event: self.cut_selected_items())
+        self.bind("<Control-n>", lambda event: self.create_sub_diagram())
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
@@ -435,14 +436,9 @@ class CustomCanvas(tk.Canvas):
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         self.selector.update_selection(event)
 
-    def __select_release__(self, event):
+    def __select_release__(self):
         self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
-        if len(self.selector.selected_items) > 1:
-            res = mb.askquestion(message='Add selection to a separate sub-diagram?')
-            if res == 'yes':
-                self.selector.select_action(event, True)
-                return
-        self.selector.select_action(event, False)
+        self.selector.select_action()
 
     def delete_selected_items(self):
         self.selector.delete_selected_items()
@@ -940,3 +936,7 @@ class CustomCanvas(tk.Canvas):
     def cut_selected_items(self):
         self.copy_selected_items()
         self.delete_selected_items()
+
+    def create_sub_diagram(self):
+        if len(self.selector.selected_items) > 1:
+            self.selector.create_sub_diagram()
