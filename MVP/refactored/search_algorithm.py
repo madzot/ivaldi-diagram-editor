@@ -8,8 +8,11 @@ class SearchAlgorithm:
         self.searchable = searchable
         self.canvas = canvas
 
-    def get_potential_results(self, searchable_connections, canvas_connections):
+    def get_potential_results(self, searchable_objects, canvas_objects):
         potential_results = []
+
+        searchable_connections = self.create_connection_dictionary(searchable_objects)
+        canvas_connections = self.create_connection_dictionary(canvas_objects)
 
         counter = 0
         for searchable_connection in searchable_connections.items():
@@ -17,14 +20,19 @@ class SearchAlgorithm:
             for canvas_connection in canvas_connections.items():
                 curr_canvas_id = canvas_connection[0]
                 curr_canvas_left, curr_canvas_right = canvas_connection[1]
-                if len(curr_canvas_left) == len(curr_search_left) or len(curr_search_left) == 0:
-                    if len(curr_canvas_right) == len(curr_search_right) or len(curr_search_right) == 0:
+
+                if len(curr_canvas_left) == len(curr_search_left) or len(curr_search_left) == 0 or isinstance(canvas_objects[curr_canvas_id], Spider):
+                    if len(curr_canvas_right) == len(curr_search_right) or len(curr_search_right) == 0 or isinstance(canvas_objects[curr_canvas_id], Spider):
                         if counter == 0:
                             print()
                             print("Adding potential results the first round")
                             print(f"Searchable connection: {searchable_connection}")
                             print(f"Canvas connection: {canvas_connection}")
-                            potential_results.append({curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
+                            if searchable_objects[counter].__class__ == canvas_objects[curr_canvas_id].__class__:
+                                if isinstance(canvas_objects[curr_canvas_id], Spider):
+                                    potential_results.append({curr_canvas_id: [[], []]})
+                                else:
+                                    potential_results.append({curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
                         else:
                             for potential in potential_results:
                                 if len(potential) == counter:
@@ -34,7 +42,10 @@ class SearchAlgorithm:
                                             print("Adding potential results")
                                             print(f"Searchable connection: {searchable_connection}")
                                             print(f"Canvas connection: {canvas_connection}")
-                                            potential[curr_canvas_id] = [curr_canvas_left, curr_canvas_right]
+                                            if isinstance(canvas_objects[curr_canvas_id], Spider):
+                                                potential[curr_canvas_id] = [[], []]
+                                            else:
+                                                potential[curr_canvas_id] = [curr_canvas_left, curr_canvas_right]
                                             break
             counter += 1
 
@@ -44,7 +55,6 @@ class SearchAlgorithm:
 
     def contains_searchable(self):
         found = False
-        result_count = 0
         result_ids = []
         canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes, key=lambda item: [item.x, item.y])
         searchable_objects = sorted(self.searchable.spiders + self.searchable.boxes, key=lambda item: [item.x, item.y])
@@ -57,125 +67,53 @@ class SearchAlgorithm:
         canvas_connection_dict = self.create_connection_dictionary(canvas_objects)
         print(f"Canvas dict: {canvas_connection_dict}")
 
-        searchable_length = len(searchable_objects)
+        potential_results = self.get_potential_results(searchable_objects, canvas_objects)
 
-        potential_results = self.get_potential_results(searchable_connections_dict, canvas_connection_dict)
+        for potential_result in potential_results:
+            for i in range(len(searchable_objects)):
+                potential = list(potential_result.items())[i]
+                potential_id = potential[0]
+                potential_left, potential_right = potential[1]
+                potential_item = canvas_objects[potential_id]
 
-        count = 0
-        canvas_start_id = 0
-        for canvas_object in list(canvas_connection_dict.items()):
-            print(f"Count at start: {count}")
-            curr = searchable_connections_dict[count]
-            search_left, search_right = curr
+                searchable = list(searchable_connections_dict.items())[i]
+                searchable_id = searchable[0]
+                searchable_left, searchable_right = searchable[1]
+                searchable_item = searchable_objects[searchable_id]
 
-            left, right = canvas_object[1]
-            if count == 0:
-                canvas_start_id = canvas_object[0]
-            canvas_latest_id = canvas_object[0]
-            left = [i - canvas_start_id for i in left]
-            right = [i - canvas_start_id for i in right]
+                left_side_check = False
+                right_side_check = False
+                if searchable_item.__class__ == potential_item.__class__:
+                    if isinstance(searchable_item, Box):
 
-            print()
-            print(f"curr : {curr}")
-            print(f"left : {left}")
-            print(f"right: {right}")
-            print()
-            print(searchable_objects[count].__class__)
-            print(canvas_objects[canvas_latest_id].__class__)
-
-            for count in range(max(len(x) + 1 for x in potential_results)):
-                if searchable_objects[count].__class__ == canvas_objects[canvas_latest_id].__class__:
-                    if isinstance(searchable_objects[count], Box):
-                        left_side_check = False
-                        right_side_check = False
-
-                        if searchable_objects[count].left_connections:
-                            if canvas_objects[canvas_latest_id].left_connections == searchable_objects[count].left_connections:
-                                matching_connection_count = 0
-                                for i in range(searchable_objects[count].left_connections):
-                                    if search_left[i] == left[i] or search_left is None:
-                                        matching_connection_count += 1
-                                if matching_connection_count == searchable_objects[count].left_connections:
-                                    left_side_check = True
+                        if searchable_item.left_connections:
+                            matching_connection_count = 0
+                            for j in range(searchable_item.left_connections):
+                                if searchable_left[j] is None or searchable_objects[searchable_left[j]].__class__ == canvas_objects[potential_left[j]].__class__:
+                                    matching_connection_count += 1
+                            if matching_connection_count == searchable_item.left_connections:
+                                left_side_check = True
                         else:
                             left_side_check = True
 
-                        if searchable_objects[count].right_connections:
-                            if canvas_objects[canvas_latest_id].right_connections == searchable_objects[count].right_connections:
-                                matching_connection_count = 0
-                                for i in range(searchable_objects[count].right_connections):
-                                    if search_right[i] == right[i] or search_right is None:
-                                        matching_connection_count += 1
-                                if matching_connection_count == searchable_objects[count].right_connections:
-                                    right_side_check = True
+                        if searchable_item.right_connections:
+                            matching_connection_count = 0
+                            for j in range(searchable_item.right_connections):
+                                if searchable_right[j] is None or searchable_objects[searchable_right[j]].__class__ == canvas_objects[potential_right[j]].__class__:
+                                    matching_connection_count += 1
+                            if matching_connection_count == searchable_item.right_connections:
+                                right_side_check = True
                         else:
                             right_side_check = True
 
-                        # if left_side_check and right_side_check:
-                        #     for dict in potential_results:
-                        #         for connection in dict.values():
-                        #             if canvasconnection[1]
+                    elif isinstance(searchable_item, Spider):
+                        left_side_check = True
+                        right_side_check = True
 
-
-
-                    elif isinstance(searchable_objects[count], Spider):
-                        pass
-
-
-
-            # if searchable_objects[count].__class__ == canvas_objects[canvas_latest_id].__class__:
-            #     if isinstance(searchable_objects[count], Box):
-            #         if searchable_objects[count].left_connections:
-            #             if searchable_objects[count].left_connections == canvas_objects[canvas_latest_id].left_connections:
-            #                 if not search_left == left and search_left:
-            #                     print("box left continue")
-            #                     result_ids.clear()
-            #                     count = 0
-            #                     continue
-            #             else:
-            #                 result_ids.clear()
-            #                 print("here1")
-            #                 count = 0
-            #                 continue
-            #
-            #         if searchable_objects[count].right_connections:
-            #             if searchable_objects[count].right_connections == canvas_objects[canvas_latest_id].right_connections:
-            #                 if not search_right == right and search_right:
-            #                     print("box right continue")
-            #                     result_ids.clear()
-            #                     count = 0
-            #                     continue
-            #             else:
-            #                 result_ids.clear()
-            #                 print("here2")
-            #                 count = 0
-            #                 continue
-            #     else:
-            #         if not search_left == left and search_left:
-            #             count = 0
-            #             result_ids.clear()
-            #             print("left continue")
-            #             continue
-            #
-            #         if not search_right == right and search_right:
-            #             count = 0
-            #             result_ids.clear()
-            #             print("right continue")
-            #             continue
-            #     result_ids.append(canvas_latest_id)
-            #     count += 1
-            #     print(f"count: {count}")
-            #     if count == searchable_length:
-            #         found = True
-            #         result_count += 1
-            #         break
-            # else:
-            #     result_ids.clear()
-            #     print("here3")
-            #     count = 0
-
-        print()
-        print(f"End count: {count}")
+                if left_side_check and right_side_check:
+                    found = True
+                    for key in potential_result.keys():
+                        result_ids.append(key)
 
         self.highlight_results(result_ids, canvas_objects)
 
