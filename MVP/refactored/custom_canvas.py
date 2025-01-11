@@ -523,7 +523,8 @@ class CustomCanvas(tk.Canvas):
         if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
                                                                               connection) or bypass_legality_check:
             self.cancel_wire_pulling()
-            self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
+            start_end = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
+            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1])
             self.wires.append(self.current_wire)
 
             if self.current_wire_start.box is not None:
