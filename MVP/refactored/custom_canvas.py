@@ -97,8 +97,8 @@ class CustomCanvas(tk.Canvas):
         self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
 
         button = ttk.Button(self, image=self.tree_logo,
-                            command=lambda: self.master.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
-        button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
+                            command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
+        button.place(x=28, y=20, anchor=tk.CENTER)
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
 
