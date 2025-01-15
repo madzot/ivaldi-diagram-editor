@@ -206,6 +206,26 @@ class CustomCanvas(tk.Canvas):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
 
+    def update_after_treeview(self, treeview_width, to_left):
+        if to_left:
+            multiplier = -1
+        else:
+            multiplier = 1
+
+        for box in self.boxes:
+            move_amount = (box.x / self.winfo_width()) * treeview_width
+            box.x += move_amount * multiplier
+            box.update_size(box.size[0], box.size[1])
+            box.move_label()
+
+        for spider in self.spiders:
+            move_amount = (spider.x / self.winfo_width()) * treeview_width
+            spider.x += move_amount * multiplier
+            spider.move_to((spider.x, spider.y))
+
+        for wire in self.wires:
+            wire.update()
+
     def handle_right_click(self, event):
         if self.selector.selecting:
             self.selector.finish_selection()
