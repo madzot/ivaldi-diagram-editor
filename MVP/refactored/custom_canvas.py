@@ -213,7 +213,7 @@ class CustomCanvas(tk.Canvas):
             multiplier = 1
 
         for box in self.boxes:
-            move_amount = (box.x / self.winfo_width()) * treeview_width
+            move_amount = (((box.x + box.x + box.size[0]) / 2) / self.winfo_width()) * treeview_width
             box.x += move_amount * multiplier
             box.update_size(box.size[0], box.size[1])
             box.move_label()
