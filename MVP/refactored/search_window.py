@@ -35,5 +35,10 @@ class SearchWindow(tk.Toplevel):
 
     def search(self):
         algorithm = SearchAlgorithm(self.search_canvas, self.main_diagram.custom_canvas)
-        print(f"Found: {algorithm.contains_searchable()}")
+        found = algorithm.contains_searchable()
+        print(f"Found: {found}")
+        self.main_diagram.is_search_active = found
+        if found:
+            for canvas in self.main_diagram.canvasses.values():
+                canvas.toggle_displaying_results_button()
 

@@ -99,9 +99,13 @@ class CustomCanvas(tk.Canvas):
             self.tree_logo = self.tree_logo.resize((20, 15))
             self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
 
-            button = ttk.Button(self, image=self.tree_logo,
-                                command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
-            button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
+            tree_button = ttk.Button(self, image=self.tree_logo,
+                                     command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
+            tree_button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
+
+        self.result_display_button = ttk.Button(self, text="Displaying search | X",
+                                                command=self.on_displaying_results_click, bootstyle=(SECONDARY, OUTLINE))
+
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
 
@@ -134,6 +138,22 @@ class CustomCanvas(tk.Canvas):
         self.pan_speed = 20
 
         self.resize_timer = None
+
+        self.search_result_highlights = []
+
+    def toggle_displaying_results_button(self):
+        if self.main_diagram.is_search_active:
+            self.result_display_button.place(x=self.winfo_width() - 75, y=20, anchor=tk.CENTER)
+        else:
+            self.result_display_button.destroy()
+
+    def on_displaying_results_click(self):
+        self.main_diagram.cancel_search_results()
+
+    def remove_search_highlights(self):
+        for item in self.search_result_highlights:
+            item.deselect()
+        self.search_result_highlights = []
 
     def update_prev_winfo_size(self):
         self.prev_width_max = self.canvasx(self.winfo_width())
@@ -366,10 +386,10 @@ class CustomCanvas(tk.Canvas):
         for corner in self.corners:
             for location in locations:
                 if ((abs(round(self.canvasx(corner.location[0])) - location[0]) < 2
-                    and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
+                     and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
                         or
-                    (abs(round(corner.location[0]) - location[0]) < 2
-                        and abs(round(corner.location[1]) - location[1]) < 2)):
+                        (abs(round(corner.location[0]) - location[0]) < 2
+                         and abs(round(corner.location[1]) - location[1]) < 2)):
                     count += 1
         return count >= 4
 
@@ -605,10 +625,13 @@ class CustomCanvas(tk.Canvas):
         tikz_window = tk.Toplevel(self)
         tikz_window.title("TikZ Generator")
 
-        tk.Label(tikz_window, text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.", justify="left").pack()
+        tk.Label(tikz_window,
+                 text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.",
+                 justify="left").pack()
 
         pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
-        pgfplotsset_text.insert(tk.END, "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.insert(tk.END,
+                                "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
         pgfplotsset_text.config(state=tk.DISABLED)
         pgfplotsset_text.pack()
 
@@ -795,7 +818,7 @@ class CustomCanvas(tk.Canvas):
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
                                            "left", [0, 0], self,
-                                           r=5*self.total_scale, id_=id_)
+                                           r=5 * self.total_scale, id_=id_)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -832,7 +855,7 @@ class CustomCanvas(tk.Canvas):
         if len(self.inputs) != 0:
             input_index += 1
         new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
-                               r=5*self.total_scale, id_=id_)
+                               r=5 * self.total_scale, id_=id_)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id)
