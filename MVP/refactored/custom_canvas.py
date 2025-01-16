@@ -145,7 +145,7 @@ class CustomCanvas(tk.Canvas):
         if self.main_diagram.is_search_active:
             self.result_display_button.place(x=self.winfo_width() - 75, y=20, anchor=tk.CENTER)
         else:
-            self.result_display_button.destroy()
+            self.result_display_button.place_forget()
 
     def on_displaying_results_click(self):
         self.main_diagram.cancel_search_results()
@@ -154,6 +154,7 @@ class CustomCanvas(tk.Canvas):
         for item in self.search_result_highlights:
             item.deselect()
         self.search_result_highlights = []
+        self.toggle_displaying_results_button()
 
     def update_prev_winfo_size(self):
         self.prev_width_max = self.canvasx(self.winfo_width())

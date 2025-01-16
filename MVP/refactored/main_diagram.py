@@ -181,6 +181,7 @@ class MainDiagram(tk.Tk):
         SearchWindow(self)
 
     def cancel_search_results(self):
+        self.is_search_active = False
         for canvas in self.canvasses.values():
             canvas.remove_search_highlights()
 
