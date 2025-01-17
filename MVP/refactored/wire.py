@@ -56,6 +56,9 @@ class Wire:
     def select(self):
         self.canvas.itemconfig(self.line, fill="green")
 
+    def search_highlight(self):
+        self.canvas.itemconfig(self.line, fill="cyan")
+
     def deselect(self):
         # make sure connections have wires attached after select and deselect as copying between canvasses can remove
         self.start_connection.add_wire(self)
