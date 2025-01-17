@@ -62,7 +62,7 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
-        self.selector = Selector(self)
+        self.selector = main_diagram.selector
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)
