@@ -5,8 +5,8 @@ import copy
 
 
 class Selector:
-    def __init__(self, canvas):
-        self.canvas = canvas
+    def __init__(self, main_diagram):
+        self.canvas = main_diagram.custom_canvas
         self.selecting = False
         self.selected_items = []
         self.selected_boxes = []
