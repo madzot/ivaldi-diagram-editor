@@ -40,6 +40,7 @@ class Spider(Connection):
         self.canvas.tag_bind(self.circle, '<ButtonPress-1>', lambda event: self.on_press())
         self.canvas.tag_bind(self.circle, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
+        self.canvas.tag_bind(self.circle, '<Control-ButtonPress-1>', lambda event: self.add_to_select())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -76,6 +77,10 @@ class Spider(Connection):
             if self not in self.canvas.selector.selected_items:
                 self.select()
                 self.canvas.selector.selected_items.append(self)
+
+    def add_to_select(self):
+        self.select()
+        self.canvas.selector.selected_items.append(self)
 
     def on_drag(self, event):
         if self.canvas.pulling_wire:

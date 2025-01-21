@@ -73,6 +73,14 @@ class Selector:
         self.selecting = False
 
     def create_sub_diagram(self, boxes, spiders, wires, coordinates, event):
+        for box in self.selected_boxes:
+            for wire in box.wires:
+                if wire not in self.selected_wires:
+                    self.selected_wires.append(wire)
+        for spider in self.selected_spiders:
+            for wire in spider.wires:
+                if wire not in self.selected_wires:
+                    self.selected_wires.append(wire)
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
         event.x, event.y = x, y
