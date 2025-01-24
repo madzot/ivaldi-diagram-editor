@@ -5,8 +5,8 @@ import copy
 
 
 class Selector:
-    def __init__(self, canvas):
-        self.canvas = canvas
+    def __init__(self, main_diagram):
+        self.canvas = main_diagram.custom_canvas
         self.selecting = False
         self.selected_items = []
         self.selected_boxes = []
@@ -54,15 +54,10 @@ class Selector:
             for item in self.selected_items:
                 item.select()
 
-    def select_action(self, event, create_diagram=False):
+    def select_action(self):
         if self.selecting:
-            if create_diagram:
-                self.create_sub_diagram(self.selected_boxes, self.selected_spiders, self.selected_wires,
-                                        self.canvas.coords(self.canvas.selectBox), event)
-                self.finish_selection()
-            else:
-                self.canvas.delete(self.canvas.selectBox)
-                self.selecting = False
+            self.canvas.delete(self.canvas.selectBox)
+            self.selecting = False
 
     def finish_selection(self):
         for item in self.selected_items:
@@ -72,6 +67,8 @@ class Selector:
         self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
 
+    def create_sub_diagram(self):
+        coordinates = self.find_corners_selected_items()
     def create_sub_diagram(self, boxes, spiders, wires, coordinates, event):
         for box in self.selected_boxes:
             for wire in box.wires:
@@ -83,27 +80,23 @@ class Selector:
                     self.selected_wires.append(wire)
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
-        event.x, event.y = x, y
         box = self.canvas.add_box((x, y), shape="rectangle")
 
-        for wire in filter(lambda w: w in self.canvas.wires, wires):
+        for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete_self("sub_diagram")
-        for box_ in filter(lambda b: b in self.canvas.boxes, boxes):
+        for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
             box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
-        for spider in filter(lambda s: s in self.canvas.spiders, spiders):
+        for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):
             spider.delete_spider("sub_diagram")
             if self.canvas.receiver.listener:
                 self.canvas.receiver.receiver_callback(
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
                 )
-
-        # Create a new box that will contain the sub-diagram
-        box.on_drag(event)
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
         self.canvas.receiver.listener = False
         self.canvas.copier.copy_canvas_contents(
-            sub_diagram, wires, boxes, spiders, coordinates, box
+            sub_diagram, self.selected_wires, self.selected_boxes, self.selected_spiders, coordinates, box
         )
         box.lock_box()
         self.canvas.receiver.listener = prev_status
@@ -292,3 +285,29 @@ class Selector:
             middle_y = event_y - (canvas_height - most_down)
 
         return middle_x, middle_y
+
+    def find_corners_selected_items(self):
+        most_left = self.canvas.winfo_width()
+        most_right = 0
+        most_up = self.canvas.winfo_height()
+        most_down = 0
+        for item in self.selected_items:
+            if isinstance(item, Box):
+                if item.x < most_left:
+                    most_left = item.x
+                if item.y < most_up:
+                    most_up = item.y
+                if item.x + item.size[0] > most_right:
+                    most_right = item.x + item.size[0]
+                if item.y + item.size[1] > most_down:
+                    most_down = item.y + item.size[1]
+            if isinstance(item, Spider):
+                if item.x - item.r < most_left:
+                    most_left = item.x - item.r
+                if item.y - item.r < most_up:
+                    most_up = item.y - item.r
+                if item.x + item.r > most_right:
+                    most_right = item.x + item.r
+                if item.y + item.r > most_down:
+                    most_down = item.y + item.r
+        return [most_left, most_up, most_right, most_down]
