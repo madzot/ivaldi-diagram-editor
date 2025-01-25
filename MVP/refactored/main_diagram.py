@@ -22,6 +22,7 @@ from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.search_window import SearchWindow
+from MVP.refactored.selector import Selector
 from MVP.refactored.toolbar import Titlebar
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
@@ -40,9 +41,14 @@ class MainDiagram(tk.Tk):
         screen_height_min = round(self.winfo_screenheight() / 1.5)
         self.wm_minsize(screen_width_min, screen_height_min)
 
+        self.selector = None
+
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.selector = Selector(self)
+        self.custom_canvas.selector = self.selector
 
         self.titlebar.set_custom_canvas(self.custom_canvas)
 
@@ -328,6 +334,7 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.selector.selected_items.clear()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
+        self.selector.canvas = self.custom_canvas
         # Show the selected canvas
         self.custom_canvas.pack(fill='both', expand=True)
         self.bind_buttons()
