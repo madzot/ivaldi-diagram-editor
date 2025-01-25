@@ -69,19 +69,11 @@ class Selector:
 
     def create_sub_diagram(self):
         coordinates = self.find_corners_selected_items()
-    def create_sub_diagram(self, boxes, spiders, wires, coordinates, event):
-        for box in self.selected_boxes:
-            for wire in box.wires:
-                if wire not in self.selected_wires:
-                    self.selected_wires.append(wire)
-        for spider in self.selected_spiders:
-            for wire in spider.wires:
-                if wire not in self.selected_wires:
-                    self.selected_wires.append(wire)
+        if len(self.selected_boxes) == 0 and len(self.selected_spiders) == 0:
+            return
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
         box = self.canvas.add_box((x, y), shape="rectangle")
-
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete_self("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):

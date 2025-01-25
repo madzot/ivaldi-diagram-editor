@@ -62,7 +62,7 @@ class Box:
         self.id = id_
 
     def bind_events(self):
-        self.canvas.tag_bind(self.rect, '<Control-Button-1>', lambda event: self.add_to_select())
+        self.canvas.tag_bind(self.rect, '<Control-ButtonPress-1>', lambda event: self.add_to_select())
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.rect, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
@@ -203,10 +203,14 @@ class Box:
 
     # MOVING, CLICKING ETC.
     def on_press(self, event):
-        print("pressed")
+        if event.state & 0x4:
+            return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         for item in self.canvas.selector.selected_items:
             item.deselect()
+        self.canvas.selector.selected_boxes.clear()
+        self.canvas.selector.selected_spiders.clear()
+        self.canvas.selector.selected_wires.clear()
         self.canvas.selector.selected_items.clear()
         self.select()
         self.canvas.selector.selected_items.append(self)
@@ -216,11 +220,12 @@ class Box:
         self.y_dif = event.y - self.y
 
     def add_to_select(self):
-        print("clicked")
         self.select()
         self.canvas.selector.selected_items.append(self)
 
     def on_drag(self, event):
+        if event.state & 0x4:
+            return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
         self.start_x = event.x
