@@ -220,6 +220,9 @@ class Box:
         self.y_dif = event.y - self.y
 
     def add_to_select(self):
+        self.canvas.selector.selected_boxes.clear()
+        self.canvas.selector.selected_spiders.clear()
+        self.canvas.selector.selected_wires.clear()
         self.select()
         self.canvas.selector.selected_items.append(self)
 
