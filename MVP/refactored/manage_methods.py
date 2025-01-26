@@ -69,6 +69,8 @@ class ManageMethods(tk.Toplevel):
             return
         elif on_import:
             file = filedialog.askopenfilename(filetypes=[("python files", "*.py")], title="Add new function")
+            if not file:
+                return
             with open(file, "r") as f:
                 code = f.read()
             editor = CodeEditor(self.main_diagram, label=file.split("/")[-1][:-3], code=code)
