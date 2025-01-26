@@ -4,7 +4,7 @@ from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.node import Node
 
 if TYPE_CHECKING:
-    from MVP.refactored.custom_canvas import CustomCanvas
+    from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 
 class HypergraphManager:

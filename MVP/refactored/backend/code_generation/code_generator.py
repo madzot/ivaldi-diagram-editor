@@ -8,7 +8,7 @@ from MVP.refactored.backend.code_generation.renamer import Renamer
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
-from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 
 class CodeGenerator:

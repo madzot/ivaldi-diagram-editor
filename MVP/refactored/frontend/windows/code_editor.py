@@ -1,5 +1,4 @@
 import json
-import os
 import tkinter as tk
 from tkinter import messagebox
 
@@ -7,6 +6,7 @@ import pygments.lexers
 from chlorophyll import CodeView
 
 from MVP.refactored.util.exporter.code_exporter import CodeExporter
+from constants import *
 
 
 class CodeEditor:
@@ -111,8 +111,8 @@ class CodeEditor:
         self.save_handler(destroy=False)
 
     def save_to_file(self):
-        if os.stat("conf/functions_conf.json").st_size != 0:
-            with open("conf/functions_conf.json", "r+") as file:
+        if os.stat(FUNCTIONS_CONF).st_size != 0:
+            with open(FUNCTIONS_CONF, "r+") as file:
                 existing_json = json.load(file)
                 existing_json[self.label] = self.code_view.get('1.0', tk.END).strip()
                 json_object = json.dumps(existing_json, indent=4)
@@ -120,7 +120,7 @@ class CodeEditor:
                 file.truncate(0)
                 file.write(json_object)
         else:
-            with open("conf/functions_conf.json", "w") as file:
+            with open(FUNCTIONS_CONF, "w") as file:
                 json_object = json.dumps(
                     {f"{self.label}": self.code_view.get('1.0', tk.END).strip()},
                     indent=4

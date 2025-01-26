@@ -1,12 +1,12 @@
-import tkinter as tk
-from tkinter import simpledialog
-from tkinter import messagebox
 import json
 import re
-import os
+import tkinter as tk
+from tkinter import messagebox
+from tkinter import simpledialog
 
-from MVP.refactored.code_editor import CodeEditor
-from MVP.refactored.connection import Connection
+from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.windows.code_editor import CodeEditor
+from constants import *
 
 
 class Box:
@@ -172,7 +172,7 @@ class Box:
                 self.add_left_connection()
 
     def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True, switch=True):
-        from MVP.refactored.custom_canvas import CustomCanvas
+        from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
         if self.receiver.listener:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
@@ -308,8 +308,8 @@ class Box:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
                 self.label_text = text
-            if os.stat("conf/functions_conf.json").st_size != 0:
-                with open("conf/functions_conf.json", "r") as file:
+            if os.stat(FUNCTIONS_CONF).st_size != 0:
+                with open(FUNCTIONS_CONF, "r") as file:
                     data = json.load(file)
                     for label, code in data.items():
                         if label == self.label_text:
@@ -429,7 +429,7 @@ class Box:
 
     def update_io(self):
         """Update inputs and outputs based on label and code."""
-        with open("conf/functions_conf.json", "r") as file:
+        with open(FUNCTIONS_CONF, "r") as file:
             data = json.load(file)
             for label, code in data.items():
                 if label == self.label_text:

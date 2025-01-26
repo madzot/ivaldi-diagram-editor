@@ -1,10 +1,11 @@
 import json
 from tkinter import simpledialog, messagebox
+from constants import *
 
 import ttkbootstrap as ttk
 import tkinter as tk
 
-from MVP.refactored.code_editor import CodeEditor
+from MVP.refactored.frontend.windows.code_editor import CodeEditor
 
 
 class ManageMethods(tk.Toplevel):
@@ -105,7 +106,7 @@ class ManageMethods(tk.Toplevel):
 
     @staticmethod
     def write_to_json(content):
-        with open("conf/functions_conf.json", "r+") as file:
+        with open(FUNCTIONS_CONF, "r+") as file:
             json_object = json.dumps(content, indent=4)
             file.seek(0)
             file.truncate(0)

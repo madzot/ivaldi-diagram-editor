@@ -1,10 +1,10 @@
 import numpy as np
 
-from MVP.refactored.box import Box
+from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.modules.notations.pseudo_notation.obj_structure import ColumnN, IdentityN, BoxN, DiagramN, \
     SymmetryN, SpiderN
-from MVP.refactored.spider import Spider
-from MVP.refactored.wire import curved_line
+from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.wire import curved_line
 
 
 class PseudoNotation:

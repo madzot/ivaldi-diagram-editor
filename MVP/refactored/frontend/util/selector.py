@@ -1,6 +1,6 @@
-from MVP.refactored.box import Box
-from MVP.refactored.spider import Spider
-from MVP.refactored.wire import Wire
+from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.wire import Wire
 import copy
 
 
