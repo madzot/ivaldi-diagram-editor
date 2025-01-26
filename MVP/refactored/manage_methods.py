@@ -1,5 +1,5 @@
 import json
-from tkinter import simpledialog, messagebox
+from tkinter import simpledialog, messagebox, filedialog
 
 import ttkbootstrap as ttk
 import tkinter as tk
@@ -36,7 +36,7 @@ class ManageMethods(tk.Toplevel):
         self.cancel_button = ttk.Button(self.button_frame, text="Cancel", command=self.destroy)
         self.cancel_button.pack(side=tk.RIGHT, fill=tk.X)
 
-        self.add_new_button = ttk.Button(self.button_frame, text="Add new", command=self.add_new_function)
+        self.add_new_button = ttk.Button(self.button_frame, text="Add new", command=self.new_function_handler)
         self.add_new_button.pack(padx=5, side=tk.RIGHT, fill=tk.X)
 
         self.edit_button = ttk.Button(self.button_frame, text="Edit code", command=self.open_code_editor)
@@ -63,8 +63,23 @@ class ManageMethods(tk.Toplevel):
             self.edit_label_button.pack_forget()
             self.delete_button.pack_forget()
 
+    def new_function_handler(self):
+        on_import = messagebox.askyesnocancel("Add new function", "Would you like to import a new function?")
+        if on_import is None:
+            return
+        elif on_import:
+            file = filedialog.askopenfilename(filetypes=[("python files", "*.py")], title="Add new function")
+            with open(file, "r") as f:
+                code = f.read()
+            editor = CodeEditor(self.main_diagram, label=file.split("/")[-1][:-3], code=code)
+            editor.save_handler(destroy=False)
+        else:
+            self.add_new_function()
+
     def add_new_function(self):
-        label = simpledialog.askstring("Add label", "Please enter new label").strip()
+        label = simpledialog.askstring("Add label", "Please enter new label")
+        if label:
+            label = label.strip()
         if not label or label in self.main_diagram.label_content.keys():
             messagebox.showerror(title="Error", message="Label is empty or already exists")
             self.add_new_function()
