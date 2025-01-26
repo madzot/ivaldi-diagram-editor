@@ -20,7 +20,7 @@ class SearchWindow(tk.Toplevel):
         self.search_all_canvases.set(1)
         self.search_all_option_button = tkk.Checkbutton(self.options_frame, text="Search all canvases",
                                                         variable=self.search_all_canvases)
-        self.search_all_option_button.pack(side=tk.LEFT, padx=(50, 5))
+        self.search_all_option_button.pack(side=tk.LEFT, padx=(50, 5), pady=10)
 
         self.search_canvas = CustomCanvas(self, None, self.main_diagram.receiver,
                                           self.main_diagram, self.main_diagram, False, search=True)
