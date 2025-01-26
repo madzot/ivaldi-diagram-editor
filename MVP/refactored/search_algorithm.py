@@ -117,10 +117,10 @@ class SearchAlgorithm:
 
                 print(f"Normalized key: {normalized_key}")
                 for key in searchable_left:
-                    if key not in normalized_left:
+                    if key not in normalized_left and key is not None:
                         not_correct = True
                 for key in searchable_right:
-                    if key not in normalized_right:
+                    if key not in normalized_right and key is not None:
                         not_correct = True
 
             if not_correct:
@@ -182,29 +182,26 @@ class SearchAlgorithm:
 
     @staticmethod
     def normalize_dictionary(dictionary):
-        """{3: [[], [4]], 5: [[4], [6, 7]]} -> {0: [[], [1]], 2: [[1], [3, 4]]}"""
-        numbers = []
-        for item in dictionary.items():
-            numbers.append(item[0])
-            connections = list(filter(lambda x: x is not None and x >= numbers[0] and x not in numbers,
-                                      item[1][0] + item[1][1]))
-            numbers = numbers + connections
-        numbers = list(set(numbers))
-        numbers = sorted(numbers)
+        """{6: [[4], [9]], 9: [[7, 6], [11]]} -> {0: [[], [1]], 1: [[0], []]}"""
+        number_correspondence_dict = {}
         result = {}
-        print(f"numbers: {numbers}")
+
+        number_count = 0
+        for key in sorted(dictionary.keys()):
+            number_correspondence_dict[key] = number_count
+            number_count += 1
+
         for item in dictionary.items():
-            print(f"item: {item}")
-            new_id = numbers.index(item[0])
-            new_left = []
-            new_right = []
-            for left_id in item[1][0]:
-                if left_id in numbers:
-                    new_left.append(numbers.index(left_id))
-            for right_id in item[1][1]:
-                if right_id in numbers:
-                    new_right.append(numbers.index(right_id))
-            result[new_id] = [new_left, new_right]
+            corresponding_num = number_correspondence_dict[item[0]]
+            left, right = item[1]
+            new_left, new_right = [], []
+            for num in left:
+                if num in number_correspondence_dict:
+                    new_left.append(number_correspondence_dict[num])
+            for numb in right:
+                if numb in number_correspondence_dict:
+                    new_right.append(number_correspondence_dict[numb])
+            result[corresponding_num] = [new_left, new_right]
         return result
 
     @staticmethod

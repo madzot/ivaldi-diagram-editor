@@ -1,7 +1,6 @@
 import tkinter as tk
 from threading import Timer
 from tkinter import filedialog
-from tkinter import messagebox as mb
 
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
@@ -65,12 +64,12 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
-        self.selector = Selector(self)
+        self.selector = main_diagram.selector
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
-        self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
         self.bind("<MouseWheel>", self.zoom)
@@ -81,6 +80,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
         self.bind("<Control-x>", lambda event: self.cut_selected_items())
+        self.bind("<Control-n>", lambda event: self.create_sub_diagram())
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
@@ -101,10 +101,11 @@ class CustomCanvas(tk.Canvas):
 
             tree_button = ttk.Button(self, image=self.tree_logo,
                                      command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
-            tree_button.place(relx=0.02, rely=0.02, anchor=tk.CENTER)
+            tree_button.place(x=28, y=20, anchor=tk.CENTER)
 
         self.result_display_button = ttk.Button(self, text="Displaying search | X",
-                                                command=self.on_displaying_results_click, bootstyle=(SECONDARY, OUTLINE))
+                                                command=self.on_displaying_results_click,
+                                                bootstyle=(SECONDARY, OUTLINE))
 
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
@@ -460,14 +461,9 @@ class CustomCanvas(tk.Canvas):
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         self.selector.update_selection(event)
 
-    def __select_release__(self, event):
+    def __select_release__(self):
         self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
-        if len(self.selector.selected_items) > 1:
-            res = mb.askquestion(message='Add selection to a separate sub-diagram?')
-            if res == 'yes':
-                self.selector.select_action(event, True)
-                return
-        self.selector.select_action(event, False)
+        self.selector.select_action()
 
     def delete_selected_items(self):
         self.selector.delete_selected_items()
@@ -969,3 +965,7 @@ class CustomCanvas(tk.Canvas):
     def cut_selected_items(self):
         self.copy_selected_items()
         self.delete_selected_items()
+
+    def create_sub_diagram(self):
+        if len(self.selector.selected_items) > 1:
+            self.selector.create_sub_diagram()
