@@ -1,30 +1,29 @@
 import hashlib
 import json
-import os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
-from scipy.interpolate import make_interp_spline
+
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
-import tikzplotlib
-
 import ttkbootstrap as ttk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from scipy.interpolate import make_interp_spline
 from ttkbootstrap.constants import *
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
+import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.code_editor import CodeEditor
-from MVP.refactored.custom_canvas import CustomCanvas
-from MVP.refactored.manage_methods import ManageMethods
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.toolbar import Titlebar
+from MVP.refactored.frontend.util.selector import Selector
+from MVP.refactored.frontend.windows.code_editor import CodeEditor
+from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
-from MVP.refactored.selector import Selector
-from MVP.refactored.toolbar import Titlebar
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
+from constants import *
 
 
 class MainDiagram(tk.Tk):
@@ -162,13 +161,13 @@ class MainDiagram(tk.Tk):
 
     @staticmethod
     def calculate_boxes_json_file_hash():
-        with open("conf/boxes_conf.json", "r") as file:
+        with open(BOXES_CONF, "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
     def load_functions(self):
-        if os.stat("conf/functions_conf.json").st_size != 0:
-            with open("conf/functions_conf.json", "r") as file:
+        if os.stat(FUNCTIONS_CONF).st_size != 0:
+            with open(FUNCTIONS_CONF, "r") as file:
                 self.label_content = json.load(file)
 
     def generate_code(self):

@@ -4,15 +4,15 @@ import random
 import string
 from tkinter import filedialog
 from tkinter import messagebox
+from constants import *
 
 
-from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 
 class Importer:
     def __init__(self, canvas):
         self.canvas: CustomCanvas = canvas
-        self.boxes_json_conf = "conf/boxes_conf.json"
         self.id_randomize = {}
         self.seed = ""
         self.random_id = False
@@ -114,7 +114,7 @@ class Importer:
 
     def load_boxes_to_menu(self):
         try:
-            with open(self.boxes_json_conf, 'r') as json_file:
+            with open(BOXES_CONF, 'r') as json_file:
                 data = json.load(json_file)
                 return data
         except FileNotFoundError or IOError or json.JSONDecodeError:
@@ -130,7 +130,7 @@ class Importer:
         return random_string
 
     def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
-        with open(self.boxes_json_conf, 'r') as json_file:
+        with open(BOXES_CONF, 'r') as json_file:
             self.seed = self.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
