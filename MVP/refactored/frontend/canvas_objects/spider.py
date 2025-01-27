@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from MVP.refactored.connection import Connection
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 
 
 class Spider(Connection):

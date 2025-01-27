@@ -2,22 +2,21 @@ import tkinter as tk
 from threading import Timer
 from tkinter import filedialog
 
-
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.box import Box
-from MVP.refactored.connection import Connection
-from MVP.refactored.corner import Corner
-from MVP.refactored.event import Event
-from MVP.refactored.selector import Selector
-from MVP.refactored.spider import Spider
+from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.corner import Corner
+from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.util.event import Event
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-from MVP.refactored.wire import Wire
+from constants import *
 
 
 class CustomCanvas(tk.Canvas):
@@ -92,7 +91,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
-        self.tree_logo = (Image.open("../../assets/file-tree-outline.png"))
+        self.tree_logo = (Image.open(ASSETS_DIR + "/file-tree-outline.png"))
         self.tree_logo = self.tree_logo.resize((20, 15))
         self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
 
@@ -102,7 +101,7 @@ class CustomCanvas(tk.Canvas):
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
 
-        self.copy_logo = (Image.open('../../assets/content-copy.png'))
+        self.copy_logo = (Image.open(ASSETS_DIR + "/content-copy.png"))
         self.copy_logo = self.copy_logo.resize((20, 20))
         self.copy_logo = ImageTk.PhotoImage(self.copy_logo)
 

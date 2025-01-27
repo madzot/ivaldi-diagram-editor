@@ -1,6 +1,7 @@
 import json
 import time
 from tkinter import messagebox
+from constants import *
 
 from MVP.refactored.util.exporter.exporter import Exporter
 
@@ -9,7 +10,6 @@ class ProjectExporter(Exporter):
 
     def __init__(self, canvas):
         super().__init__(canvas)
-        self.boxes_json_conf = "conf/boxes_conf.json"
 
     def create_file_content(self, filename):
         return {"file_name": filename,
@@ -107,12 +107,13 @@ class ProjectExporter(Exporter):
             new_entry["sub_diagram"] = self.create_canvas_dict(box.sub_diagram)
         current[box.label_text] = new_entry
 
-        with open(self.boxes_json_conf, "w") as outfile:
+        with open(BOXES_CONF, "w") as outfile:
             json.dump(current, outfile, indent=4)
 
-    def get_current_d(self):
+    @staticmethod
+    def get_current_d():
         try:
-            with open(self.boxes_json_conf, 'r') as json_file:
+            with open(BOXES_CONF, 'r') as json_file:
                 data = json.load(json_file)
                 return data
         except FileNotFoundError or IOError or json.JSONDecodeError:
@@ -121,5 +122,5 @@ class ProjectExporter(Exporter):
     def del_box_menu_option(self, box):
         current = self.get_current_d()
         current.pop(box)
-        with open(self.boxes_json_conf, "w") as outfile:
+        with open(BOXES_CONF, "w") as outfile:
             json.dump(current, outfile, indent=4)
