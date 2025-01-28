@@ -37,10 +37,10 @@ class Spider(Connection):
         return True
 
     def bind_events(self):
-        self.canvas.tag_bind(self.circle, '<ButtonPress-1>', self.on_press)
+        self.canvas.tag_bind(self.circle, '<ButtonPress-1>', lambda event: self.on_press())
         self.canvas.tag_bind(self.circle, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.circle, '<Control-ButtonPress-1>', lambda event: self.add_to_select())
+        self.canvas.tag_bind(self.circle, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -67,9 +67,7 @@ class Spider(Connection):
         self.wires.append(wire)
 
     # MOVING, CLICKING ETC.
-    def on_press(self, event):
-        if event.state & 0x4:
-            return
+    def on_press(self):
         self.canvas.selector.selected_boxes.clear()
         self.canvas.selector.selected_spiders.clear()
         self.canvas.selector.selected_wires.clear()
@@ -83,12 +81,14 @@ class Spider(Connection):
                 self.select()
                 self.canvas.selector.selected_items.append(self)
 
-    def add_to_select(self):
-        self.canvas.selector.selected_boxes.clear()
-        self.canvas.selector.selected_spiders.clear()
-        self.canvas.selector.selected_wires.clear()
-        self.select()
-        self.canvas.selector.selected_items.append(self)
+    def on_control_press(self):
+        if self in self.canvas.selector.selected_items:
+            self.canvas.selector.selected_items.remove(self)
+            self.deselect()
+        else:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
+        self.canvas.selector.select_wires_between_selected_items()
 
     def on_drag(self, event):
         if event.state & 0x4:
