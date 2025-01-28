@@ -1,6 +1,6 @@
 import os
 
-ROOT_DIR = os.path.abspath(os.curdir + "/../../")
+ROOT_DIR = os.path.dirname(__file__)
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets/")
 CONF_DIR = ROOT_DIR + "/MVP/refactored/conf/"
 
