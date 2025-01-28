@@ -18,6 +18,31 @@ class TestMainDiagram(unittest.TestCase):
 
 
 class Test(TestMainDiagram):
+
+    def test__init_title(self):
+        expected = "Dynamic String Diagram Canvas"
+        actual = self.app.title()
+        self.assertEqual(expected, actual)
+
+    def test__init_tree_hidden(self):
+        expected = False
+        actual = self.app.is_tree_visible
+        self.assertEqual(expected, actual)
+
+    def test__init_creates_1_custom_canvas(self):
+        expected_size = 1
+        actual_size = len(self.app.canvasses)
+        self.assertEqual(expected_size, actual_size)
+
+    def test__init_adds_custom_canvas_to_canvases(self):
+        expected_key = self.app.custom_canvas.id
+        expected_value = self.app.custom_canvas
+        actual_item = list(self.app.canvasses.items())[0]
+        actual_key = int(actual_item[0])
+        actual_value = actual_item[1]
+        self.assertEqual(expected_key, actual_key)
+        self.assertEqual(expected_value, actual_value)
+
     def test__add_input__adds_input(self):
         self.app.add_diagram_input()
         expected = 1
