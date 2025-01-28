@@ -46,6 +46,35 @@ class Test(TestMainDiagram):
         actual = len(self.app.custom_canvas.inputs)
         self.assertEqual(expected, actual, "Inputs are not removed correctly")
 
+    def test__add_output__adds_output(self):
+        self.app.add_diagram_output()
+        expected = 1
+        actual = len(self.app.custom_canvas.outputs)
+        self.assertEqual(expected, actual, "Outputs are not added correctly")
+
+    def test__add_output__adds_output_2(self):
+        self.app.add_diagram_output()
+        self.app.add_diagram_output()
+        expected = 2
+        actual = len(self.app.custom_canvas.outputs)
+        self.assertEqual(expected, actual, "Outputs are not added correctly")
+
+    def test__remove_output__removes_output(self):
+        self.app.add_diagram_output()
+        self.app.add_diagram_input()
+        self.app.remove_diagram_output()
+        expected = 0
+        actual = len(self.app.custom_canvas.outputs)
+        self.assertEqual(expected, actual, "Outputs are not removed correctly")
+
+    def test__remove_output__removes_output_2(self):
+        self.app.add_diagram_output()
+        self.app.add_diagram_output()
+        self.app.remove_diagram_output()
+        expected = 1
+        actual = len(self.app.custom_canvas.outputs)
+        self.assertEqual(expected, actual, "Outputs are not removed correctly")
+
     # def test_load_functions():
     #     assert False
     #

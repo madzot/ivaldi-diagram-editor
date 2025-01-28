@@ -157,6 +157,8 @@ class MainDiagram(tk.Tk):
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
+        self.bind("i", lambda event: print(self.custom_canvas.inputs))
+        self.bind("o", lambda event: print(self.custom_canvas.outputs))
         # self.mainloop()
 
     @staticmethod
@@ -389,7 +391,7 @@ class MainDiagram(tk.Tk):
                 self.receiver.receiver_callback("remove_inner_right",
                                                 generator_id=self.custom_canvas.diagram_source_box.id)
         else:
-            self.custom_canvas.remove_diagram_input()
+            self.custom_canvas.remove_diagram_output()
 
     def find_connection_to_remove(self, side):
         c_max = 0
