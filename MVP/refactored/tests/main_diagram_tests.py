@@ -20,39 +20,31 @@ class TestMainDiagram(unittest.TestCase):
 class Test(TestMainDiagram):
     def test__add_input__adds_input(self):
         self.app.add_diagram_input()
-        self.assertEqual(len(self.app.custom_canvas.inputs), 1)
-        # assert len(self.app.custom_canvas.inputs) == 1
+        expected = 1
+        actual = len(self.app.custom_canvas.inputs)
+        self.assertEqual(expected, actual, "Inputs are not added correctly")
 
     def test__add_input__adds_input_2(self):
         self.app.add_diagram_input()
         self.app.add_diagram_input()
-        self.assertEqual(len(self.app.custom_canvas.inputs), 2)
-        # assert len(self.app.custom_canvas.inputs) == 2
+        expected = 2
+        actual = len(self.app.custom_canvas.inputs)
+        self.assertEqual(expected, actual, "Inputs are not added correctly")
 
-    def test__add_input__adds_input_3(self):
+    def test__remove_input__removes_input(self):
+        self.app.add_diagram_input()
+        self.app.remove_diagram_input()
+        expected = 0
+        actual = len(self.app.custom_canvas.inputs)
+        self.assertEqual(expected, actual, "Inputs are not removed correctly")
+
+    def test__remove_input__removes_input_2(self):
         self.app.add_diagram_input()
         self.app.add_diagram_input()
-        self.app.add_diagram_input()
-        self.assertEqual(len(self.app.custom_canvas.inputs), 3)
-        # assert len(self.app.custom_canvas.inputs) == 3
-
-
-    # def pump_events(self):
-    #     while self.main_diagram.mainloop(_tkinter.ALL_EVENTS | _tkinter.DONT_WAIT):
-    #         pass
-    #
-    # def tearDown(self):
-    #     if self.main_diagram:
-    #         self.main_diagram.destroy()
-    #         self.pump_events()
-    #
-    # def test_calculate_boxes_json_file_hash(self):
-    #     # self.main_diagram = MainDiagram(Receiver())
-    #     self.pump_events()
-    #     # main_diagram.destroy()
-    #     self.main_diagram.add_diagram_input()
-    #     assert len(self.main_diagram.custom_canvas.inputs) == 1
-
+        self.app.remove_diagram_input()
+        expected = 1
+        actual = len(self.app.custom_canvas.inputs)
+        self.assertEqual(expected, actual, "Inputs are not removed correctly")
 
     # def test_load_functions():
     #     assert False
