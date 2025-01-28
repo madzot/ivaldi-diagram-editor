@@ -58,7 +58,6 @@ class MainDiagram(tk.Tk):
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
-        self.toggle_treeview()
 
         # Add some items to the tree
         self.tree.insert("", "end", str(self.custom_canvas.id), text="Root")
@@ -68,6 +67,8 @@ class MainDiagram(tk.Tk):
         # Bind the treeview to the click event
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
         self.tree.update()
+
+        self.toggle_treeview()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
@@ -518,10 +519,14 @@ class MainDiagram(tk.Tk):
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.tree.winfo_width(), to_left=True)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.tree.winfo_width(), to_left=False)
 
     @staticmethod
     def pairwise(iterable):
