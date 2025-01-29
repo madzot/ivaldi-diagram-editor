@@ -77,7 +77,7 @@ class SearchAlgorithm:
 
         return connected_dicts
 
-    def find_searchable(self):
+    def contains_searchable(self):
         found = False
         result_ids = []
         canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes, key=lambda item: [item.x, item.y])
