@@ -157,9 +157,6 @@ class MainDiagram(tk.Tk):
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
-        self.bind("i", lambda event: print(self.custom_canvas.inputs))
-        self.bind("o", lambda event: print(self.custom_canvas.outputs))
-        # self.mainloop()
 
     @staticmethod
     def calculate_boxes_json_file_hash():
