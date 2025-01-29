@@ -77,7 +77,7 @@ class SearchAlgorithm:
 
         return connected_dicts
 
-    def contains_searchable(self):
+    def find_searchable(self):
         found = False
         result_ids = []
         canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes, key=lambda item: [item.x, item.y])
@@ -115,7 +115,6 @@ class SearchAlgorithm:
                 print(f"Searchable {searchable}")
                 searchable_left, searchable_right = searchable
 
-                print(f"Normalized key: {normalized_key}")
                 for key in searchable_left:
                     if key not in normalized_left and key is not None:
                         not_correct = True
@@ -124,7 +123,6 @@ class SearchAlgorithm:
                         not_correct = True
 
             if not_correct:
-                print("SKIPPED")
                 continue
             for i in range(len(searchable_objects)):
                 potential = list(potential_result.items())[i]
@@ -172,8 +170,28 @@ class SearchAlgorithm:
                         result_ids.append(key)
 
         self.highlight_results(result_ids, canvas_objects)
+        self.highlight_wires(result_ids, canvas_objects)
 
         return found
+
+    def highlight_wires(self, result_ids, canvas_objects):
+        for wire in self.canvas.wires:
+            if wire.start_connection in canvas_objects:
+                start_index = canvas_objects.index(wire.start_connection)
+            elif wire.start_connection.box in canvas_objects:
+                start_index = canvas_objects.index(wire.start_connection.box)
+            else:
+                continue
+
+            if wire.end_connection in canvas_objects:
+                end_index = canvas_objects.index(wire.end_connection)
+            elif wire.end_connection.box in canvas_objects:
+                end_index = canvas_objects.index(wire.end_connection.box)
+            else:
+                continue
+
+            if start_index in result_ids and end_index in result_ids:
+                wire.search_highlight()
 
     @staticmethod
     def highlight_results(result_indexes, canvas_objects):
@@ -207,56 +225,53 @@ class SearchAlgorithm:
     @staticmethod
     def create_connection_dictionary(canvas_objects):
         canvas_connection_dict = {}
-        print(f"CANVAS OBJECTS: {canvas_objects}")
         for i in range(len(canvas_objects)):
             print()
             curr_item = canvas_objects[i]
             left_wires = []
             right_wires = []
-            # print(f"Curr_item: {i}:{canvas_objects[i]}")
             if isinstance(curr_item, Box):
                 for connection in curr_item.connections:
-                    # print(connection.side)
                     if connection.side == "left":
-                        if connection.wire:
-                            try:
-                                index = canvas_objects.index(connection.wire.start_connection)
-                                # print(f"left index: {index}, {connection.wire.start_connection}")
-                            except ValueError:
-                                index = canvas_objects.index(connection.wire.start_connection.box)
-                                # print(f"left index: {index}, {connection.wire.start_connection.box}")
-                        else:
-                            index = None
+                        index = SearchAlgorithm.get_item_index_from_connection(canvas_objects, connection,
+                                                                               "start_connection")
                         left_wires.append(index)
                     elif connection.side == "right":
-                        if connection.wire:
-                            try:
-                                index = canvas_objects.index(connection.wire.end_connection)
-                                # print(f"right index: {index}, {connection.wire.end_connection}")
-                            except ValueError:
-                                index = canvas_objects.index(connection.wire.end_connection.box)
-                                # print(f"right index: {index}, {connection.wire.end_connection.box}")
-                                # if index == 2:
-                                    # print(f"wire end: {connection.wire.end_connection.box}")
-                                    # print(f"wire start: {connection.wire.start_connection.box}")
-                        else:
-                            index = None
+                        index = SearchAlgorithm.get_item_index_from_connection(canvas_objects, connection,
+                                                                               "end_connection")
                         right_wires.append(index)
             elif isinstance(curr_item, Spider):
                 for wire in curr_item.wires:
                     if wire.start_connection == curr_item:
-                        try:
+                        if wire.end_connection in canvas_objects:
                             index_of_end = canvas_objects.index(wire.end_connection)
-                        except ValueError:
+                        elif wire.end_connection.box in canvas_objects:
                             index_of_end = canvas_objects.index(wire.end_connection.box)
+                        else:
+                            index_of_end = None
                         right_wires.append(index_of_end)
                     if wire.end_connection == curr_item:
-                        try:
+                        if wire.start_connection in canvas_objects:
                             index_of_start = canvas_objects.index(wire.start_connection)
-                        except ValueError:
+                        elif wire.start_connection.box in canvas_objects:
                             index_of_start = canvas_objects.index(wire.start_connection.box)
+                        else:
+                            index_of_start = None
                         left_wires.append(index_of_start)
             canvas_connection_dict[i] = [left_wires, right_wires]
-            # print(f"canvas connection dict: {canvas_connection_dict}")
         return canvas_connection_dict
+
+    @staticmethod
+    def get_item_index_from_connection(canvas_objects, connection, start_end_variable):
+        if connection.wire:
+            start_end_connection = getattr(connection.wire, start_end_variable)
+            if start_end_connection in canvas_objects:
+                index = canvas_objects.index(start_end_connection)
+            elif start_end_connection.box in canvas_objects:
+                index = canvas_objects.index(start_end_connection.box)
+            else:
+                index = None
+        else:
+            index = None
+        return index
 
