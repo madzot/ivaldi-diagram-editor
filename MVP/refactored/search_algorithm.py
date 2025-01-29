@@ -170,8 +170,28 @@ class SearchAlgorithm:
                         result_ids.append(key)
 
         self.highlight_results(result_ids, canvas_objects)
+        self.highlight_wires(result_ids, canvas_objects)
 
         return found
+
+    def highlight_wires(self, result_ids, canvas_objects):
+        for wire in self.canvas.wires:
+            if wire.start_connection in canvas_objects:
+                start_index = canvas_objects.index(wire.start_connection)
+            elif wire.start_connection.box in canvas_objects:
+                start_index = canvas_objects.index(wire.start_connection.box)
+            else:
+                continue
+
+            if wire.end_connection in canvas_objects:
+                end_index = canvas_objects.index(wire.end_connection)
+            elif wire.end_connection.box in canvas_objects:
+                end_index = canvas_objects.index(wire.end_connection.box)
+            else:
+                continue
+
+            if start_index in result_ids and end_index in result_ids:
+                wire.search_highlight()
 
     @staticmethod
     def highlight_results(result_indexes, canvas_objects):
