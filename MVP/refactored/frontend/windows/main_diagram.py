@@ -519,14 +519,16 @@ class MainDiagram(tk.Tk):
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
+            self.tree.update()
             for canvas in self.canvasses.values():
-                canvas.update_after_treeview(self.tree.winfo_width(), to_left=True)
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=True)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
+            self.tree.update()
             for canvas in self.canvasses.values():
-                canvas.update_after_treeview(self.tree.winfo_width(), to_left=False)
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=False)
 
     @staticmethod
     def pairwise(iterable):
