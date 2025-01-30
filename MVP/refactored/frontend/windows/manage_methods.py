@@ -83,6 +83,8 @@ class ManageMethods(tk.Toplevel):
         label = simpledialog.askstring("Add label", "Please enter new label")
         if label:
             label = label.strip()
+        if label is None:
+            return
         if not label or label in self.main_diagram.label_content.keys():
             messagebox.showerror(title="Error", message="Label is empty or already exists")
             self.add_new_function()
