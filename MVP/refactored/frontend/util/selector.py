@@ -95,7 +95,6 @@ class Selector:
         sub_diagram.set_name(str(sub_diagram.id)[-6:])
         box.set_label(str(sub_diagram.id)[-6:])
         self.canvas.main_diagram.add_canvas(sub_diagram)
-        self.selected_items.clear()
 
     def is_within_selection(self, rect, selection_coords):
         if len(self.canvas.coords(rect)) == 4:

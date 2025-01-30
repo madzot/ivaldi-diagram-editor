@@ -959,3 +959,4 @@ class CustomCanvas(tk.Canvas):
     def create_sub_diagram(self):
         if len(list(filter(lambda x: isinstance(x, Spider) or isinstance(x, Box), self.selector.selected_items))) > 1:
             self.selector.create_sub_diagram()
+            self.selector.selected_items = []
