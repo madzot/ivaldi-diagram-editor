@@ -497,6 +497,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
+        self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
         self.set_title(filename)
 

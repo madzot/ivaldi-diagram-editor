@@ -604,6 +604,7 @@ class CustomCanvas(tk.Canvas):
 
     # OTHER BUTTON FUNCTIONALITY
     def save_as_png(self):
+        self.reset_zoom()
         filetypes = [('png files', '*.png')]
         file_path = filedialog.asksaveasfilename(defaultextension='.png', filetypes=filetypes,
                                                  title="Save png file")
@@ -907,6 +908,7 @@ class CustomCanvas(tk.Canvas):
         return c
 
     def export_hypergraph(self):
+        self.reset_zoom()
         self.hypergraph_exporter.export()
 
     @staticmethod
