@@ -327,6 +327,7 @@ class MainDiagram(tk.Tk):
         for item in self.custom_canvas.selector.selected_items:
             item.deselect()
         self.custom_canvas.selector.selected_items.clear()
+        self.custom_canvas.reset_zoom()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
         self.selector.canvas = self.custom_canvas
@@ -497,6 +498,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
+        self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
         self.set_title(filename)
 
