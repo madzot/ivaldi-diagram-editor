@@ -19,6 +19,83 @@ class HypergraphManager:
     hypergraphs: set[Hypergraph] = set()
 
     @staticmethod
+    def remove_node(id: int):
+        _hypergraph: Hypergraph = None
+        for hypergraph in HypergraphManager.hypergraphs:
+            for node in hypergraph.get_all_nodes():
+                if node.id == id:
+                    _hypergraph = hypergraph
+                    hypergraph.remove_node(id)
+        # check if new hyper graphs were created
+        source_nodes: list[Node] = _hypergraph.get_source_nodes()
+        source_nodes_groups: list[list[Node]] = list() # list of all source nodes groups
+        for source_node in source_nodes:
+            group: list[Node] = list()
+            for next_source_node in source_nodes:
+                if source_node != next_source_node and source_node.is_connected_to(next_source_node):
+                    group.append(next_source_node)
+            group = sorted(group, key=lambda node: node.id)
+            if group not in source_nodes_groups:
+                source_nodes_groups.append(group)
+        #TODO create new hypergraphs from source_nodes_groups and delete exicting one
+
+    @staticmethod
+    def create_new_node(id: int, canvas_id: int) -> Node:
+        """
+        Create new hypergraph, when spider is created.
+
+        :return: created node
+        """
+        new_hypergraph: Hypergraph = Hypergraph(canvas_id=canvas_id)
+        new_node = Node(id)
+        new_hypergraph.add_hypergraph_source(new_node)
+        return new_node
+
+    @staticmethod
+    def connect_node_with_input(node: Node, connect_to: Node|HyperEdge):
+        """
+        After hypergraph creation is done, make connectivity of node, with node/hyperedge and
+        theirs hyper graphs.
+        In this case to given node (first arg) input should be added node|hyper edge
+        """
+        node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
+        if isinstance(connect_to, Node): # spider or diagram input
+            connect_to.union(node)
+            connect_to_hypergraph : Hypergraph = HypergraphManager.get_graph_by_node_id(connect_to.id) # always exits, because node is always forms a hypergraph
+            HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
+        else: # box
+            connect_to.append_target_node(node)
+            node.append_input(connect_to)
+            connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(connect_to.id)
+            if connect_to_hypergraph is None: # It is autonomous box
+                HypergraphManager.add_hypergraph(node_hypergraph)
+            else: # It is box that already have some connections => forms hypergraph
+                HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
+
+    @staticmethod
+    def combine_hypergraphs(hypergraphs: list[Hypergraph]):
+        """Combine two or more hypergraphs.
+
+        NB!!!
+        When combining hypergraphs from different canvases, new hypegraph will have canvas id from first element!!!
+        """
+        combined_hypergraph = Hypergraph(canvas_id=hypergraphs[0].canvas_id)
+        for hypergraph in hypergraphs:
+            combined_hypergraph.nodes.update(hypergraph.nodes)
+            combined_hypergraph.edges.update(hypergraph.edges)
+            combined_hypergraph.add_hypergraph_sources(hypergraph.get_source_nodes())
+
+            HypergraphManager.remove_hypergraph(hypergraph)
+        HypergraphManager.add_hypergraph(combined_hypergraph)
+
+    @staticmethod
+    def get_graph_by_node_id(node_id: int) -> Hypergraph|Node:
+        for hypergraph in HypergraphManager.hypergraphs:
+            if node_id in hypergraph.nodes:
+                return hypergraph
+        return None
+
+    @staticmethod
     def get_graph_by_hyper_edge_id(hyper_edge_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
             for hyper_edge in hypergraph.get_all_hyper_edges():
@@ -30,8 +107,9 @@ class HypergraphManager:
     def get_graph_by_source_node_id(source_node_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
             for source_node in hypergraph.get_hypergraph_source():
-                if source_node.id == source_node_id:
-                    return hypergraph
+                for source_node_union in source_node.get_all_directly_connected_to():
+                    if source_node_union.id == source_node_id:
+                        return hypergraph
         return None
 
     @staticmethod
@@ -49,105 +127,3 @@ class HypergraphManager:
     @staticmethod
     def remove_hypergraph(hypergraph: Hypergraph):
         HypergraphManager.hypergraphs.remove(hypergraph)
-
-    @staticmethod
-    def modify_canvas_hypergraph(canvas: CustomCanvas) -> None:
-        return
-        # TODO
-        hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-
-        if hypergraph:
-            HypergraphManager.hypergraphs.remove(hypergraph)
-
-        HypergraphManager._create_hypergraphs_from_canvas(canvas)
-
-    @staticmethod
-    def remove_hypergraph_source_node(source_node_id: int):
-        hypergraph = HypergraphManager.get_graph_by_source_node_id(source_node_id)
-        hypergraph.remove_node(source_node_id)
-        if len(hypergraph.get_hypergraph_source()) == 0:
-            HypergraphManager.remove_hypergraph(hypergraph)
-
-    # @staticmethod
-    # def _create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
-    #     # TODO: fix this hypergraph creation to note that many hypergraphs can be created from one canvas
-    #     pass
-    #     hypergraph = Hypergraph(canvas.id)
-    #     for box in canvas.boxes:
-    #         node = HyperEdge(box.id)
-    #         for connection in box.connections:
-    #             if connection.side == "left" and connection.has_wire:
-    #                 node.add_input(connection.wire.id)
-    #             elif connection.has_wire:
-    #                 node.add_output(connection.wire.id)
-    #         hypergraph.add_node(node)
-    #
-    #     if hypergraph._is_valid():
-    #         HypergraphManager.hypergraphs.add(hypergraph)
-    #         print("Valid hypergraph created")
-    #         print(hypergraph.__str__())
-    #     else:
-    #         print("Invalid hypergraph not created")
-
-    # @staticmethod
-    # def create_hypergraphs_from_canvas(canvas: CustomCanvas) -> None:
-    #     hypergraphs_on_canvas = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-    #     all_existing_nodes: set[tuple[HyperEdge, Hypergraph]] = set()
-    #     for hypergraph in hypergraphs_on_canvas:
-    #         for node in hypergraph.get_all_nodes():
-    #             all_existing_nodes.add((node, hypergraph))
-    #
-    #     is_independent_graph = True
-    #     hypergraph = Hypergraph(canvas.id)
-    #     for canvas_input in canvas.inputs:
-    #         if canvas_input.box is None:  # None if connection is diagram input/output
-    #             source_node = HyperEdge(canvas_input.id)
-    #             hypergraph.add_hypergraph_source(source_node)
-    #
-    #             boxes_to_visit: Queue[tuple[HyperEdge, Box | Connection]] = Queue()
-    #             for end_connection in HypergraphManager._get_end_connections(canvas_input):  # iterating children of input (might be the output of diagram or box)
-    #                 boxes_to_visit.put((source_node, end_connection))
-    #
-    #             while not boxes_to_visit.empty():
-    #                 node_from, node_to = boxes_to_visit.get()
-    #
-    #                 node = HyperEdge(node_to.id, box_function=node_to.box_function)
-    #                 is_all_children_are_explored = False
-    #
-    #                 for existing_node, existing_node_hypergraph in all_existing_nodes:
-    #                     if existing_node == node:
-    #                         existing_node_hypergraph.add_hypergraph_source(source_node)
-    #                         node = existing_node
-    #                         is_all_children_are_explored = True
-    #                         is_independent_graph = False
-    #                         break
-    #
-    #                 node.add_parent(node_from)
-    #                 node_from.add_child(node)
-    #
-    #                 if isinstance(node_to, Box) and not is_all_children_are_explored: # If this node already exists in other graph,
-    #                     # we don`t need to add his children because they already exists
-    #                     for connection in node_to.connections:
-    #                         if connection.side == "right":
-    #                             for end_connection in HypergraphManager._get_end_connections(connection):
-    #                                 boxes_to_visit.put((node, end_connection))
-    #
-    #     if is_independent_graph:
-    #         HypergraphManager.add_hypergraph(hypergraph)
-
-    @staticmethod
-    def _get_end_connections(connection: Connection) -> list[Box | Connection]:
-        if connection.has_wire and connection.wire.end_connection is not None:
-            end_connection = connection.wire.end_connection
-            if isinstance(end_connection, Spider):
-                connections: list = []
-                for connection in end_connection.connections:
-                    if connection.side == "right":
-                        connections.extend(HypergraphManager._get_end_connections(connection)) # if from spider to spider, need recursion
-            else:
-                if end_connection.box is not None:
-                    return [end_connection.box]
-                else:
-                    return [end_connection]  # output of the diagram
-        return []
-

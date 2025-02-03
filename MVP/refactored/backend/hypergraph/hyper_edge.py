@@ -118,29 +118,7 @@ class HyperEdge:
             del self.target_nodes[connection_index]
 
     def remove_self(self):
-        hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(self.id)
-        HypergraphManager.remove_hypergraph(hypergraph)
-        source_nodes: list[Node] = self.get_source_nodes()
-        target_nodes: list[Node] = self.get_target_nodes()
-        for source_node in self.source_nodes.values():
-            source_node.remove_output(self)
-        for target_node in self.target_nodes.values():
-            target_node.remove_input(self)
-
-        connected_nodes: dict[Node, list[Node]] = defaultdict(list)
-        for source_node in source_nodes:
-            for target_node in target_nodes:
-                if source_node.is_connected_to(target_node):
-                    connected_nodes[source_node].append(target_node)
-                    connected_nodes[target_node].append(source_node)
-        connectivity: list[list[Node]] = find_connected_component(connected_nodes)
-        for nodes in connectivity:
-            new_hypergraph: Hypergraph = Hypergraph(hypergraph.get_canvas_id())
-            new_hypergraph.append_source_nodes(nodes[0].get_source_nodes())
-            HypergraphManager.add_hypergraph(new_hypergraph)
-
-        self.source_nodes.clear()
-        self.target_nodes.clear()
+        pass
 
     def set_box_function(self, function: BoxFunction):
         self.box_function = function
@@ -162,7 +140,7 @@ class HyperEdge:
 
     def __str__(self) -> str:
         """Return a string representation of the node."""
-        return (f"Node ID: {self.id}\n"
+        return (f"Hyper edge ID: {self.id}\n"
                 f"Inputs: {self.get_source_nodes()}\n"
                 f"Outputs: {self.get_target_nodes()}")
 
@@ -173,24 +151,3 @@ class HyperEdge:
 
     def __hash__(self):
         return hash(self.id)
-
-
-def find_connected_component(connected_nodes: dict[Node, list[Node]]) -> list[list[Node]]:
-    connected_components: list[list[Node]] = list()
-    queue: Queue[Node] = Queue()
-    visited: set[Node] = set()
-    for node, connected_nodes in connected_nodes.items():
-        connected_component: list[Node] = list()
-        if node not in visited:
-            connected_component.append(node)
-        visited.add(node)
-        for connected_node in connected_nodes:
-            queue.put(connected_node)
-        while not queue.empty():
-            connected_node = queue.get()
-            if connected_node not in visited:
-                connected_component.append(connected_node)
-                for connected_node_connected_node in connected_nodes[connected_node]:
-                    queue.put(connected_node_connected_node)
-        connected_components.append(connected_component)
-    return connected_components

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
-    from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
 
@@ -25,11 +25,11 @@ class Node:
 
     def get_source_nodes(self) -> list[Self]:
         visited: set[Node] = set()
-        source_nodes: list[Node] = list()
+        source_nodes: set[Node] = set()
         queue: Queue[Node] = Queue()
         visited.add(self)
         if len(self.get_inputs()) == 0:
-            source_nodes.append(self)
+            source_nodes.add(self)
         for hyper_edge in self.get_inputs() + self.get_outputs():
             for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                 queue.put(node)
@@ -37,13 +37,13 @@ class Node:
             node: Node = queue.get()
             visited.add(node)
             if len(node.get_inputs()) == 0:
-                source_nodes.append(node)
+                source_nodes.add(node)
             else:
                 for hyper_edge in self.get_inputs() + self.get_outputs():
                     for hyper_edge_node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                         if hyper_edge_node not in visited:
                             queue.put(hyper_edge_node)
-        return source_nodes
+        return list(source_nodes)
 
     def get_target_nodes(self) -> list[Self]:
         visited: set[Node] = set()
@@ -79,6 +79,9 @@ class Node:
             input.remove_target_node_by_reference(self)
         for output in self.outputs:
             output.remove_source_node_by_reference(self)
+
+        # TODO remove hypergraph source node
+
 
         connected_nodes: dict[Node, list[Node]] = defaultdict(list)
         for source_node in source_nodes:
@@ -158,7 +161,8 @@ class Node:
             node: Node = queue.get()
             visited.add(node)
             for directly_connected_to_node in node.directly_connected_to:
-                queue.put(directly_connected_to_node)
+                if directly_connected_to_node not in visited:
+                    queue.put(directly_connected_to_node)
         return list(visited)
 
     def get_outputs(self) -> list[HyperEdge]:
@@ -200,11 +204,11 @@ class Node:
         return hash(self.id)
 
 
-def find_connected_component(connected_nodes: dict[Node, list[Node]]) -> list[list[Node]]:
+def find_connected_component(connected_nodes_map: dict[Node, list[Node]]) -> list[list[Node]]:
     connected_components: list[list[Node]] = list()
     queue: Queue[Node] = Queue()
     visited: set[Node] = set()
-    for node, connected_nodes in connected_nodes.items():
+    for node, connected_nodes in connected_nodes_map.items():
         connected_component: list[Node] = list()
         if node not in visited:
             connected_component.append(node)
@@ -215,7 +219,7 @@ def find_connected_component(connected_nodes: dict[Node, list[Node]]) -> list[li
             connected_node = queue.get()
             if connected_node not in visited:
                 connected_component.append(connected_node)
-                for connected_node_connected_node in connected_nodes[connected_node]:
+                for connected_node_connected_node in connected_nodes_map[connected_node]:
                     queue.put(connected_node_connected_node)
         connected_components.append(connected_component)
     return connected_components
