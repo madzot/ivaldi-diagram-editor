@@ -41,6 +41,8 @@ class MainDiagram(tk.Tk):
         screen_height_min = round(self.winfo_screenheight() / 1.5)
         self.wm_minsize(screen_width_min, screen_height_min)
 
+        self.is_search_active = False
+
         self.selector = None
 
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
@@ -183,6 +185,11 @@ class MainDiagram(tk.Tk):
 
     def open_search_window(self):
         SearchWindow(self)
+
+    def cancel_search_results(self):
+        self.is_search_active = False
+        for canvas in self.canvasses.values():
+            canvas.remove_search_highlights()
 
     def change_function_label(self, old_label, new_label):
         if old_label in self.label_content.keys():
@@ -524,10 +531,18 @@ class MainDiagram(tk.Tk):
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
+            self.custom_canvas.update()
+            if self.is_search_active:
+                self.custom_canvas.result_display_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
+                                                               anchor=tk.CENTER)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
+            self.custom_canvas.update()
+            if self.is_search_active:
+                self.custom_canvas.result_display_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
+                                                               anchor=tk.CENTER)
 
     @staticmethod
     def pairwise(iterable):
