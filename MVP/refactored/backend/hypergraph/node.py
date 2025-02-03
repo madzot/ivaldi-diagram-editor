@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from lib2to3.pgen2.tokenize import group
 from queue import Queue
 from typing_extensions import Self
 from typing import TYPE_CHECKING

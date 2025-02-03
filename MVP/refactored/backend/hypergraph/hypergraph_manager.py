@@ -3,11 +3,6 @@ from __future__ import annotations
 from queue import Queue
 from typing import TYPE_CHECKING
 
-
-from MVP.refactored.box import Box
-from MVP.refactored.connection import Connection
-from MVP.refactored.spider import Spider
-
 if TYPE_CHECKING:
     from MVP.refactored.custom_canvas import CustomCanvas
     from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
