@@ -158,7 +158,6 @@ class MainDiagram(tk.Tk):
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
-        self.mainloop()
 
     @staticmethod
     def calculate_boxes_json_file_hash():
@@ -391,7 +390,7 @@ class MainDiagram(tk.Tk):
                 self.receiver.receiver_callback("remove_inner_right",
                                                 generator_id=self.custom_canvas.diagram_source_box.id)
         else:
-            self.custom_canvas.remove_diagram_input()
+            self.custom_canvas.remove_diagram_output()
 
     def find_connection_to_remove(self, side):
         c_max = 0
