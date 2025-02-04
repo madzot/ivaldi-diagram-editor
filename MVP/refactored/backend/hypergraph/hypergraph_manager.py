@@ -21,6 +21,7 @@ class HypergraphManager:
                 if node.id == id:
                     _hypergraph = hypergraph
                     hypergraph.remove_node(id)
+                    break
         # check if new hyper graphs were created
         source_nodes: list[Node] = _hypergraph.get_source_nodes()
         source_nodes_groups: list[list[Node]] = list() # list of all source nodes groups
@@ -32,7 +33,15 @@ class HypergraphManager:
             group = sorted(group, key=lambda node: node.id)
             if group not in source_nodes_groups:
                 source_nodes_groups.append(group)
-        #TODO create new hypergraphs from source_nodes_groups and delete exicting one
+
+        # if after deleting node hype graph split to two or more hyper graphs we need to handle that
+        if len(source_nodes_groups) > 1: # If group count isn`t 1, so there occurred new hyper graphs
+            HypergraphManager.remove_hypergraph(_hypergraph) # remove old hypergraph
+
+            for group in source_nodes_groups:
+                new_hypegraph = Hypergraph(canvas_id=_hypergraph.get_canvas_id())
+                new_hypegraph.add_hypergraph_sources(group)
+                HypergraphManager.add_hypergraph(new_hypegraph)
 
     @staticmethod
     def create_new_node(id: int, canvas_id: int) -> Node:
@@ -47,25 +56,59 @@ class HypergraphManager:
         return new_node
 
     @staticmethod
-    def connect_node_with_input(node: Node, connect_to: Node|HyperEdge):
+    def _get_node_by_id(id: int):
+        for hypergraph in HypergraphManager.hypergraphs:
+            for node in hypergraph.get_all_nodes():
+                if node.id == id:
+                    return node
+
+    @staticmethod
+    def union_nodes(node: Node, unite_with_id: int):
+        unite_with = HypergraphManager._get_node_by_id(unite_with_id)
+
+        node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
+        node.union(unite_with)
+
+        unite_with_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(unite_with.id)  # always exits, because node is always forms a hypergraph
+        HypergraphManager.combine_hypergraphs([node_hypergraph, unite_with_hypergraph])
+
+    @staticmethod
+    def connect_node_with_input(node: Node, hyper_edge_id: int):
         """
-        After hypergraph creation is done, make connectivity of node, with node/hyperedge and
+        After hypergraph creation is done, make connectivity of node, with node/hyper edge and
         theirs hyper graphs.
         In this case to given node (first arg) input should be added node|hyper edge
         """
+        hyper_edge = HyperEdge(hyper_edge_id)
+
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
-        if isinstance(connect_to, Node): # spider or diagram input
-            connect_to.union(node)
-            connect_to_hypergraph : Hypergraph = HypergraphManager.get_graph_by_node_id(connect_to.id) # always exits, because node is always forms a hypergraph
+        # box = hyper edge
+        hyper_edge.append_target_node(node)
+        node.append_input(hyper_edge)
+        connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge.id)
+        if connect_to_hypergraph is None: # It is autonomous box
+            HypergraphManager.add_hypergraph(node_hypergraph) # IS IT NEEDED?? TODO
+        else: # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
-        else: # box
-            connect_to.append_target_node(node)
-            node.append_input(connect_to)
-            connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(connect_to.id)
-            if connect_to_hypergraph is None: # It is autonomous box
-                HypergraphManager.add_hypergraph(node_hypergraph)
-            else: # It is box that already have some connections => forms hypergraph
-                HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
+
+    @staticmethod
+    def connect_node_with_output(node: Node, hyper_edge_id: int):
+        """
+        After hypergraph creation is done, make connectivity of node, with node/hyper edge and
+        theirs hyper graphs.
+        In this case to given node (first arg) output should be added node|hyper edge
+        """
+        hyper_edge = HyperEdge(hyper_edge_id)
+
+        node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
+         # box = hyper edge
+        hyper_edge.append_source_node(node)
+        node.append_output(hyper_edge)
+        connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(hyper_edge.id)
+        if connect_to_hypergraph is None:  # It is autonomous box
+            HypergraphManager.add_hypergraph(node_hypergraph) # IS IT NEEDED?? TODO
+        else:  # It is box that already have some connections => forms hypergraph
+            HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
     @staticmethod
     def combine_hypergraphs(hypergraphs: list[Hypergraph]):

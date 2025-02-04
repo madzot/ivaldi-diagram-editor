@@ -55,7 +55,8 @@ class Receiver:
             parent.spiders.remove(wire_id)
         self.wire_handle_delete_resource(spider)
 
-        self._remove_node(spider.id)
+        HypergraphManager.remove_node(spider.id)
+        # self._remove_node(spider.id) TODO
 
     def spider_parent(self, id, generator_id=None, canvas_id=None):
         spider = self.spider_get_resource_by_connection_id(id)
@@ -76,11 +77,12 @@ class Receiver:
         self.diagram.spiders.append(resource)
         logger.info(f"Spider created and added to diagram: {resource}")
 
-        new_node = Node(id)
-
-        WireAndSpiderToNodeMapping.add_new_pair(id, new_node)
-        new_hypergraph = Hypergraph(canvas_id=canvas_id)
-        HypergraphManager.add_hypergraph(new_hypergraph)
+        HypergraphManager.create_new_node(id, canvas_id=canvas_id)
+        # new_node = Node(id) TODO
+        #
+        # WireAndSpiderToNodeMapping.add_new_pair(id, new_node)
+        # new_hypergraph = Hypergraph(canvas_id=canvas_id)
+        # HypergraphManager.add_hypergraph(new_hypergraph)
 
     def wire_callback(self, wire_id, action=None, start_connection=None, connection_id=None, end_connection=None,
                       canvas_id=None):
@@ -96,7 +98,9 @@ class Receiver:
             else:
                 resource = self.wire_get_resource_by_id(wire_id)
                 self.wire_handle_delete_resource(resource)
-            self._remove_node(wire_id)
+
+            HypergraphManager.remove_node(wire_id)
+            # self._remove_node(wire_id) TODO
         else:
             # TODO Create node when wire connected to spider. Spider node and new node should be united.
             if end_connection:  # HAS end_connection if connection between spider and something
@@ -116,6 +120,16 @@ class Receiver:
                     # Add hyper edge to new node or union nodes
                     self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, end_connection[3],
                                                             end_connection[2], canvas_id)
+                    # TODO
+                    new_node = HypergraphManager.create_new_node(wire_id, canvas_id)
+                    HypergraphManager.union_nodes(new_node, spider.id) # unite wire and spider to one node
+                    if box:
+                        if connection_side == 'left':
+                            HypergraphManager.connect_node_with_output(new_node, connection_box_id)
+                        elif connection_side == 'right':
+                            HypergraphManager.connect_node_with_input(new_node, connection_box_id)
+                    else: # connection to spider
+                        HypergraphManager.union_nodes(new_node, end_connection[3])
                     print(f"Added wire - {wire_id}")
 
                 elif end_connection[2] == 'spider':
@@ -134,6 +148,16 @@ class Receiver:
                     # Add hyper edge to new node or union nodes
                     self.add_hyper_edge_or_union_with_nodes(wire_id, spider.id, box, start_connection[3],
                                                             start_connection[2], canvas_id)
+                    # TODO
+                    new_node = HypergraphManager.create_new_node(wire_id, canvas_id)
+                    HypergraphManager.union_nodes(new_node, spider.id)  # unite wire and spider to one node
+                    if box:
+                        if connection_side == 'left':
+                            HypergraphManager.connect_node_with_output(new_node, connection_box_id)
+                        elif connection_side == 'right':
+                            HypergraphManager.connect_node_with_input(new_node, connection_box_id)
+                    else:  # connection to spider
+                        HypergraphManager.union_nodes(new_node, start_connection[3])
             else:  # if it connection not between spider and smt
                 connection_nr = start_connection[0]
                 connection_box_id = start_connection[1]
@@ -347,16 +371,24 @@ class Receiver:
         # TODO create or delete nodes when diagram input/output added/removed
         elif action == 'add_diagram_output':
             self.add_main_diagram_output()
-            self._create_new_special_node(connection_id)
+
+            HypergraphManager.create_new_node(connection_id, canvas_id)
+            # self._create_new_special_node(connection_id) TODO
         elif action == 'add_diagram_input':
             self.add_main_diagram_input()
-            self._create_new_special_node(connection_id)
+
+            HypergraphManager.create_new_node(connection_id, canvas_id)
+            # self._create_new_special_node(connection_id) TODO
         elif action == 'remove_diagram_input':
             self.remove_main_diagram_input()
-            self._remove_node(connection_id)
+
+            HypergraphManager.remove_node(connection_id)
+            # self._remove_node(connection_id) TODO
         elif action == 'remove_diagram_output':
             self.remove_main_diagram_output()
-            self._remove_node(connection_id)
+
+            HypergraphManager.remove_node(connection_id)
+            # self._remove_node(connection_id) TODO
         # elif action == 'box_swap_id':   PROGRAMM CAN`T REACH THAT?
         #     hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
         #     BoxToHyperEdgeMapping.remove_pair(box.id)
