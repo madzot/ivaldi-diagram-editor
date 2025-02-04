@@ -56,7 +56,11 @@ class Wire:
     def select(self):
         self.canvas.itemconfig(self.line, fill="green")
 
-    def search_highlight(self):
+    def search_highlight_secondary(self):
+        self.canvas.itemconfig(self.line, fill="orange")
+        self.canvas.search_result_highlights.append(self)
+
+    def search_highlight_primary(self):
         self.canvas.itemconfig(self.line, fill="cyan")
         self.canvas.search_result_highlights.append(self)
 

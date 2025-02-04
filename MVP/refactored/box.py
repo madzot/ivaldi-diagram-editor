@@ -382,9 +382,14 @@ class Box:
         self.canvas.itemconfig(self.rect, outline="green")
         [c.select() for c in self.connections]
 
-    def search_highlight(self):
+    def search_highlight_secondary(self):
+        self.canvas.itemconfig(self.rect, outline="orange")
+        [c.search_highlight_secondary() for c in self.connections]
+        self.canvas.search_result_highlights.append(self)
+
+    def search_highlight_primary(self):
         self.canvas.itemconfig(self.rect, outline="cyan")
-        [c.search_highlight() for c in self.connections]
+        [c.search_highlight_primary() for c in self.connections]
         self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
