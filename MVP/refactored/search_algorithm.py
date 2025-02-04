@@ -7,6 +7,10 @@ class SearchAlgorithm:
     def __init__(self, searchable: CustomCanvas, canvas: CustomCanvas):
         self.searchable = searchable
         self.canvas = canvas
+        self.results = []
+        self.result_objects = {}
+        self.wire_results = []
+        self.wire_objects = {}
 
     def get_potential_results(self, searchable_objects, canvas_objects):
         potential_results = []
@@ -97,9 +101,11 @@ class SearchAlgorithm:
         print(f"Potential after filtering: {potential_results}")
 
         for potential_result in potential_results:
+
             print()
             print(f"POTENTIAL RESULT: {potential_result}")
             print(f"Normalized potential result: {self.normalize_dictionary(potential_result)}")
+            temp_result_ids = []
             normalized = self.normalize_dictionary(potential_result)
             not_correct = False
             for normalized_key in normalized.keys():
@@ -165,12 +171,26 @@ class SearchAlgorithm:
                         right_side_check = True
 
                 if left_side_check and right_side_check:
-                    found = True
-                    for key in potential_result.keys():
-                        result_ids.append(key)
+                    print(f"potential_result: {potential_results}")
+                    temp_result_ids.append(potential_id)
+                else:
+                    temp_result_ids = []
+                    break
 
-        self.highlight_results(result_ids, canvas_objects)
-        self.highlight_wires(result_ids, canvas_objects)
+            if temp_result_ids == list(potential_result.keys()):
+                found = True
+                result_ids.append(temp_result_ids)
+
+        for results in result_ids:
+            self.highlight_results(results, canvas_objects)
+            self.highlight_wires(results, canvas_objects)
+
+        self.results = result_ids
+        objects = {}
+        for result in self.results:
+            for index in result:
+                objects[index] = canvas_objects[index]
+        self.result_objects = objects
 
         return found
 
@@ -191,12 +211,16 @@ class SearchAlgorithm:
                 continue
 
             if start_index in result_ids and end_index in result_ids:
-                wire.search_highlight()
+                wire.search_highlight_secondary()
+                if wire not in self.wire_objects:
+                    self.wire_objects[tuple(result_ids)] = [wire]
+                else:
+                    self.wire_objects[tuple(result_ids)].append(wire)
 
     @staticmethod
     def highlight_results(result_indexes, canvas_objects):
         for result_index in result_indexes:
-            canvas_objects[result_index].search_highlight()
+            canvas_objects[result_index].search_highlight_secondary()
 
     @staticmethod
     def normalize_dictionary(dictionary):

@@ -17,6 +17,7 @@ from MVP.refactored.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from MVP.refactored.wire import Wire
+from search_result_button import SearchResultButton
 
 
 class CustomCanvas(tk.Canvas):
@@ -103,9 +104,7 @@ class CustomCanvas(tk.Canvas):
                                      command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
             tree_button.place(x=28, y=20, anchor=tk.CENTER)
 
-        self.result_display_button = ttk.Button(self, text="Displaying search | X",
-                                                command=self.on_displaying_results_click,
-                                                bootstyle=(SECONDARY, OUTLINE))
+        self.search_result_button = SearchResultButton(self, self.main_diagram, self)
 
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
@@ -144,9 +143,9 @@ class CustomCanvas(tk.Canvas):
 
     def toggle_displaying_results_button(self):
         if self.main_diagram.is_search_active:
-            self.result_display_button.place(x=self.winfo_width() - 75, y=20, anchor=tk.CENTER)
+            self.search_result_button.place(x=self.winfo_width() - 75, y=20, anchor=tk.CENTER)
         else:
-            self.result_display_button.place_forget()
+            self.search_result_button.place_forget()
 
     def on_displaying_results_click(self):
         self.main_diagram.cancel_search_results()

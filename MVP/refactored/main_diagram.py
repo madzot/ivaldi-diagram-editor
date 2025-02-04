@@ -162,6 +162,10 @@ class MainDiagram(tk.Tk):
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
+        self.search_results = []
+        self.active_search_index = 0
+        self.search_objects = {}
+        self.wire_objects = {}
         self.mainloop()
 
     @staticmethod
@@ -190,6 +194,33 @@ class MainDiagram(tk.Tk):
         self.is_search_active = False
         for canvas in self.canvasses.values():
             canvas.remove_search_highlights()
+
+    def move_between_search_results(self, up: bool):
+        current_search = self.search_results[self.active_search_index]
+        for index in current_search:
+            self.search_objects[index].search_highlight_secondary()
+        for wire in self.wire_objects[tuple(current_search)]:
+            wire.search_highlight_secondary()
+
+        if up:
+            self.active_search_index += 1
+        else:
+            self.active_search_index -= 1
+
+        self.active_search_index %= len(self.search_results)
+
+        self.highlight_search_result_by_index(self.active_search_index)
+
+    def check_search_result_canvas(self, index):
+        if self.search_results[index][0].canvas != self.custom_canvas:
+            self.switch_canvas(self.search_results[index][0].canvas)
+
+    def highlight_search_result_by_index(self, index):
+        new_search = self.search_results[index]
+        for index in new_search:
+            self.search_objects[index].search_highlight_primary()
+        for wire in self.wire_objects[tuple(new_search)]:
+            wire.search_highlight_primary()
 
     def change_function_label(self, old_label, new_label):
         if old_label in self.label_content.keys():
@@ -533,16 +564,16 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
             self.custom_canvas.update()
             if self.is_search_active:
-                self.custom_canvas.result_display_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
-                                                               anchor=tk.CENTER)
+                self.custom_canvas.search_result_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
+                                                              anchor=tk.CENTER)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
             self.custom_canvas.update()
             if self.is_search_active:
-                self.custom_canvas.result_display_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
-                                                               anchor=tk.CENTER)
+                self.custom_canvas.search_result_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
+                                                              anchor=tk.CENTER)
 
     @staticmethod
     def pairwise(iterable):
