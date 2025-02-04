@@ -209,7 +209,7 @@ class SearchAlgorithm:
     @staticmethod
     def highlight_results(result_indexes, canvas_objects):
         for result_index in result_indexes:
-            canvas_objects[result_index].select()
+            canvas_objects[result_index].search_highlight()
 
     @staticmethod
     def normalize_dictionary(dictionary):
