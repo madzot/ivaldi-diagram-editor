@@ -45,6 +45,11 @@ class MainDiagram(tk.Tk):
 
         self.selector = None
 
+        self.search_results = []
+        self.active_search_index = 0
+        self.search_objects = {}
+        self.wire_objects = {}
+
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -162,10 +167,6 @@ class MainDiagram(tk.Tk):
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
-        self.search_results = []
-        self.active_search_index = 0
-        self.search_objects = {}
-        self.wire_objects = {}
         self.mainloop()
 
     @staticmethod
@@ -210,6 +211,12 @@ class MainDiagram(tk.Tk):
         self.active_search_index %= len(self.search_results)
 
         self.highlight_search_result_by_index(self.active_search_index)
+
+        self.update_search_result_button_texts()
+
+    def update_search_result_button_texts(self):
+        for canvas in self.canvasses.values():
+            canvas.search_result_button.info_text.set(f"Search: {self.active_search_index + 1}/{len(self.search_results)}")
 
     def check_search_result_canvas(self, index):
         if self.search_results[index][0].canvas != self.custom_canvas:

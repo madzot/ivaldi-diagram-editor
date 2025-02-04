@@ -143,7 +143,7 @@ class CustomCanvas(tk.Canvas):
 
     def toggle_displaying_results_button(self):
         if self.main_diagram.is_search_active:
-            self.search_result_button.place(x=self.winfo_width() - 75, y=20, anchor=tk.CENTER)
+            self.search_result_button.place(x=self.winfo_width() - 90, y=20, anchor=tk.CENTER, width=175, height=30)
         else:
             self.search_result_button.place_forget()
 
