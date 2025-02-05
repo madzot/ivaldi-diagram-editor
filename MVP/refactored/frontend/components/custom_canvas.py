@@ -950,7 +950,11 @@ class CustomCanvas(tk.Canvas):
         self.selector.copy_selected_items()
 
     def paste_copied_items(self, event):
-        self.selector.paste_copied_items(event.x, event.y)
+        if len(self.selector.selected_items) > 0:
+            x1, y1, x2, y2 = self.selector.find_corners_selected_items()
+            self.selector.paste_copied_items((x1 + x2) / 2, (y1 + y2) / 2, True)
+        else:
+            self.selector.paste_copied_items(event.x, event.y)
 
     def cut_selected_items(self):
         self.copy_selected_items()

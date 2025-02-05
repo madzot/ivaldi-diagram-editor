@@ -17,6 +17,11 @@ class Selector:
         self.connection_mapping = {}
         self.copied_items = []
         self.copied_wire_list = []
+        self.copied_left_connections = []
+        self.copied_right_connections = []
+        self.copied_left_wires = []
+        self.copied_right_wires = []
+        self.pasted_items = []
 
     def start_selection(self, event):
         for item in self.selected_items:
@@ -131,6 +136,8 @@ class Selector:
         if len(self.selected_items) > 0:
             self.copied_items.clear()
             self.copied_wire_list.clear()
+            self.copied_left_wires.clear()
+            self.copied_right_wires.clear()
             connection_list = []
 
             for item in self.selected_items:
@@ -185,9 +192,87 @@ class Selector:
                             'original_end_index': copy.deepcopy(item.end_connection.index),
                             'original_end_side': copy.deepcopy(item.end_connection.side)
                         })
+                    elif item.start_connection in connection_list and item.end_connection not in connection_list:
+                        if item.start_connection.side == "left":
+                            self.copied_left_wires.append({
+                                'wire': "Wire",
+                                'start_connection': None,
+                                'end_connection': "New",
+                                'original_start_connection': copy.deepcopy(item.start_connection.id),
+                                'original_start_index': copy.deepcopy(item.start_connection.index),
+                                'original_start_side': copy.deepcopy(item.start_connection.side)
+                            })
+                        if item.start_connection.side == "right":
+                            self.copied_right_wires.append({
+                                'wire': "Wire",
+                                'start_connection': None,
+                                'end_connection': "New",
+                                'original_start_connection': copy.deepcopy(item.start_connection.id),
+                                'original_start_index': copy.deepcopy(item.start_connection.index),
+                                'original_start_side': copy.deepcopy(item.start_connection.side)
+                            })
+                        if item.start_connection.side == "spider":
+                            if item.start_connection.location[0] > item.end_connection.location[0]:
+                                self.copied_left_wires.append({
+                                    'wire': "Wire",
+                                    'start_connection': None,
+                                    'end_connection': "New",
+                                    'original_start_connection': copy.deepcopy(item.start_connection.id),
+                                    'original_start_index': copy.deepcopy(item.start_connection.index),
+                                    'original_start_side': copy.deepcopy(item.start_connection.side)
+                                })
+                            else:
+                                self.copied_right_wires.append({
+                                    'wire': "Wire",
+                                    'start_connection': None,
+                                    'end_connection': "New",
+                                    'original_start_connection': copy.deepcopy(item.start_connection.id),
+                                    'original_start_index': copy.deepcopy(item.start_connection.index),
+                                    'original_start_side': copy.deepcopy(item.start_connection.side)
+                                })
+                    elif item.start_connection not in connection_list and item.end_connection in connection_list:
+                        if item.end_connection.side == "left":
+                            self.copied_left_wires.append({
+                                'wire': "Wire",
+                                'start_connection': None,
+                                'end_connection': "New",
+                                'original_start_connection': copy.deepcopy(item.end_connection.id),
+                                'original_start_index': copy.deepcopy(item.end_connection.index),
+                                'original_start_side': copy.deepcopy(item.end_connection.side)
+                            })
+                        if item.end_connection.side == "right":
+                            self.copied_right_wires.append({
+                                'wire': "Wire",
+                                'start_connection': None,
+                                'end_connection': "New",
+                                'original_start_connection': copy.deepcopy(item.end_connection.id),
+                                'original_start_index': copy.deepcopy(item.end_connection.index),
+                                'original_start_side': copy.deepcopy(item.end_connection.side)
+                            })
+                        if item.end_connection.side == "spider":
+                            if item.end_connection.location[0] > item.start_connection.location[0]:
+                                self.copied_left_wires.append({
+                                    'wire': "Wire",
+                                    'start_connection': None,
+                                    'end_connection': "New",
+                                    'original_start_connection': copy.deepcopy(item.end_connection.id),
+                                    'original_start_index': copy.deepcopy(item.end_connection.index),
+                                    'original_start_side': copy.deepcopy(item.end_connection.side)
+                                })
+                            else:
+                                self.copied_right_wires.append({
+                                    'wire': "Wire",
+                                    'start_connection': None,
+                                    'end_connection': "New",
+                                    'original_start_connection': copy.deepcopy(item.end_connection.id),
+                                    'original_start_index': copy.deepcopy(item.end_connection.index),
+                                    'original_start_side': copy.deepcopy(item.end_connection.side)
+                                })
+            print("copied")
 
-    def paste_copied_items(self, event_x=50, event_y=50):
+    def paste_copied_items(self, event_x=50, event_y=50, over_selected=False):
         if len(self.copied_items) > 0:
+            self.pasted_items = []
 
             middle_point = self.find_middle_point(event_x, event_y)
 
@@ -207,6 +292,7 @@ class Selector:
                             if c['side'] == "left":
                                 new_box.add_left_connection()
                         new_box.set_label(item['label'])
+                    self.pasted_items.append(new_box)
 
                     for wire in self.copied_wire_list:
                         for box_connection in item['connections']:
@@ -220,7 +306,21 @@ class Selector:
                                     if (connection.side == wire['original_end_side']
                                             and connection.index == wire['original_end_index']):
                                         wire['end_connection'] = connection
-
+                    if over_selected:
+                        for wire in self.copied_left_wires:
+                            for box_connection in item['connections']:
+                                if wire['original_start_connection'] == box_connection['id']:
+                                    for connection in new_box.connections:
+                                        if (connection.side == wire['original_start_side']
+                                                and connection.index == wire['original_start_index']):
+                                            wire['start_connection'] = connection
+                        for wire in self.copied_right_wires:
+                            for box_connection in item['connections']:
+                                if wire['original_start_connection'] == box_connection['id']:
+                                    for connection in new_box.connections:
+                                        if (connection.side == wire['original_start_side']
+                                                and connection.index == wire['original_start_index']):
+                                            wire['start_connection'] = connection
                 if item['component'] == "Spider":
                     new_spider = self.canvas.add_spider((event_x + item['location'][0] - middle_point[0],
                                                          event_y + item['location'][1] - middle_point[1]))
@@ -229,10 +329,38 @@ class Selector:
                             wire['start_connection'] = new_spider
                         if wire['original_end_connection'] == item['id']:
                             wire['end_connection'] = new_spider
+                    if over_selected:
+                        for wire in self.copied_left_wires:
+                            if wire['original_start_connection'] == item['id']:
+                                wire['start_connection'] = new_spider
+                        for wire in self.copied_right_wires:
+                            if wire['original_start_connection'] == item['id']:
+                                wire['start_connection'] = new_spider
+                    self.pasted_items.append(new_spider)
 
             for wire in self.copied_wire_list:
                 self.canvas.start_wire_from_connection(wire['start_connection'])
                 self.canvas.end_wire_to_connection(wire['end_connection'])
+            if over_selected:
+                left_connections, right_connections = self.find_side_connections()
+                self.delete_selected_items()
+                if len(left_connections) <= len(self.copied_left_wires):
+                    for i in range(len(left_connections)):
+
+                        self.canvas.start_wire_from_connection(self.copied_left_wires[i]['start_connection'])
+                        self.canvas.end_wire_to_connection(left_connections[i])
+                else:
+                    for i in range(len(self.copied_left_wires)):
+                        self.canvas.start_wire_from_connection(self.copied_left_wires[i]['start_connection'])
+                        self.canvas.end_wire_to_connection(left_connections[i])
+                if len(right_connections) <= len(self.copied_right_wires):
+                    for i in range(len(right_connections)):
+                        self.canvas.start_wire_from_connection(self.copied_right_wires[i]['start_connection'])
+                        self.canvas.end_wire_to_connection(right_connections[i])
+                else:
+                    for i in range(len(self.copied_right_wires)):
+                        self.canvas.start_wire_from_connection(self.copied_right_wires[i]['start_connection'])
+                        self.canvas.end_wire_to_connection(right_connections[i])
 
     def find_middle_point(self, event_x, event_y):
         most_left = self.canvas.winfo_width()
@@ -302,3 +430,66 @@ class Selector:
                 if item.y + item.r > most_down:
                     most_down = item.y + item.r
         return [most_left, most_up, most_right, most_down]
+
+    def find_side_connections(self):
+        connection_list = []
+        left_wires = []
+        right_wires = []
+        wires = []
+        connections_to_connect_left = []
+        connections_to_connect_right = []
+        # Find all connections
+        for item in self.selected_items:
+            if isinstance(item, Box):
+                for connection in item.connections:
+                    connection_list.append(connection)
+            if isinstance(item, Spider):
+                for wire in item.wires:
+                    if wire.start_connection == item:
+                        connection_list.append(wire.start_connection)
+                    else:
+                        connection_list.append(wire.end_connection)
+        # Find wires with only 1 connection in connection_list (not fully in copied/selected items)
+        for wire in self.canvas.wires:
+            if wire.start_connection in connection_list and wire.end_connection not in connection_list:
+                wires.append(wire)
+            if wire.start_connection not in connection_list and wire.end_connection in connection_list:
+                wires.append(wire)
+        # Find side where wire goes outside selected items
+        for wire in wires:
+            if wire.start_connection in connection_list:
+                print(wire.start_connection.side)
+                if wire.start_connection.side == "left":
+                    left_wires.append(wire)
+                if wire.start_connection.side == "right":
+                    right_wires.append(wire)
+                if wire.start_connection.side == "spider":
+                    if wire.start_connection.location[0] > wire.end_connection.location[0]:
+                        left_wires.append(wire)
+                    else:
+                        right_wires.append(wire)
+            if wire.end_connection in connection_list:
+                if wire.end_connection.side == "left":
+                    left_wires.append(wire)
+                if wire.end_connection.side == "right":
+                    right_wires.append(wire)
+                if wire.end_connection.side == "spider":
+                    if wire.end_connection.location[0] > wire.start_connection.location[0]:
+                        left_wires.append(wire)
+                    else:
+                        right_wires.append(wire)
+        # Sort wires based on connection height
+        right_wires.sort(key=lambda wire: wire.end_connection.location[1] if wire.end_connection in connection_list else wire.start_connection.location[1])
+        left_wires.sort(key=lambda wire: wire.end_connection.location[1] if wire.end_connection in connection_list else wire.start_connection.location[1])
+        # Add connection to connect to lists
+        for wire in left_wires:
+            if wire.start_connection in connection_list:
+                connections_to_connect_left.append(wire.end_connection)
+            else:
+                connections_to_connect_left.append(wire.start_connection)
+        for wire in right_wires:
+            if wire.start_connection in connection_list:
+                connections_to_connect_right.append(wire.end_connection)
+            else:
+                connections_to_connect_right.append(wire.start_connection)
+        return connections_to_connect_left, connections_to_connect_right
