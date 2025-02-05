@@ -77,6 +77,7 @@ class PythonImporter(Importer):
 
 
     def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
+        elements_y_position = 300
         #TODO: refactor this to appropriate condition
         functions = data["functions"]
         main_logic = data["main_logic"]
@@ -85,13 +86,15 @@ class PythonImporter(Importer):
         boxes_gap = 1000 / (len(main_logic) - 1)
         box_x = 100
 
+        box_right_connection_spiders = {}
+
         for function_call in main_logic:
             args = function_call["args"]
 
             for assigned_variable in function_call["assigned_variables"]:
                 possible_outputs[assigned_variable] = function_call["function_name"]
 
-            new_box = canvas.create_new_box(loc=(box_x, 300))
+            new_box = canvas.create_new_box(loc=(box_x, elements_y_position))
             new_box.set_label(function_call["function_name"])
 
             for arg in args:
@@ -110,8 +113,26 @@ class PythonImporter(Importer):
                 if wire_end:
                     for box in canvas.boxes:
                         if box.label_text == wire_end:
-                            wire_end_connection = box.add_right_connection()
-                            canvas.end_wire_to_connection(wire_end_connection, True)
+
+                            new_spider_added = False
+                            if arg not in box_right_connection_spiders.keys():
+                                spider_x_position = box.x + boxes_gap / 2
+                                new_spider = canvas.add_spider(loc=(spider_x_position, elements_y_position))
+                                box_right_connection_spiders[arg] = new_spider
+
+                                new_spider_added = True
+
+
+                            connection_spider = box_right_connection_spiders[arg]
+
+
+                            canvas.end_wire_to_connection(connection_spider, True)
+
+                            if new_spider_added:
+                                wire_end_connection = box.add_right_connection()
+                                canvas.start_wire_from_connection(connection_spider)
+                                canvas.end_wire_to_connection(wire_end_connection, True)
+
                             break
                 else:
                     diagram_input = canvas.add_diagram_input()
