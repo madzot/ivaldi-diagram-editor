@@ -330,7 +330,7 @@ class CustomCanvas(tk.Canvas):
         self.spiders.append(spider)
         return spider
 
-    def add_spider_with_wires(self, start, end, x, y):
+    def add_spider_with_wires(self, start: Connection, end: Connection, x, y):
         spider = self.add_spider((x, y))
         self.start_wire_from_connection(start)
         self.end_wire_to_connection(spider)
