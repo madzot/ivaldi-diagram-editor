@@ -20,7 +20,10 @@ class Selector:
 
     def start_selection(self, event):
         for item in self.selected_items:
-            item.deselect()
+            if item not in self.canvas.search_result_highlights:
+                item.deselect()
+            else:
+                item.search_highlight()
         self.selecting = True
         self.origin_x = event.x
         self.origin_y = event.y
@@ -61,7 +64,10 @@ class Selector:
 
     def finish_selection(self):
         for item in self.selected_items:
-            item.deselect()
+            if item not in self.canvas.search_result_highlights:
+                item.deselect()
+            else:
+                item.search_highlight()
         self.selected_items.clear()
         # Remove the selection box and reset selecting state
         self.canvas.delete(self.canvas.selectBox)

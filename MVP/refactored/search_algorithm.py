@@ -172,23 +172,25 @@ class SearchAlgorithm:
         return found
 
     def highlight_wires(self, result_ids, canvas_objects):
-        for wire in self.canvas.wires:
-            if wire.start_connection in canvas_objects:
-                start_index = canvas_objects.index(wire.start_connection)
-            elif wire.start_connection.box in canvas_objects:
-                start_index = canvas_objects.index(wire.start_connection.box)
-            else:
-                continue
+        canvases = self.canvas.main_diagram.canvasses.values() if self.search_all_canvases else [self.canvas]
+        for canvas in canvases:
+            for wire in canvas.wires:
+                if wire.start_connection in canvas_objects:
+                    start_index = canvas_objects.index(wire.start_connection)
+                elif wire.start_connection.box in canvas_objects:
+                    start_index = canvas_objects.index(wire.start_connection.box)
+                else:
+                    continue
 
-            if wire.end_connection in canvas_objects:
-                end_index = canvas_objects.index(wire.end_connection)
-            elif wire.end_connection.box in canvas_objects:
-                end_index = canvas_objects.index(wire.end_connection.box)
-            else:
-                continue
+                if wire.end_connection in canvas_objects:
+                    end_index = canvas_objects.index(wire.end_connection)
+                elif wire.end_connection.box in canvas_objects:
+                    end_index = canvas_objects.index(wire.end_connection.box)
+                else:
+                    continue
 
-            if start_index in result_ids and end_index in result_ids:
-                wire.search_highlight()
+                if start_index in result_ids and end_index in result_ids:
+                    wire.search_highlight()
 
     @staticmethod
     def check_side_connections(canvas_objects, side_check, potential, connection_amount, searchable,
