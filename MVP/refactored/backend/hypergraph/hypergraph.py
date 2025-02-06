@@ -18,34 +18,68 @@ class Hypergraph(HyperEdge):
     def __init__(self, hypergraph_id=None, canvas_id=None):
         super().__init__(hypergraph_id)
         self.canvas_id = canvas_id
-        self.hypergraph_source: list[Node] = []
+        self.hypergraph_source: dict[int, Node] = {}
         self.nodes: dict[int, Node] = {}
         self.edges: dict[int, HyperEdge] = {}
 
     def get_all_hyper_edges(self) -> set:
         return set(self.edges.values())
 
+    def add_node(self, node: Node):
+        self.nodes[node.id] = node
+        if len(node.get_source_nodes()) == 0:
+            self.hypergraph_source[node.id] = node
+            for directly_connected in node.get_all_directly_connected_to():
+                self.nodes[directly_connected.id] = directly_connected
+                self.hypergraph_source[directly_connected.id] = directly_connected
+        else:
+            for directly_connected in node.get_all_directly_connected_to():
+                self.nodes[directly_connected.id] = directly_connected
+
+    def add_nodes(self, nodes: list[Node]):
+        for node in nodes:
+            self.add_node(node)
+
+    def add_edge(self, edge: HyperEdge):
+        self.edges[edge.id] = edge
+
+    def add_edges(self, edges: list[HyperEdge]):
+        for edge in edges:
+            self.add_edge(edge)
+
     def get_all_nodes(self) -> set[Node]:
         return set(self.nodes.values())
 
     def get_hypergraph_source(self) -> list[Node]:
-        return self.hypergraph_source
+        return list(self.hypergraph_source.values())
 
     def remove_node(self, node_to_remove_id: int):
         self.nodes[node_to_remove_id].remove_self()
         self.nodes.pop(node_to_remove_id)
 
+        if node_to_remove_id in self.hypergraph_source:
+            self.hypergraph_source.pop(node_to_remove_id)
+
+    def get_hyper_edge_by_id(self, hyper_edge_id: int) -> HyperEdge|None:
+        return self.edges.get(hyper_edge_id)
+
     def contains_node(self, node: Node) -> bool:
         return node in self.nodes.values()
 
     def add_hypergraph_source(self, node: Node):
-        self.hypergraph_source.append(node)
+        self.hypergraph_source[node.id] = node
+        self.nodes[node.id] = node
+        for directly_connected in node.get_all_directly_connected_to():
+            self.nodes[directly_connected.id] = directly_connected
+            self.hypergraph_source[directly_connected.id] = directly_connected
 
     def add_hypergraph_sources(self, nodes: list[Node]):
-        self.hypergraph_source.extend(nodes)
+        for node in nodes:
+            self.add_hypergraph_source(node)
 
     def set_hypergraph_sources(self, nodes: list[Node]):
-        self.hypergraph_source = nodes
+        self.hypergraph_source.clear()
+        self.add_hypergraph_sources(nodes)
 
     def get_node_by_input(self, input_id: int) -> HyperEdge | None:
         # TODO rewrite, input now is wire id => Node id, and Node is hyperedge
@@ -89,8 +123,8 @@ class Hypergraph(HyperEdge):
                 visited.add(vertex)
                 for node in vertex.get_all_directly_connected_to():
                     visited.add(node)
-                inputs = f"|" + "|".join(f"{hyper_edge}" for hyper_edge in vertex.get_inputs())
-                outputs = f"|" + "|".join(f"{hyper_edge}" for hyper_edge in vertex.get_outputs())
+                inputs = f"|" + "|".join(f"{hyper_edge}" for hyper_edge in vertex.get_input_hyper_edges())
+                outputs = f"|" + "|".join(f"{hyper_edge}" for hyper_edge in vertex.get_output_hyper_edges())
                 result += f"{inputs}<-{vertex.id}->{outputs}\n"
 
         return result

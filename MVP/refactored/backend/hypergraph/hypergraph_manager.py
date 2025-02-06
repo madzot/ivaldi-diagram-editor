@@ -20,10 +20,11 @@ class HypergraphManager:
             for node in hypergraph.get_all_nodes():
                 if node.id == id:
                     _hypergraph = hypergraph
+                    removed_node_outputs = node.get_node_children()
                     hypergraph.remove_node(id)
                     break
         # check if new hyper graphs were created
-        source_nodes: list[Node] = _hypergraph.get_source_nodes()
+        source_nodes: list[Node] = _hypergraph.get_source_nodes() + removed_node_outputs
         source_nodes_groups: list[list[Node]] = list() # list of all source nodes groups
         for source_node in source_nodes:
             group: list[Node] = list()
@@ -39,9 +40,12 @@ class HypergraphManager:
             HypergraphManager.remove_hypergraph(_hypergraph) # remove old hypergraph
 
             for group in source_nodes_groups:
-                new_hypegraph = Hypergraph(canvas_id=_hypergraph.get_canvas_id())
-                new_hypegraph.add_hypergraph_sources(group)
-                HypergraphManager.add_hypergraph(new_hypegraph)
+                new_hypergraph = Hypergraph(canvas_id=_hypergraph.get_canvas_id())
+                new_hypergraph.add_hypergraph_sources(group)
+                new_hypergraph.update_source_nodes_descendants()
+                new_hypergraph.update_edges()
+                HypergraphManager.add_hypergraph(new_hypergraph)
+
 
     @staticmethod
     def create_new_node(id: int, canvas_id: int) -> Node:
@@ -79,16 +83,19 @@ class HypergraphManager:
         theirs hyper graphs.
         In this case to given node (first arg) input should be added node|hyper edge
         """
-        hyper_edge = HyperEdge(hyper_edge_id)
-
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
+        connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
+
+        if connect_to_hypergraph is None:
+            hyper_edge = HyperEdge(hyper_edge_id)
+        else:
+            hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
         # box = hyper edge
         hyper_edge.append_target_node(node)
         node.append_input(hyper_edge)
-        connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge.id)
-        if connect_to_hypergraph is None: # It is autonomous box
-            HypergraphManager.add_hypergraph(node_hypergraph) # IS IT NEEDED?? TODO
-        else: # It is box that already have some connections => forms hypergraph
+        if connect_to_hypergraph is None:  # It is autonomous box
+            node_hypergraph.add_edge(hyper_edge)
+        else:  # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
     @staticmethod
@@ -98,13 +105,16 @@ class HypergraphManager:
         theirs hyper graphs.
         In this case to given node (first arg) output should be added node|hyper edge
         """
-        hyper_edge = HyperEdge(hyper_edge_id)
-
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
+        connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
+
+        if connect_to_hypergraph is None:
+            hyper_edge = HyperEdge(hyper_edge_id)
+        else:
+            hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
          # box = hyper edge
         hyper_edge.append_source_node(node)
         node.append_output(hyper_edge)
-        connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(hyper_edge.id)
         if connect_to_hypergraph is None:  # It is autonomous box
             HypergraphManager.add_hypergraph(node_hypergraph) # IS IT NEEDED?? TODO
         else:  # It is box that already have some connections => forms hypergraph

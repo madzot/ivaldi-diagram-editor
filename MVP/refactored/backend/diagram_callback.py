@@ -168,32 +168,36 @@ class Receiver:
                                                      connection_side,
                                                      connection_id)
 
-                    new_node = Node(resource.id)
-                    should_be_united_with: list[tuple[int, Node]] = []  # in tuple first is conn_id
-                    hyper_edges_nodes: set[Node] = set()
-                    for connection in resource.connections:
-                        conn_index, box_id, side, conn_id = connection
-                        if box_id is not None:  # Wire connection with box
-                            hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box_id)
-                            if side == "right":
-                                new_node.append_input(hyper_edge)
-                                hyper_edge.set_target_node(conn_index, new_node)
 
-                            elif side == "left":
-                                new_node.append_output(hyper_edge)
-                                hyper_edge.set_source_node(conn_index, new_node)
-
-                            for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
-                                hyper_edges_nodes.add(node)
-                        else:  # Wire connection with diagram input/output
-                            node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(conn_id)  # input/output id
-                            should_be_united_with.append((conn_id, node))
+                    new_node = HypergraphManager.create_new_node(resource.id, canvas_id)
 
 
-                    for conn_id, node_to_union in should_be_united_with:
-                        new_node.union(node_to_union)
-
-                    WireAndSpiderToNodeMapping.add_new_pair(resource.id, new_node)
+                    # new_node = Node(resource.id) TODO
+                    # should_be_united_with: list[tuple[int, Node]] = []  # in tuple first is conn_id
+                    # hyper_edges_nodes: set[Node] = set()
+                    # for connection in resource.connections:
+                    #     conn_index, box_id, side, conn_id = connection
+                    #     if box_id is not None:  # Wire connection with box
+                    #         hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box_id)
+                    #         if side == "right":
+                    #             new_node.append_input(hyper_edge)
+                    #             hyper_edge.set_target_node(conn_index, new_node)
+                    #
+                    #         elif side == "left":
+                    #             new_node.append_output(hyper_edge)
+                    #             hyper_edge.set_source_node(conn_index, new_node)
+                    #
+                    #         for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
+                    #             hyper_edges_nodes.add(node)
+                    #     else:  # Wire connection with diagram input/output
+                    #         node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(conn_id)  # input/output id
+                    #         should_be_united_with.append((conn_id, node))
+                    #
+                    #
+                    # for conn_id, node_to_union in should_be_united_with:
+                    #     new_node.union(node_to_union)
+                    #
+                    # WireAndSpiderToNodeMapping.add_new_pair(resource.id, new_node)
 
 
 

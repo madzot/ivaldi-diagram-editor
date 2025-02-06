@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from lib2to3.pgen2.tokenize import group
 from queue import Queue
 from typing_extensions import Self
 from typing import TYPE_CHECKING
@@ -29,18 +27,18 @@ class Node:
         source_nodes: set[Node] = set()
         queue: Queue[Node] = Queue()
         visited.add(self)
-        if len(self.get_inputs()) == 0:
+        if len(self.get_input_hyper_edges()) == 0:
             source_nodes.add(self)
-        for hyper_edge in self.get_inputs() + self.get_outputs():
+        for hyper_edge in self.get_input_hyper_edges() + self.get_output_hyper_edges():
             for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                 queue.put(node)
         while not queue.empty():
             node: Node = queue.get()
             visited.add(node)
-            if len(node.get_inputs()) == 0:
+            if len(node.get_input_hyper_edges()) == 0:
                 source_nodes.add(node)
             else:
-                for hyper_edge in self.get_inputs() + self.get_outputs():
+                for hyper_edge in self.get_input_hyper_edges() + self.get_output_hyper_edges():
                     for hyper_edge_node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                         if hyper_edge_node not in visited:
                             queue.put(hyper_edge_node)
@@ -51,28 +49,24 @@ class Node:
         target_nodes: list[Node] = list()
         queue: Queue[Node] = Queue()
         visited.add(self)
-        if len(self.get_outputs()) == 0:
+        if len(self.get_output_hyper_edges()) == 0:
             target_nodes.append(self)
-        for hyper_edge in self.get_inputs() + self.get_outputs():
+        for hyper_edge in self.get_input_hyper_edges() + self.get_output_hyper_edges():
             for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                 queue.put(node)
         while not queue.empty():
             node: Node = queue.get()
             visited.add(node)
-            if len(node.get_outputs()) == 0:
+            if len(node.get_output_hyper_edges()) == 0:
                 target_nodes.append(node)
             else:
-                for hyper_edge in self.get_inputs() + self.get_outputs():
+                for hyper_edge in self.get_input_hyper_edges() + self.get_output_hyper_edges():
                     for hyper_edge_node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                         if hyper_edge_node not in visited:
                             queue.put(hyper_edge_node)
         return target_nodes
 
     def remove_self(self):
-        # TODO check if this method works correctly
-        source_nodes: list[Self] = self.get_source_nodes()
-        target_nodes: list[Self] = self.get_target_nodes()
-        hypergraph: Hypergraph = HypergraphManager.get_graph_by_source_node_id(source_nodes[0].id)
         for connected_to_node in self.directly_connected_to:
             connected_to_node.directly_connected_to.remove(self)
         self.directly_connected_to.clear()
@@ -80,21 +74,6 @@ class Node:
             input.remove_target_node_by_reference(self)
         for output in self.outputs:
             output.remove_source_node_by_reference(self)
-
-        # TODO remove hypergraph source node
-
-
-        connected_nodes: dict[Node, list[Node]] = defaultdict(list)
-        for source_node in source_nodes:
-            for target_node in target_nodes:
-                if source_node.is_connected_to(target_node):
-                    connected_nodes[source_node].append(target_node)
-                    connected_nodes[target_node].append(source_node)
-        connectivity: list[list[Node]] = find_connected_component(connected_nodes)
-        for nodes in connectivity:
-            new_hypergraph: Hypergraph = Hypergraph(hypergraph.get_canvas_id())
-            new_hypergraph.append_source_nodes(nodes[0].get_source_nodes())
-            HypergraphManager.add_hypergraph(new_hypergraph)
 
         self.inputs.clear()
         self.outputs.clear()
@@ -108,7 +87,7 @@ class Node:
         visited: set[Node] = set()
         queue: Queue[Node] = Queue()
         visited.add(self)
-        for hyper_edge in self.get_inputs() + self.get_outputs():
+        for hyper_edge in self.get_input_hyper_edges() + self.get_output_hyper_edges():
             for node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                 if node not in visited:
                     queue.put(node)
@@ -117,7 +96,7 @@ class Node:
             visited.add(node)
             if node == target_node:
                 return True
-            for hyper_edge in node.get_inputs() + node.get_outputs():
+            for hyper_edge in node.get_input_hyper_edges() + node.get_output_hyper_edges():
                 for hyper_edge_node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
                     if hyper_edge_node not in visited:
                         queue.put(hyper_edge_node)
@@ -134,11 +113,11 @@ class Node:
     def set_inputs(self, inputs: list[HyperEdge]):
         self.inputs = inputs
 
-    def get_inputs(self) -> list[HyperEdge]:
+    def get_input_hyper_edges(self) -> list[HyperEdge]:
         inputs = []
         visited = set()
         queue = Queue()
-        visited.add(self.id)
+        visited.add(self)
         inputs.extend(self.inputs)
         for other in self.directly_connected_to:
             queue.put(other)
@@ -166,11 +145,11 @@ class Node:
                     queue.put(directly_connected_to_node)
         return list(visited)
 
-    def get_outputs(self) -> list[HyperEdge]:
+    def get_output_hyper_edges(self) -> list[HyperEdge]:
         outputs = []
         visited = set()
         queue = Queue()
-        visited.add(self.id)
+        visited.add(self)
         outputs.extend(self.outputs)
         for other in self.directly_connected_to:
             queue.put(other)
@@ -183,6 +162,14 @@ class Node:
                 for other in node.directly_connected_to:
                     queue.put(other)
         return outputs
+
+    def get_node_children(self) -> list[Node]:
+        children: set[Node] = set()
+        for hyper_edge in self.get_output_hyper_edges():
+            for target_node in hyper_edge.get_target_nodes():
+                children.add(target_node)
+                children.union(target_node.get_all_directly_connected_to())
+        return list(children)
 
     def remove_input(self, input: HyperEdge):
         if input in self.inputs:
