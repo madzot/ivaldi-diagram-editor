@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from queue import Queue
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from MVP.refactored.custom_canvas import CustomCanvas
     from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
     from MVP.refactored.backend.hypergraph.node import Node
@@ -14,7 +12,19 @@ class HypergraphManager:
     hypergraphs: set[Hypergraph] = set()
 
     @staticmethod
-    def remove_node(id: int):
+    def remove_node(id: int):  # TODO handle case, when for example (-0-+-0- -> -0+ 0-)
+        """
+        Removes a node from the hypergraph and handles the case where deleting a node causes the hypergraph to
+        split into multiple disconnected hypergraphs.
+
+        This function performs the following steps:
+        1. Removes the specified node from its hypergraph.
+        2. Checks if removing the node causes the hypergraph to split into multiple disconnected hypergraphs.
+        3. If the hypergraph splits, removes the original hypergraph and creates new hypergraphs for each disconnected component.
+
+        :param id: The unique identifier of the node to be removed.
+        """
+        removed_node_outputs = []
         _hypergraph: Hypergraph = None
         for hypergraph in HypergraphManager.hypergraphs:
             for node in hypergraph.get_all_nodes():
@@ -116,7 +126,7 @@ class HypergraphManager:
         hyper_edge.append_source_node(node)
         node.append_output(hyper_edge)
         if connect_to_hypergraph is None:  # It is autonomous box
-            HypergraphManager.add_hypergraph(node_hypergraph) # IS IT NEEDED?? TODO
+            node_hypergraph.add_edge(hyper_edge)
         else:  # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
