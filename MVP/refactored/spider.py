@@ -67,9 +67,7 @@ class Spider(Connection):
 
     # MOVING, CLICKING ETC.
     def on_press(self):
-        for item in self.canvas.selector.selected_items:
-            item.deselect()
-        self.canvas.selector.selected_items.clear()
+        self.canvas.selector.finish_selection()
         self.select()
         self.canvas.selector.selected_items.append(self)
         if not self.canvas.draw_wire_mode:

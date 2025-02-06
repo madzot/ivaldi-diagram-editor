@@ -203,9 +203,7 @@ class Box:
     # MOVING, CLICKING ETC.
     def on_press(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        for item in self.canvas.selector.selected_items:
-            item.deselect()
-        self.canvas.selector.selected_items.clear()
+        self.canvas.selector.finish_selection()
         self.select()
         self.canvas.selector.selected_items.append(self)
         self.start_x = event.x
