@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from queue import Queue
+
 from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
-    from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 
 
 class HyperEdge:
@@ -24,8 +21,8 @@ class HyperEdge:
         self.source_nodes: dict[int, Node] = dict() # key is connection index, it neede for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
 
-    def set_id(self, hyper_edge_id):
-        self.id = hyper_edge_id
+    def swap_id(self, new_id: int):
+        self.id = new_id
 
     def remove_all_source_nodes(self):
         self.source_nodes.clear()

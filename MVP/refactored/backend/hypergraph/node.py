@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
 
 class Node:
@@ -190,24 +188,3 @@ class Node:
 
     def __hash__(self):
         return hash(self.id)
-
-
-def find_connected_component(connected_nodes_map: dict[Node, list[Node]]) -> list[list[Node]]:
-    connected_components: list[list[Node]] = list()
-    queue: Queue[Node] = Queue()
-    visited: set[Node] = set()
-    for node, connected_nodes in connected_nodes_map.items():
-        connected_component: list[Node] = list()
-        if node not in visited:
-            connected_component.append(node)
-        visited.add(node)
-        for connected_node in connected_nodes:
-            queue.put(connected_node)
-        while not queue.empty():
-            connected_node = queue.get()
-            if connected_node not in visited:
-                connected_component.append(connected_node)
-                for connected_node_connected_node in connected_nodes_map[connected_node]:
-                    queue.put(connected_node_connected_node)
-        connected_components.append(connected_component)
-    return connected_components

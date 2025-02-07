@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+from MVP.refactored.backend.hypergraph.node import Node
+
 if TYPE_CHECKING:
-    from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-    from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
-    from MVP.refactored.backend.hypergraph.node import Node
+    pass
 
 
 class HypergraphManager:
@@ -14,7 +16,7 @@ class HypergraphManager:
     @staticmethod
     def remove_node(id: int):  # TODO handle case, when for example (-0-+-0- -> -0+ 0-)
         """
-        Removes a node from the hypergraph and handles the case where deleting a node causes the hypergraph to
+        Removes a node from the hypergraph and handles the case where deleting the node causes the hypergraph to
         split into multiple disconnected hypergraphs.
 
         This function performs the following steps:
@@ -42,7 +44,7 @@ class HypergraphManager:
                 if source_node != next_source_node and source_node.is_connected_to(next_source_node):
                     group.append(next_source_node)
             group = sorted(group, key=lambda node: node.id)
-            if group not in source_nodes_groups:
+            if group not in source_nodes_groups and len(group) != 0:
                 source_nodes_groups.append(group)
 
         # if after deleting node hype graph split to two or more hyper graphs we need to handle that
@@ -56,17 +58,72 @@ class HypergraphManager:
                 new_hypergraph.update_edges()
                 HypergraphManager.add_hypergraph(new_hypergraph)
 
+    @staticmethod
+    def remove_hyper_edge(id: int):
+        """
+        Removes a hyper edge from the hypergraph and handles the case where deleting the edge causes the hypergraph to
+        split into multiple disconnected hypergraphs.
+
+        This function performs the following steps:
+        1. Removes the specified hyper edge from its hypergraph.
+        2. Checks if removing the hyper edge causes the hypergraph to split into multiple disconnected hypergraphs.
+        3. If the hypergraph splits, removes the original hypergraph and creates new hypergraphs for each disconnected component.
+
+        :param id: The unique identifier of the node to be removed.
+        """
+        _hypergraph: Hypergraph = None
+        deleted_hyper_edge = None
+        for hypergraph in HypergraphManager.hypergraphs:
+            if hypergraph.get_hyper_edge_by_id(id) is not None:
+                _hypergraph = hypergraph
+                deleted_hyper_edge = hypergraph.remove_hyper_edge(id) # remove hyper edge from hypergraph
+                break
+        # check if new hypergraph appears
+        source_nodes: list[Node] = _hypergraph.get_source_nodes() + deleted_hyper_edge.get_target_nodes()
+        source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
+        # TODO move duplicated code into another method?
+        for source_node in source_nodes:
+            group: list[Node] = list()
+            for next_source_node in source_nodes:
+                if source_node != next_source_node and source_node.is_connected_to(next_source_node):
+                    group.append(next_source_node)
+            group = sorted(group, key=lambda node: node.id)
+            if group not in source_nodes_groups:
+                source_nodes_groups.append(group)
+
+        # if after deleting node hype graph split to two or more hyper graphs we need to handle that
+        if len(source_nodes_groups) > 1:  # If group count isn`t 1, so there occurred new hyper graphs
+            HypergraphManager.remove_hypergraph(_hypergraph)  # remove old hypergraph
+
+            for group in source_nodes_groups:
+                new_hypergraph = Hypergraph(canvas_id=_hypergraph.get_canvas_id())
+                new_hypergraph.add_hypergraph_sources(group)
+                new_hypergraph.update_source_nodes_descendants()
+                new_hypergraph.update_edges()
+                HypergraphManager.add_hypergraph(new_hypergraph)
+
+    @staticmethod
+    def swap_hyper_edge_id(prev_id: int, new_id: int):
+        """
+        Replaces a hyper edge ID in the corresponding hypergraph.
+
+        :param prev_id: The current hyper edge ID.
+        :param new_id: The new hyper edge ID.
+        """
+        hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(prev_id)
+        hypergraph.swap_hyper_edge_id(prev_id, new_id)
 
     @staticmethod
     def create_new_node(id: int, canvas_id: int) -> Node:
         """
-        Create new hypergraph, when spider is created.
+        Create new hypergraph, when spider/diagram input/diagram output/wire is created.
 
         :return: created node
         """
         new_hypergraph: Hypergraph = Hypergraph(canvas_id=canvas_id)
         new_node = Node(id)
         new_hypergraph.add_hypergraph_source(new_node)
+        HypergraphManager.hypergraphs.add(new_hypergraph)
         return new_node
 
     @staticmethod
@@ -79,11 +136,11 @@ class HypergraphManager:
     @staticmethod
     def union_nodes(node: Node, unite_with_id: int):
         unite_with = HypergraphManager._get_node_by_id(unite_with_id)
-
+        unite_with_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(unite_with.id)  # always exits, because node is always forms a hypergraph
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
+
         node.union(unite_with)
 
-        unite_with_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(unite_with.id)  # always exits, because node is always forms a hypergraph
         HypergraphManager.combine_hypergraphs([node_hypergraph, unite_with_hypergraph])
 
     @staticmethod
@@ -139,10 +196,10 @@ class HypergraphManager:
         """
         combined_hypergraph = Hypergraph(canvas_id=hypergraphs[0].canvas_id)
         for hypergraph in hypergraphs:
-            combined_hypergraph.nodes.update(hypergraph.nodes)
-            combined_hypergraph.edges.update(hypergraph.edges)
-            combined_hypergraph.add_hypergraph_sources(hypergraph.get_source_nodes())
-
+            combined_hypergraph.add_nodes(hypergraph.get_hypergraph_source())
+            combined_hypergraph.update_source_nodes_descendants()
+            combined_hypergraph.update_edges()
+            # TODO after hypergraps combining one old hypergraph remains
             HypergraphManager.remove_hypergraph(hypergraph)
         HypergraphManager.add_hypergraph(combined_hypergraph)
 

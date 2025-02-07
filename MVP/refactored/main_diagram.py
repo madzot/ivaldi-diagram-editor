@@ -138,8 +138,6 @@ class MainDiagram(tk.Tk):
         self.mainloop()
 
     def __get_all(self):
-        map1 = BoxToHyperEdgeMapping
-        map2 = WireAndSpiderToNodeMapping
         hypergraphs = HypergraphManager
         print("hi")
 

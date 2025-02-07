@@ -286,7 +286,6 @@ class CustomCanvas(tk.Canvas):
 
             self.current_wire.update()
             self.nullify_wire_start()
-        HypergraphManager.modify_canvas_hypergraph(self)
 
     def cancel_wire_pulling(self, event=None):
         if event:

@@ -3,14 +3,11 @@ from __future__ import annotations
 from queue import Queue
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
-
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
 
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
 class Hypergraph(HyperEdge):
     """Hypergraph class."""
@@ -22,12 +19,12 @@ class Hypergraph(HyperEdge):
         self.nodes: dict[int, Node] = {}
         self.edges: dict[int, HyperEdge] = {}
 
-    def get_all_hyper_edges(self) -> set:
-        return set(self.edges.values())
+    def get_all_hyper_edges(self) -> list[HyperEdge]:
+        return list(self.edges.values())
 
     def add_node(self, node: Node):
         self.nodes[node.id] = node
-        if len(node.get_source_nodes()) == 0:
+        if len(node.get_input_hyper_edges()) == 0:
             self.hypergraph_source[node.id] = node
             for directly_connected in node.get_all_directly_connected_to():
                 self.nodes[directly_connected.id] = directly_connected
@@ -47,8 +44,8 @@ class Hypergraph(HyperEdge):
         for edge in edges:
             self.add_edge(edge)
 
-    def get_all_nodes(self) -> set[Node]:
-        return set(self.nodes.values())
+    def get_all_nodes(self) -> list[Node]:
+        return list(self.nodes.values())
 
     def get_hypergraph_source(self) -> list[Node]:
         return list(self.hypergraph_source.values())
@@ -59,6 +56,15 @@ class Hypergraph(HyperEdge):
 
         if node_to_remove_id in self.hypergraph_source:
             self.hypergraph_source.pop(node_to_remove_id)
+
+    def remove_hyper_edge(self, edge_to_remove_id: int) -> HyperEdge:
+        self.edges[edge_to_remove_id].remove_self()
+        return self.edges.pop(edge_to_remove_id)
+
+    def swap_hyper_edge_id(self, prev_id: int, new_id: int):
+        self.edges[prev_id].swap_id(new_id)
+        self.edges[new_id] = self.edges[prev_id]
+        self.edges.pop(prev_id)
 
     def get_hyper_edge_by_id(self, hyper_edge_id: int) -> HyperEdge|None:
         return self.edges.get(hyper_edge_id)
