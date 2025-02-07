@@ -1,3 +1,5 @@
+import tkinter.messagebox
+
 from MVP.refactored.box import Box
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.spider import Spider
@@ -7,6 +9,7 @@ class SearchAlgorithm:
     def __init__(self, searchable: CustomCanvas, canvas: CustomCanvas, search_window):
         self.searchable = searchable
         self.canvas = canvas
+        self.search_window = search_window
         self.search_all_canvases = search_window.search_all_canvases.get()
 
     def get_potential_results(self, searchable_objects, canvas_objects):
@@ -90,8 +93,9 @@ class SearchAlgorithm:
 
         searchable_objects = sorted(self.searchable.spiders + self.searchable.boxes, key=lambda item: [item.x, item.y])
 
-        if len(searchable_objects) == 0:
-            print("TODO: create some sort of indication that there is nothing in search.")  # TODO
+        if len(searchable_objects) <= 1:
+            tkinter.messagebox.showwarning("Warning", "Please add more items into search.")
+            self.search_window.focus()
 
         searchable_connections_dict = self.create_connection_dictionary(searchable_objects)
         print(f"Searchable dict: {searchable_connections_dict}")
