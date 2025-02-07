@@ -32,7 +32,7 @@ class SearchWindow(tk.Toplevel):
 
         self.match_sub_diagrams = tk.IntVar()
         self.match_sub_diagrams.set(0)
-        self.match_sub_canvases_button = tkk.Checkbutton(self.options_frame, text="Match sub diagrams",
+        self.match_sub_canvases_button = tkk.Checkbutton(self.options_frame, text="Match labels",
                                                          variable=self.match_sub_diagrams)
         self.match_sub_canvases_button.grid(row=1, column=1, sticky=tk.NSEW, padx=(0, 0))
 
