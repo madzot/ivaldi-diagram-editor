@@ -36,6 +36,16 @@ class Titlebar(ttk.Frame):
         self.file_menu.add_command(label="Import as sub-diagram", command=self.import_sub_diagram)
         self.file_button.pack(side=ttk.LEFT)
 
+        # Edit button
+        self.edit_button = tk.Menubutton(self, text="Edit", width=5, indicatoron=False)
+        self.edit_menu = tk.Menu(self.edit_button, tearoff=False)
+        self.edit_button.config(menu=self.edit_menu)
+
+        # Edit menu buttons
+        self.edit_menu.add_command(label="Search in Project",
+                                   command=lambda: self.main_diagram.open_search_window())
+        self.edit_button.pack(side=ttk.LEFT)
+
         # View button
         self.view_button = tk.Menubutton(self, text="View",
                                          width=5, indicatoron=False)
