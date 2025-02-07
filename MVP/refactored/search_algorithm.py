@@ -31,30 +31,18 @@ class SearchAlgorithm:
                         if len(curr_canvas_right) == len(curr_search_right) or len(
                                 curr_search_right) == 0 or isinstance(canvas_objects[curr_canvas_id], Spider):
                             if counter == 0:
-                                print()
-                                print("Adding potential results the first round")
-                                print(f"Searchable connection: {searchable_connection}")
-                                print(f"Canvas connection: {canvas_connection}")
                                 potential_results.append({curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
                             else:
                                 for potential in potential_results.copy():
-                                    print("New potential")
-                                    print(potential_results)
-                                    print(potential)
                                     if len(potential) == counter:
                                         for key in potential.keys():
                                             if key in curr_canvas_left or not curr_search_left:
-                                                print()
-                                                print("Adding potential results")
-                                                print(f"Searchable connection: {searchable_connection}")
-                                                print(f"Canvas connection: {canvas_connection}")
                                                 potential_results.append(
                                                     potential | {curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
                                                 break
             counter += 1
 
         potential_results = list(filter(lambda x: len(x) == len(searchable_connections), potential_results))
-        print(f"Potential results: {potential_results}")
         return potential_results
 
     @staticmethod
@@ -69,8 +57,6 @@ class SearchAlgorithm:
                 connection_ids.append(connection[0])
                 left_con, right_con = connection[1]
                 connected_ids = connected_ids + left_con + right_con
-            print(f"Connection ids: {connected_ids}")
-            print(f"connected ids: {connected_ids}")
             for connection_id in connection_ids:
                 if connection_id not in connected_ids:
                     connected = False
@@ -96,34 +82,28 @@ class SearchAlgorithm:
         if len(searchable_objects) <= 1:
             tkinter.messagebox.showwarning("Warning", "Please add more items into search.")
             self.search_window.focus()
+            return False
 
         searchable_connections_dict = self.create_connection_dictionary(searchable_objects)
-        print(f"Searchable dict: {searchable_connections_dict}")
-        canvas_connection_dict = self.create_connection_dictionary(canvas_objects)
-        print(f"Canvas dict: {canvas_connection_dict}")
+        if not self.filter_connectivity([searchable_connections_dict]):
+            tkinter.messagebox.showwarning("Warning", "All items need to be connected to search.")
+            self.search_window.focus()
+            return False
 
         potential_results = self.get_potential_results(searchable_objects, canvas_objects)
-
         potential_results = self.filter_connectivity(potential_results)
-        print(f"Potential after filtering: {potential_results}")
 
         for potential_result in potential_results:
-            print()
-            print(f"POTENTIAL RESULT: {potential_result}")
-            print(f"Normalized potential result: {self.normalize_dictionary(potential_result)}")
             normalized = self.normalize_dictionary(potential_result)
             not_correct = False
             for normalized_key in normalized.keys():
                 if normalized_key not in searchable_connections_dict.keys():
                     not_correct = True
                     break
-                print(f"Normalized {normalized}")
-                print(f"searchable dict: {searchable_connections_dict}")
                 normalized_item = normalized[normalized_key]
                 normalized_left, normalized_right = normalized_item
 
                 searchable = searchable_connections_dict[normalized_key]
-                print(f"Searchable {searchable}")
                 searchable_left, searchable_right = searchable
 
                 for key in searchable_left:
@@ -245,7 +225,6 @@ class SearchAlgorithm:
     def create_connection_dictionary(canvas_objects):
         canvas_connection_dict = {}
         for i in range(len(canvas_objects)):
-            print()
             curr_item = canvas_objects[i]
             left_wires = []
             right_wires = []
