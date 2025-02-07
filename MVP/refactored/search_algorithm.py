@@ -11,6 +11,7 @@ class SearchAlgorithm:
         self.canvas = canvas
         self.search_window = search_window
         self.search_all_canvases = search_window.search_all_canvases.get()
+        self.match_labels = search_window.match_labels.get()
 
     def get_potential_results(self, searchable_objects, canvas_objects):
         potential_results = []
@@ -128,6 +129,7 @@ class SearchAlgorithm:
 
                 left_side_check = False
                 right_side_check = False
+                label_check = False
                 if searchable_item.__class__ == potential_item.__class__:
                     if isinstance(searchable_item, Box):
 
@@ -140,15 +142,20 @@ class SearchAlgorithm:
                                                                        searchable_item.right_connections,
                                                                        searchable_right,
                                                                        searchable_objects)
+                        if self.match_labels:
+                            label_check = (potential_item.label_text == searchable_item.label_text
+                                           or searchable_item.label_text == "")
 
                     elif isinstance(searchable_item, Spider):
                         left_side_check = True
                         right_side_check = True
+                        label_check = True
 
                 if left_side_check and right_side_check:
-                    found = True
-                    for key in potential_result.keys():
-                        result_ids.append(key)
+                    if label_check or not self.match_labels:
+                        found = True
+                        for key in potential_result.keys():
+                            result_ids.append(key)
 
         self.highlight_results(result_ids, canvas_objects)
         self.highlight_wires(result_ids, canvas_objects)
