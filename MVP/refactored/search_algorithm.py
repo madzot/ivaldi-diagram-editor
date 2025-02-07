@@ -84,13 +84,16 @@ class SearchAlgorithm:
         found = False
         result_ids = []
         if self.search_all_canvases:
-            canvases = self.canvas.main_diagram.canvasses.values()
+            canvases = list(self.canvas.main_diagram.canvasses.values())
+            canvases.remove(self.canvas)
+            canvases.insert(0, self.canvas)
             items = []
             for canvas in canvases:
                 items = items + canvas.spiders + canvas.boxes
-            canvas_objects = sorted(items, key=lambda item: [item.x, item.y])
+            canvas_objects = sorted(items, key=lambda item: [canvases.index(item.canvas), item.x, item.y])
         else:
-            canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes, key=lambda item: [item.x, item.y])
+            canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes,
+                                    key=lambda item: [item.x, item.y])
 
         searchable_objects = sorted(self.searchable.spiders + self.searchable.boxes, key=lambda item: [item.x, item.y])
 

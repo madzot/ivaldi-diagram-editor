@@ -61,6 +61,7 @@ class MainDiagram(tk.Tk):
 
         self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
         self.bind("<Control-f>", lambda event: self.open_search_window())
+        self.search_window = None
 
         self.is_tree_visible = True
         self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
@@ -189,10 +190,17 @@ class MainDiagram(tk.Tk):
         self.manage_methods = ManageMethods(self)
 
     def open_search_window(self):
-        SearchWindow(self)
+        try:
+            self.search_window.focus()
+        except (tk.TclError, AttributeError):
+            self.search_window = SearchWindow(self)
 
     def cancel_search_results(self):
         self.is_search_active = False
+        self.search_results = []
+        self.active_search_index = 0
+        self.search_objects = {}
+        self.wire_objects = {}
         for canvas in self.canvasses.values():
             canvas.remove_search_highlights()
 
@@ -211,7 +219,7 @@ class MainDiagram(tk.Tk):
         self.active_search_index %= len(self.search_results)
 
         self.highlight_search_result_by_index(self.active_search_index)
-
+        self.check_search_result_canvas(self.active_search_index)
         self.update_search_result_button_texts()
 
     def update_search_result_button_texts(self):
@@ -219,8 +227,9 @@ class MainDiagram(tk.Tk):
             canvas.search_result_button.info_text.set(f"Search: {self.active_search_index + 1}/{len(self.search_results)}")
 
     def check_search_result_canvas(self, index):
-        if self.search_results[index][0].canvas != self.custom_canvas:
-            self.switch_canvas(self.search_results[index][0].canvas)
+        new_canvas = self.search_objects[self.search_results[index][0]].canvas
+        if new_canvas != self.custom_canvas:
+            self.switch_canvas(new_canvas)
 
     def highlight_search_result_by_index(self, index):
         new_search = self.search_results[index]
@@ -376,12 +385,16 @@ class MainDiagram(tk.Tk):
     def switch_canvas(self, canvas):
         for item in self.custom_canvas.selector.selected_items:
             item.deselect()
+        width = self.custom_canvas.winfo_width()
         self.custom_canvas.selector.selected_items.clear()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
         self.selector.canvas = self.custom_canvas
         # Show the selected canvas
         self.custom_canvas.pack(fill='both', expand=True)
+        self.custom_canvas.configure(width=width)
+        self.custom_canvas.update()
+        self.custom_canvas.update_search_results_button()
         self.bind_buttons()
 
         self.titlebar.set_custom_canvas(self.custom_canvas)
@@ -569,18 +582,12 @@ class MainDiagram(tk.Tk):
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
-            self.custom_canvas.update()
-            if self.is_search_active:
-                self.custom_canvas.search_result_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
-                                                              anchor=tk.CENTER)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
-            self.custom_canvas.update()
-            if self.is_search_active:
-                self.custom_canvas.search_result_button.place(x=self.custom_canvas.winfo_width() - 75, y=20,
-                                                              anchor=tk.CENTER)
+        self.custom_canvas.update()
+        self.custom_canvas.update_search_results_button()
 
     @staticmethod
     def pairwise(iterable):

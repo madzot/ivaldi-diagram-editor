@@ -67,7 +67,13 @@ class Selector:
             if item not in self.canvas.search_result_highlights:
                 item.deselect()
             else:
-                item.search_highlight()
+                main_diagram = self.canvas.main_diagram
+                active = main_diagram.search_results[main_diagram.active_search_index]
+                active_items = [main_diagram.search_objects[index] for index in active]
+                if item in active_items:
+                    item.search_highlight_primary()
+                else:
+                    item.search_highlight_secondary()
         self.selected_items.clear()
         # Remove the selection box and reset selecting state
         self.canvas.delete(self.canvas.selectBox)
