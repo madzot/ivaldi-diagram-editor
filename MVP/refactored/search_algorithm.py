@@ -4,9 +4,10 @@ from MVP.refactored.spider import Spider
 
 
 class SearchAlgorithm:
-    def __init__(self, searchable: CustomCanvas, canvas: CustomCanvas):
+    def __init__(self, searchable: CustomCanvas, canvas: CustomCanvas, search_window):
         self.searchable = searchable
         self.canvas = canvas
+        self.search_all_canvases = search_window.search_all_canvases.get()
         self.results = []
         self.result_objects = {}
         self.wire_results = []
@@ -26,8 +27,10 @@ class SearchAlgorithm:
                 curr_canvas_left, curr_canvas_right = canvas_connection[1]
                 if searchable_objects[counter].__class__ == canvas_objects[curr_canvas_id].__class__:
 
-                    if len(curr_canvas_left) == len(curr_search_left) or len(curr_search_left) == 0 or isinstance(canvas_objects[curr_canvas_id], Spider):
-                        if len(curr_canvas_right) == len(curr_search_right) or len(curr_search_right) == 0 or isinstance(canvas_objects[curr_canvas_id], Spider):
+                    if len(curr_canvas_left) == len(curr_search_left) or len(curr_search_left) == 0 or isinstance(
+                            canvas_objects[curr_canvas_id], Spider):
+                        if len(curr_canvas_right) == len(curr_search_right) or len(
+                                curr_search_right) == 0 or isinstance(canvas_objects[curr_canvas_id], Spider):
                             if counter == 0:
                                 print()
                                 print("Adding potential results the first round")
@@ -46,12 +49,8 @@ class SearchAlgorithm:
                                                 print("Adding potential results")
                                                 print(f"Searchable connection: {searchable_connection}")
                                                 print(f"Canvas connection: {canvas_connection}")
-                                                # if isinstance(canvas_objects[curr_canvas_id], Spider):
-                                                #     potential_results.append(potential | {curr_canvas_id: [[], []]})
-                                                #     # potential[curr_canvas_id] = [[], []]
-                                                # else:
-                                                potential_results.append(potential | {curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
-                                                # potential[curr_canvas_id] = [curr_canvas_left, curr_canvas_right]
+                                                potential_results.append(
+                                                    potential | {curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
                                                 break
             counter += 1
 
@@ -84,7 +83,15 @@ class SearchAlgorithm:
     def contains_searchable(self):
         found = False
         result_ids = []
-        canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes, key=lambda item: [item.x, item.y])
+        if self.search_all_canvases:
+            canvases = self.canvas.main_diagram.canvasses.values()
+            items = []
+            for canvas in canvases:
+                items = items + canvas.spiders + canvas.boxes
+            canvas_objects = sorted(items, key=lambda item: [item.x, item.y])
+        else:
+            canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes, key=lambda item: [item.x, item.y])
+
         searchable_objects = sorted(self.searchable.spiders + self.searchable.boxes, key=lambda item: [item.x, item.y])
 
         if len(searchable_objects) == 0:
@@ -146,25 +153,15 @@ class SearchAlgorithm:
                 if searchable_item.__class__ == potential_item.__class__:
                     if isinstance(searchable_item, Box):
 
-                        if searchable_item.left_connections:
-                            matching_connection_count = 0
-                            for j in range(searchable_item.left_connections):
-                                if searchable_left[j] is None or potential_left[j] is None or searchable_objects[searchable_left[j]].__class__ == canvas_objects[potential_left[j]].__class__:
-                                    matching_connection_count += 1
-                            if matching_connection_count == searchable_item.left_connections:
-                                left_side_check = True
-                        else:
-                            left_side_check = True
+                        left_side_check = self.check_side_connections(canvas_objects, left_side_check, potential_left,
+                                                                      searchable_item.left_connections, searchable_left,
+                                                                      searchable_objects)
 
-                        if searchable_item.right_connections:
-                            matching_connection_count = 0
-                            for j in range(searchable_item.right_connections):
-                                if searchable_right[j] is None or potential_right[j] is None or searchable_objects[searchable_right[j]].__class__ == canvas_objects[potential_right[j]].__class__:
-                                    matching_connection_count += 1
-                            if matching_connection_count == searchable_item.right_connections:
-                                right_side_check = True
-                        else:
-                            right_side_check = True
+                        right_side_check = self.check_side_connections(canvas_objects, right_side_check,
+                                                                       potential_right,
+                                                                       searchable_item.right_connections,
+                                                                       searchable_right,
+                                                                       searchable_objects)
 
                     elif isinstance(searchable_item, Spider):
                         left_side_check = True
@@ -195,27 +192,45 @@ class SearchAlgorithm:
         return found
 
     def highlight_wires(self, result_ids, canvas_objects):
-        for wire in self.canvas.wires:
-            if wire.start_connection in canvas_objects:
-                start_index = canvas_objects.index(wire.start_connection)
-            elif wire.start_connection.box in canvas_objects:
-                start_index = canvas_objects.index(wire.start_connection.box)
-            else:
-                continue
-
-            if wire.end_connection in canvas_objects:
-                end_index = canvas_objects.index(wire.end_connection)
-            elif wire.end_connection.box in canvas_objects:
-                end_index = canvas_objects.index(wire.end_connection.box)
-            else:
-                continue
-
-            if start_index in result_ids and end_index in result_ids:
-                wire.search_highlight_secondary()
-                if wire not in self.wire_objects:
-                    self.wire_objects[tuple(result_ids)] = [wire]
+        canvases = self.canvas.main_diagram.canvasses.values() if self.search_all_canvases else [self.canvas]
+        for canvas in canvases:
+            for wire in canvas.wires:
+                if wire.start_connection in canvas_objects:
+                    start_index = canvas_objects.index(wire.start_connection)
+                elif wire.start_connection.box in canvas_objects:
+                    start_index = canvas_objects.index(wire.start_connection.box)
                 else:
-                    self.wire_objects[tuple(result_ids)].append(wire)
+                    continue
+
+                if wire.end_connection in canvas_objects:
+                    end_index = canvas_objects.index(wire.end_connection)
+                elif wire.end_connection.box in canvas_objects:
+                    end_index = canvas_objects.index(wire.end_connection.box)
+                else:
+                    continue
+
+                if start_index in result_ids and end_index in result_ids:
+                    wire.search_highlight_secondary()
+                    if wire not in self.wire_objects:
+                        self.wire_objects[tuple(result_ids)] = [wire]
+                    else:
+                        self.wire_objects[tuple(result_ids)].append(wire)
+
+    @staticmethod
+    def check_side_connections(canvas_objects, side_check, potential, connection_amount, searchable,
+                               searchable_objects):
+        if connection_amount:
+            matching_connection_count = 0
+            for j in range(connection_amount):
+                if (searchable[j] is None
+                        or potential[j] is None
+                        or searchable_objects[searchable[j]].__class__ == canvas_objects[potential[j]].__class__):
+                    matching_connection_count += 1
+            if matching_connection_count == connection_amount:
+                side_check = True
+        else:
+            side_check = True
+        return side_check
 
     @staticmethod
     def highlight_results(result_indexes, canvas_objects):
