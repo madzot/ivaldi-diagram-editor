@@ -62,6 +62,7 @@ class Box:
         self.id = id_
 
     def bind_events(self):
+        self.canvas.tag_bind(self.rect, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.rect, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
@@ -205,6 +206,9 @@ class Box:
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         for item in self.canvas.selector.selected_items:
             item.deselect()
+        self.canvas.selector.selected_boxes.clear()
+        self.canvas.selector.selected_spiders.clear()
+        self.canvas.selector.selected_wires.clear()
         self.canvas.selector.selected_items.clear()
         self.select()
         self.canvas.selector.selected_items.append(self)
@@ -213,7 +217,18 @@ class Box:
         self.x_dif = event.x - self.x
         self.y_dif = event.y - self.y
 
+    def on_control_press(self):
+        if self in self.canvas.selector.selected_items:
+            self.canvas.selector.selected_items.remove(self)
+            self.deselect()
+        else:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
+        self.canvas.selector.select_wires_between_selected_items()
+
     def on_drag(self, event):
+        if event.state & 0x4:
+            return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
         self.start_x = event.x
@@ -303,6 +318,13 @@ class Box:
         if self.label:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
+    def bind_event_label(self):
+        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
+        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
+        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+        self.canvas.tag_bind(self.label, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
+        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
+
     def edit_label(self, new_label=None):
         if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
@@ -335,10 +357,7 @@ class Box:
                 self.sub_diagram.set_name(self.label_text)
                 self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
 
-        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
-        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
-        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+        self.bind_event_label()
 
     def set_label(self, new_label):
         self.label_text = new_label
@@ -349,10 +368,8 @@ class Box:
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
-        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
-        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
-        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+
+        self.bind_event_label()
 
     def on_resize_press(self, event):
         self.start_x = event.x
