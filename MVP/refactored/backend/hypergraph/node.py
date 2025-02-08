@@ -4,6 +4,8 @@ from queue import Queue
 from typing_extensions import Self
 from typing import TYPE_CHECKING
 
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
@@ -20,7 +22,7 @@ class Node:
         self.directly_connected_to: list[Node] = []
         # Should be modified that we can determine how each node connected to another
 
-    def get_source_nodes(self) -> list[Self]:
+    def get_hypergraph_source_nodes(self) -> list[Self]:
         visited: set[Node] = set()
         source_nodes: set[Node] = set()
         queue: Queue[Node] = Queue()
@@ -42,7 +44,7 @@ class Node:
                             queue.put(hyper_edge_node)
         return list(source_nodes)
 
-    def get_target_nodes(self) -> list[Self]:
+    def get_hypergraph_target_nodes(self) -> list[Self]:
         visited: set[Node] = set()
         target_nodes: list[Node] = list()
         queue: Queue[Node] = Queue()
@@ -63,6 +65,15 @@ class Node:
                         if hyper_edge_node not in visited:
                             queue.put(hyper_edge_node)
         return target_nodes
+
+    def get_children_nodes(self) -> list[Self]:
+        children_nodes: set[Node] = set()
+        for output_hyper_edge in self.get_output_hyper_edges():
+            for node in output_hyper_edge.get_target_nodes():
+                children_nodes.add(node)
+                for directly_connected_to in node.get_all_directly_connected_to():
+                    children_nodes.add(directly_connected_to)
+        return list(children_nodes)
 
     def remove_self(self):
         for connected_to_node in self.directly_connected_to:
@@ -144,11 +155,11 @@ class Node:
         return list(visited)
 
     def get_output_hyper_edges(self) -> list[HyperEdge]:
-        outputs = []
+        outputs: set[HyperEdge] = set()
         visited = set()
         queue = Queue()
         visited.add(self)
-        outputs.extend(self.outputs)
+        outputs.update(self.outputs)
         for other in self.directly_connected_to:
             queue.put(other)
 
@@ -156,10 +167,10 @@ class Node:
             node = queue.get()
             if node not in visited:
                 visited.add(node)
-                outputs.extend(node.outputs)
+                outputs.update(node.outputs)
                 for other in node.directly_connected_to:
                     queue.put(other)
-        return outputs
+        return list(outputs)
 
     def get_node_children(self) -> list[Node]:
         children: set[Node] = set()

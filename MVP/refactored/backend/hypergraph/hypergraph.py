@@ -114,14 +114,14 @@ class Hypergraph(HyperEdge):
         visited: set[Node] = set()
         for source_node in self.get_hypergraph_source():
             visited.add(source_node)
-            for connected_node in source_node.get_target_nodes() + source_node.get_all_directly_connected_to():
+            for connected_node in source_node.get_children_nodes() + source_node.get_all_directly_connected_to():
                 queue.put(connected_node)
 
         while not queue.empty():
             child_node = queue.get()
             self.nodes[child_node.id] = child_node
             visited.add(child_node)
-            for connected_node in child_node.get_target_nodes() + child_node.get_all_directly_connected_to():
+            for connected_node in child_node.get_children_nodes() + child_node.get_all_directly_connected_to():
                 if connected_node not in visited:
                     queue.put(connected_node)
 
@@ -136,7 +136,7 @@ class Hypergraph(HyperEdge):
             hyper_edges: list[HyperEdge] = source_node.get_output_hyper_edges()
             for hyper_edge in hyper_edges:
                 self.edges[hyper_edge.id] = hyper_edge  # update hyper edges
-            for connected_node in source_node.get_target_nodes() + source_node.get_all_directly_connected_to():
+            for connected_node in source_node.get_children_nodes() + source_node.get_all_directly_connected_to():
                 queue.put(connected_node)  # add next level nodes to queue
 
         while not queue.empty():
@@ -144,7 +144,7 @@ class Hypergraph(HyperEdge):
             visited_nodes.add(node)
             for hyper_edge in node.get_output_hyper_edges():
                 self.edges[hyper_edge.id] = hyper_edge  # update hyper edges
-            for connected_node in node.get_target_nodes() + node.get_all_directly_connected_to():
+            for connected_node in node.get_children_nodes() + node.get_all_directly_connected_to():
                 if connected_node not in visited_nodes:
                     queue.put(connected_node)  # add next level nodes to queue
 

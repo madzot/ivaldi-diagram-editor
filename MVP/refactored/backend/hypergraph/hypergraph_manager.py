@@ -196,7 +196,7 @@ class HypergraphManager:
         """
         combined_hypergraph = Hypergraph(canvas_id=hypergraphs[0].canvas_id)
         for hypergraph in hypergraphs:
-            combined_hypergraph.add_nodes(hypergraph.get_hypergraph_source())
+            combined_hypergraph.add_nodes(hypergraph.get_hypergraph_source()) # adding source node
             combined_hypergraph.update_source_nodes_descendants()
             combined_hypergraph.update_edges()
             # TODO after hypergraps combining one old hypergraph remains
@@ -204,7 +204,7 @@ class HypergraphManager:
         HypergraphManager.add_hypergraph(combined_hypergraph)
 
     @staticmethod
-    def get_graph_by_node_id(node_id: int) -> Hypergraph|Node:
+    def get_graph_by_node_id(node_id: int) -> Hypergraph|None:
         for hypergraph in HypergraphManager.hypergraphs:
             if node_id in hypergraph.nodes:
                 return hypergraph

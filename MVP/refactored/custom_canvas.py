@@ -513,8 +513,6 @@ class CustomCanvas(tk.Canvas):
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_input", canvas_id=self.id)
 
-        HypergraphManager.remove_hypergraph_source_node(to_be_removed.id)
-
 
     def remove_specific_diagram_input(self, con):
         if not self.inputs:
@@ -533,8 +531,6 @@ class CustomCanvas(tk.Canvas):
         con.delete_me()
         self.update_inputs_outputs()
 
-        BoxToHyperEdgeMapping.remove_pair(con.id)
-        HypergraphManager.remove_hypergraph_source_node(con.id)
 
     def remove_specific_diagram_output(self, con):
         if not self.outputs:
