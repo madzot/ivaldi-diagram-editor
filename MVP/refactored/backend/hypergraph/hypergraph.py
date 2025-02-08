@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from queue import Queue
 from typing import TYPE_CHECKING
 
@@ -8,23 +9,36 @@ if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
 
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', )
+logger = logging.getLogger(__name__)
 
+message_start = "\x1b[33;20m"
+message_end = "\x1b[0m"
+
+current_hypergraph = 0
+
+id_dict_hypergraph = {}
 class Hypergraph(HyperEdge):
     """Hypergraph class."""
 
     def __init__(self, hypergraph_id=None, canvas_id=None):
+        global current_hypergraph
         super().__init__(hypergraph_id)
         self.canvas_id = canvas_id
         self.hypergraph_source: dict[int, Node] = {}
         self.nodes: dict[int, Node] = {}
         self.edges: dict[int, HyperEdge] = {}
+        id_dict_hypergraph[self.id] = current_hypergraph
+        current_hypergraph += 1
+        logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph[self.id]}" + message_end)
+
 
     def get_all_hyper_edges(self) -> list[HyperEdge]:
         return list(self.edges.values())
 
     def add_node(self, node: Node):
         self.nodes[node.id] = node
-        if len(node.get_input_hyper_edges()) == 0:
+        if len(node.get_parent_nodes()) == 0:
             self.hypergraph_source[node.id] = node
             for directly_connected in node.get_all_directly_connected_to():
                 self.nodes[directly_connected.id] = directly_connected
@@ -133,7 +147,7 @@ class Hypergraph(HyperEdge):
         queue: Queue[Node] = Queue()
         visited_nodes: set[Node] = set()
         for source_node in self.get_hypergraph_source():
-            hyper_edges: list[HyperEdge] = source_node.get_output_hyper_edges()
+            hyper_edges: list[HyperEdge] = source_node.get_output_hyper_edges() + source_node.get_input_hyper_edges()
             for hyper_edge in hyper_edges:
                 self.edges[hyper_edge.id] = hyper_edge  # update hyper edges
             for connected_node in source_node.get_children_nodes() + source_node.get_all_directly_connected_to():
@@ -142,7 +156,7 @@ class Hypergraph(HyperEdge):
         while not queue.empty():
             node = queue.get()  # current level node
             visited_nodes.add(node)
-            for hyper_edge in node.get_output_hyper_edges():
+            for hyper_edge in node.get_output_hyper_edges() + node.get_input_hyper_edges():
                 self.edges[hyper_edge.id] = hyper_edge  # update hyper edges
             for connected_node in node.get_children_nodes() + node.get_all_directly_connected_to():
                 if connected_node not in visited_nodes:
@@ -184,4 +198,4 @@ class Hypergraph(HyperEdge):
         return other.id == self.id
 
     def __hash__(self):
-        return super().__hash__()
+        return hash(self.id)

@@ -1,13 +1,30 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph, id_dict_hypergraph
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.backend.hypergraph.node import Node
 
 if TYPE_CHECKING:
     pass
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', )
+logger = logging.getLogger(__name__)
+
+message_start = "\x1b[33;20m"
+message_end = "\x1b[0m"
+
+debug = lambda x: logger.debug(message_start + x + message_end)
+
+current_count_node = 0
+
+id_dict_node = {}
+
+current_count_hyper_edge = 0
+
+id_dict_hyper_edge = {}
 
 
 class HypergraphManager:
@@ -26,6 +43,8 @@ class HypergraphManager:
 
         :param id: The unique identifier of the node to be removed.
         """
+        logger.debug(message_start + f"Removing node with id {id_dict_node[id]}" + message_end)
+
         removed_node_outputs = []
         _hypergraph: Hypergraph = None
         for hypergraph in HypergraphManager.hypergraphs:
@@ -71,6 +90,8 @@ class HypergraphManager:
 
         :param id: The unique identifier of the node to be removed.
         """
+        logger.debug(message_start + f"Removing hyper edge with id {id_dict_node[id]}" + message_end)
+
         _hypergraph: Hypergraph = None
         deleted_hyper_edge = None
         for hypergraph in HypergraphManager.hypergraphs:
@@ -110,6 +131,8 @@ class HypergraphManager:
         :param prev_id: The current hyper edge ID.
         :param new_id: The new hyper edge ID.
         """
+        logger.debug(message_start + f"Swapping hyper edge id from {prev_id} to {new_id}" + message_end)
+
         hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(prev_id)
         hypergraph.swap_hyper_edge_id(prev_id, new_id)
 
@@ -120,10 +143,17 @@ class HypergraphManager:
 
         :return: created node
         """
+        global current_count_node
+        id_dict_node[id] = current_count_node
+        current_count_node += 1
+        logger.debug(message_start + f"Creating new node with id {id_dict_node[id]}" + message_end)
+
+
         new_hypergraph: Hypergraph = Hypergraph(canvas_id=canvas_id)
         new_node = Node(id)
+
         new_hypergraph.add_hypergraph_source(new_node)
-        HypergraphManager.hypergraphs.add(new_hypergraph)
+        HypergraphManager.add_hypergraph(new_hypergraph)
         return new_node
 
     @staticmethod
@@ -135,6 +165,8 @@ class HypergraphManager:
 
     @staticmethod
     def union_nodes(node: Node, unite_with_id: int):
+        logger.debug(message_start + f"Union node with id {id_dict_node[node.id]} with other node with id {id_dict_node[unite_with_id]}" + message_end)
+
         unite_with = HypergraphManager._get_node_by_id(unite_with_id)
         unite_with_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(unite_with.id)  # always exits, because node is always forms a hypergraph
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
@@ -150,18 +182,25 @@ class HypergraphManager:
         theirs hyper graphs.
         In this case to given node (first arg) input should be added node|hyper edge
         """
+
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
         connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
 
         if connect_to_hypergraph is None:
             hyper_edge = HyperEdge(hyper_edge_id)
+            global current_count_hyper_edge
+            id_dict_hyper_edge[hyper_edge_id] = current_count_hyper_edge
+            current_count_hyper_edge += 1
         else:
             hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
+        logger.debug(message_start + f"Connecting to node with id {id_dict_node[node.id]} input a hyper edge with id {id_dict_hyper_edge[hyper_edge_id]}" + message_end)
+
         # box = hyper edge
         hyper_edge.append_target_node(node)
         node.append_input(hyper_edge)
         if connect_to_hypergraph is None:  # It is autonomous box
             node_hypergraph.add_edge(hyper_edge)
+
         else:  # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
@@ -172,13 +211,19 @@ class HypergraphManager:
         theirs hyper graphs.
         In this case to given node (first arg) output should be added node|hyper edge
         """
+
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
         connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
 
         if connect_to_hypergraph is None:
             hyper_edge = HyperEdge(hyper_edge_id)
+            global current_count_hyper_edge
+            id_dict_hyper_edge[hyper_edge_id] = current_count_hyper_edge
+            current_count_hyper_edge += 1
         else:
             hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
+        logger.debug(message_start + f"Connecting to node with id {id_dict_node[node.id]} output a hyper edge with id {id_dict_hyper_edge[hyper_edge_id]}" + message_end)
+
          # box = hyper edge
         hyper_edge.append_source_node(node)
         node.append_output(hyper_edge)
@@ -194,11 +239,13 @@ class HypergraphManager:
         NB!!!
         When combining hypergraphs from different canvases, new hypegraph will have canvas id from first element!!!
         """
+        logger.debug(message_start + f"Combining hypergraps with following ids: " + ", ".join(map(lambda x: str(id_dict_hypergraph[x.id]), hypergraphs)) + message_end)
+
         combined_hypergraph = Hypergraph(canvas_id=hypergraphs[0].canvas_id)
         for hypergraph in hypergraphs:
             combined_hypergraph.add_nodes(hypergraph.get_hypergraph_source()) # adding source node
-            combined_hypergraph.update_source_nodes_descendants()
             combined_hypergraph.update_edges()
+            combined_hypergraph.update_source_nodes_descendants()
             # TODO after hypergraps combining one old hypergraph remains
             HypergraphManager.remove_hypergraph(hypergraph)
         HypergraphManager.add_hypergraph(combined_hypergraph)
@@ -213,9 +260,8 @@ class HypergraphManager:
     @staticmethod
     def get_graph_by_hyper_edge_id(hyper_edge_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
-            for hyper_edge in hypergraph.get_all_hyper_edges():
-                if hyper_edge.id == hyper_edge_id:
-                    return hypergraph
+            if hyper_edge_id in hypergraph.edges:
+                return hypergraph
         return None
 
     @staticmethod
@@ -237,8 +283,11 @@ class HypergraphManager:
 
     @staticmethod
     def add_hypergraph(hypergraph: Hypergraph):
+        logger.debug(message_start + f"Adding hypergraph with id {id_dict_hypergraph[hypergraph.id]}" + message_end)
+
         HypergraphManager.hypergraphs.add(hypergraph)
 
     @staticmethod
     def remove_hypergraph(hypergraph: Hypergraph):
+        logger.debug(message_start + f"Removing hypergraph with id {id_dict_hypergraph[hypergraph.id]}" + message_end)
         HypergraphManager.hypergraphs.remove(hypergraph)

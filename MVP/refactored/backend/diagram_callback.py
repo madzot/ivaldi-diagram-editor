@@ -2,12 +2,7 @@ import logging
 
 from MVP.refactored.backend.diagram import Diagram
 from MVP.refactored.backend.generator import Generator
-from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.hypergraph.node import Node
-from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
 from MVP.refactored.backend.resource import Resource
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,12 +37,12 @@ class Receiver:
             self.spider_parent(wire_id, generator_id, canvas_id)
         elif action == 'delete_spider':
             logger.info("Routing to create_spider")
-            self.delete_spider_be(wire_id, canvas_id)
+            self.delete_spider_be(wire_id)
         else:
             logger.info("Routing to box_callback")
             self.box_callback(generator_id, action, connection_id, generator_side, connection_nr, operator, canvas_id)
 
-    def delete_spider_be(self, wire_id, canvas_id):
+    def delete_spider_be(self, wire_id):
         logger.info(f"Routing to delete_spider")
         spider = self.spider_get_resource_by_connection_id(wire_id)
         if spider.parent:
@@ -113,9 +108,9 @@ class Receiver:
                     HypergraphManager.union_nodes(new_node, spider.id) # unite wire and spider to one node
                     if box:
                         if connection_side == 'left':
-                            HypergraphManager.connect_node_with_output(new_node, connection_box_id)
+                            HypergraphManager.connect_node_with_output(new_node, box.id)
                         elif connection_side == 'right':
-                            HypergraphManager.connect_node_with_input(new_node, connection_box_id)
+                            HypergraphManager.connect_node_with_input(new_node, box.id)
                     else: # connection to spider
                         HypergraphManager.union_nodes(new_node, end_connection[3])
                     print(f"Added wire - {wire_id}")
@@ -137,9 +132,9 @@ class Receiver:
                     HypergraphManager.union_nodes(new_node, spider.id)  # unite wire and spider to one node
                     if box:
                         if connection_side == 'left':
-                            HypergraphManager.connect_node_with_output(new_node, connection_box_id)
+                            HypergraphManager.connect_node_with_output(new_node, box.id)
                         elif connection_side == 'right':
-                            HypergraphManager.connect_node_with_input(new_node, connection_box_id)
+                            HypergraphManager.connect_node_with_input(new_node, box.id)
                     else:  # connection to spider
                         HypergraphManager.union_nodes(new_node, start_connection[3])
             else:  # if it connection not between spider and smt
@@ -355,15 +350,6 @@ class Receiver:
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Number of Boxes: {len(self.diagram.boxes)}")
-
-    def _create_new_special_node(self, _id: int):
-        node = Node(_id, is_special=True)
-        WireAndSpiderToNodeMapping.add_new_pair(_id, node)
-
-    def _remove_node(self, _id: int):
-        node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(_id)
-        node.remove_self()
-        WireAndSpiderToNodeMapping.remove_pair(_id)
 
     def add_main_diagram_input(self):
         self.diagram.input.append([len(self.diagram.input), None])

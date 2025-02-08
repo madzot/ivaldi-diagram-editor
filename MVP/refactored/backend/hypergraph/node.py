@@ -9,7 +9,6 @@ from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
-
 class Node:
     def __init__(self, node_id: int = None, is_special=False):
         if node_id is None:
@@ -74,6 +73,15 @@ class Node:
                 for directly_connected_to in node.get_all_directly_connected_to():
                     children_nodes.add(directly_connected_to)
         return list(children_nodes)
+
+    def get_parent_nodes(self) -> list[Self]:
+        parent_nodes: set[Node] = set()
+        for input_hyper_edge in self.get_input_hyper_edges():
+            for node in input_hyper_edge.get_source_nodes():
+                parent_nodes.add(node)
+                for directly_connected_to in node.get_all_directly_connected_to():
+                    parent_nodes.add(directly_connected_to)
+        return list(parent_nodes)
 
     def remove_self(self):
         for connected_to_node in self.directly_connected_to:
