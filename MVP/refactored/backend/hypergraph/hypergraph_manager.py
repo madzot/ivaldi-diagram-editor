@@ -172,8 +172,8 @@ class HypergraphManager:
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
 
         node.union(unite_with)
-
-        HypergraphManager.combine_hypergraphs([node_hypergraph, unite_with_hypergraph])
+        if not node_hypergraph == unite_with_hypergraph:
+            HypergraphManager.combine_hypergraphs([node_hypergraph, unite_with_hypergraph])
 
     @staticmethod
     def connect_node_with_input(node: Node, hyper_edge_id: int):
@@ -182,7 +182,6 @@ class HypergraphManager:
         theirs hyper graphs.
         In this case to given node (first arg) input should be added node|hyper edge
         """
-
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
         connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
 
@@ -194,14 +193,15 @@ class HypergraphManager:
         else:
             hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
         logger.debug(message_start + f"Connecting to node with id {id_dict_node[node.id]} input a hyper edge with id {id_dict_hyper_edge[hyper_edge_id]}" + message_end)
-
         # box = hyper edge
         hyper_edge.append_target_node(node)
         node.append_input(hyper_edge)
         if connect_to_hypergraph is None:  # It is autonomous box
             node_hypergraph.add_edge(hyper_edge)
-
-        else:  # It is box that already have some connections => forms hypergraph
+        elif not node_hypergraph == connect_to_hypergraph:
+            # if node's and hyper edge's hypergraph is the same, it means that new wire between spider and the box is added
+            # nothing to combine
+            # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
     @staticmethod
@@ -211,7 +211,6 @@ class HypergraphManager:
         theirs hyper graphs.
         In this case to given node (first arg) output should be added node|hyper edge
         """
-
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
         connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
 
@@ -223,13 +222,15 @@ class HypergraphManager:
         else:
             hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
         logger.debug(message_start + f"Connecting to node with id {id_dict_node[node.id]} output a hyper edge with id {id_dict_hyper_edge[hyper_edge_id]}" + message_end)
-
-         # box = hyper edge
+        # box = hyper edge
         hyper_edge.append_source_node(node)
         node.append_output(hyper_edge)
         if connect_to_hypergraph is None:  # It is autonomous box
             node_hypergraph.add_edge(hyper_edge)
-        else:  # It is box that already have some connections => forms hypergraph
+        elif not node_hypergraph == connect_to_hypergraph:
+            # if node's and hyper edge's hypergraph is the same, it means that new wire between spider and the box is added
+            # nothing to combine
+            # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
     @staticmethod
@@ -239,6 +240,7 @@ class HypergraphManager:
         NB!!!
         When combining hypergraphs from different canvases, new hypegraph will have canvas id from first element!!!
         """
+
         logger.debug(message_start + f"Combining hypergraps with following ids: " + ", ".join(map(lambda x: str(id_dict_hypergraph[x.id]), hypergraphs)) + message_end)
 
         combined_hypergraph = Hypergraph(canvas_id=hypergraphs[0].canvas_id)
@@ -246,7 +248,6 @@ class HypergraphManager:
             combined_hypergraph.add_nodes(hypergraph.get_hypergraph_source()) # adding source node
             combined_hypergraph.update_edges()
             combined_hypergraph.update_source_nodes_descendants()
-            # TODO after hypergraps combining one old hypergraph remains
             HypergraphManager.remove_hypergraph(hypergraph)
         HypergraphManager.add_hypergraph(combined_hypergraph)
 
