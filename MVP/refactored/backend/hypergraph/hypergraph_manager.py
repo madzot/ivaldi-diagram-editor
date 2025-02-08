@@ -45,34 +45,43 @@ class HypergraphManager:
         """
         logger.debug(message_start + f"Removing node with id {id_dict_node[id]}" + message_end)
 
-        removed_node_outputs = []
+        # removed_node_outputs = []
         _hypergraph: Hypergraph = None
         for hypergraph in HypergraphManager.hypergraphs:
             for node in hypergraph.get_all_nodes():
                 if node.id == id:
                     _hypergraph = hypergraph
-                    removed_node_outputs = node.get_node_children()
+                    # removed_node_outputs = node.get_node_children()
                     hypergraph.remove_node(id)
+                    node.remove_self()
                     break
         # check if new hyper graphs were created
-        source_nodes: list[Node] = _hypergraph.get_source_nodes() + removed_node_outputs
-        source_nodes_groups: list[list[Node]] = list() # list of all source nodes groups
+        source_nodes: list[Node] = _hypergraph.get_all_nodes()
+        source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
         for source_node in source_nodes:
             group: list[Node] = list()
             for next_source_node in source_nodes:
-                if source_node != next_source_node and source_node.is_connected_to(next_source_node):
+                if source_node != next_source_node and source_node.is_connected_to(
+                        next_source_node) and next_source_node not in group:
+                    # TODO add single node
                     group.append(next_source_node)
             group = sorted(group, key=lambda node: node.id)
             if group not in source_nodes_groups and len(group) != 0:
                 source_nodes_groups.append(group)
 
+        logger.debug(message_start + "Source nodes are " + ", ".join(
+            f"{id_dict_node[n.id]}" for n in source_nodes) + message_end)
+        logger.debug(message_start + "Source node groups are " + ", ".join(
+            f"[{', '.join(map(str, (id_dict_node[n.id] for n in group)))}]" for group in
+            source_nodes_groups) + message_end)
+
         # if after deleting node hype graph split to two or more hyper graphs we need to handle that
-        if len(source_nodes_groups) > 1: # If group count isn`t 1, so there occurred new hyper graphs
-            HypergraphManager.remove_hypergraph(_hypergraph) # remove old hypergraph
+        if len(source_nodes_groups) > 1:  # If group count isn`t 1, so there occurred new hyper graphs
+            HypergraphManager.remove_hypergraph(_hypergraph)  # remove old hypergraph
 
             for group in source_nodes_groups:
                 new_hypergraph = Hypergraph(canvas_id=_hypergraph.get_canvas_id())
-                new_hypergraph.add_hypergraph_sources(group)
+                new_hypergraph.add_nodes(group)
                 new_hypergraph.update_source_nodes_descendants()
                 new_hypergraph.update_edges()
                 HypergraphManager.add_hypergraph(new_hypergraph)
@@ -112,6 +121,11 @@ class HypergraphManager:
             if group not in source_nodes_groups:
                 source_nodes_groups.append(group)
 
+        logger.debug(message_start + "Source nodes are " + ", ".join(
+            f"{id_dict_node[n.id]}" for n in source_nodes) + message_end)
+        logger.debug(message_start + "Source node groups are " + ", ".join(
+            f"[{', '.join(map(str, (id_dict_node[n.id] for n in group)))}]" for group in
+            source_nodes_groups) + message_end)
         # if after deleting node hype graph split to two or more hyper graphs we need to handle that
         if len(source_nodes_groups) > 1:  # If group count isn`t 1, so there occurred new hyper graphs
             HypergraphManager.remove_hypergraph(_hypergraph)  # remove old hypergraph
@@ -245,7 +259,7 @@ class HypergraphManager:
 
         combined_hypergraph = Hypergraph(canvas_id=hypergraphs[0].canvas_id)
         for hypergraph in hypergraphs:
-            combined_hypergraph.add_nodes(hypergraph.get_hypergraph_source()) # adding source node
+            combined_hypergraph.add_nodes(hypergraph.get_hypergraph_source())  # adding source node
             combined_hypergraph.update_edges()
             combined_hypergraph.update_source_nodes_descendants()
             HypergraphManager.remove_hypergraph(hypergraph)

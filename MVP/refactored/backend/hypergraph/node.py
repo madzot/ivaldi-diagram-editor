@@ -100,7 +100,8 @@ class Node:
         other.directly_connected_to.append(self)
 
     def is_connected_to(self, target_node: Self) -> bool:
-        if self == target_node: return True
+        if self == target_node:
+            return True
         visited: set[Node] = set()
         queue: Queue[Node] = Queue()
         visited.add(self)
