@@ -68,7 +68,7 @@ class Box:
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
-        self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
+        self.canvas.tag_bind(self.rect, '<Double-Button-1>', lambda _: self.handle_double_click())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -117,9 +117,14 @@ class Box:
             return
         self.canvas.main_diagram.save_box_to_diagram_menu(self)
 
-    def set_inputs_outputs(self, _):
-        # TODO idea: double click on box with sub diagram opens the sub-diagram?
-        if self.locked or self.sub_diagram:
+    def handle_double_click(self):
+        if self.sub_diagram:
+            self.canvas.main_diagram.switch_canvas(self.sub_diagram)
+        else:
+            self.set_inputs_outputs()
+
+    def set_inputs_outputs(self):
+        if self.locked:
             return
         # ask for inputs amount
         inputs = simpledialog.askstring(title="Inputs (left connections)", prompt="Enter amount")
@@ -321,7 +326,7 @@ class Box:
     def bind_event_label(self):
         self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+        self.canvas.tag_bind(self.label, '<Double-Button-1>', lambda _: self.handle_double_click())
         self.canvas.tag_bind(self.label, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
 
