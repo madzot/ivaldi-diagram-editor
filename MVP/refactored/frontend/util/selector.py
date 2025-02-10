@@ -272,6 +272,27 @@ class Selector:
                 self.reconnect_wires(self.copied_right_wires, right_connections)
 
     def find_middle_point(self, event_x, event_y):
+        most_left, most_right, most_up, most_down = self.find_corners_copied_items()
+
+        middle_x = (most_left + most_right) / 2
+        middle_y = (most_up + most_down) / 2
+
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+
+        if most_left - (middle_x - event_x) < 0:
+            middle_x = event_x + most_left
+        if most_right - (middle_x - event_x) > canvas_width:
+            middle_x = event_x - (canvas_width - most_right)
+
+        if most_up - (middle_y - event_y) < 0:
+            middle_y = event_y + most_up
+        if most_down - (middle_y - event_y) > canvas_height:
+            middle_y = event_y - (canvas_height - most_down)
+
+        return middle_x, middle_y
+
+    def find_corners_copied_items(self):
         most_left = self.canvas.winfo_width()
         most_right = 0
         most_up = self.canvas.winfo_height()
@@ -295,24 +316,7 @@ class Selector:
                     most_right = item['location'][0] + item['size']
                 if item['location'][1] + item['size'] > most_down:
                     most_down = item['location'][1] + item['size']
-
-        middle_x = (most_left + most_right) / 2
-        middle_y = (most_up + most_down) / 2
-
-        canvas_width = self.canvas.winfo_width()
-        canvas_height = self.canvas.winfo_height()
-
-        if most_left - (middle_x - event_x) < 0:
-            middle_x = event_x + most_left
-        if most_right - (middle_x - event_x) > canvas_width:
-            middle_x = event_x - (canvas_width - most_right)
-
-        if most_up - (middle_y - event_y) < 0:
-            middle_y = event_y + most_up
-        if most_down - (middle_y - event_y) > canvas_height:
-            middle_y = event_y - (canvas_height - most_down)
-
-        return middle_x, middle_y
+        return most_left, most_right, most_up, most_down,
 
     def find_corners_selected_items(self):
         most_left = self.canvas.winfo_width()
