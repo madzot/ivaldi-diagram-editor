@@ -111,7 +111,11 @@ class Connection:
     def select(self):
         self.canvas.itemconfig(self.circle, fill="green")
 
-    def search_highlight(self):
+    def search_highlight_secondary(self):
+        self.canvas.itemconfig(self.circle, fill="orange")
+        self.canvas.search_result_highlights.append(self)
+
+    def search_highlight_primary(self):
         self.canvas.itemconfig(self.circle, fill="cyan")
         self.canvas.search_result_highlights.append(self)
 

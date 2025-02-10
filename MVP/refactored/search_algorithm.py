@@ -11,6 +11,10 @@ class SearchAlgorithm:
         self.canvas = canvas
         self.search_window = search_window
         self.search_all_canvases = search_window.search_all_canvases.get()
+        self.results = []
+        self.result_objects = {}
+        self.wire_results = []
+        self.wire_objects = {}
 
     def get_potential_results(self, searchable_objects, canvas_objects):
         potential_results = []
@@ -69,13 +73,16 @@ class SearchAlgorithm:
         found = False
         result_ids = []
         if self.search_all_canvases:
-            canvases = self.canvas.main_diagram.canvasses.values()
+            canvases = list(self.canvas.main_diagram.canvasses.values())
+            canvases.remove(self.canvas)
+            canvases.insert(0, self.canvas)
             items = []
             for canvas in canvases:
                 items = items + canvas.spiders + canvas.boxes
-            canvas_objects = sorted(items, key=lambda item: [item.x, item.y])
+            canvas_objects = sorted(items, key=lambda item: [canvases.index(item.canvas), item.x, item.y])
         else:
-            canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes, key=lambda item: [item.x, item.y])
+            canvas_objects = sorted(self.canvas.spiders + self.canvas.boxes,
+                                    key=lambda item: [item.x, item.y])
 
         searchable_objects = sorted(self.searchable.spiders + self.searchable.boxes, key=lambda item: [item.x, item.y])
 
@@ -94,6 +101,8 @@ class SearchAlgorithm:
         potential_results = self.filter_connectivity(potential_results)
 
         for potential_result in potential_results:
+
+            temp_result_ids = []
             normalized = self.normalize_dictionary(potential_result)
             not_correct = False
             for normalized_key in normalized.keys():
@@ -146,12 +155,25 @@ class SearchAlgorithm:
                         right_side_check = True
 
                 if left_side_check and right_side_check:
-                    found = True
-                    for key in potential_result.keys():
-                        result_ids.append(key)
+                    temp_result_ids.append(potential_id)
+                else:
+                    temp_result_ids = []
+                    break
 
-        self.highlight_results(result_ids, canvas_objects)
-        self.highlight_wires(result_ids, canvas_objects)
+            if temp_result_ids == list(potential_result.keys()):
+                found = True
+                result_ids.append(temp_result_ids)
+
+        for results in result_ids:
+            self.highlight_results(results, canvas_objects)
+            self.highlight_wires(results, canvas_objects)
+
+        self.results = result_ids
+        objects = {}
+        for result in self.results:
+            for index in result:
+                objects[index] = canvas_objects[index]
+        self.result_objects = objects
 
         return found
 
@@ -174,7 +196,11 @@ class SearchAlgorithm:
                     continue
 
                 if start_index in result_ids and end_index in result_ids:
-                    wire.search_highlight()
+                    wire.search_highlight_secondary()
+                    if tuple(result_ids) not in self.wire_objects:
+                        self.wire_objects[tuple(result_ids)] = [wire]
+                    else:
+                        self.wire_objects[tuple(result_ids)].append(wire)
 
     @staticmethod
     def check_side_connections(canvas_objects, side_check, potential, connection_amount, searchable,
@@ -195,7 +221,7 @@ class SearchAlgorithm:
     @staticmethod
     def highlight_results(result_indexes, canvas_objects):
         for result_index in result_indexes:
-            canvas_objects[result_index].search_highlight()
+            canvas_objects[result_index].search_highlight_secondary()
 
     @staticmethod
     def normalize_dictionary(dictionary):
