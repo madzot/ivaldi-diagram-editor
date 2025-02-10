@@ -43,34 +43,46 @@ class HypergraphManager:
 
         :param id: The unique identifier of the node to be removed.
         """
+        # removed wire
+        #   wire between spider/spider
+        #   wire between box/box
+        #   wire between box/spider
+        #   wire between spider/box
+        #   wire between input/output
+        #   wire between input/
+        #   wire between input/
+        # removed spider
+        # removed diagram input
+        # removed diagram output
         logger.debug(message_start + f"Removing node with id {id_dict_node[id]}" + message_end)
 
-        # removed_node_outputs = []
+        removed_node_outputs_and_directly_connected = []
         _hypergraph: Hypergraph = None
         for hypergraph in HypergraphManager.hypergraphs:
             for node in hypergraph.get_all_nodes():
                 if node.id == id:
                     _hypergraph = hypergraph
-                    # removed_node_outputs = node.get_node_children()
+                    removed_node_outputs_and_directly_connected = node.get_node_children() + node.get_united_with_nodes()
                     hypergraph.remove_node(id)
-                    node.remove_self()
                     break
         # check if new hyper graphs were created
-        source_nodes: list[Node] = _hypergraph.get_all_nodes()
+        source_nodes_and_potentially_source_nodes: list[Node] = _hypergraph.get_hypergraph_source() + removed_node_outputs_and_directly_connected  # TODO
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
-        for source_node in source_nodes:
+        for source_node in source_nodes_and_potentially_source_nodes:
             group: list[Node] = list()
-            for next_source_node in source_nodes:
-                if source_node != next_source_node and source_node.is_connected_to(
-                        next_source_node) and next_source_node not in group:
+            group.append(source_node)
+            group.extend(source_node.get_united_with_nodes())
+            for next_source_node in source_nodes_and_potentially_source_nodes:
+                if  next_source_node.is_connected_to(group[-1]) and next_source_node not in group:
                     # TODO add single node
                     group.append(next_source_node)
+                    group.extend(next_source_node.get_united_with_nodes())
             group = sorted(group, key=lambda node: node.id)
             if group not in source_nodes_groups and len(group) != 0:
                 source_nodes_groups.append(group)
 
         logger.debug(message_start + "Source nodes are " + ", ".join(
-            f"{id_dict_node[n.id]}" for n in source_nodes) + message_end)
+            f"{id_dict_node[n.id]}" for n in source_nodes_and_potentially_source_nodes) + message_end)
         logger.debug(message_start + "Source node groups are " + ", ".join(
             f"[{', '.join(map(str, (id_dict_node[n.id] for n in group)))}]" for group in
             source_nodes_groups) + message_end)
@@ -283,7 +295,7 @@ class HypergraphManager:
     def get_graph_by_source_node_id(source_node_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
             for source_node in hypergraph.get_hypergraph_source():
-                for source_node_union in source_node.get_all_directly_connected_to():
+                for source_node_union in source_node.get_united_with_nodes():
                     if source_node_union.id == source_node_id:
                         return hypergraph
         return None

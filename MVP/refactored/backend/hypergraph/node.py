@@ -4,8 +4,6 @@ from queue import Queue
 from typing_extensions import Self
 from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
@@ -70,7 +68,7 @@ class Node:
         for output_hyper_edge in self.get_output_hyper_edges():
             for node in output_hyper_edge.get_target_nodes():
                 children_nodes.add(node)
-                for directly_connected_to in node.get_all_directly_connected_to():
+                for directly_connected_to in node.get_united_with_nodes():
                     children_nodes.add(directly_connected_to)
         return list(children_nodes)
 
@@ -79,7 +77,7 @@ class Node:
         for input_hyper_edge in self.get_input_hyper_edges():
             for node in input_hyper_edge.get_source_nodes():
                 parent_nodes.add(node)
-                for directly_connected_to in node.get_all_directly_connected_to():
+                for directly_connected_to in node.get_united_with_nodes():
                     parent_nodes.add(directly_connected_to)
         return list(parent_nodes)
 
@@ -149,7 +147,8 @@ class Node:
                     queue.put(other)
         return inputs
 
-    def get_all_directly_connected_to(self) -> list[Self]:
+    def get_united_with_nodes(self) -> list[Node]:
+        united_with_nodes: set[Node] = set()
         visited: set = set()
         queue: Queue[Node] = Queue()
         visited.add(self)
@@ -157,11 +156,16 @@ class Node:
             queue.put(directly_connected_to_node)
         while not queue.empty():
             node: Node = queue.get()
+            if node not in visited:
+                united_with_nodes.add(node)
             visited.add(node)
             for directly_connected_to_node in node.directly_connected_to:
                 if directly_connected_to_node not in visited:
                     queue.put(directly_connected_to_node)
-        return list(visited)
+        return list(united_with_nodes)
+
+    def get_directly_connected_to(self) -> list[Node]:
+        return self.directly_connected_to
 
     def get_output_hyper_edges(self) -> list[HyperEdge]:
         outputs: set[HyperEdge] = set()
@@ -186,7 +190,7 @@ class Node:
         for hyper_edge in self.get_output_hyper_edges():
             for target_node in hyper_edge.get_target_nodes():
                 children.add(target_node)
-                children.union(target_node.get_all_directly_connected_to())
+                children.union(target_node.get_united_with_nodes())
         return list(children)
 
     def remove_input(self, input: HyperEdge):
@@ -201,7 +205,7 @@ class Node:
         if type(self) == type(__value):
             if self.id == __value.id:
                 return True
-            for directly_connected_to in self.get_all_directly_connected_to():
+            for directly_connected_to in self.get_united_with_nodes():
                 if directly_connected_to.id == __value.id:
                     return True
         return False

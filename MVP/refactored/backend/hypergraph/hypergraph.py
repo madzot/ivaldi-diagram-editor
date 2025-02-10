@@ -40,11 +40,11 @@ class Hypergraph(HyperEdge):
         self.nodes[node.id] = node
         if len(node.get_parent_nodes()) == 0:
             self.hypergraph_source[node.id] = node
-            for directly_connected in node.get_all_directly_connected_to():
+            for directly_connected in node.get_united_with_nodes():
                 self.nodes[directly_connected.id] = directly_connected
                 self.hypergraph_source[directly_connected.id] = directly_connected
         else:
-            for directly_connected in node.get_all_directly_connected_to():
+            for directly_connected in node.get_united_with_nodes():
                 self.nodes[directly_connected.id] = directly_connected
 
     def add_nodes(self, nodes: list[Node]):
@@ -65,11 +65,20 @@ class Hypergraph(HyperEdge):
         return list(self.hypergraph_source.values())
 
     def remove_node(self, node_to_remove_id: int):
-        self.nodes[node_to_remove_id].remove_self()
-        self.nodes.pop(node_to_remove_id)
+        removed_node = self.nodes.pop(node_to_remove_id)
+        removed_node_united_with_nodes = removed_node.get_united_with_nodes()
+        removed_node.remove_self()
 
         if node_to_remove_id in self.hypergraph_source:
             self.hypergraph_source.pop(node_to_remove_id)
+
+        for directly_connected in removed_node_united_with_nodes:
+            for source_node in self.hypergraph_source.values():
+                if not source_node.is_connected_to(directly_connected):
+                    self.nodes.pop(directly_connected.id)
+                    if directly_connected.id in self.hypergraph_source:
+                        self.hypergraph_source.pop(directly_connected.id)
+                    break
 
     def remove_hyper_edge(self, edge_to_remove_id: int) -> HyperEdge:
         self.edges[edge_to_remove_id].remove_self()
@@ -89,7 +98,7 @@ class Hypergraph(HyperEdge):
     def add_hypergraph_source(self, node: Node):
         self.hypergraph_source[node.id] = node
         self.nodes[node.id] = node
-        for directly_connected in node.get_all_directly_connected_to():
+        for directly_connected in node.get_united_with_nodes():
             self.nodes[directly_connected.id] = directly_connected
             self.hypergraph_source[directly_connected.id] = directly_connected
 
@@ -124,18 +133,19 @@ class Hypergraph(HyperEdge):
         Update all hypergraph nodes.
         Must be called, when source node is added.
         """
+        self.nodes.clear()
         queue: Queue[Node] = Queue()
         visited: set[Node] = set()
         for source_node in self.get_hypergraph_source():
-            visited.add(source_node)
-            for connected_node in source_node.get_children_nodes() + source_node.get_all_directly_connected_to():
+            queue.put(source_node)
+            for connected_node in source_node.get_children_nodes() + source_node.get_united_with_nodes():
                 queue.put(connected_node)
 
         while not queue.empty():
             child_node = queue.get()
             self.nodes[child_node.id] = child_node
             visited.add(child_node)
-            for connected_node in child_node.get_children_nodes() + child_node.get_all_directly_connected_to():
+            for connected_node in child_node.get_children_nodes() + child_node.get_united_with_nodes():
                 if connected_node not in visited:
                     queue.put(connected_node)
 
@@ -144,13 +154,14 @@ class Hypergraph(HyperEdge):
         Update all hypergraph edges.
         Must be called, when source node is added.
         """
+        self.edges.clear()
         queue: Queue[Node] = Queue()
         visited_nodes: set[Node] = set()
         for source_node in self.get_hypergraph_source():
             hyper_edges: list[HyperEdge] = source_node.get_output_hyper_edges() + source_node.get_input_hyper_edges()
             for hyper_edge in hyper_edges:
                 self.edges[hyper_edge.id] = hyper_edge  # update hyper edges
-            for connected_node in source_node.get_children_nodes() + source_node.get_all_directly_connected_to():
+            for connected_node in source_node.get_children_nodes() + source_node.get_united_with_nodes():
                 queue.put(connected_node)  # add next level nodes to queue
 
         while not queue.empty():
@@ -158,7 +169,7 @@ class Hypergraph(HyperEdge):
             visited_nodes.add(node)
             for hyper_edge in node.get_output_hyper_edges() + node.get_input_hyper_edges():
                 self.edges[hyper_edge.id] = hyper_edge  # update hyper edges
-            for connected_node in node.get_children_nodes() + node.get_all_directly_connected_to():
+            for connected_node in node.get_children_nodes() + node.get_united_with_nodes():
                 if connected_node not in visited_nodes:
                     queue.put(connected_node)  # add next level nodes to queue
 
@@ -177,14 +188,14 @@ class Hypergraph(HyperEdge):
 
         vertices = self.get_all_nodes()
         result += f"Vertices({len(vertices)}): " + ", ".join(
-            f"{vertex.id}({len(vertex.get_all_directly_connected_to())})" for vertex in vertices) + "\n"
+            f"{vertex.id}({len(vertex.get_united_with_nodes())})" for vertex in vertices) + "\n"
 
         result += "Connections:\n"
         visited = set()
         for vertex in vertices:
             if vertex not in visited:
                 visited.add(vertex)
-                for node in vertex.get_all_directly_connected_to():
+                for node in vertex.get_united_with_nodes():
                     visited.add(node)
                 inputs = f"|" + "|".join(f"{hyper_edge}" for hyper_edge in vertex.get_input_hyper_edges())
                 outputs = f"|" + "|".join(f"{hyper_edge}" for hyper_edge in vertex.get_output_hyper_edges())

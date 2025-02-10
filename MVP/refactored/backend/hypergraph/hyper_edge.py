@@ -106,12 +106,12 @@ class HyperEdge:
 
     def remove_source_node_by_reference(self, node: Node):
         connection_index = self.get_source_node_connection_index(node)
-        if connection_index:
+        if connection_index is not None:
             del self.source_nodes[connection_index]
 
     def remove_target_node_by_reference(self, node: Node):
         connection_index = self.get_target_node_connection_index(node)
-        if connection_index:
+        if connection_index is not None:
             del self.target_nodes[connection_index]
 
     def remove_self(self):
