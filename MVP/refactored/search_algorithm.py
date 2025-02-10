@@ -197,7 +197,7 @@ class SearchAlgorithm:
 
                 if start_index in result_ids and end_index in result_ids:
                     wire.search_highlight_secondary()
-                    if wire not in self.wire_objects:
+                    if tuple(result_ids) not in self.wire_objects:
                         self.wire_objects[tuple(result_ids)] = [wire]
                     else:
                         self.wire_objects[tuple(result_ids)].append(wire)
