@@ -348,7 +348,7 @@ class MainDiagram(tk.Tk):
 
     def on_tree_select(self, _):
         # Get the selected item
-        selected_item = self.tree.focus()  # Get the ID of the selected item
+        selected_item = self.tree.focus()
         if selected_item:
             new_canvas = self.canvasses[selected_item]
             self.switch_canvas(new_canvas)
@@ -391,7 +391,7 @@ class MainDiagram(tk.Tk):
                 self.receiver.receiver_callback("remove_inner_right",
                                                 generator_id=self.custom_canvas.diagram_source_box.id)
         else:
-            self.custom_canvas.remove_diagram_input()
+            self.custom_canvas.remove_diagram_output()
 
     def find_connection_to_remove(self, side):
         c_max = 0

@@ -63,7 +63,7 @@ class Selector:
         for item in self.selected_items:
             item.deselect()
         self.selected_items.clear()
-        # Remove the selection box and reset selecting state
+
         self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
 
