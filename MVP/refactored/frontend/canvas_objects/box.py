@@ -322,14 +322,8 @@ class Box:
         else:
             self.label_text = new_label
 
-        if self.receiver.listener:
-            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
-        if not self.label:
-            self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
-                                                 text=self.label_text, fill="black", font=('Helvetica', 14))
+        self.change_label()
 
-        else:
-            self.canvas.itemconfig(self.label, text=self.label_text)
         if self.label_text:
             if self.sub_diagram:
                 self.sub_diagram.set_name(self.label_text)
@@ -340,8 +334,7 @@ class Box:
         self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
 
-    def set_label(self, new_label):
-        self.label_text = new_label
+    def change_label(self):
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
@@ -349,6 +342,10 @@ class Box:
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
+
+    def set_label(self, new_label):
+        self.label_text = new_label
+        self.change_label()
         self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
