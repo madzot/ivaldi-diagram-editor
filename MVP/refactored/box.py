@@ -468,6 +468,7 @@ class Box:
 
     def set_label(self, new_label):
         self.label_text = new_label
+
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text, canvas_id=self.canvas.id)
         if not self.label:
@@ -475,6 +476,7 @@ class Box:
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
+
         self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
@@ -684,5 +686,3 @@ class Box:
 
     def __hash__(self):
         return hash(self.id)
-
-
