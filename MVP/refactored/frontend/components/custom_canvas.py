@@ -1,37 +1,49 @@
 import os
 import tkinter as tk
+from threading import Timer
 from tkinter import filedialog
 from tkinter import messagebox as mb
 
 from PIL import Image
+import ttkbootstrap as ttk
+from PIL import Image, ImageTk
+from ttkbootstrap.constants import *
 
 from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.util.event import Event
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
+from constants import *
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 
 
 class CustomCanvas(tk.Canvas):
-
-    def __init__(self, master, diagram_source_box, receiver, main_diagram, parent_diagram, add_boxes, id_=None, **kwargs):
+    def __init__(self, master, diagram_source_box, receiver, main_diagram,
+                 parent_diagram, add_boxes, id_=None, **kwargs):
         super().__init__(master, **kwargs)
+
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
         self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+        self.update()
 
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
         self.master = master
-        self.boxes: set[Box] = set()
+        self.boxes: list[Box] = []
         self.outputs: list[Connection] = []
         self.inputs: list[Connection] = []
         self.spiders: list[Spider] = []
-        self.wires: set[Wire] = set()
+        self.wires: list[Wire] = []
+        self.corners: list[Corner] = []
         self.temp_wire = None
         self.temp_end_connection = None
         self.pulling_wire = False
@@ -55,14 +67,23 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
-        self.selector = Selector(self)
+        self.selector = main_diagram.selector
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)
         self.bind("<B1-Motion>", self.__select_motion__)
-        self.bind("<ButtonRelease-1>", self.__select_release__)
+        self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.bind("<Button-3>", self.handle_right_click)
         self.bind("<Delete>", lambda event: self.delete_selected_items())
+        self.bind("<MouseWheel>", self.zoom)
+        self.bind("<Right>", self.pan_horizontal)
+        self.bind("<Left>", self.pan_horizontal)
+        self.bind("<Down>", self.pan_vertical)
+        self.bind("<Up>", self.pan_vertical)
+        self.bind("<Control-c>", lambda event: self.copy_selected_items())
+        self.bind("<Control-v>", self.paste_copied_items)
+        self.bind("<Control-x>", lambda event: self.cut_selected_items())
+        self.bind("<Control-n>", lambda event: self.create_sub_diagram())
         self.selecting = False
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
@@ -77,9 +98,119 @@ class CustomCanvas(tk.Canvas):
         self.context_menu = tk.Menu(self, tearoff=0)
         self.columns = {}
 
+        self.tree_logo = (Image.open(ASSETS_DIR + "/file-tree-outline.png"))
+        self.tree_logo = self.tree_logo.resize((20, 15))
+        self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
+
+        button = ttk.Button(self, image=self.tree_logo,
+                            command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
+        button.place(x=28, y=20, anchor=tk.CENTER)
+        self.box_shape = "rectangle"
+        self.is_wire_pressed = False
+
+        self.copy_logo = (Image.open(ASSETS_DIR + "/content-copy.png"))
+        self.copy_logo = self.copy_logo.resize((20, 20))
+        self.copy_logo = ImageTk.PhotoImage(self.copy_logo)
+
+        self.total_scale = 1.0
+        self.delta = 0.75
+
+        self.prev_width_max = self.canvasx(self.winfo_width())
+        self.prev_height_max = self.canvasy(self.winfo_height())
+        self.prev_width_min = self.canvasx(0)
+        self.prev_height_min = self.canvasy(0)
+
+        c1 = Corner(None, None, "left", [0, 0], self, 0)
+        c2 = Corner(None, None, "left", [0, self.winfo_height()], self, 0)
+        c3 = Corner(None, None, "left", [self.winfo_width(), 0], self, 0)
+        c4 = Corner(None, None, "left", [self.winfo_width(), self.winfo_height()], self, 0)
+        self.corners.append(c1)
+        self.corners.append(c2)
+        self.corners.append(c3)
+        self.corners.append(c4)
+        self.init_corners()
+
+        self.prev_scale = 1.0
+
+        self.pan_history_x = 0
+        self.pan_history_y = 0
+        self.pan_speed = 20
+
+        self.resize_timer = None
+
+    def update_prev_winfo_size(self):
+        self.prev_width_max = self.canvasx(self.winfo_width())
+        self.prev_height_max = self.canvasy(self.winfo_height())
+        self.prev_width_min = self.canvasx(0)
+        self.prev_height_min = self.canvasy(0)
+
+    def pan_horizontal(self, event):
+        if event.keysym == "Right":
+            multiplier = -1
+        else:
+            multiplier = 1
+
+        for corner in self.corners:
+            next_location = [
+                corner.location[0] + multiplier * self.pan_speed,
+                corner.location[1]
+            ]
+            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
+                self.pan_speed = min(abs(1 - corner.location[0]), abs(self.winfo_width() - corner.location[0] - 1))
+                return
+
+        for connection in self.corners + self.inputs + self.outputs:
+            connection.location[0] = connection.location[0] + multiplier * self.pan_speed
+            self.coords(connection.circle,
+                        connection.location[0] - connection.r, connection.location[1] - connection.r,
+                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        self.move_boxes_spiders(True, multiplier)
+        self.pan_speed = 20
+
+    def pan_vertical(self, event):
+        if event.keysym == "Down":
+            multiplier = -1
+        else:
+            multiplier = 1
+
+        for corner in self.corners:
+            next_location = [
+                corner.location[0], corner.location[1] + multiplier * self.pan_speed
+            ]
+            if 0 < round(next_location[0]) < self.winfo_width() or 0 < round(next_location[1]) < self.winfo_height():
+                self.pan_speed = min(abs(1 - corner.location[1]), abs(self.winfo_height() - corner.location[1] - 1))
+                return
+
+        for connection in self.corners + self.inputs + self.outputs:
+            connection.location[1] = connection.location[1] + multiplier * self.pan_speed
+            self.coords(connection.circle,
+                        connection.location[0] - connection.r, connection.location[1] - connection.r,
+                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        self.move_boxes_spiders(False, multiplier)
+        self.pan_speed = 20
+
+    def move_boxes_spiders(self, is_horizontal, multiplier):
+        if is_horizontal:
+            attr = "x"
+            self.pan_history_x += multiplier * self.pan_speed
+        else:
+            attr = "y"
+            self.pan_history_y += multiplier * self.pan_speed
+        for spider in self.spiders:
+            setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
+            spider.move_to((spider.x, spider.y))
+        for box in self.boxes:
+            setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
+            box.update_size(box.size[0], box.size[1])
+            box.move_label()
+        for wire in self.wires:
+            wire.update()
+        if self.pulling_wire:
+            self.temp_wire.update()
+
     def delete(self, *args):
         # HypergraphManager.modify_canvas_hypergraph(self)
-        super().delete(args)
+        super().delete(*args)
 
     def add_box(self, box: Box):
         self.boxes.add(box)
@@ -100,6 +231,27 @@ class CustomCanvas(tk.Canvas):
     def remove_all_wires(self):
         self.wires = set()
 
+    def update_after_treeview(self, canvas_width, treeview_width, to_left):
+        if to_left:
+            old_canvas_width = canvas_width + treeview_width
+        else:
+
+            old_canvas_width = canvas_width - treeview_width
+
+        for box in self.boxes:
+            relative_pos = ((box.x + box.x + box.size[0]) / 2) / old_canvas_width * canvas_width
+            box.x = relative_pos - box.size[0] / 2
+            box.update_size(box.size[0], box.size[1])
+            box.move_label()
+
+        for spider in self.spiders:
+            relative_pos = (spider.x / old_canvas_width) * canvas_width
+            spider.x = relative_pos
+            spider.move_to((spider.x, spider.y))
+
+        for wire in self.wires:
+            wire.update()
+
     def handle_right_click(self, event):
         if self.selector.selecting:
             self.selector.finish_selection()
@@ -114,18 +266,172 @@ class CustomCanvas(tk.Canvas):
         self.itemconfig(self.name, text=name)
         self.name_text = name
 
+    def offset_items(self, x_offset, y_offset):
+        for box in self.boxes:
+            box.x -= x_offset
+            box.y -= y_offset
+            box.update_size(box.size[0], box.size[1])
+            box.move_label()
+        for spider in self.spiders:
+            spider.x -= x_offset
+            spider.y -= y_offset
+            spider.move_to((spider.x, spider.y))
+        for wire in self.wires:
+            wire.update()
+        for i_o_c in self.inputs + self.outputs + self.corners:
+            i_o_c.location = [i_o_c.location[0] - x_offset, i_o_c.location[1] - y_offset]
+            self.coords(i_o_c.circle, i_o_c.location[0] - i_o_c.r, i_o_c.location[1] - i_o_c.r,
+                        i_o_c.location[0] + i_o_c.r, i_o_c.location[1] + i_o_c.r)
+        self.pan_history_x = 0
+        self.pan_history_y = 0
+
+    def reset_zoom(self):
+        while self.total_scale - 1 > 0.01:
+            event = Event(self.winfo_width() / 2, self.winfo_height() / 2, 5, -120)
+            self.zoom(event)
+
+    def zoom(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
+        scale = 1
+
+        self.prev_scale = self.total_scale
+        if event.num == 5 or event.delta == -120:
+            scale *= self.delta
+            self.total_scale *= self.delta
+        if event.num == 4 or event.delta == 120:
+            scale /= self.delta
+            self.total_scale /= self.delta
+
+        if self.prev_scale < self.total_scale:
+            denominator = self.delta
+        else:
+            denominator = 1 / self.delta
+            is_allowed, x_offset, y_offset, end = self.check_max_zoom(event.x, event.y, denominator)
+            if end:
+                self.total_scale = self.prev_scale
+                return
+            if not is_allowed:
+                event.x += x_offset
+                event.y += y_offset
+
+        self.update_coordinates(denominator, event, scale)
+        self.update_inputs_outputs()
+        if self.total_scale - 1 < 0.1:
+            self.init_corners()
+        self.configure(scrollregion=self.bbox('all'))
+
+    def update_coordinates(self, denominator, event, scale):
+        for corner in self.corners:
+            next_location = [
+                self.calculate_zoom_dif(event.x, corner.location[0], denominator),
+                self.calculate_zoom_dif(event.y, corner.location[1], denominator)
+            ]
+            corner.location = next_location
+            self.coords(corner.circle, next_location[0] - corner.r, corner.location[1] - corner.r,
+                        corner.location[0] + corner.r, corner.location[1] + corner.r)
+
+        for i_o in self.inputs + self.outputs:
+            i_o_location = [
+                self.calculate_zoom_dif(event.x, i_o.location[0], denominator),
+                self.calculate_zoom_dif(event.y, i_o.location[1], denominator)
+            ]
+            i_o.r *= scale
+            i_o.location = i_o_location
+            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
+                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
+
+        for box in self.boxes:
+            box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
+            box.y = self.calculate_zoom_dif(event.y, box.y, denominator)
+            box.update_size(box.size[0] * scale, box.size[1] * scale)
+            box.move_label()
+
+        for spider in self.spiders:
+            spider.x = self.calculate_zoom_dif(event.x, spider.x, denominator)
+            spider.y = self.calculate_zoom_dif(event.y, spider.y, denominator)
+            spider.location = spider.x, spider.y
+            spider.r *= scale
+            self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
+                        spider.y + spider.r)
+
+        for wire in self.wires:
+            wire.wire_width *= scale
+            wire.update()
+        if self.temp_wire:
+            self.temp_wire.update()
+
+    def check_max_zoom(self, x, y, denominator):
+        x_offset = 0
+        y_offset = 0
+        for corner in self.corners:
+            next_location = [
+                self.calculate_zoom_dif(x, corner.location[0], denominator),
+                self.calculate_zoom_dif(y, corner.location[1], denominator)
+            ]
+            multiplier = 1 / (1 - self.delta)
+            if self.canvasx(0) < round(next_location[0]) < self.canvasx(self.winfo_width()):
+                x_offset = -next_location[0] * multiplier
+                if round(next_location[0]) > self.canvasx(self.winfo_width()) / 2:
+                    x_offset = (self.canvasx(self.winfo_width()) - next_location[0]) * multiplier
+            if self.canvasy(0) < round(next_location[1]) < self.canvasy(self.winfo_height()):
+                y_offset = -next_location[1] * multiplier
+                if round(next_location[1]) > self.canvasy(self.winfo_height()) / 2:
+                    y_offset = (self.canvasy(self.winfo_height()) - next_location[1]) * multiplier
+            # TODO does this part also need canvas coords
+            # if 0 < round(next_location[0]) < self.winfo_width():
+            #     x_offset = -next_location[0] * multiplier
+            #     if round(next_location[0]) > self.winfo_width() / 2:
+            #         x_offset = (self.winfo_width() - next_location[0]) * multiplier
+            # if 0 < round(next_location[1]) < self.winfo_height():
+            #     y_offset = -next_location[1] * multiplier
+            #     if round(next_location[1]) > self.winfo_height() / 2:
+            #         y_offset = (self.winfo_height() - next_location[1]) * multiplier
+        is_allowed = x_offset == 0 == y_offset
+        return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
+
+    def check_corner_start_locations(self):
+        min_x = self.canvasx(0)
+        min_y = self.canvasy(0)
+        max_x = self.canvasx(self.winfo_width())
+        max_y = self.canvasy(self.winfo_height())
+        # min_x = 0
+        # min_y = 0
+        # max_x = self.winfo_width()
+        # max_y = self.winfo_height()
+        count = 0
+        locations = [
+            [min_x, min_y],
+            [min_x, max_y],
+            [max_x, min_y],
+            [max_x, max_y]
+
+        ]
+        for corner in self.corners:
+            for location in locations:
+                if ((abs(round(self.canvasx(corner.location[0])) - location[0]) < 2
+                    and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
+                        or
+                    (abs(round(corner.location[0]) - location[0]) < 2
+                        and abs(round(corner.location[1]) - location[1]) < 2)):
+                    count += 1
+        return count >= 4
+
     def close_menu(self):
         if self.context_menu:
             self.context_menu.destroy()
 
     def show_context_menu(self, event):
+        if self.is_wire_pressed:
+            self.close_menu()
+            self.is_wire_pressed = False
+            return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         if not self.is_mouse_on_object(event):
             self.close_menu()
             self.context_menu = tk.Menu(self, tearoff=0)
 
             self.context_menu.add_command(label="Add undefined box",
-                                          command=lambda loc=(event.x, event.y): self.create_new_box(loc))
+                                          command=lambda loc=(event.x, event.y): self.add_box(loc))
 
             # noinspection PyUnresolvedReferences
             if len(self.master.quick_create_boxes) > 0:
@@ -157,6 +463,7 @@ class CustomCanvas(tk.Canvas):
 
     # binding for drag select
     def __select_start__(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         [box.close_menu() for box in self.boxes]
         [wire.close_menu() for wire in self.wires]
         [(spider.close_menu(), self.tag_raise(spider.circle)) for spider in self.spiders]
@@ -172,16 +479,12 @@ class CustomCanvas(tk.Canvas):
         self.selector.start_selection(event)
 
     def __select_motion__(self, event):
+        event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         self.selector.update_selection(event)
 
-    def __select_release__(self, event):
+    def __select_release__(self):
         self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
-        if len(self.selector.selected_items) > 1:
-            res = mb.askquestion(message='Add selection to a separate sub-diagram?')
-            if res == 'yes':
-                self.selector.select_action(event, True)
-                return
-        self.selector.select_action(event, False)
+        self.selector.select_action()
 
     def delete_selected_items(self):
         self.selector.delete_selected_items()
@@ -271,7 +574,7 @@ class CustomCanvas(tk.Canvas):
                                                                               connection) or bypass_legality_check:
             self.cancel_wire_pulling()
             self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
-            self.add_wire(self.current_wire)
+            self.wires.append(self.current_wire)
 
             if self.current_wire_start.box is not None:
                 self.current_wire_start.box.add_wire(self.current_wire)
@@ -296,7 +599,7 @@ class CustomCanvas(tk.Canvas):
             if self.quick_pull:
                 self.quick_pull = False
                 self.draw_wire_mode = False
-                self.main_diagram.draw_wire_button.config(bg="white")
+                self.main_diagram.draw_wire_button.config(bootstyle=(PRIMARY, OUTLINE))
 
     def nullify_wire_start(self):
         if self.current_wire_start:
@@ -304,9 +607,11 @@ class CustomCanvas(tk.Canvas):
         self.current_wire_start = None
         self.current_wire = None
 
-    def create_new_box(self, loc=(100, 100), size=(60, 60), id_=None):
-        box = Box(self, *loc, self.receiver, size=size, id_=id_)
-        self.add_box(box)
+    def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape=None):
+        if shape is None:
+            shape = self.box_shape
+        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape)
+        self.boxes.append(box)
         return box
 
     def get_box_by_id(self, box_id: int) -> Box | None:
@@ -318,7 +623,7 @@ class CustomCanvas(tk.Canvas):
     def get_box_function(self, box_id) -> BoxFunction | None:
         box = self.get_box_by_id(box_id)
         if box:
-            return box.box_function
+            return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
         return None
 
     def add_spider(self, loc=(100, 100), id_=None):
@@ -336,14 +641,35 @@ class CustomCanvas(tk.Canvas):
 
     # OTHER BUTTON FUNCTIONALITY
     def save_as_png(self):
+        self.reset_zoom()
         filetypes = [('png files', '*.png')]
         file_path = filedialog.asksaveasfilename(defaultextension='.png', filetypes=filetypes,
                                                  title="Save png file")
         if file_path:
-            self.postscript(file='../../temp.ps', colormode="color")
-            img = Image.open('../../temp.ps')
-            img.save(file_path, 'png')
-            os.remove("../../temp.ps")
+            self.main_diagram.generate_png(self, file_path)
+
+    def open_tikz_generator(self):
+        self.reset_zoom()
+        tikz_window = tk.Toplevel(self)
+        tikz_window.title("TikZ Generator")
+
+        tk.Label(tikz_window, text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.", justify="left").pack()
+
+        pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
+        pgfplotsset_text.insert(tk.END, "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.config(state=tk.DISABLED)
+        pgfplotsset_text.pack()
+
+        tikz_text = tk.Text(tikz_window)
+        tikz_text.insert(tk.END, self.main_diagram.generate_tikz(self))
+        tikz_text.config(state="disabled")
+        tikz_text.pack(pady=10, fill=tk.BOTH, expand=True)
+        tikz_text.update()
+
+        tikz_copy_button = ttk.Button(tikz_text, image=self.copy_logo,
+                                      command=lambda: self.main_diagram.copy_to_clipboard(tikz_text),
+                                      bootstyle=LIGHT)
+        tikz_copy_button.place(x=tikz_text.winfo_width() - 30, y=20, anchor=tk.CENTER)
 
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
@@ -351,44 +677,115 @@ class CustomCanvas(tk.Canvas):
             for item in self.selector.selected_items:
                 item.deselect()
             self.selector.selected_items.clear()
-            self.main_diagram.draw_wire_button.config(bg="lightgreen")
+            self.main_diagram.draw_wire_button.config(bootstyle=SUCCESS)
         else:
             self.nullify_wire_start()
             self.cancel_wire_pulling()
-            self.main_diagram.draw_wire_button.config(bg="white")
+            self.main_diagram.draw_wire_button.config(bootstyle=(PRIMARY, OUTLINE))
 
     # RESIZE/UPDATE
     def on_canvas_resize(self, _):
         # update label loc
-        w = self.winfo_width()
-        self.coords(self.name, w / 2, 10)
+        w = self.canvasx(self.winfo_width())
+        self.coords(self.name, w / 2, self.canvasy(10))
+
+        if self.total_scale - 1 > 0.1:
+            self.update_corners()
+        else:
+            self.init_corners()
 
         self.update_inputs_outputs()
+        self.update_prev_winfo_size()
+        # self.offset_items(self.corners[0].location[0], self.corners[0].location[1])
         # TODO here or somewhere else limit resize if it would mess up output/input display
 
+    @staticmethod
+    def debounce(wait_time):
+        """
+        Decorator that will debounce a function so that it is called after wait_time seconds
+        If it is called multiple times, will wait for the last call to be debounced and run only this one.
+        """
+
+        def decorator(function):
+            def debounced(*args, **kwargs):
+                def call_function():
+                    debounced._timer = None
+                    return function(*args, **kwargs)
+
+                # if we already have a call to the function currently waiting to be executed, reset the timer
+                if debounced._timer is not None:
+                    debounced._timer.cancel()
+
+                # after wait_time, call the function provided to the decorator with its arguments
+                debounced._timer = Timer(wait_time, call_function)
+                debounced._timer.start()
+
+            debounced._timer = None
+            return debounced
+
+        return decorator
+
+    def init_corners(self):
+        min_x = self.canvasx(0)
+        min_y = self.canvasy(0)
+        max_x = self.canvasx(self.winfo_width())
+        max_y = self.canvasy(self.winfo_height())
+        self.corners[0].move_to([min_x, min_y])
+        self.corners[1].move_to([min_x, max_y])
+        self.corners[2].move_to([max_x, min_y])
+        self.corners[3].move_to([max_x, max_y])
+        self.update_inputs_outputs()
+
+    @debounce(1)
+    def update_corners(self):
+        min_x = self.canvasx(0)
+        min_y = self.canvasy(0)
+        max_x = self.canvasx(self.winfo_width())
+        max_y = self.canvasy(self.winfo_height())
+        self.corners[0].move_to([(self.corners[0].location[0] + (min_x - self.prev_width_min) / self.delta),
+                                 (self.corners[0].location[1] + (min_y - self.prev_height_min) / self.delta)])
+
+        self.corners[1].move_to([(self.corners[1].location[0] + (min_x - self.prev_width_min) / self.delta),
+                                 (self.corners[1].location[1] + (max_y - self.prev_height_max) / self.delta)])
+
+        self.corners[2].move_to([(self.corners[2].location[0] + (max_x - self.prev_width_max) / self.delta),
+                                 (self.corners[2].location[1] + (min_y - self.prev_height_min) / self.delta)])
+
+        self.corners[3].move_to([(self.corners[3].location[0] + (max_x - self.prev_width_max) / self.delta),
+                                 (self.corners[3].location[1] + (max_y - self.prev_height_max) / self.delta)])
+
     def update_inputs_outputs(self):
-        x = self.winfo_width()
-        y = self.winfo_height()
+        x = self.corners[3].location[0]
+        y = self.corners[3].location[1]
+        min_y = self.corners[0].location[1]
         output_index = max([o.index for o in self.outputs] + [0])
         for o in self.outputs:
             i = o.index
-            step = y / (output_index + 2)
-            o.move_to((x - 7, step * (i + 1)))
+            step = (y - min_y) / (output_index + 2)
+            o.move_to([x - 7, min_y + step * (i + 1)])
 
         input_index = max([o.index for o in self.inputs] + [0])
         for o in self.inputs:
             i = o.index
-            step = y / (input_index + 2)
-            o.move_to((6, step * (i + 1)))
+            step = (y - min_y) / (input_index + 2)
+            o.move_to([6 + self.corners[0].location[0], min_y + step * (i + 1)])
         [w.update() for w in self.wires]
 
     def delete_everything(self):
-        for w in self.wires:
-            w.delete_self()
-        for b in self.boxes:
-            b.delete_box()
-        self.remove_all_boxes()
-        self.remove_all_wires()
+        while len(self.wires) > 0:
+            self.wires[0].delete_self()
+        while len(self.boxes) > 0:
+            if self.boxes[0].sub_diagram:
+                sub_diagram = 'sub_diagram'
+            else:
+                sub_diagram = None
+            self.boxes[0].delete_box(action=sub_diagram)
+        while len(self.spiders) > 0:
+            self.spiders[0].delete_spider()
+        while len(self.outputs) > 0:
+            self.remove_diagram_output()
+        while len(self.inputs) > 0:
+            self.remove_diagram_input()
 
     # STATIC HELPERS
     @staticmethod
@@ -444,7 +841,9 @@ class CustomCanvas(tk.Canvas):
         output_index = max([o.index for o in self.outputs] + [0])
         if len(self.outputs) != 0:
             output_index += 1
-        connection_output_new = Connection(self.diagram_source_box, output_index, "left", (0, 0), self, id_=id_)
+        connection_output_new = Connection(self.diagram_source_box, output_index,
+                                           "left", [0, 0], self,
+                                           r=5*self.total_scale, id_=id_)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -455,7 +854,6 @@ class CustomCanvas(tk.Canvas):
 
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
-
 
         return connection_output_new
 
@@ -486,7 +884,8 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, "right", (0, 0), self, id_=id_)
+        new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
+                               r=5*self.total_scale, id_=id_)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id, canvas_id=self.id)
@@ -510,7 +909,6 @@ class CustomCanvas(tk.Canvas):
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_input", canvas_id=self.id)
 
-
     def remove_specific_diagram_input(self, con):
         if not self.inputs:
             return
@@ -527,7 +925,6 @@ class CustomCanvas(tk.Canvas):
         self.inputs.remove(con)
         con.delete_me()
         self.update_inputs_outputs()
-
 
     def remove_specific_diagram_output(self, con):
         if not self.outputs:
@@ -579,7 +976,13 @@ class CustomCanvas(tk.Canvas):
             self.columns.pop(snapped_x, None)
 
     def export_hypergraph(self):
+        self.reset_zoom()
         self.hypergraph_exporter.export()
+
+    @staticmethod
+    def calculate_zoom_dif(zoom_coord, object_coord, denominator):
+        """Calculates how much an object will to be moved when zooming."""
+        return round(zoom_coord - (zoom_coord - object_coord) / denominator, 4)
 
     @staticmethod
     def get_upper_lower_edges(component):
@@ -609,3 +1012,21 @@ class CustomCanvas(tk.Canvas):
             else:
                 go_to_y = go_to_y_down
         return break_boolean, go_to_y
+
+    def change_box_shape(self, shape):
+        self.box_shape = shape
+
+    def copy_selected_items(self):
+        self.selector.copy_selected_items()
+
+    def paste_copied_items(self, event):
+        self.selector.paste_copied_items(event.x, event.y)
+
+    def cut_selected_items(self):
+        self.copy_selected_items()
+        self.delete_selected_items()
+
+    def create_sub_diagram(self):
+        if len(list(filter(lambda x: isinstance(x, Spider) or isinstance(x, Box), self.selector.selected_items))) > 1:
+            self.selector.create_sub_diagram()
+            self.selector.selected_items = []

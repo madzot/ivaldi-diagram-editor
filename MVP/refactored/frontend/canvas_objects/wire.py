@@ -40,7 +40,8 @@ class Wire:
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
         if not self.is_temporary:
-            self.canvas.remove_wire(self)
+            if self in self.canvas.wires:
+                self.canvas.wires.remove(self)
         if not self.is_temporary:
             self.handle_wire_deletion_callback(action)
 
@@ -75,6 +76,7 @@ class Wire:
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
 
     def show_context_menu(self, event):
+        self.canvas.is_wire_pressed = True
         if not self.is_temporary:
             self.close_menu()
             self.context_menu = tk.Menu(self.canvas, tearoff=0)
