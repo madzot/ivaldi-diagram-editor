@@ -9,10 +9,8 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
-from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
-from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer.json_importer import JsonImporter

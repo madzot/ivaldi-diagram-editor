@@ -6,17 +6,14 @@ from tkinter import messagebox as mb
 from PIL import Image
 
 from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
-from MVP.refactored.box import Box
-from MVP.refactored.connection import Connection
-from MVP.refactored.selector import Selector
-from MVP.refactored.spider import Spider
+from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.util.selector import Selector
+from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-from MVP.refactored.wire import Wire
+from MVP.refactored.frontend.canvas_objects.wire import Wire
 
 
 class CustomCanvas(tk.Canvas):
@@ -343,10 +340,10 @@ class CustomCanvas(tk.Canvas):
         file_path = filedialog.asksaveasfilename(defaultextension='.png', filetypes=filetypes,
                                                  title="Save png file")
         if file_path:
-            self.postscript(file='temp.ps', colormode="color")
-            img = Image.open('temp.ps')
+            self.postscript(file='../../temp.ps', colormode="color")
+            img = Image.open('../../temp.ps')
             img.save(file_path, 'png')
-            os.remove("temp.ps")
+            os.remove("../../temp.ps")
 
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode

@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.code_editor import CodeEditor
+from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
-from MVP.refactored.connection import Connection
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 
 if TYPE_CHECKING:
-    from MVP.refactored.spider import Spider
-    from MVP.refactored.wire import Wire
+    from MVP.refactored.frontend.canvas_objects.spider import Spider
+    from MVP.refactored.frontend.canvas_objects.wire import Wire
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
 
@@ -273,7 +273,7 @@ class Box:
                 self.add_left_connection()
 
     def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True):
-        from MVP.refactored.custom_canvas import CustomCanvas
+        from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
         if self.receiver.listener:
             self.receiver.receiver_callback("compound", generator_id=self.id, canvas_id=self.canvas.id)
         if not self.sub_diagram:

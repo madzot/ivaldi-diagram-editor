@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TextIO
 
-from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 
 class Importer(ABC):

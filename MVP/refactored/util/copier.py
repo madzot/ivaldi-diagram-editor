@@ -1,4 +1,4 @@
-from MVP.refactored.box import Box
+from MVP.refactored.frontend.canvas_objects.box import Box
 
 class Copier:
 

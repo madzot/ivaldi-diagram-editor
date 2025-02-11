@@ -3,7 +3,7 @@ from tkinter import font  # Import the font module
 from tkinter import messagebox
 
 from MVP.refactored.backend.diagram_callback import Receiver
-from MVP.refactored.main_diagram import MainDiagram
+from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 
 
 class Launcher:

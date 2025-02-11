@@ -1,8 +1,6 @@
 import tkinter as tk
 
-from MVP.refactored.backend.hypergraph.node import Node
-from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
-from MVP.refactored.connection import Connection
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 
 
 def curved_line(start, end, det=15):
