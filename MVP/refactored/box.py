@@ -7,6 +7,7 @@ from tkinter import simpledialog
 from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
 from MVP.refactored.connection import Connection
@@ -61,8 +62,9 @@ class Box:
     def set_box_function(self, function: BoxFunction):
         self.box_function = function
 
-        node = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(self.id)
-        node.set_box_function(self.box_function)
+        hyper_edge: HyperEdge = HypergraphManager.get_hyper_edge_by_id(self.id)
+        if hyper_edge:
+            hyper_edge.set_box_function(self.box_function)
 
     def get_box_function(self) -> BoxFunction:
         return self.box_function

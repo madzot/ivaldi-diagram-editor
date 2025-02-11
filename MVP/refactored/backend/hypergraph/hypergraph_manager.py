@@ -278,6 +278,13 @@ class HypergraphManager:
         HypergraphManager.add_hypergraph(combined_hypergraph)
 
     @staticmethod
+    def get_hyper_edge_by_id(hyper_edge_id: int) -> HyperEdge|None:
+        graph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
+        if graph is not None:
+            return graph.get_hyper_edge_by_id(hyper_edge_id)
+        return None
+
+    @staticmethod
     def get_graph_by_node_id(node_id: int) -> Hypergraph|None:
         for hypergraph in HypergraphManager.hypergraphs:
             if node_id in hypergraph.nodes:
