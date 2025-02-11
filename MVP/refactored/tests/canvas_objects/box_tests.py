@@ -116,3 +116,133 @@ class BoxTests(TestMainDiagram):
         self.assertTrue(resize_by_connections_mock.called)
         self.assertTrue(update_wires_mock.called)
         self.assertTrue(update_connections_mock.called)
+
+    def test__lock_box__turns_locked_to_true(self):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        self.assertFalse(box.locked)
+
+        box.lock_box()
+        self.assertTrue(box.locked)
+
+    def test__unlock_box__turns_locked_to_false(self):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.lock_box()
+        self.assertTrue(box.locked)
+
+        box.unlock_box()
+        self.assertFalse(box.locked)
+
+    def test__select__turns_rect_outline_green(self):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+
+        expected_start_color = "black"
+        actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        self.assertEqual(expected_start_color, actual_start_color)
+
+        box.select()
+        expected_selected_color = "green"
+        actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        self.assertEqual(expected_selected_color, actual_selected_color)
+
+    def test__deselect__turns_rect_outline_black(self):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+
+        box.select()
+        expected_selected_color = "green"
+        actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        self.assertEqual(expected_selected_color, actual_selected_color)
+
+        box.deselect()
+        expected_start_color = "black"
+        actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        self.assertEqual(expected_start_color, actual_start_color)
+
+    def test__move__updates_x_y(self):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        self.assertEqual((100, 100), (box.x, box.y))
+
+        expected_x = 500
+        expected_y = 600
+        box.move(expected_x, expected_y)
+        self.assertEqual((expected_x, expected_y), (box.x, box.y))
+
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_position")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_connections")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_wires")
+    def test__move__calls_out_methods(self, update_wires_mock, update_connections_mock, update_position_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.move(100, 100)
+
+        self.assertTrue(update_wires_mock.called)
+        self.assertTrue(update_connections_mock.called)
+        self.assertTrue(update_position_mock.called)
+
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.is_illegal_move")
+    def test__move__checks_for_illegal_move_when_connections_with_wire_exist(self, is_illegal_move_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.add_left_connection()
+        box.connections[0].has_wire = True
+
+        box.move(100, 100)
+        self.assertTrue(is_illegal_move_mock.called)
+
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.is_illegal_move", return_value=True)
+    def test__move__if_illegal_doesnt_change_x(self, is_illegal_move_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.add_left_connection()
+        box.connections[0].has_wire = True
+
+        box.move(500, 600)
+        self.assertTrue(is_illegal_move_mock.called)
+        self.assertEqual(100, box.x)
+        self.assertEqual(600, box.y)
+
+    @patch("tkinter.simpledialog.askstring", return_value="1")
+    def test__set_inputs_outputs__asks_user_for_input(self, ask_string_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.set_inputs_outputs("_")
+
+        self.assertTrue(ask_string_mock.called)
+        self.assertEqual(2, len(box.connections))
+
+    @patch("tkinter.simpledialog.askstring", return_value="2")
+    def test__set_inputs_outputs__removes_outputs_if_needed(self, ask_string_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        for i in range(3):
+            box.add_left_connection()
+            box.add_right_connection()
+
+        self.assertEqual(6, len(box.connections))
+        self.assertEqual(3, box.left_connections)
+        self.assertEqual(3, box.right_connections)
+
+        box.set_inputs_outputs("_")
+
+        self.assertEqual(2, ask_string_mock.call_count)
+        self.assertEqual(4, len(box.connections))
+        self.assertEqual(2, box.left_connections)
+        self.assertEqual(2, box.right_connections)
+
+    # @patch("MVP.refactored.frontend.canvas_objects.box.Box.change_label")
+    # def test__set_label__set
+
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.change_label")
+    def test__edit_label__with_param_changes_label(self, change_label_mock, tag_bind_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        tag_bind_mock.call_count = 0  # resetting tag_bind amount from box creation
+
+        expected_label = "new label"
+        box.edit_label(expected_label)
+
+        self.assertEqual(expected_label, box.label_text)
+        self.assertTrue(change_label_mock.called)
+        self.assertEqual(4, tag_bind_mock.call_count)
+
+
+
+
+
+
+
+
