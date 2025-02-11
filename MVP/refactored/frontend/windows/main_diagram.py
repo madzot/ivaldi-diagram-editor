@@ -1,22 +1,31 @@
 import hashlib
 import json
-import os
 import tkinter as tk
 from tkinter import messagebox, filedialog
 from tkinter import simpledialog
 from tkinter import ttk
 
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+import ttkbootstrap as ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from scipy.interpolate import make_interp_spline
+from ttkbootstrap.constants import *
 
+import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
-from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
-from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.toolbar import Titlebar
+from MVP.refactored.frontend.util.selector import Selector
+from MVP.refactored.frontend.windows.code_editor import CodeEditor
+from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer.json_importer import JsonImporter
 from MVP.refactored.util.importer.python_importer import PythonImporter
+from constants import *
 
 
 class MainDiagram(tk.Tk):
@@ -25,15 +34,31 @@ class MainDiagram(tk.Tk):
         self.title("Dynamic String Diagram Canvas")
         self.receiver = receiver
 
+        self.titlebar = Titlebar(self, None)
+        self.titlebar.pack(side='top', fill='both')
+
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
+        self.wm_minsize(screen_width_min, screen_height_min)
 
-        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False, width=screen_width_min,
-                                          height=screen_height_min, bg="white", highlightthickness=0)
+        self.selector = None
+
+        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
+        self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.tree = ttk.Treeview(self)
-        self.tree.pack(side=tk.LEFT)
+        self.selector = Selector(self)
+        self.custom_canvas.selector = self.selector
+
+        self.titlebar.set_custom_canvas(self.custom_canvas)
+
+        self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
+
+        self.is_tree_visible = True
+        self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
+        self.tree.bind("<Motion>", "break")
+        self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
+        self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
 
         # Add some items to the tree
@@ -43,10 +68,11 @@ class MainDiagram(tk.Tk):
         self.tree_root_id = str(self.custom_canvas.id)
         # Bind the treeview to the click event
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
+        self.tree.update()
 
-        self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.control_frame = tk.Frame(self)
-        self.wm_minsize(screen_width_min, screen_height_min)
+        self.toggle_treeview()
+
+        self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
@@ -54,60 +80,68 @@ class MainDiagram(tk.Tk):
         self.json_importer = JsonImporter(self.custom_canvas)
         self.python_importer = PythonImporter(self.custom_canvas)
 
+
         # Add undefined box
-        self.undefined_box_button = tk.Button(self.control_frame, text="Add Undefined Box",
-                                              command=self.custom_canvas.create_new_box, bg="white", width=18)
+        self.undefined_box_button = ttk.Button(self.control_frame, text="Add Undefined Box",
+                                               command=self.custom_canvas.add_box, width=20,
+                                               bootstyle=(PRIMARY, OUTLINE))
         self.undefined_box_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.undefined_box_button.update()
+
+        self.shape_dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box Shape", width=16,
+                                                    bootstyle=(PRIMARY, OUTLINE))
+        self.shape_dropdown_menu = ttk.Menu(self.shape_dropdown_button, tearoff=0)
+        self.shape_dropdown_button.config(menu=self.shape_dropdown_menu)
+        self.shape_dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.update_shape_dropdown_menu()
 
         self.boxes = {}
         self.quick_create_boxes = []
 
         # Create Menubutton and Menu for dropdown
-        self.dropdown_button = tk.Menubutton(self.control_frame, text="Select Box to Add", relief="raised")
-        self.dropdown_menu = tk.Menu(self.dropdown_button, tearoff=0)
+        self.dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box to Add", width=16,
+                                              bootstyle=(PRIMARY, OUTLINE))
+        self.dropdown_menu = ttk.Menu(self.dropdown_button, tearoff=0)
         self.dropdown_button.config(menu=self.dropdown_menu)
         self.dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
-        self.dropdown_button.config(width=20, background="white")
         self.update_dropdown_menu()
 
-        self.manage_boxes = tk.Button(self.control_frame, text="Manage Boxes",
-                                      command=self.manage_boxes_method, bg="white", width=18)
+        self.manage_boxes = ttk.Button(self.control_frame, text="Manage Boxes",
+                                       command=self.manage_boxes_method, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.manage_boxes.pack(side=tk.TOP, padx=5, pady=5)
 
         self.quick_create_booleans = []
         self.get_boxes_from_file()
-        self.manage_quick_create = tk.Button(self.control_frame, text="Manage Quick Create",
-                                             command=self.manage_quick_create, bg="white", width=18)
+        self.manage_quick_create = ttk.Button(self.control_frame, text="Manage Quick Create",
+                                              command=self.manage_quick_create, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.manage_quick_create.pack(side=tk.TOP, padx=5, pady=5)
+
+        self.manage_methods_button = ttk.Button(self.control_frame, text="Manage Methods",
+                                                command=self.open_manage_methods_window, width=20,
+                                                bootstyle=(PRIMARY, OUTLINE))
+        self.manage_methods_button.pack(side=tk.TOP, padx=5, pady=5)
+
         # Add Spider
-        self.spider_box = tk.Button(self.control_frame, text="Add Spider",
-                                    command=self.custom_canvas.add_spider, bg="white", width=18)
+        self.spider_box = ttk.Button(self.control_frame, text="Add Spider",
+                                     command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.spider_box.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.rename = tk.Button(self.control_frame, text="Rename Diagram",
-                                command=self.rename, bg="white", width=18)
+        self.rename = ttk.Button(self.control_frame, text="Rename Diagram",
+                                 command=self.rename, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.rename.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.random = tk.Button(self.control_frame, text="Connect At Random",
-                                command=self.custom_canvas.random, bg="white", width=18)
+        self.random = ttk.Button(self.control_frame, text="Connect At Random",
+                                 command=self.custom_canvas.random, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.random.pack(side=tk.TOP, padx=5, pady=5)
 
-        self.alg_not = tk.Button(self.control_frame, text="Get Algebraic Notation",
-                                 command=self.create_algebraic_notation, bg="white", width=18)
-        self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
-
-        # self.alg_not = tk.Button(self.control_frame, text="Visualize as graph",
-        #                          command=lambda: self.visualize_as_graph(self.custom_canvas),
-        #                          bg="light sea green", width=18)
-
-        self.alg_not = tk.Button(self.control_frame, text="Visualize as graph",
-                                 command=lambda: self.__get_all(),
-                                 bg="light sea green", width=18)
+        self.alg_not = ttk.Button(self.control_frame, text="Get Algebraic Notation",
+                                  command=self.create_algebraic_notation, width=20, bootstyle=(PRIMARY, OUTLINE))
         self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
 
         # Button for Draw Wire Mode
-        self.draw_wire_button = tk.Button(self.control_frame, text="Draw Wire Mode",
-                                          command=self.custom_canvas.toggle_draw_wire_mode, bg="white", width=18)
+        self.draw_wire_button = ttk.Button(self.control_frame, text="Draw Wire Mode",
+                                           command=self.custom_canvas.toggle_draw_wire_mode, width=20,
+                                           bootstyle=(PRIMARY, OUTLINE))
         self.draw_wire_button.pack(side=tk.TOP, padx=5, pady=25)
 
         self.generate_code_btn = tk.Button(self.control_frame, text="Generate code",
@@ -116,10 +150,6 @@ class MainDiagram(tk.Tk):
 
         # Bottom buttons
         buttons = {
-            "Generate code": self.generate_code,
-            "Save project": self.save_to_file,
-            "Save png": self.custom_canvas.save_as_png,
-            "Export hypergraph": self.custom_canvas.export_hypergraph,
             "Remove input": self.custom_canvas.remove_diagram_input,
             "Remove output": self.custom_canvas.remove_diagram_output,
             "Add input": self.custom_canvas.add_diagram_input,
@@ -127,30 +157,51 @@ class MainDiagram(tk.Tk):
         }
         self.saved_buttons = {}
         for name, method in buttons.items():
-            button = tk.Button(self.control_frame, text=name, command=method, bg="white", width=18)
+            button = ttk.Button(self.control_frame, text=name, command=method, width=20, bootstyle=(PRIMARY, OUTLINE))
             button.pack(side=tk.BOTTOM, padx=5, pady=5)
             self.saved_buttons[name] = button
 
         if load:
             self.load_from_file()
-        self.json_file_hash = self.calculate_json_file_hash()
+        self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
+        self.load_functions()
+        self.manage_methods = None
+        self.import_counter = 0
         self.mainloop()
 
-    def __get_all(self):
+    def get_all(self):
         hypergraphs = HypergraphManager
         print("hi")
 
     @staticmethod
-    def calculate_json_file_hash():
-        with open("MVP/refactored/conf/boxes_conf.json", "r") as file:
+    def calculate_boxes_json_file_hash():
+        with open(BOXES_CONF, "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
+    def load_functions(self):
+        if os.stat(FUNCTIONS_CONF).st_size != 0:
+            with open(FUNCTIONS_CONF, "r") as file:
+                self.label_content = json.load(file)
+
     def generate_code(self):
-        code = CodeGenerator.generate_code(self.custom_canvas,
-                                           self.canvasses)  # TODO if user in sub diagram, should use another canvas
-        print("-----------------------\ncode is:\n", code, sep="", end="")
+        print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
+        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
+        CodeEditor(self, code=code, is_generated=True)
+
+    def open_manage_methods_window(self):
+        self.manage_methods = ManageMethods(self)
+
+    def change_function_label(self, old_label, new_label):
+        if old_label in self.label_content.keys():
+            code = self.label_content[old_label]
+            self.label_content[new_label] = code
+            del self.label_content[old_label]
+            for canvas in self.canvasses.values():
+                for box in canvas.boxes:
+                    if box.label_text == old_label:
+                        box.edit_label(new_label)
 
     def create_algebraic_notation(self):
         if not is_canvas_complete(self.custom_canvas):
@@ -187,20 +238,19 @@ class MainDiagram(tk.Tk):
                 copy_button.pack(pady=5)
 
     def visualize_as_graph(self, canvas):
+        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
+        if hypergraph is None:
+            messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
+            return
+
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
-        hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-        if hypergraph is None:
-            messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
-            plot_window.destroy()
-            return
-
         try:
-            figure = next(iter(hypergraph)).visualize()
+            figure = hypergraph.visualize()
         except Exception as e:
-            print(f"Error during visualization: {e}")
-            messagebox.showerror("Error", "Failed to generate the visualization.")
+            messagebox.showerror("Error", "Failed to generate the visualization." +
+                                 f"Error during visualization: {e}")
             plot_window.destroy()
             return
 
@@ -222,7 +272,7 @@ class MainDiagram(tk.Tk):
             self.open_children(child)  # recursively open children
 
     def bind_buttons(self):
-        self.undefined_box_button.configure(command=self.custom_canvas.create_new_box)
+        self.undefined_box_button.configure(command=self.custom_canvas.add_box)
         self.manage_boxes.configure(command=self.manage_boxes_method)
         self.spider_box.configure(command=self.custom_canvas.add_spider)
 
@@ -232,10 +282,6 @@ class MainDiagram(tk.Tk):
         # TODO figure out why this is needed! and change it!
         if not self.custom_canvas.diagram_source_box:
             buttons = {
-                "Generate code": self.generate_code,
-                "Save project": self.save_to_file,
-                "Save png": self.custom_canvas.save_as_png,
-                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.custom_canvas.remove_diagram_input,
                 "Remove output": self.custom_canvas.remove_diagram_output,
                 "Add input": self.custom_canvas.add_diagram_input,
@@ -243,10 +289,6 @@ class MainDiagram(tk.Tk):
             }
         else:
             buttons = {
-                "Generate code": self.generate_code,
-                "Save project": self.save_to_file,
-                "Save png": self.custom_canvas.save_as_png,
-                "Export hypergraph": self.custom_canvas.export_hypergraph,
                 "Remove input": self.remove_diagram_input,
                 "Remove output": self.remove_diagram_output,
                 "Add input": self.add_diagram_input,
@@ -257,8 +299,16 @@ class MainDiagram(tk.Tk):
 
     def add_canvas(self, canvas):
         # Add some items to the tree
-
-        self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
+        try:
+            self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
+        except tk.TclError as e:
+            if "already exists" in str(e):
+                self.import_counter += 1
+                canvas.id += self.import_counter
+            try:
+                self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
+            except tk.TclError:
+                self.tree.insert(str(self.custom_canvas.id), "end", str(canvas.id), text=canvas.name_text)
         self.canvasses[str(canvas.id)] = canvas
         for box in canvas.boxes:
             if box.sub_diagram:
@@ -291,11 +341,15 @@ class MainDiagram(tk.Tk):
         for item in self.custom_canvas.selector.selected_items:
             item.deselect()
         self.custom_canvas.selector.selected_items.clear()
+        self.custom_canvas.reset_zoom()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
+        self.selector.canvas = self.custom_canvas
         # Show the selected canvas
         self.custom_canvas.pack(fill='both', expand=True)
         self.bind_buttons()
+
+        self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.tree.selection_remove(self.tree.selection())
 
@@ -304,6 +358,7 @@ class MainDiagram(tk.Tk):
 
     def del_from_canvasses(self, canvas):
         self.tree.delete(str(canvas.id))
+        del self.canvasses[str(canvas.id)]
 
     def on_tree_select(self, _):
         # Get the selected item
@@ -388,7 +443,7 @@ class MainDiagram(tk.Tk):
         list_window.minsize(100, 150)
         list_window.title("List of Boxes")
 
-        if self.calculate_json_file_hash() != self.json_file_hash:
+        if self.calculate_boxes_json_file_hash() != self.json_file_hash:
             self.get_boxes_from_file()
 
         checkbox_frame = tk.Frame(list_window)
@@ -425,7 +480,7 @@ class MainDiagram(tk.Tk):
         # add undefined box button as well to make width greater
         self.dropdown_menu.delete(0, tk.END)
         self.dropdown_menu.add_command(label="Add Undefined Box",
-                                       command=self.custom_canvas.create_new_box)
+                                       command=self.custom_canvas.add_box)
         self.dropdown_menu.add_separator()
 
         # Add options to the dropdown menu
@@ -458,6 +513,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
+        self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
         self.set_title(filename)
 
@@ -482,3 +538,106 @@ class MainDiagram(tk.Tk):
 
         except FileNotFoundError or IOError or json.JSONDecodeError:
             messagebox.showerror("Error", "File import failed, loading new empty canvas.")
+
+    def update_shape_dropdown_menu(self):
+        shapes = ["rectangle", "triangle"]
+        self.shape_dropdown_menu.delete(0, tk.END)
+
+        for shape in shapes:
+            self.shape_dropdown_menu.add_command(label=shape,
+                                                 command=lambda s=shape: self.custom_canvas.change_box_shape(s))
+
+    def toggle_treeview(self):
+        if not self.is_tree_visible:
+            self.is_tree_visible = True
+            self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
+            self.tree.config(height=20)  # Number of visible rows
+            self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
+            self.tree.update()
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=True)
+        else:
+            self.is_tree_visible = False
+            self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
+            self.tree.pack_forget()
+            self.tree.update()
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=False)
+
+    @staticmethod
+    def pairwise(iterable):
+        "s -> (s0, s1), (s2, s3), (s4, s5), ..."
+        a = iter(iterable)
+        return zip(a, a)
+
+    def generate_tikz(self, canvas):
+        fig, ax = self.generate_matplot(canvas)
+
+        tikzplotlib.clean_figure(fig=fig)
+        tikz = tikzplotlib.get_tikz_code(figure=fig)
+        plt.close()
+        return tikz
+
+    def generate_png(self, canvas, file_path):
+        fig, ax = self.generate_matplot(canvas, True)
+        fig.savefig(file_path, format='png', dpi=300, bbox_inches='tight')
+        plt.close()
+
+    def generate_matplot(self, canvas, show_connections=False):
+        x_max, y_max = canvas.winfo_width() / 100, canvas.winfo_height() / 100
+        fig, ax = plt.subplots(1, figsize=(x_max, y_max))
+        ax.set_aspect('equal', adjustable='box')
+
+        for box in canvas.boxes:
+            if box.shape == "triangle":
+                polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
+                                           (box.x / 100, y_max - box.y / 100),
+                                           (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),
+                                          edgecolor="black", facecolor="none")
+            else:
+                polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
+                                            box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
+            if show_connections:
+                for connection in box.connections:
+                    circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
+                                            connection.r / 100, color="black")
+                    ax.add_patch(circle)
+
+            plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
+                     horizontalalignment="center", verticalalignment="center")
+            ax.add_patch(polygon)
+
+        for spider in canvas.spiders:
+            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black")
+            ax.add_patch(circle)
+
+        for i_o in canvas.inputs + canvas.outputs:
+            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black")
+            ax.add_patch(con)
+
+        for wire in canvas.wires:
+            x = []
+            y = []
+            x_y = {}
+            for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                x_y[x_coord / 100] = y_max - y_coord / 100
+
+            x_y = dict(sorted(x_y.items()))
+            for x_coord in x_y.keys():
+                x.append(x_coord)
+                y.append(x_y[x_coord])
+
+            x = np.array(x)
+            y = np.array(y)
+
+            x_linspace = np.linspace(x.min(), x.max(), 200)
+            spl = make_interp_spline(x, y, k=3)
+            y_line = spl(x_linspace)
+
+            plt.plot(x_linspace, y_line, color="black")
+
+        ax.set_xlim(0, x_max)
+        ax.set_ylim(0, y_max)
+        plt.axis('off')
+
+        return fig, ax

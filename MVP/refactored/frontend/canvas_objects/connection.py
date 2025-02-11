@@ -17,8 +17,10 @@ class Connection:
         self.r = r
         if not id_:
             self.id = id(self)
+
         else:
             self.id = id_
+        self.node = None
 
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
@@ -94,10 +96,12 @@ class Connection:
             self.wire.delete_self()
 
             if self.box and self.wire in self.box.wires:
-                self.box.remove_wire(self.wire)
+                self.box.wires.remove(self.wire)
+                # self.box.remove_wire(self.wire)
 
             if self.wire in self.canvas.wires:
-                self.canvas.remove_wire(self.wire)
+                self.canvas.wires.remove(self.wire)
+                # self.canvas.remove_wire(self.wire)
 
     def add_wire(self, wire):
         if not self.has_wire and self.wire is None:
@@ -125,5 +129,3 @@ class Connection:
 
     def __hash__(self):
         return hash(self.id)
-
-

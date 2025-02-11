@@ -12,6 +12,7 @@
                     100
                 ],
                 "label": "3to3",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2234270989424,
@@ -80,6 +81,7 @@
                     60
                 ],
                 "label": "g",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2234271063872,
@@ -112,6 +114,7 @@
                     60
                 ],
                 "label": "T",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2234271126768,
@@ -144,6 +147,7 @@
                     60
                 ],
                 "label": "P",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2234271151536,

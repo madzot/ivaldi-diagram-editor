@@ -9,13 +9,13 @@ def get_predefined_functions() -> dict:
     for name in dirs_and_files:
         full_path = os.path.join(functions_path, name)
         if os.path.isfile(full_path):
-            file = open(full_path, "r")
-            function_name = name.replace(".py", "").replace("_", " ")
-            predefined_functions[function_name] = file.read()
+            with open(full_path, "r") as file:
+                function_name = name.replace(".py", "").replace("_", " ")
+                predefined_functions[function_name] = file.read()
     return predefined_functions
 
 
-functions = get_predefined_functions()  # When user add his own custom function, this functions should be there
+functions = get_predefined_functions()
 
 
 class BoxFunction:
@@ -45,7 +45,7 @@ class BoxFunction:
 
     def __eq__(self, other):
         if isinstance(other, BoxFunction):
-            return self.code == other.code  # potentially can be very time expensive
+            return self.code == other.code
         return False
 
     def __hash__(self):
@@ -53,11 +53,3 @@ class BoxFunction:
 
     def __str__(self):
         return self.name
-
-
-def test_box():
-    custom_code = """def invoke(n, l, g, *args):
-        return sum(args)
-    """
-    function = BoxFunction("test", custom_code)
-    print(function.count_inputs())

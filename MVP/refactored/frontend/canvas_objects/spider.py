@@ -1,7 +1,7 @@
 import tkinter as tk
 
-from MVP.refactored.box import Box
-from MVP.refactored.connection import Connection
+from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 
 
 class Spider(Connection):
@@ -33,6 +33,9 @@ class Spider(Connection):
         self.snapped_x = None
         self.prev_snapped = None
 
+        coords = self.canvas.coords(self.circle)
+        self.collision_id = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-1]
+
     def is_spider(self):
         return True
 
@@ -40,6 +43,7 @@ class Spider(Connection):
         self.canvas.tag_bind(self.circle, '<ButtonPress-1>', lambda event: self.on_press())
         self.canvas.tag_bind(self.circle, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
+        self.canvas.tag_bind(self.circle, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -67,6 +71,9 @@ class Spider(Connection):
 
     # MOVING, CLICKING ETC.
     def on_press(self):
+        self.canvas.selector.selected_boxes.clear()
+        self.canvas.selector.selected_spiders.clear()
+        self.canvas.selector.selected_wires.clear()
         for item in self.canvas.selector.selected_items:
             item.deselect()
         self.canvas.selector.selected_items.clear()
@@ -77,7 +84,18 @@ class Spider(Connection):
                 self.select()
                 self.canvas.selector.selected_items.append(self)
 
+    def on_control_press(self):
+        if self in self.canvas.selector.selected_items:
+            self.canvas.selector.selected_items.remove(self)
+            self.deselect()
+        else:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
+        self.canvas.selector.select_wires_between_selected_items()
+
     def on_drag(self, event):
+        if event.state & 0x4:
+            return
         if self.canvas.pulling_wire:
             return
 
@@ -121,34 +139,23 @@ class Spider(Connection):
                 found = True
 
         if found:
+            collision = self.find_collisions(go_to_x, go_to_y)
+            if len(collision) != 0:
+                if self.is_snapped:
+                    return
 
-            if self.snapped_x not in self.canvas.columns:
-                self.canvas.columns[self.snapped_x] = [col_preset]
-            if self not in self.canvas.columns[self.snapped_x]:
-                self.canvas.columns[self.snapped_x].append(self)
+                jump_size = 5
+                counter = 0
+                while collision:
+                    if counter % 2 == 0:
+                        go_to_y += counter * jump_size
+                    else:
+                        go_to_y -= counter * jump_size
+                    collision = self.find_collisions(go_to_x, go_to_y)
 
-            for column_item in self.canvas.columns[self.snapped_x]:
-                if column_item == self:
-                    continue
-                if isinstance(column_item, Box):
-                    if (go_to_y + self.r >= column_item.y
-                            and go_to_y - self.r <= column_item.y + column_item.size[1]):
-                        if not self.is_snapped:
-                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
-                        else:
-                            return
-                else:
-                    if (go_to_y + self.r >= column_item.y - column_item.r
-                            and go_to_y - self.r <= column_item.y + column_item.r):
-                        if not self.is_snapped:
-                            go_to_y = self.find_space_y(self.snapped_x, go_to_y)
-                        else:
-                            return
-
-        self.canvas.setup_column_removal(self, found)
+                    counter += 1
 
         self.is_snapped = found
-        self.prev_snapped = self.snapped_x
 
         self.location = [go_to_x, go_to_y]
         self.x = go_to_x
@@ -158,39 +165,13 @@ class Spider(Connection):
                            self.y + self.r)
         [w.update() for w in self.wires]
 
-    def find_space_y(self, go_to_x, go_to_y):
-        objects_by_distance = sorted(self.canvas.columns[float(go_to_x)], key=lambda x: abs(self.y - x.y))
-        for item in objects_by_distance:
-            if item == self:
-                continue
-            y_up = True
-            y_down = True
-
-            if isinstance(item, Box):
-                go_to_y_up = item.y - self.r - 1
-                go_to_y_down = item.y + item.size[1] + self.r + 1
-            else:
-                go_to_y_up = item.y - item.r - self.r - 1
-                go_to_y_down = item.y + item.r + self.r + 1
-
-            for component in objects_by_distance:
-                if component == self or component == item:
-                    continue
-
-                upper_y, lower_y = self.canvas.get_upper_lower_edges(component)
-
-                if go_to_y_up + self.r >= upper_y and go_to_y_up - self.r <= lower_y:
-                    y_up = False
-                if go_to_y_down + self.r >= upper_y and go_to_y_down - self.r <= lower_y:
-                    y_down = False
-
-            up_or_down = self.canvas.check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, self)
-            if up_or_down[0]:
-                go_to_y = up_or_down[1]
-                break
-            else:
-                continue
-        return go_to_y
+    def find_collisions(self, go_to_x, go_to_y):
+        collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
+                                                 go_to_y + self.r)
+        collision = list(collision)
+        if self.collision_id in collision:
+            collision.remove(self.collision_id)
+        return collision
 
     def is_illegal_move(self, new_x):
         for connection in list(filter(lambda x: (x is not None and x != self),

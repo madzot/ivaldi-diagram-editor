@@ -1,8 +1,6 @@
 import tkinter as tk
 
-from MVP.refactored.backend.hypergraph.node import Node
-from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
-from MVP.refactored.connection import Connection
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 
 
 def curved_line(start, end, det=15):
@@ -42,7 +40,8 @@ class Wire:
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
         if not self.is_temporary:
-            self.canvas.remove_wire(self)
+            if self in self.canvas.wires:
+                self.canvas.wires.remove(self)
         if not self.is_temporary:
             self.handle_wire_deletion_callback(action)
 
@@ -77,6 +76,7 @@ class Wire:
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
 
     def show_context_menu(self, event):
+        self.canvas.is_wire_pressed = True
         if not self.is_temporary:
             self.close_menu()
             self.context_menu = tk.Menu(self.canvas, tearoff=0)
