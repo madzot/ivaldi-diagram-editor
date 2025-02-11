@@ -23,7 +23,7 @@ class DiagramNotation:
         for wire in self.diagram.resources:
             wire_id = f"wire_{wire.id}"
             wire_start = wire.connections[0]
-            wire_end = wire.connections[0]
+            wire_end = wire.connections[1]
 
             self.graph.add_node(wire_id, type='wire')
             port_start, start_box_id, side_start, wire_start_id = wire_start
@@ -54,14 +54,6 @@ class DiagramNotation:
             for connection in spider.connections:
                 port, box_id, side, con_id = connection
                 box_node = f"box_{box_id}"
-                # TODO: fix bug,
-                #  inputs and outputs represents like "box_None" in visualization, when connected with spider
-                # if box_name is None:
-                #     box_node = f'box_{box_count}'
-                #     box_count += 1
-                # else:
-                #     box_node = f"box_{box_name}"
-
                 edge_id = f"{spider_id}_{box_node}_{port}_{side}"
 
                 if side == 'right':

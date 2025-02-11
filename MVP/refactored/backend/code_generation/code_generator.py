@@ -7,19 +7,19 @@ from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.code_generation.renamer import Renamer
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
-from MVP.refactored.custom_canvas import CustomCanvas
+from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 
 class CodeGenerator:
     @classmethod
-    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> str:
-        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses)
+    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> str:
+        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses, main_diagram)
         file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n\n"
 
         box_functions: dict[BoxFunction, set[str]] = {}
 
-        for box_function in code_parts.keys():  # get all variables of code
+        for box_function in code_parts.keys():
             renamer = Renamer()
             variables = set()
             variables.update(renamer.find_globals(box_function.code))
@@ -40,17 +40,18 @@ class CodeGenerator:
         return autopep8.fix_code(file_content)
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas]) -> dict[
+    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> dict[
                             BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         for box in canvas.boxes:
             if str(box.id) in canvasses:
-                code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses))
+                code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses, main_diagram))
             else:
-                if box.box_function in code_parts:
-                    code_parts[box.box_function].append(box.id)
+                box_function = BoxFunction(box.label_text, code=main_diagram.label_content[box.label_text])
+                if box_function in code_parts:
+                    code_parts[box_function].append(box.id)
                 else:
-                    code_parts[box.box_function] = [box.id]
+                    code_parts[box_function] = [box.id]
         return code_parts
 
     @classmethod
@@ -107,11 +108,11 @@ class CodeGenerator:
     @classmethod
     def construct_main_function(cls, canvas: CustomCanvas, renamed_functions: dict[BoxFunction, str]) -> str:
         main_function = ""
-        hypergraph: Hypergraph = HypergraphManager().get_graphs_by_canvas_id(canvas.id)  # TODO if there many hypergraphs
-        input_nodes: set[HyperEdge] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
+        hypergraph: Hypergraph = HypergraphManager().get_graph_by_id(canvas.id)
+        input_nodes: set[Node] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
         input_nodes = sorted(input_nodes, key=lambda input_node: canvas.get_box_by_id(input_node.id).y)
         main_function += cls.create_definition_of_main_function(input_nodes)
-        nodes_queue: Queue[HyperEdge] = Queue()
+        nodes_queue: Queue[Node] = Queue()
         node_input_count_check: dict[int, int] = dict()
 
         for node in input_nodes:
@@ -138,7 +139,7 @@ class CodeGenerator:
         return main_function
 
     @classmethod
-    def create_definition_of_main_function(cls, input_nodes: set[HyperEdge]) -> str:
+    def create_definition_of_main_function(cls, input_nodes: set[Node]) -> str:
 
         definition = "def main("
         variables_count = sum(map(lambda node: len(node.inputs), input_nodes))
@@ -152,7 +153,7 @@ class CodeGenerator:
         return definition
 
     @classmethod
-    def create_main_function_content(cls, canvas: CustomCanvas, nodes_queue: Queue[HyperEdge],
+    def create_main_function_content(cls, canvas: CustomCanvas, nodes_queue: Queue[Node],
                                      renamed_functions: dict[BoxFunction, str], hypergraph: Hypergraph
                                      ) -> list[str, dict[int, str]]:
 
@@ -161,10 +162,6 @@ class CodeGenerator:
         result_index = 1
         content = ""
 
-        # if node have multiple input wires from one box function it means that this box functions returns multiple elements
-        # for example res_func1[0], res_func1[1].
-        # Key is node id for corresponding box function
-        # Value is current using index - res_func1[0]. When we use that function output we raise index
         function_output_index: dict[int, int] = dict()
         for node in hypergraph.nodes:
             if len(node.outputs) > 1:
@@ -179,7 +176,7 @@ class CodeGenerator:
             function_result_variables[node.id] = variable_name
 
             for input_wire in node.inputs:
-                input_node = hypergraph.get_node_by_output(input_wire)  # to get parent of node by their connection
+                input_node = hypergraph.get_node_by_output(input_wire)
                 if input_node is None:
                     line += f"input_{input_index}, "
                     input_index += 1
@@ -203,7 +200,7 @@ class CodeGenerator:
         return return_statement[:-2]
 
     @classmethod
-    def get_children_nodes(cls, current_level_nodes: list[HyperEdge], node_input_count_check: dict[int, int]) -> set:
+    def get_children_nodes(cls, current_level_nodes: list[Node], node_input_count_check: dict[int, int]) -> set:
         children = set()
 
         for node in current_level_nodes:

@@ -12,6 +12,7 @@
                     60
                 ],
                 "label": "1to1",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2857753958336,
@@ -44,6 +45,7 @@
                     150
                 ],
                 "label": "G",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2857510809728,
@@ -103,6 +105,7 @@
                     60
                 ],
                 "label": "K",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2857753963184,

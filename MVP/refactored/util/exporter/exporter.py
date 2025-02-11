@@ -7,7 +7,7 @@ from tkinter import messagebox
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from MVP.refactored.custom_canvas import CustomCanvas
+    from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 
 class Exporter(ABC):

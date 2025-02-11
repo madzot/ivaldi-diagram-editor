@@ -56,8 +56,7 @@ class Renamer(ast.NodeTransformer):
                 node.id == self.target_name
                 and (
                 node.id in self.current_function_globals
-                or not self.current_function_params
-        )
+                or not self.current_function_params)
         ):
             node.id = self.new_name
 

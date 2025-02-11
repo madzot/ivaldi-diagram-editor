@@ -12,6 +12,7 @@
                     60
                 ],
                 "label": "sub1",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2271383395248,
@@ -43,6 +44,7 @@
                                 150
                             ],
                             "label": "",
+                            "shape": "rectangle",
                             "connections": [
                                 {
                                     "id": 2271383252704,
@@ -383,6 +385,7 @@
                     200
                 ],
                 "label": "",
+                "shape": "rectangle",
                 "connections": [
                     {
                         "id": 2271384311168,
