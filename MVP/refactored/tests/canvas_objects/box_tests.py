@@ -275,9 +275,152 @@ class BoxTests(TestMainDiagram):
         self.assertTrue(update_io_mock.called)
         self.assertEqual(4, tag_bind_mock.call_count)
 
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
+    def test__bind_events_calls_tag_bind_6_times(self, tag_bind_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        tag_bind_mock.call_count = 0
+        box.bind_events()
+        self.assertEqual(6, tag_bind_mock.call_count)
 
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_events")
+    def test__init__calls_bind_event(self, bind_events_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        self.assertTrue(bind_events_mock.called)
 
+    @patch("tkinter.Menu.add_command")
+    @patch("tkinter.Menu.add_cascade")
+    @patch("tkinter.Menu.entryconfig")
+    @patch("tkinter.Menu.add_separator")
+    @patch("tkinter.Menu.tk_popup")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.close_menu")
+    def test__show_context_menu__default_box(self,
+                                             close_menu_mock,
+                                             tk_popup_mock,
+                                             add_separator_mock,
+                                             entry_config_mock,
+                                             add_cascade_mock,
+                                             add_command_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        event = tkinter.Event()
+        event.x_root, event.y_root = 100, 100
+        box.show_context_menu(event)
 
+        self.assertEqual(1, close_menu_mock.call_count)
+        self.assertEqual(11, add_command_mock.call_count)
+        self.assertEqual(1, entry_config_mock.call_count)
+        self.assertEqual(1, add_separator_mock.call_count)
+        self.assertEqual(1, add_cascade_mock.call_count)
+        self.assertEqual(1, tk_popup_mock.call_count)
 
+    @patch("tkinter.Menu.add_command")
+    @patch("tkinter.Menu.add_cascade")
+    @patch("tkinter.Menu.entryconfig")
+    @patch("tkinter.Menu.add_separator")
+    @patch("tkinter.Menu.tk_popup")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.close_menu")
+    def test__show_context_menu__default_box_with_connections(self,
+                                                              close_menu_mock,
+                                                              tk_popup_mock,
+                                                              add_separator_mock,
+                                                              entry_config_mock,
+                                                              add_cascade_mock,
+                                                              add_command_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.add_left_connection()
+        box.add_right_connection()
+        event = tkinter.Event()
+        event.x_root, event.y_root = 100, 100
+        box.show_context_menu(event)
 
+        self.assertEqual(1, close_menu_mock.call_count)
+        self.assertEqual(13, add_command_mock.call_count)
+        self.assertEqual(1, entry_config_mock.call_count)
+        self.assertEqual(1, add_separator_mock.call_count)
+        self.assertEqual(1, add_cascade_mock.call_count)
+        self.assertEqual(1, tk_popup_mock.call_count)
 
+    @patch("tkinter.Menu.add_command")
+    @patch("tkinter.Menu.add_cascade")
+    @patch("tkinter.Menu.entryconfig")
+    @patch("tkinter.Menu.add_separator")
+    @patch("tkinter.Menu.tk_popup")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.close_menu")
+    def test__show_context_menu__locked_box(self,
+                                            close_menu_mock,
+                                            tk_popup_mock,
+                                            add_separator_mock,
+                                            entry_config_mock,
+                                            add_cascade_mock,
+                                            add_command_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.lock_box()
+        event = tkinter.Event()
+        event.x_root, event.y_root = 100, 100
+        box.show_context_menu(event)
+
+        self.assertEqual(1, close_menu_mock.call_count)
+        self.assertEqual(5, add_command_mock.call_count)
+        self.assertEqual(1, entry_config_mock.call_count)
+        self.assertEqual(1, add_separator_mock.call_count)
+        self.assertEqual(0, add_cascade_mock.call_count)
+        self.assertEqual(1, tk_popup_mock.call_count)
+
+    @patch("tkinter.Menu.add_command")
+    @patch("tkinter.Menu.add_cascade")
+    @patch("tkinter.Menu.entryconfig")
+    @patch("tkinter.Menu.add_separator")
+    @patch("tkinter.Menu.tk_popup")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.close_menu")
+    def test__show_context_menu__sub_diagram_box(self,
+                                                 close_menu_mock,
+                                                 tk_popup_mock,
+                                                 add_separator_mock,
+                                                 entry_config_mock,
+                                                 add_cascade_mock,
+                                                 add_command_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.sub_diagram = True
+        event = tkinter.Event()
+        event.x_root, event.y_root = 100, 100
+        box.show_context_menu(event)
+
+        self.assertEqual(1, close_menu_mock.call_count)
+        self.assertEqual(6, add_command_mock.call_count)
+        self.assertEqual(0, entry_config_mock.call_count)
+        self.assertEqual(1, add_separator_mock.call_count)
+        self.assertEqual(0, add_cascade_mock.call_count)
+        self.assertEqual(1, tk_popup_mock.call_count)
+
+    @patch("tkinter.Menu.add_command")
+    @patch("tkinter.Menu.add_cascade")
+    @patch("tkinter.Menu.entryconfig")
+    @patch("tkinter.Menu.add_separator")
+    @patch("tkinter.Menu.tk_popup")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.close_menu")
+    def test__show_context_menu__locked_sub_diagram(self,
+                                                    close_menu_mock,
+                                                    tk_popup_mock,
+                                                    add_separator_mock,
+                                                    entry_config_mock,
+                                                    add_cascade_mock,
+                                                    add_command_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.sub_diagram = True
+        box.lock_box()
+        event = tkinter.Event()
+        event.x_root, event.y_root = 100, 100
+        box.show_context_menu(event)
+
+        self.assertEqual(1, close_menu_mock.call_count)
+        self.assertEqual(4, add_command_mock.call_count)
+        self.assertEqual(0, entry_config_mock.call_count)
+        self.assertEqual(1, add_separator_mock.call_count)
+        self.assertEqual(0, add_cascade_mock.call_count)
+        self.assertEqual(1, tk_popup_mock.call_count)
+
+    @patch("MVP.refactored.frontend.windows.code_editor.CodeEditor.__init__", return_value=None)
+    def test__open_editor__creates_editor(self, init_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.open_editor()
+
+        self.assertTrue(init_mock.called)
