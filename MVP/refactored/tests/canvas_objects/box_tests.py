@@ -223,22 +223,57 @@ class BoxTests(TestMainDiagram):
         self.assertEqual(2, box.left_connections)
         self.assertEqual(2, box.right_connections)
 
-    # @patch("MVP.refactored.frontend.canvas_objects.box.Box.change_label")
-    # def test__set_label__set
-
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.change_label")
     def test__edit_label__with_param_changes_label(self, change_label_mock, tag_bind_mock):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
         tag_bind_mock.call_count = 0  # resetting tag_bind amount from box creation
 
-        expected_label = "new label"
+        expected_label = "new_label"
         box.edit_label(expected_label)
 
         self.assertEqual(expected_label, box.label_text)
         self.assertTrue(change_label_mock.called)
         self.assertEqual(4, tag_bind_mock.call_count)
 
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
+    @patch("tkinter.simpledialog.askstring", return_value="new_label")
+    def test__edit_label__without_param_asks_input(self, ask_string_mock, tag_bind_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        tag_bind_mock.call_count = 0
+        box.edit_label()
+
+        expected_label = "new_label"
+        self.assertTrue(ask_string_mock.called)
+        self.assertEqual(expected_label, box.label_text)
+        self.assertEqual(4, tag_bind_mock.call_count)
+
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_io")
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
+    @patch("tkinter.messagebox.askokcancel", return_value=True)
+    @patch("json.load", return_value={"new_label": ""})
+    @patch("tkinter.simpledialog.askstring", return_value="new_label")
+    @patch("os.stat")
+    def test__edit_label__without_param_checks_existing_and_updates(self,
+                                                                    os_stat_mock,
+                                                                    ask_string_mock,
+                                                                    json_load_mock,
+                                                                    ask_ok_cancel_mock,
+                                                                    tag_bind_mock,
+                                                                    update_io_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        tag_bind_mock.call_count = 0
+        os_stat_mock.return_value.st_size = 1
+        box.edit_label()
+
+        self.assertTrue(ask_string_mock.called)
+        expected_label = "new_label"
+        self.assertEqual(expected_label, box.label_text)
+        self.assertTrue(os_stat_mock.called)
+        self.assertTrue(json_load_mock.called)
+        self.assertTrue(ask_ok_cancel_mock.called)
+        self.assertTrue(update_io_mock.called)
+        self.assertEqual(4, tag_bind_mock.call_count)
 
 
 
