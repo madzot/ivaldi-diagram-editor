@@ -158,7 +158,7 @@ class Box:
                 c.wire.delete_from_canvas()
 
             c.delete_me()
-            self.connections.remove(c)
+            self.remove_connection(c)
             self.update_connections()
             self.update_wires()
 
