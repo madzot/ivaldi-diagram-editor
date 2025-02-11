@@ -212,9 +212,6 @@ class CustomCanvas(tk.Canvas):
         # HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
 
-    def add_box(self, box: Box):
-        self.boxes.add(box)
-
     def remove_box(self, box: Box):
         if box in self.boxes:
             self.boxes.remove(box)

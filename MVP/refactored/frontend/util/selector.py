@@ -195,7 +195,7 @@ class Selector:
             for item in self.copied_items:
                 if item['component'] == "Box":
                     if item["sub-diagram"]:
-                        new_box = self.canvas.master.importer.add_box_from_menu(
+                        new_box = self.canvas.master.json_importer.add_box_from_menu(
                             self.canvas, item['label'], (event_x + item['location'][0] - middle_point[0],
                                                          event_y + item['location'][1] - middle_point[1]), True)
                     else:

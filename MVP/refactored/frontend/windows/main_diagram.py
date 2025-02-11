@@ -1,6 +1,5 @@
 import hashlib
 import json
-import os
 import tkinter as tk
 from tkinter import messagebox, filedialog
 from tkinter import simpledialog
@@ -26,7 +25,6 @@ from MVP.refactored.modules.notations.notation_tool import get_notations, is_can
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer.json_importer import JsonImporter
 from MVP.refactored.util.importer.python_importer import PythonImporter
-from MVP.refactored.util.importer import Importer
 from constants import *
 
 
@@ -172,7 +170,7 @@ class MainDiagram(tk.Tk):
         self.import_counter = 0
         self.mainloop()
 
-    def __get_all(self):
+    def get_all(self):
         hypergraphs = HypergraphManager
         print("hi")
 

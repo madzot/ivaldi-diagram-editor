@@ -4,6 +4,7 @@ import random
 import string
 from tkinter import messagebox
 from typing import TextIO
+from constants import *
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
@@ -31,7 +32,7 @@ class JsonImporter(Importer):
 
     def load_boxes_to_canvas(self, d, canvas):
         for box in d["boxes"]:
-            new_box = canvas.create_new_box((box["x"], box["y"]), box["size"], self.get_id(box["id"]))
+            new_box = canvas.add_box((box["x"], box["y"]), box["size"], self.get_id(box["id"]), shape=box["shape"])
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
@@ -112,13 +113,13 @@ class JsonImporter(Importer):
             messagebox.showinfo("Info", "Loading custom boxes failed!")
             return {}
 
-    def add_box_from_menu(self, canvas, box_name, loc=(100, 100)):
-        with open(self.boxes_json_conf, 'r') as json_file:
+    def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
+        with open(BOXES_CONF, 'r') as json_file:
             self.seed = self.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.create_new_box(loc)
+            new_box = canvas.add_box(loc, shape=box["shape"])
             if box["label"]:
                 new_box.set_label(box["label"])
             for _ in range(box["left_c"]):
@@ -140,3 +141,5 @@ class JsonImporter(Importer):
             new_box.lock_box()
             self.random_id = False
             self.id_randomize = {}
+            if return_box:
+                return new_box
