@@ -1,5 +1,7 @@
 import tkinter as tk
 
+from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
 from MVP.refactored.connection import Connection
 
 
@@ -52,7 +54,7 @@ class Wire:
 
         self.canvas.delete(self.line)
         if self.receiver.listener:
-            self.receiver.receiver_callback("wire_delete", wire_id=self.id)
+            self.receiver.receiver_callback("wire_delete", wire_id=self.id, canvas_id=self.canvas.id)
 
     def select(self):
         self.canvas.itemconfig(self.line, fill="green")
@@ -115,16 +117,19 @@ class Wire:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=start_conn_data[:3],
                                             connection_id=self.start_connection.id,
-                                            end_connection=end_conn_data)
+                                            end_connection=end_conn_data,
+                                            canvas_id=self.canvas.id)
         elif self.end_connection.side == 'spider':
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=start_conn_data,
                                             connection_id=self.end_connection.id,
-                                            end_connection=end_conn_data[:3])
+                                            end_connection=end_conn_data[:3],
+                                            canvas_id=self.canvas.id)
         else:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=start_conn_data[:3],
-                                            connection_id=self.start_connection.id)
+                                            connection_id=self.start_connection.id,
+                                            canvas_id=self.canvas.id)
             self.add_end_connection(self.end_connection)
 
     # BE callback methods
@@ -135,20 +140,20 @@ class Wire:
             start_conn_data, end_conn_data = self.connection_data_optimizer()
             if self.start_connection.side == 'spider':
                 if self.end_connection.box is None:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.start_connection.id,
-                                                    end_connection=end_conn_data)
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, start_connection=start_conn_data,
+                                                    end_connection=end_conn_data, canvas_id=self.canvas.id)
                 else:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.start_connection.id,
-                                                    end_connection=end_conn_data)
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, start_connection=start_conn_data,
+                                                    end_connection=end_conn_data, canvas_id=self.canvas.id)
             elif self.end_connection.side == 'spider':
                 if self.start_connection.box is None:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.end_connection.id,
-                                                    start_connection=start_conn_data)
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, end_connection=start_conn_data,
+                                                    start_connection=start_conn_data, canvas_id=self.canvas.id)
                 else:
-                    self.receiver.receiver_callback("wire_delete", wire_id=self.end_connection.id,
-                                                    start_connection=start_conn_data)
+                    self.receiver.receiver_callback("wire_delete", wire_id=self.id, end_connection=start_conn_data,
+                                                    start_connection=start_conn_data, canvas_id=self.canvas.id)
             else:
-                self.receiver.receiver_callback("wire_delete", wire_id=self.id)
+                self.receiver.receiver_callback("wire_delete", wire_id=self.id, canvas_id=self.canvas.id)
 
     # BE callback methods
     def add_end_connection(self, connection):
@@ -156,11 +161,19 @@ class Wire:
         if connection.box and self.receiver.listener:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, connection.box.id, connection.side],
-                                            connection_id=connection.id)
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
         elif connection.box is None and self.receiver.listener and self.start_connection.box is not None:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=[connection.index, None, connection.side],
-                                            connection_id=connection.id)
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
+
+        # node: Node = WireAndSpiderToNodeMapping.get_node_by_wire_or_spider_id(self.id)
+        # if node is None:
+        #     node = Node(self.id)
+        #     WireAndSpiderToNodeMapping.add_new_pair(self.id, node)
+        #
+        # node.
+
 
     def __eq__(self, other):
         if type(self) is type(other):

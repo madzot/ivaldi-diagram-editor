@@ -23,7 +23,7 @@ class DiagramNotation:
         for wire in self.diagram.resources:
             wire_id = f"wire_{wire.id}"
             wire_start = wire.connections[0]
-            wire_end = wire.connections[1]
+            wire_end = wire.connections[0]
 
             self.graph.add_node(wire_id, type='wire')
             port_start, start_box_id, side_start, wire_start_id = wire_start

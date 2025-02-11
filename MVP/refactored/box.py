@@ -6,8 +6,8 @@ from tkinter import simpledialog
 
 from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.box_to_node_mapping import BoxToNodeMapping
-from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
 from MVP.refactored.connection import Connection
@@ -15,6 +15,7 @@ from MVP.refactored.connection import Connection
 if TYPE_CHECKING:
     from MVP.refactored.spider import Spider
     from MVP.refactored.wire import Wire
+    from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
 
 class Box:
@@ -46,45 +47,46 @@ class Box:
         self.sub_diagram = None
         self.receiver = receiver
         if self.receiver.listener:
-            self.receiver.receiver_callback("box_add", generator_id=self.id)
+            self.receiver.receiver_callback("box_add", generator_id=self.id, canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id)
+                                                connection_id=self.canvas.diagram_source_box.id, canvas_id=self.canvas.id)
 
         self.is_snapped = False
         self.snapped_x = None
         self.prev_snapped = None
         self.box_function: BoxFunction = None
 
-        BoxToNodeMapping.add_new_pair(self.id, Node(self.id))
+        # BoxToHyperEdgeMapping.add_new_pair(self.id, HyperEdge(self.id))
 
     def set_box_function(self, function: BoxFunction):
         self.box_function = function
 
-        node = BoxToNodeMapping.get_node_by_box_id(self.id)
-        node.set_box_function(self.box_function)
+        hyper_edge: HyperEdge = HypergraphManager.get_hyper_edge_by_id(self.id)
+        if hyper_edge:
+            hyper_edge.set_box_function(self.box_function)
 
     def get_box_function(self) -> BoxFunction:
         return self.box_function
 
     def remove_wire(self, wire: Wire):
-        box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
-
-        if wire.end_connection.box.id == self.id:
-            all_right_connected_nodes = self._get_all_left_connected_nodes(wire.start_connection)
-            for right_connected_node in all_right_connected_nodes:
-                box_node.remove_parent_edges(right_connected_node)
-
-        else:
-            all_right_connected_nodes = self._get_all_right_connected_nodes(wire.end_connection)
-            for right_connected_node in all_right_connected_nodes:
-                box_node.remove_child_edges(right_connected_node)
+        # box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
+        #
+        # if wire.end_connection.box.id == self.id:
+        #     all_right_connected_nodes = self._get_all_left_connected_nodes(wire.start_connection)
+        #     for right_connected_node in all_right_connected_nodes:
+        #         box_node.remove_parent_edges(right_connected_node)
+        #
+        # else:
+        #     all_right_connected_nodes = self._get_all_right_connected_nodes(wire.end_connection)
+        #     for right_connected_node in all_right_connected_nodes:
+        #         box_node.remove_child_edges(right_connected_node)
 
         self.wires.remove(wire)
 
-    def _get_all_left_connected_nodes(self, connection: Connection) -> list[Node]:
+    def _get_all_left_connected_nodes(self, connection: Connection) -> list[HyperEdge]:
         if connection.box is not None:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.box.id)]
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.box.id)]
 
         if isinstance(connection, Spider):
             output = list()
@@ -94,11 +96,11 @@ class Box:
                         output.extend(self._get_all_left_connected_nodes(conn.wire.start_connection))
             return output
         else:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.id)] # it is diagram input
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.id)] # it is diagram input
 
-    def _get_all_right_connected_nodes(self, connection: Connection) -> list[Node]:
+    def _get_all_right_connected_nodes(self, connection: Connection) -> list[HyperEdge]:
         if connection.box is not None:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.box.id)]
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.box.id)]
 
         if isinstance(connection, Spider):
             output = list()
@@ -108,17 +110,17 @@ class Box:
                         output.extend(self._get_all_right_connected_nodes(conn.wire.end_connection))
             return output
         else:
-            return [BoxToNodeMapping.get_node_by_box_id(connection.id)] # it is diagram output
+            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.id)] # it is diagram output
 
     def set_id(self, id_):
         if self.receiver.listener:
-            self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
+            self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_, canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id)
-        BoxToNodeMapping.add_new_pair(id_, BoxToNodeMapping.get_node_by_box_id(self.id))
-        BoxToNodeMapping.remove_pair(self.id)
-        self.id = id_
+                                                connection_id=self.canvas.diagram_source_box.id, canvas_id=self.canvas.id)
+        # BoxToHyperEdgeMapping.add_new_pair(id_, BoxToHyperEdgeMapping.get_node_by_box_id(self.id))
+        # BoxToHyperEdgeMapping.remove_pair(self.id)
+        # self.id = id_
 
     def bind_events(self):
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
@@ -174,7 +176,7 @@ class Box:
     def set_function(self, name, code=None):
         self.box_function = BoxFunction(name, code)
 
-        node = BoxToNodeMapping.get_node_by_box_id(self.id)
+        node = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(self.id)
         node.set_box_function(self.box_function)
 
     def count_inputs(self) -> int:
@@ -262,7 +264,7 @@ class Box:
             self.update_wires()
 
         # add new connections
-        self.receiver.receiver_callback("box_remove_connection_all", generator_id=self.id)
+        self.receiver.receiver_callback("box_remove_connection_all", generator_id=self.id, canvas_id=self.canvas.id)
         if outputs:
             for _ in range(int(outputs)):
                 self.add_right_connection()
@@ -273,7 +275,7 @@ class Box:
     def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True):
         from MVP.refactored.custom_canvas import CustomCanvas
         if self.receiver.listener:
-            self.receiver.receiver_callback("compound", generator_id=self.id)
+            self.receiver.receiver_callback("compound", generator_id=self.id, canvas_id=self.canvas.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
                                             self.canvas, add_boxes, self.id, highlightthickness=0)
@@ -447,7 +449,7 @@ class Box:
         # TODO check if label is already in use and if definitions match
         self.label_text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
         if self.receiver.listener:
-            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
+            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text, canvas_id=self.canvas.id)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
@@ -468,8 +470,7 @@ class Box:
         self.label_text = new_label
 
         if self.receiver.listener:
-            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
-
+            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text, canvas_id=self.canvas.id)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
@@ -560,7 +561,7 @@ class Box:
         self.update_wires()
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_left", generator_id=self.id, connection_nr=i,
-                                            connection_id=connection.id)
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
 
         self.resize_by_connections()
         return connection
@@ -575,7 +576,7 @@ class Box:
         self.update_wires()
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_right", generator_id=self.id, connection_nr=i,
-                                            connection_id=connection.id)
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
         self.resize_by_connections()
         return connection
 
@@ -585,7 +586,7 @@ class Box:
                 c.lessen_index_by_one()
         if self.receiver.listener:
             self.receiver.receiver_callback("box_remove_connection", generator_id=self.id, connection_nr=circle.index,
-                                            generator_side=circle.side)
+                                            generator_side=circle.side, canvas_id=self.canvas.id)
 
         self.connections.remove(circle)
         circle.delete_me()
@@ -616,12 +617,12 @@ class Box:
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
         if self.receiver.listener:
             if action != "sub_diagram":
-                self.receiver.receiver_callback("box_delete", generator_id=self.id)
+                self.receiver.receiver_callback("box_delete", generator_id=self.id, canvas_id=self.canvas.id)
 
-        if action != "sub_diagram":
-            box_node = BoxToNodeMapping.get_node_by_box_id(self.id)
-            box_node.remove_self()
-            BoxToNodeMapping.remove_pair(self.id)
+        # if action != "sub_diagram":
+        #     box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
+        #     box_node.remove_self()
+        #     BoxToHyperEdgeMapping.remove_pair(self.id)
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x):

@@ -2,6 +2,7 @@ import logging
 
 from MVP.refactored.backend.diagram import Diagram
 from MVP.refactored.backend.generator import Generator
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.resource import Resource
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -23,22 +24,23 @@ class Receiver:
         generator_side = kwargs.get('generator_side')
         connection_nr = kwargs.get('connection_nr')
         operator = kwargs.get('operator')
+        canvas_id = kwargs.get('canvas_id')
 
         logger.info(f"receiver_callback invoked with action: {action}, kwargs: {kwargs}")
         if action in ['wire_add', 'wire_delete']:
             logger.info(f"Routing to wire_callback with action: {action}")
-            self.wire_callback(wire_id, action, start_connection, connection_id, end_connection)
+            self.wire_callback(wire_id, action, start_connection, connection_id, end_connection, canvas_id)
         elif action == 'create_spider':
             logger.info("Routing to create_spider")
-            self.create_spider(wire_id, connection_id, generator_id)
+            self.create_spider(wire_id, connection_id, generator_id, canvas_id)
         elif action == "create_spider_parent":
-            self.spider_parent(wire_id, generator_id)
+            self.spider_parent(wire_id, generator_id, canvas_id)
         elif action == 'delete_spider':
             logger.info("Routing to create_spider")
             self.delete_spider_be(wire_id)
         else:
             logger.info("Routing to box_callback")
-            self.box_callback(generator_id, action, connection_id, generator_side, connection_nr, operator)
+            self.box_callback(generator_id, action, connection_id, generator_side, connection_nr, operator, canvas_id)
 
     def delete_spider_be(self, wire_id):
         logger.info(f"Routing to delete_spider")
@@ -48,13 +50,15 @@ class Receiver:
             parent.spiders.remove(wire_id)
         self.wire_handle_delete_resource(spider)
 
-    def spider_parent(self, id, generator_id=None):
+        HypergraphManager.remove_node(spider.id)
+
+    def spider_parent(self, id, generator_id=None, canvas_id=None):
         spider = self.spider_get_resource_by_connection_id(id)
         spider.parent = generator_id
         parent = self.generator_get_box_by_id(generator_id)
         parent.spiders.append(spider.id)
 
-    def create_spider(self, id, connection_id, generator_id=None):
+    def create_spider(self, id, connection_id, generator_id=None, canvas_id=None):
         logger.info(f"Creating spider with id: {id}")
         resource = Resource(id)
         resource.spider = True
@@ -67,21 +71,26 @@ class Receiver:
         self.diagram.spiders.append(resource)
         logger.info(f"Spider created and added to diagram: {resource}")
 
-    def wire_callback(self, wire_id, action=None, start_connection=None, connection_id=None, end_connection=None):
+        HypergraphManager.create_new_node(id, canvas_id=canvas_id)
+
+    def wire_callback(self, wire_id, action=None, start_connection=None, connection_id=None, end_connection=None,
+                      canvas_id=None):
         logger.info(
             f"wire_callback invoked with wire_id: {wire_id}, action: {action}, start_connection: {start_connection}, connection_id: {connection_id}")
         if action == 'wire_delete':
-            if start_connection:
-                spider = self.spider_get_resource_by_connection_id(wire_id)
+            if start_connection and start_connection[2] == "spider":
+                spider = self.spider_get_resource_by_connection_id(start_connection[3])
                 spider.remove_connection(start_connection)
-            elif end_connection:
-                spider = self.spider_get_resource_by_connection_id(wire_id)
+            elif end_connection and end_connection[2] == "spider":
+                spider = self.spider_get_resource_by_connection_id(end_connection[3])
                 spider.remove_connection(end_connection)
             else:
                 resource = self.wire_get_resource_by_id(wire_id)
                 self.wire_handle_delete_resource(resource)
+
+            HypergraphManager.remove_node(wire_id)
         else:
-            if end_connection:
+            if end_connection:  # HAS end_connection if connection between spider and something
                 if start_connection[2] == 'spider':
                     spider = self.spider_get_resource_by_connection_id(connection_id)
                     spider.add_connection(end_connection)
@@ -94,6 +103,18 @@ class Receiver:
                             self.wire_add_to_atomic_box(connection_nr, box, connection_side, spider.id)
                         else:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
+
+                    new_node = HypergraphManager.create_new_node(wire_id, canvas_id)
+                    HypergraphManager.union_nodes(new_node, spider.id) # unite wire and spider to one node
+                    if box:
+                        if connection_side == 'left':
+                            HypergraphManager.connect_node_with_output(new_node, box.id)
+                        elif connection_side == 'right':
+                            HypergraphManager.connect_node_with_input(new_node, box.id)
+                    else: # connection to spider
+                        HypergraphManager.union_nodes(new_node, end_connection[3])
+                    print(f"Added wire - {wire_id}")
+
                 elif end_connection[2] == 'spider':
                     spider = self.spider_get_resource_by_connection_id(connection_id)
                     spider.add_connection(start_connection)
@@ -106,18 +127,42 @@ class Receiver:
                             self.wire_add_to_atomic_box(connection_nr, box, connection_side, spider.id)
                         else:
                             self.wire_add_to_compound_box(spider.id, connection_nr, box, connection_id)
-            else:
+
+                    new_node = HypergraphManager.create_new_node(wire_id, canvas_id)
+                    HypergraphManager.union_nodes(new_node, spider.id)  # unite wire and spider to one node
+                    if box:
+                        if connection_side == 'left':
+                            HypergraphManager.connect_node_with_output(new_node, box.id)
+                        elif connection_side == 'right':
+                            HypergraphManager.connect_node_with_input(new_node, box.id)
+                    else:  # connection to spider
+                        HypergraphManager.union_nodes(new_node, start_connection[3])
+            else:  # if it connection not between spider and smt
                 connection_nr = start_connection[0]
                 connection_box_id = start_connection[1]
                 connection_side = start_connection[2]
-                resource = self.wire_get_resource_by_id(wire_id)
+                resource: Resource = self.wire_get_resource_by_id(wire_id)
                 if resource:
                     self.wire_handle_resource_action(resource, wire_id, connection_nr, connection_box_id,
                                                      connection_side,
                                                      connection_id)
+
+
+                    new_node = HypergraphManager.create_new_node(resource.id, canvas_id)
+                    for connection in resource.connections:
+                        conn_index, box_id, side, conn_id = connection
+                        if box_id is not None: # connection with box(hyper edge)
+                            if side == "left":
+                                HypergraphManager.connect_node_with_output(new_node, box_id)
+                            elif side == "right":
+                                HypergraphManager.connect_node_with_input(new_node, box_id)
+                        else: # connection with diagram input/output
+                            HypergraphManager.union_nodes(new_node, conn_id)
+
                 else:
-                    self.wire_create_new_resource(wire_id, connection_nr, connection_box_id, connection_side,
-                                                  connection_id)
+                    resource = self.wire_create_new_resource(wire_id, connection_nr, connection_box_id, connection_side,
+                                                             connection_id)
+
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Spiders: {self.diagram.spiders}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
@@ -211,7 +256,16 @@ class Receiver:
                     self.wire_add_to_compound_box(id, connection_nr, box, connection_id)
         resource.add_connection([connection_nr, connection_box_id, connection_side] + [connection_id])
 
-    def wire_create_new_resource(self, id, connection_nr, connection_box_id, connection_side, connection_id):
+    def wire_create_new_resource(self, id, connection_nr, connection_box_id, connection_side,
+                                 connection_id) -> Resource:
+        """
+        :param id:
+        :param connection_nr:
+        :param connection_box_id:
+        :param connection_side:
+        :param connection_id:
+        :return created resource:
+        """
         logger.info(f"Creating new resource with id: {id}")
         resource = Resource(id)
         self.wire_handle_resource_action(resource, id, connection_nr, connection_box_id, connection_side,
@@ -221,8 +275,10 @@ class Receiver:
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
+        return resource
 
-    def box_callback(self, id, action=None, connection_id=None, generator_side=None, connection_nr=None, operator=None):
+    def box_callback(self, id, action=None, connection_id=None, generator_side=None, connection_nr=None, operator=None,
+                     canvas_id=None):
         box = self.generator_get_box_by_id(id)
 
         if box:
@@ -230,11 +286,21 @@ class Receiver:
                 self.generator_handle_inner_connection(box, action, connection_id)
             elif action in ['box_add_left', 'box_add_right', 'box_remove_connection']:
                 self.generator_handle_box_connection(box, action, connection_nr, connection_id, generator_side)
+                # hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id) TODO
+                # if generator_side == "left":
+                #     hyper_edge.remove_source_connection_by_index(connection_nr)
+                # elif generator_side == "right":
+                #     hyper_edge.remove_target_connection_by_index(connection_nr)
             elif action == 'box_remove_connection_all':
                 box.remove_all_left()
                 box.remove_all_right()
+                # hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+                # TODO
+                # hyper_edge.remove_all_source_nodes()
+                # hyper_edge.remove_all_target_nodes()
             elif action == 'box_delete':
                 self.generator_delete_box(box)
+                HypergraphManager.remove_hyper_edge(box.id)
             elif action == 'compound':
                 box.add_type(1)
                 logger.info(f"created sub diagram: {box.type}")
@@ -248,22 +314,36 @@ class Receiver:
             elif action == "box_add_operator":
                 box.operand = operator
             elif action == 'box_swap_id':
+                HypergraphManager.swap_hyper_edge_id(box.id, connection_id)
                 box.id = connection_id
             elif action == "change_connection_id":
                 if generator_side == "left":
                     box.left[-1] = connection_id
                 else:
                     box.right[-1] = connection_id
+        # TODO create or delete nodes when diagram input/output added/removed
         elif action == 'add_diagram_output':
             self.add_main_diagram_output()
+
+            HypergraphManager.create_new_node(connection_id, canvas_id)
         elif action == 'add_diagram_input':
             self.add_main_diagram_input()
+
+            HypergraphManager.create_new_node(connection_id, canvas_id)
         elif action == 'remove_diagram_input':
             self.remove_main_diagram_input()
+
+            HypergraphManager.remove_node(connection_id)
         elif action == 'remove_diagram_output':
             self.remove_main_diagram_output()
-        elif action == 'box_swap_id':
-            box.id = connection_id
+
+            HypergraphManager.remove_node(connection_id)
+        # elif action == 'box_swap_id':   PROGRAMM CAN`T REACH THAT?
+        #     hyper_edge = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(box.id)
+        #     BoxToHyperEdgeMapping.remove_pair(box.id)
+        #     BoxToHyperEdgeMapping.add_new_pair(connection_id, hyper_edge)
+        #
+        #     box.id = connection_id
         else:
             self.generator_create_new_box(id)
 

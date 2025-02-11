@@ -9,7 +9,9 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
+from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.hypergraph.wire_and_spider_to_node_mapping import WireAndSpiderToNodeMapping
 from MVP.refactored.custom_canvas import CustomCanvas
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
@@ -94,8 +96,12 @@ class MainDiagram(tk.Tk):
                                  command=self.create_algebraic_notation, bg="white", width=18)
         self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
 
+        # self.alg_not = tk.Button(self.control_frame, text="Visualize as graph",
+        #                          command=lambda: self.visualize_as_graph(self.custom_canvas),
+        #                          bg="light sea green", width=18)
+
         self.alg_not = tk.Button(self.control_frame, text="Visualize as graph",
-                                 command=lambda: self.visualize_as_graph(self.custom_canvas),
+                                 command=lambda: self.__get_all(),
                                  bg="light sea green", width=18)
         self.alg_not.pack(side=tk.TOP, padx=5, pady=5)
 
@@ -131,9 +137,13 @@ class MainDiagram(tk.Tk):
         self.label_content = {}
         self.mainloop()
 
+    def __get_all(self):
+        hypergraphs = HypergraphManager
+        print("hi")
+
     @staticmethod
     def calculate_json_file_hash():
-        with open("conf/boxes_conf.json", "r") as file:
+        with open("MVP/refactored/conf/boxes_conf.json", "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
@@ -325,7 +335,8 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.remove_diagram_input()
             if self.receiver.listener:
                 self.receiver.receiver_callback("remove_inner_left",
-                                                generator_id=self.custom_canvas.diagram_source_box.id)
+                                                generator_id=self.custom_canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
         else:
             self.custom_canvas.remove_diagram_input()
 
@@ -338,7 +349,7 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.remove_diagram_output()
             if self.receiver.listener:
                 self.receiver.receiver_callback("remove_inner_right",
-                                                generator_id=self.custom_canvas.diagram_source_box.id)
+                                                generator_id=self.custom_canvas.diagram_source_box.id, canvas_id=self.canvas.id)
         else:
             self.custom_canvas.remove_diagram_input()
 

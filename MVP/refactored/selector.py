@@ -92,7 +92,7 @@ class Selector:
             spider.delete_spider("sub_diagram")
             if self.canvas.receiver.listener:
                 self.canvas.receiver.receiver_callback(
-                    'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
+                    'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id, canvas_id=self.canvas.id
                 )
 
         sub_diagram.set_name(str(sub_diagram.id)[-6:])
