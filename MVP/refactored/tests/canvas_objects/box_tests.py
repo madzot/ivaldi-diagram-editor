@@ -424,3 +424,55 @@ class BoxTests(TestMainDiagram):
         box.open_editor()
 
         self.assertTrue(init_mock.called)
+
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.select")
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.canvasx", return_value=300)
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.canvasy", return_value=300)
+    def test__on_press__callouts(self, canvas_y_mock, canvas_x_mock, select_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        event = tkinter.Event()
+        event.x = 300
+        event.y = 300
+        box.on_press(event)
+        self.assertTrue(canvas_x_mock.called)
+        self.assertTrue(canvas_y_mock.called)
+        self.assertTrue(select_mock.called)
+
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.canvasx", return_value=300)
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.canvasy", return_value=400)
+    def test__on_press__variable_changes(self, canvas_y_mock, canvas_x_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        box.x = 100
+        box.y = 100
+        event = tkinter.Event()
+        event.x = 300
+        event.y = 400
+        box.on_press(event)
+
+        self.assertTrue(canvas_x_mock.called)
+        self.assertTrue(canvas_y_mock.called)
+
+        self.assertEqual(300, box.start_x)
+        self.assertEqual(400, box.start_y)
+
+        self.assertEqual(300 - 100, box.x_dif)
+        self.assertEqual(400 - 100, box.y_dif)
+
+    def test__on_drag__no_other_items_changes_location(self):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        event = tkinter.Event()
+        event.x = 150
+        event.y = 150
+
+        box.on_press(event)
+        box.on_drag(event)
+
+        event.x = 200
+        event.y = 200
+
+        box.on_drag(event)
+
+        self.assertEqual(150, box.x)
+        self.assertEqual(150, box.y)
+
+
