@@ -1001,12 +1001,10 @@ class CustomCanvas(tk.Canvas):
             if item not in self.selector.selected_items:
                 if isinstance(item, Box):
                     if not (item.y + item.size[1] < area_y1 or item.y > area_y2):
-                        if len(left) == 0:
-                            if x > item.x + item.size[0] > area_x1:
-                                area_x1 = item.x + item.size[0]
-                        if len(right) == 0:
-                            if x < item.x < area_x2:
-                                area_x2 = item.x
+                        if x > item.x + item.size[0] > area_x1:
+                            area_x1 = item.x + item.size[0]
+                        if x < item.x < area_x2:
+                            area_x2 = item.x
                     if not (item.x > area_x2 or item.x + item.size[0] < area_x1):
                         if y > item.y + item.size[1] > area_y1:
                             area_y1 = item.y + item.size[1]
@@ -1014,12 +1012,10 @@ class CustomCanvas(tk.Canvas):
                             area_y2 = item.y
                 if isinstance(item, Spider):
                     if not (item.y + item.r < area_y1 or item.y - item.r > area_y2):
-                        if len(left) == 0:
-                            if x > item.x + item.r > area_x1:
-                                area_x1 = item.x + item.r
-                        if len(right) == 0:
-                            if x < item.x - item.r < area_x2:
-                                area_x2 = item.x - item.r
+                        if x > item.x + item.r > area_x1:
+                            area_x1 = item.x + item.r
+                        if x < item.x - item.r < area_x2:
+                            area_x2 = item.x - item.r
                     if not (item.x - item.r > area_x2 or item.x + item.r < area_x1):
                         if y > item.y + item.r > area_y1:
                             area_y1 = item.y + item.r

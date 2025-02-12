@@ -1,6 +1,5 @@
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.spider import Spider
-from MVP.refactored.frontend.canvas_objects.wire import Wire
 import copy
 
 
@@ -208,7 +207,7 @@ class Selector:
                             is_left = connection.location[0] > wire.start_connection.location[0]
                         self.add_copied_wire(connection, is_left)
 
-    def paste_copied_items(self, event_x=50, event_y=50, over_selected=False, multi = 1):
+    def paste_copied_items(self, event_x=50, event_y=50, over_selected=False, multi=1):
         if len(self.copied_items) > 0:
 
             middle_point = self.find_middle_point(event_x, event_y)
