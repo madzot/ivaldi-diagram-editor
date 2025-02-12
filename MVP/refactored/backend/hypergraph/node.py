@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from queue import Queue
-from typing_extensions import Self
+from typing import Self
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
