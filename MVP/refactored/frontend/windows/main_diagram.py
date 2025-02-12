@@ -327,6 +327,7 @@ class MainDiagram(tk.Tk):
         for item in self.custom_canvas.selector.selected_items:
             item.deselect()
         self.custom_canvas.selector.selected_items.clear()
+        self.custom_canvas.reset_zoom()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
         self.selector.canvas = self.custom_canvas
@@ -497,6 +498,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
+        self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
         self.set_title(filename)
 
@@ -519,14 +521,16 @@ class MainDiagram(tk.Tk):
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
+            self.tree.update()
             for canvas in self.canvasses.values():
-                canvas.update_after_treeview(self.tree.winfo_width(), to_left=True)
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=True)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
+            self.tree.update()
             for canvas in self.canvasses.values():
-                canvas.update_after_treeview(self.tree.winfo_width(), to_left=False)
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=False)
 
     @staticmethod
     def pairwise(iterable):

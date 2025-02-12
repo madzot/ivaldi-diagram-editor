@@ -205,21 +205,22 @@ class CustomCanvas(tk.Canvas):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
 
-    def update_after_treeview(self, treeview_width, to_left):
+    def update_after_treeview(self, canvas_width, treeview_width, to_left):
         if to_left:
-            multiplier = -1
+            old_canvas_width = canvas_width + treeview_width
         else:
-            multiplier = 1
+
+            old_canvas_width = canvas_width - treeview_width
 
         for box in self.boxes:
-            move_amount = (((box.x + box.x + box.size[0]) / 2) / self.winfo_width()) * treeview_width
-            box.x += move_amount * multiplier
+            relative_pos = ((box.x + box.x + box.size[0]) / 2) / old_canvas_width * canvas_width
+            box.x = relative_pos - box.size[0] / 2
             box.update_size(box.size[0], box.size[1])
             box.move_label()
 
         for spider in self.spiders:
-            move_amount = (spider.x / self.winfo_width()) * treeview_width
-            spider.x += move_amount * multiplier
+            relative_pos = (spider.x / old_canvas_width) * canvas_width
+            spider.x = relative_pos
             spider.move_to((spider.x, spider.y))
 
         for wire in self.wires:
@@ -604,6 +605,7 @@ class CustomCanvas(tk.Canvas):
 
     # OTHER BUTTON FUNCTIONALITY
     def save_as_png(self):
+        self.reset_zoom()
         filetypes = [('png files', '*.png')]
         file_path = filedialog.asksaveasfilename(defaultextension='.png', filetypes=filetypes,
                                                  title="Save png file")
@@ -907,6 +909,7 @@ class CustomCanvas(tk.Canvas):
         return c
 
     def export_hypergraph(self):
+        self.reset_zoom()
         self.hypergraph_exporter.export()
 
     @staticmethod
@@ -969,8 +972,9 @@ class CustomCanvas(tk.Canvas):
         self.delete_selected_items()
 
     def create_sub_diagram(self):
-        if len(self.selector.selected_items) > 1:
+        if len(list(filter(lambda x: isinstance(x, Spider) or isinstance(x, Box), self.selector.selected_items))) > 1:
             self.selector.create_sub_diagram()
+            self.selector.selected_items = []
 
     def find_paste_multipliers(self, x, y, x_length, y_length):
         area_x1 = x - x_length / 2

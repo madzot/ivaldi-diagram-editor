@@ -2,6 +2,10 @@ import tkinter as tk
 from tkinter import messagebox
 
 import ttkbootstrap as ttk
+from PIL import Image, ImageTk
+
+from MVP.refactored.frontend.windows.help_window import HelpWindow
+from constants import *
 
 
 class Titlebar(ttk.Frame):
@@ -47,6 +51,18 @@ class Titlebar(ttk.Frame):
                                    command=lambda: self.main_diagram.visualize_as_graph(self.custom_canvas))
 
         self.view_button.pack(side=ttk.LEFT)
+
+        self.help_logo = (Image.open(ASSETS_DIR + "/help-circle-outline.png"))
+        self.help_logo = self.help_logo.resize((21, 21))
+        self.help_logo = ImageTk.PhotoImage(self.help_logo)
+
+        help_button = ttk.Label(self, image=self.help_logo, bootstyle="inverse-light")
+        help_button.pack(side=ttk.RIGHT, anchor=tk.CENTER, padx=(0, 5))
+
+        help_button.bind("<Button-1>", lambda event: self.open_help_window())
+
+    def open_help_window(self):
+        HelpWindow(self.main_diagram)
 
     def import_sub_diagram(self):
         box = self.custom_canvas.add_box(loc=(200, 100))
