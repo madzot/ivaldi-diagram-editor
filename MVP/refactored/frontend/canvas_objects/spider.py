@@ -104,7 +104,6 @@ class Spider(Connection):
             move_legal = True
 
         # snapping into place
-        # TODO bug here with box and 2 spiders
         found = False
         for box in self.canvas.boxes:
             if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:

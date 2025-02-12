@@ -113,10 +113,10 @@ class CustomCanvas(tk.Canvas):
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
 
-        c1 = Corner(None, None, "left", [0, 0], self, 0)
-        c2 = Corner(None, None, "left", [0, self.winfo_height()], self, 0)
-        c3 = Corner(None, None, "left", [self.winfo_width(), 0], self, 0)
-        c4 = Corner(None, None, "left", [self.winfo_width(), self.winfo_height()], self, 0)
+        c1 = Corner([0, 0], self, 0)
+        c2 = Corner([0, self.winfo_height()], self, 0)
+        c3 = Corner([self.winfo_width(), 0], self, 0)
+        c4 = Corner([self.winfo_width(), self.winfo_height()], self, 0)
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
@@ -351,15 +351,6 @@ class CustomCanvas(tk.Canvas):
                 y_offset = -next_location[1] * multiplier
                 if round(next_location[1]) > self.canvasy(self.winfo_height()) / 2:
                     y_offset = (self.canvasy(self.winfo_height()) - next_location[1]) * multiplier
-            # TODO does this part also need canvas coords
-            # if 0 < round(next_location[0]) < self.winfo_width():
-            #     x_offset = -next_location[0] * multiplier
-            #     if round(next_location[0]) > self.winfo_width() / 2:
-            #         x_offset = (self.winfo_width() - next_location[0]) * multiplier
-            # if 0 < round(next_location[1]) < self.winfo_height():
-            #     y_offset = -next_location[1] * multiplier
-            #     if round(next_location[1]) > self.winfo_height() / 2:
-            #         y_offset = (self.winfo_height() - next_location[1]) * multiplier
         is_allowed = x_offset == 0 == y_offset
         return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
 
@@ -368,10 +359,6 @@ class CustomCanvas(tk.Canvas):
         min_y = self.canvasy(0)
         max_x = self.canvasx(self.winfo_width())
         max_y = self.canvasy(self.winfo_height())
-        # min_x = 0
-        # min_y = 0
-        # max_x = self.winfo_width()
-        # max_y = self.winfo_height()
         count = 0
         locations = [
             [min_x, min_y],
@@ -407,16 +394,13 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.add_command(label="Add undefined box",
                                           command=lambda loc=(event.x, event.y): self.add_box(loc))
 
-            # noinspection PyUnresolvedReferences
-            if len(self.master.quick_create_boxes) > 0:
+            if len(self.main_diagram.quick_create_boxes) > 0:
                 sub_menu = tk.Menu(self.context_menu, tearoff=0)
                 self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
-                # noinspection PyUnresolvedReferences
-                for box in self.master.quick_create_boxes:
-                    # noinspection PyUnresolvedReferences
+                for box in self.main_diagram.quick_create_boxes:
                     sub_menu.add_command(label=box,
                                          command=lambda loc=(event.x, event.y), name=box:
-                                         self.master.importer.add_box_from_menu(self, name, loc))
+                                         self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))
@@ -660,8 +644,6 @@ class CustomCanvas(tk.Canvas):
 
         self.update_inputs_outputs()
         self.update_prev_winfo_size()
-        # self.offset_items(self.corners[0].location[0], self.corners[0].location[1])
-        # TODO here or somewhere else limit resize if it would mess up output/input display
 
     @staticmethod
     def debounce(wait_time):

@@ -347,7 +347,7 @@ class MainDiagram(tk.Tk):
 
     def on_tree_select(self, _):
         # Get the selected item
-        selected_item = self.tree.focus()  # Get the ID of the selected item
+        selected_item = self.tree.focus()
         if selected_item:
             new_canvas = self.canvasses[selected_item]
             self.switch_canvas(new_canvas)
