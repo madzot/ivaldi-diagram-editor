@@ -206,7 +206,7 @@ class Selector:
                             is_left = connection.location[0] > wire.start_connection.location[0]
                         self.add_copied_wire(connection, is_left)
 
-    def paste_copied_items(self, event_x=50, event_y=50, over_selected=False):
+    def paste_copied_items(self, event_x=50, event_y=50, over_selected=False, multi = 1):
         if len(self.copied_items) > 0:
 
             middle_point = self.find_middle_point(event_x, event_y)
@@ -216,12 +216,14 @@ class Selector:
                 if item['component'] == "Box":
                     if item["sub-diagram"]:
                         new_box = self.canvas.master.importer.add_box_from_menu(
-                            self.canvas, item['label'], (event_x + item['location'][0] - middle_point[0],
-                                                         event_y + item['location'][1] - middle_point[1]), True)
+                            self.canvas, item['label'], (event_x + (item['location'][0] - middle_point[0]) * multi,
+                                                         event_y + (item['location'][1] - middle_point[1]) * multi),
+                            True, size=(item['size'][0] * multi, item['size'][1] * multi),)
                     else:
-                        new_box = self.canvas.add_box((event_x + item['location'][0] - middle_point[0],
-                                                       event_y + item['location'][1] - middle_point[1]),
-                                                      size=item['size'], shape=item['shape'])
+                        new_box = self.canvas.add_box((event_x + (item['location'][0] - middle_point[0]) * multi,
+                                                       event_y + (item['location'][1] - middle_point[1]) * multi),
+                                                      size=(item['size'][0] * multi, item['size'][1] * multi),
+                                                      shape=item['shape'])
                         for c in item['connections']:
                             if c['side'] == "right":
                                 new_box.add_right_connection()
@@ -250,8 +252,8 @@ class Selector:
                                                 and connection.index == wire['original_start_index']):
                                             wire['start_connection'] = connection
                 if item['component'] == "Spider":
-                    new_spider = self.canvas.add_spider((event_x + item['location'][0] - middle_point[0],
-                                                         event_y + item['location'][1] - middle_point[1]))
+                    new_spider = self.canvas.add_spider((event_x + (item['location'][0] - middle_point[0]) * multi,
+                                                         event_y + (item['location'][1] - middle_point[1]) * multi))
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
                             wire['start_connection'] = new_spider

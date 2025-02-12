@@ -953,22 +953,14 @@ class CustomCanvas(tk.Canvas):
         if len(self.selector.selected_items) > 0:
             copied_x1, copied_x2, copied_y1, copied_y2 = self.selector.find_corners_copied_items()
             selected_x1, selected_y1, selected_x2, selected_y2 = self.selector.find_corners_selected_items()
-            copied_middle_to_side_x = (copied_x2 - copied_x1) / 2
-            copied_middle_to_side_y = (copied_y2 - copied_y1) / 2
             selected_middle_x = (selected_x1 + selected_x2) / 2
             selected_middle_y = (selected_y1 + selected_y2) / 2
-            items_to_move = self.find_all_in_area(selected_middle_x - copied_middle_to_side_x,
-                                                  selected_middle_x + copied_middle_to_side_x,
-                                                  selected_middle_y - copied_middle_to_side_y,
-                                                  selected_middle_y + copied_middle_to_side_y,
-                                                  self.boxes + self.spiders)
-            if len(items_to_move) != 0:
-                self.create_space(selected_middle_x - copied_middle_to_side_x,
-                                  selected_middle_x + copied_middle_to_side_x,
-                                  selected_middle_y - copied_middle_to_side_y,
-                                  selected_middle_y + copied_middle_to_side_y,
-                                  items_to_move)
-            self.selector.paste_copied_items((selected_x1 + selected_x2) / 2, (selected_y1 + selected_y2) / 2, True)
+            copied_x_length = copied_x2 - copied_x1
+            copied_y_length = copied_y2 - copied_y1
+            multi, x, y = self.find_paste_multipliers(selected_middle_x, selected_middle_y, copied_x_length,
+                                                      copied_y_length)
+
+            self.selector.paste_copied_items(x, y, True, multi)
         else:
             self.selector.paste_copied_items(event.x, event.y)
 
@@ -980,39 +972,58 @@ class CustomCanvas(tk.Canvas):
         if len(self.selector.selected_items) > 1:
             self.selector.create_sub_diagram()
 
-    def find_all_in_area(self, x1, x2, y1, y2, items):
-        items_in_area = []
-        for item in items:
-            if isinstance(item, Box):
-                if item not in self.selector.selected_items:
-                    if not (item.x + item.size[0] < x1 or item.x > x2 or item.y + item.size[1] < y1 or item.y > y2):
-                        items_in_area.append(item)
-            if isinstance(item, Spider):
-                if item not in self.selector.selected_items:
-                    if not (item.x + item.r < x1 or item.x - item.r > x2 or
-                            item.y + item.r < y1 or item.y - item.r < y2):
-                        items_in_area.append(item)
-        return items_in_area
+    def find_paste_multipliers(self, x, y, x_length, y_length):
+        area_x1 = x - x_length / 2
+        area_x2 = x + x_length / 2
+        area_y1 = y - y_length / 2
+        area_y2 = y + y_length / 2
+        left, right = self.selector.find_side_connections()
+        if len(left) != 0 or len(right) != 0:
+            for connection in left:
+                if connection.side == "spider":
+                    if connection.location[0] + connection.r > area_x1:
+                        area_x1 = connection.location[0] + connection.r
+                else:
+                    if connection.location[0] > area_x1:
+                        area_x1 = connection.location[0]
+            for connection in right:
+                if connection.side == "spider":
+                    if connection.location[0] - connection.r < area_x2:
+                        area_x2 = connection.location[0] - connection.r
+                else:
+                    if connection.location[0] < area_x2:
+                        area_x2 = connection.location[0]
+        for item in self.boxes + self.spiders:
+            if item not in self.selector.selected_items:
+                if isinstance(item, Box):
+                    if not (item.y + item.size[1] < area_y1 or item.y > area_y2):
+                        if len(left) == 0:
+                            if x > item.x + item.size[0] > area_x1:
+                                area_x1 = item.x + item.size[0]
+                        if len(right) == 0:
+                            if x < item.x < area_x2:
+                                area_x2 = item.x
+                    if not (item.x > area_x2 or item.x + item.size[0] < area_x1):
+                        if y > item.y + item.size[1] > area_y1:
+                            area_y1 = item.y + item.size[1]
+                        if y < item.y < area_y2:
+                            area_y2 = item.y
+                if isinstance(item, Spider):
+                    if not (item.y + item.r < area_y1 or item.y - item.r > area_y2):
+                        if len(left) == 0:
+                            if x > item.x + item.r > area_x1:
+                                area_x1 = item.x + item.r
+                        if len(right) == 0:
+                            if x < item.x - item.r < area_x2:
+                                area_x2 = item.x - item.r
+                    if not (item.x - item.r > area_x2 or item.x + item.r < area_x1):
+                        if y > item.y + item.r > area_y1:
+                            area_y1 = item.y + item.r
+                        if y < item.y - item.r < area_y2:
+                            area_y2 = item.y - item.r
 
-    def create_space(self, x1, x2, y1, y2, items_to_move):
-        for item in items_to_move:
-            closest_distance_to_move = None
-            if isinstance(item, Box):
-                if abs((item.x + item.size[0] / 2) - x1) < abs((item.x + item.size[0] / 2) - x2):
-                    closest_distance_to_move = x1, abs((item.x + item.size[0] / 2) - x1)
-                else:
-                    closest_distance_to_move = x2, abs((item.x + item.size[0] / 2) - x2)
-                if abs((item.y + item.size[1] / 2) - y1) < closest_distance_to_move[1]:
-                    closest_distance_to_move = y1, abs((item.y + item.size[1] / 2) - y1)
-                if abs((item.y + item.size[1] / 2) - y2) < closest_distance_to_move[1]:
-                    closest_distance_to_move = y1, abs((item.y + item.size[1] / 2) - y2)
-            if isinstance(item, Spider):
-                if abs(item.x - x1) < abs(item.x - x2):
-                    closest_distance_to_move = x1, abs(item.x - x1)
-                else:
-                    closest_distance_to_move = x2, abs(item.x - x2)
-                if abs(item.y - y1) < closest_distance_to_move[1]:
-                    closest_distance_to_move = y1, abs(item.y - y1)
-                if abs(item.y - y2) < closest_distance_to_move[1]:
-                    closest_distance_to_move = y1, abs(item.y - y2)
-                    item.move()
+        area_x1 = area_x1 + 10
+        area_x2 = area_x2 - 10
+        x_multiplier = round((area_x2 - area_x1) / x_length, 3)
+        y_multiplier = round((area_y2 - area_y1) / y_length, 3)
+        return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
