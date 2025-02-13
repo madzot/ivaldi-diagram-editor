@@ -1,12 +1,12 @@
-import tkinter as tk
-from tkinter import simpledialog
-from tkinter import messagebox
 import json
 import re
-import os
+import tkinter as tk
+from tkinter import messagebox
+from tkinter import simpledialog
 
-from MVP.refactored.code_editor import CodeEditor
-from MVP.refactored.connection import Connection
+from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.windows.code_editor import CodeEditor
+from constants import *
 
 
 class Box:
@@ -62,12 +62,13 @@ class Box:
         self.id = id_
 
     def bind_events(self):
+        self.canvas.tag_bind(self.rect, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.rect, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
-        self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
+        self.canvas.tag_bind(self.rect, '<Double-Button-1>', lambda _: self.handle_double_click())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -116,9 +117,14 @@ class Box:
             return
         self.canvas.main_diagram.save_box_to_diagram_menu(self)
 
-    def set_inputs_outputs(self, _):
-        # TODO idea: double click on box with sub diagram opens the sub-diagram?
-        if self.locked or self.sub_diagram:
+    def handle_double_click(self):
+        if self.sub_diagram:
+            self.canvas.main_diagram.switch_canvas(self.sub_diagram)
+        else:
+            self.set_inputs_outputs()
+
+    def set_inputs_outputs(self):
+        if self.locked:
             return
         # ask for inputs amount
         inputs = simpledialog.askstring(title="Inputs (left connections)", prompt="Enter amount")
@@ -172,7 +178,7 @@ class Box:
                 self.add_left_connection()
 
     def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True, switch=True):
-        from MVP.refactored.custom_canvas import CustomCanvas
+        from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
         if self.receiver.listener:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
@@ -203,7 +209,12 @@ class Box:
     # MOVING, CLICKING ETC.
     def on_press(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        self.canvas.selector.finish_selection()
+        for item in self.canvas.selector.selected_items:
+            item.deselect()
+        self.canvas.selector.selected_boxes.clear()
+        self.canvas.selector.selected_spiders.clear()
+        self.canvas.selector.selected_wires.clear()
+        self.canvas.selector.selected_items.clear()
         self.select()
         self.canvas.selector.selected_items.append(self)
         self.start_x = event.x
@@ -211,7 +222,18 @@ class Box:
         self.x_dif = event.x - self.x
         self.y_dif = event.y - self.y
 
+    def on_control_press(self):
+        if self in self.canvas.selector.selected_items:
+            self.canvas.selector.selected_items.remove(self)
+            self.deselect()
+        else:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
+        self.canvas.selector.select_wires_between_selected_items()
+
     def on_drag(self, event):
+        if event.state & 0x4:
+            return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
         self.start_x = event.x
@@ -301,13 +323,20 @@ class Box:
         if self.label:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
+    def bind_event_label(self):
+        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
+        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
+        self.canvas.tag_bind(self.label, '<Double-Button-1>', lambda _: self.handle_double_click())
+        self.canvas.tag_bind(self.label, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
+        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
+
     def edit_label(self, new_label=None):
         if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
                 self.label_text = text
-            if os.stat("conf/functions_conf.json").st_size != 0:
-                with open("conf/functions_conf.json", "r") as file:
+            if os.stat(FUNCTIONS_CONF).st_size != 0:
+                with open(FUNCTIONS_CONF, "r") as file:
                     data = json.load(file)
                     for label, code in data.items():
                         if label == self.label_text:
@@ -333,10 +362,7 @@ class Box:
                 self.sub_diagram.set_name(self.label_text)
                 self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
 
-        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
-        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
-        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+        self.bind_event_label()
 
     def set_label(self, new_label):
         self.label_text = new_label
@@ -347,10 +373,8 @@ class Box:
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
-        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
-        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
-        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+
+        self.bind_event_label()
 
     def on_resize_press(self, event):
         self.start_x = event.x
@@ -437,7 +461,7 @@ class Box:
 
     def update_io(self):
         """Update inputs and outputs based on label and code."""
-        with open("conf/functions_conf.json", "r") as file:
+        with open(FUNCTIONS_CONF, "r") as file:
             data = json.load(file)
             for label, code in data.items():
                 if label == self.label_text:

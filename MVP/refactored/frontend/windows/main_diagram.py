@@ -1,31 +1,32 @@
 import hashlib
 import json
-import os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
-from scipy.interpolate import make_interp_spline
+
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
-import tikzplotlib
-
 import ttkbootstrap as ttk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from scipy.interpolate import make_interp_spline
 from ttkbootstrap.constants import *
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
+import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.code_editor import CodeEditor
-from MVP.refactored.custom_canvas import CustomCanvas
-from MVP.refactored.manage_methods import ManageMethods
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.toolbar import Titlebar
+from MVP.refactored.frontend.util.selector import Selector
+from MVP.refactored.frontend.windows.code_editor import CodeEditor
+from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.search_window import SearchWindow
 from MVP.refactored.selector import Selector
 from MVP.refactored.toolbar import Titlebar
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
+from constants import *
 
 
 class MainDiagram(tk.Tk):
@@ -69,7 +70,6 @@ class MainDiagram(tk.Tk):
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
-        self.toggle_treeview()
 
         # Add some items to the tree
         self.tree.insert("", "end", str(self.custom_canvas.id), text="Root")
@@ -79,6 +79,8 @@ class MainDiagram(tk.Tk):
         # Bind the treeview to the click event
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
         self.tree.update()
+
+        self.toggle_treeview()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
@@ -168,17 +170,16 @@ class MainDiagram(tk.Tk):
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
-        self.mainloop()
 
     @staticmethod
     def calculate_boxes_json_file_hash():
-        with open("conf/boxes_conf.json", "r") as file:
+        with open(BOXES_CONF, "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
     def load_functions(self):
-        if os.stat("conf/functions_conf.json").st_size != 0:
-            with open("conf/functions_conf.json", "r") as file:
+        if os.stat(FUNCTIONS_CONF).st_size != 0:
+            with open(FUNCTIONS_CONF, "r") as file:
                 self.label_content = json.load(file)
 
     def generate_code(self):
@@ -387,6 +388,7 @@ class MainDiagram(tk.Tk):
             item.deselect()
         width = self.custom_canvas.winfo_width()
         self.custom_canvas.selector.selected_items.clear()
+        self.custom_canvas.reset_zoom()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
         self.selector.canvas = self.custom_canvas
@@ -410,7 +412,7 @@ class MainDiagram(tk.Tk):
 
     def on_tree_select(self, _):
         # Get the selected item
-        selected_item = self.tree.focus()  # Get the ID of the selected item
+        selected_item = self.tree.focus()
         if selected_item:
             new_canvas = self.canvasses[selected_item]
             self.switch_canvas(new_canvas)
@@ -453,7 +455,7 @@ class MainDiagram(tk.Tk):
                 self.receiver.receiver_callback("remove_inner_right",
                                                 generator_id=self.custom_canvas.diagram_source_box.id)
         else:
-            self.custom_canvas.remove_diagram_input()
+            self.custom_canvas.remove_diagram_output()
 
     def find_connection_to_remove(self, side):
         c_max = 0
@@ -560,6 +562,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
+        self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
         self.set_title(filename)
 
@@ -582,10 +585,16 @@ class MainDiagram(tk.Tk):
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
+            self.tree.update()
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=True)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
+            self.tree.update()
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=False)
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
 
