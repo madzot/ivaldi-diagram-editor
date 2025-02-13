@@ -16,7 +16,7 @@ from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.util.event import Event
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-from search_result_button import SearchResultButton
+from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from constants import *
 
 

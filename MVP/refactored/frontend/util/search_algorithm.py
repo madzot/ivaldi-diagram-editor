@@ -1,8 +1,8 @@
 import tkinter.messagebox
 
-from MVP.refactored.box import Box
-from MVP.refactored.custom_canvas import CustomCanvas
-from MVP.refactored.spider import Spider
+from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.canvas_objects.spider import Spider
 
 
 class SearchAlgorithm:

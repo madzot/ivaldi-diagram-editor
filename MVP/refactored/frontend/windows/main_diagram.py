@@ -20,10 +20,8 @@ from MVP.refactored.frontend.components.toolbar import Titlebar
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.frontend.windows.manage_methods import ManageMethods
+from MVP.refactored.frontend.windows.search_window import SearchWindow
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
-from MVP.refactored.search_window import SearchWindow
-from MVP.refactored.selector import Selector
-from MVP.refactored.toolbar import Titlebar
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
 from constants import *

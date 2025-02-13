@@ -2,6 +2,7 @@ import tkinter as tk
 
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
+from constants import *
 
 
 class SearchResultButton(tk.LabelFrame):
@@ -13,7 +14,7 @@ class SearchResultButton(tk.LabelFrame):
         self.close_button_frame = tk.LabelFrame(self, height=30, width=25)
         self.close_button_frame.pack(side=tk.RIGHT)
 
-        self.close_icon = Image.open("../../assets/close-circle-outline.png")
+        self.close_icon = Image.open(ASSETS_DIR + "/close-circle-outline.png")
         self.close_icon = self.close_icon.resize((20, 20))
         self.close_icon = ImageTk.PhotoImage(self.close_icon)
 
@@ -24,7 +25,7 @@ class SearchResultButton(tk.LabelFrame):
         up_down_frame = tk.LabelFrame(self, height=30)
         up_down_frame.pack(side=tk.RIGHT, padx=(0, 5))
 
-        self.up_icon = Image.open("../../assets/chevron-up-circle.png")
+        self.up_icon = Image.open(ASSETS_DIR + "/chevron-up-circle.png")
         self.up_icon = self.up_icon.resize((20, 20))
         self.up_icon = ImageTk.PhotoImage(self.up_icon)
 
@@ -34,7 +35,7 @@ class SearchResultButton(tk.LabelFrame):
 
         ttk.Separator(up_down_frame, orient=tk.VERTICAL).pack(side=tk.LEFT)
 
-        self.down_icon = Image.open("../../assets/chevron-down-circle.png")
+        self.down_icon = Image.open(ASSETS_DIR + "chevron-down-circle.png")
         self.down_icon = self.down_icon.resize((20, 20))
         self.down_icon = ImageTk.PhotoImage(self.down_icon)
 

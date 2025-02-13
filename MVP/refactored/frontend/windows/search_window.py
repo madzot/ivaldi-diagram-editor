@@ -1,8 +1,8 @@
 import tkinter as tk
 import ttkbootstrap as tkk
 
-from MVP.refactored.custom_canvas import CustomCanvas
-from MVP.refactored.search_algorithm import SearchAlgorithm
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.util.search_algorithm import SearchAlgorithm
 
 
 class SearchWindow(tk.Toplevel):
