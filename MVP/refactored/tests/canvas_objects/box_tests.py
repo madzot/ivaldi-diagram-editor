@@ -475,4 +475,131 @@ class BoxTests(TestMainDiagram):
         self.assertEqual(150, box.x)
         self.assertEqual(150, box.y)
 
+    def test__on_drag__box_above(self):
+        self.custom_canvas.add_box(size=(50, 50))
+        self.custom_canvas.add_box(loc=(100, 200), size=(50, 50))
+
+        box_2 = self.custom_canvas.boxes[1]
+
+        event = tkinter.Event()
+        event.x, event.y = 225, 225
+
+        box_2.on_press(event)
+
+        for _ in range(100):
+            event.y -= 1
+            box_2.on_drag(event)
+
+        self.assertEqual(100, box_2.x)  # Should not have changed
+        self.assertEqual(151, box_2.y)  # Box 1 ends at 150 so this should be 151
+
+    def test__on_drag__box_below(self):
+        self.custom_canvas.add_box(size=(50, 50))
+        self.custom_canvas.add_box(loc=(100, 200), size=(50, 50))
+
+        box_1 = self.custom_canvas.boxes[0]
+
+        event = tkinter.Event()
+        event.x, event.y = 125, 125
+
+        box_1.on_press(event)
+
+        for _ in range(100):
+            event.y += 1
+            box_1.on_drag(event)
+
+        self.assertEqual(100, box_1.x)  # Should not have changed
+        self.assertEqual(149, box_1.y)  # Box 2 starts at 200 so this should be 149
+
+    def test__on_drag__box_right_should_snap_to_same_x(self):
+        self.custom_canvas.add_box(size=(50, 50))
+        self.custom_canvas.add_box(loc=(200, 100), size=(50, 50))
+
+        event = tkinter.Event()
+        event.x, event.y = 125, 125
+
+        box_1 = self.custom_canvas.boxes[0]
+
+        box_1.on_press(event)
+
+        for _ in range(51):
+            event.x += 1
+            box_1.on_drag(event)
+
+        self.assertEqual(200, box_1.x)  # Should match the 2nd box x coords
+
+    def test__on_drag__spider_snap(self):
+        self.custom_canvas.add_box(size=(50, 50))
+        self.custom_canvas.add_spider(loc=(200, 125))
+
+        event = tkinter.Event()
+        event.x, event.y = 125, 125
+
+        box_1 = self.custom_canvas.boxes[0]
+
+        box_1.on_press(event)
+
+        for _ in range(50):
+            event.x += 1
+            box_1.on_drag(event)
+
+        expected_x = 200 - box_1.size[0] / 2
+        self.assertEqual(expected_x, box_1.x)
+
+    def test__on_drag__spider_below(self):
+        self.custom_canvas.add_box(size=(50, 50))
+        self.custom_canvas.add_spider(loc=(125, 175))
+
+        event = tkinter.Event()
+        event.x, event.y = 125, 125
+
+        box_1 = self.custom_canvas.boxes[0]
+
+        box_1.on_press(event)
+
+        for _ in range(50):
+            event.y += 1
+            box_1.on_drag(event)
+
+        expected_y = 175 - 10 - 50 - 1  # Spider.y - spider.size - box.size - gap
+        self.assertEqual(expected_y, box_1.y)
+
+    def test__on_drag__spider_above(self):
+        self.custom_canvas.add_box(loc=(100, 150), size=(50, 50))
+        self.custom_canvas.add_spider(loc=(125, 100))
+
+        event = tkinter.Event()
+        event.x, event.y = 125, 175
+
+        box_1 = self.custom_canvas.boxes[0]
+
+        box_1.on_press(event)
+
+        for _ in range(50):
+            event.y -= 1
+            box_1.on_drag(event)
+
+        self.assertEqual(111, box_1.y)
+
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.move_label")
+    def test__on_resize_drag__updates_size_same_coords(self, move_label_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+
+        event = tkinter.Event()
+        event.x, event.y = 155, 155
+
+        box.on_press(event)
+
+        for _ in range(50):
+            event.x += 1
+            event.y += 1
+            box.on_resize_drag(event)
+
+        self.assertEqual((110, 110), box.size)
+        self.assertEqual(50, move_label_mock.call_count)
+
+
+
+
+
 
