@@ -200,7 +200,7 @@ class BoxTests(TestMainDiagram):
     @patch("tkinter.simpledialog.askstring", return_value="1")
     def test__set_inputs_outputs__asks_user_for_input(self, ask_string_mock):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
-        box.set_inputs_outputs("_")
+        box.set_inputs_outputs()
 
         self.assertTrue(ask_string_mock.called)
         self.assertEqual(2, len(box.connections))
@@ -216,40 +216,40 @@ class BoxTests(TestMainDiagram):
         self.assertEqual(3, box.left_connections)
         self.assertEqual(3, box.right_connections)
 
-        box.set_inputs_outputs("_")
+        box.set_inputs_outputs()
 
         self.assertEqual(2, ask_string_mock.call_count)
         self.assertEqual(4, len(box.connections))
         self.assertEqual(2, box.left_connections)
         self.assertEqual(2, box.right_connections)
 
-    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_event_label")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.change_label")
-    def test__edit_label__with_param_changes_label(self, change_label_mock, tag_bind_mock):
+    def test__edit_label__with_param_changes_label(self, change_label_mock, bind_mock):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
-        tag_bind_mock.call_count = 0  # resetting tag_bind amount from box creation
+        bind_mock.call_count = 0  # resetting tag_bind amount from box creation
 
         expected_label = "new_label"
         box.edit_label(expected_label)
 
         self.assertEqual(expected_label, box.label_text)
         self.assertTrue(change_label_mock.called)
-        self.assertEqual(4, tag_bind_mock.call_count)
+        self.assertTrue(bind_mock.called)
 
-    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_event_label")
     @patch("tkinter.simpledialog.askstring", return_value="new_label")
-    def test__edit_label__without_param_asks_input(self, ask_string_mock, tag_bind_mock):
+    def test__edit_label__without_param_asks_input(self, ask_string_mock, bind_mock):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
-        tag_bind_mock.call_count = 0
+        bind_mock.call_count = 0
         box.edit_label()
 
         expected_label = "new_label"
         self.assertTrue(ask_string_mock.called)
         self.assertEqual(expected_label, box.label_text)
-        self.assertEqual(4, tag_bind_mock.call_count)
+        self.assertTrue(bind_mock.called)
 
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_event_label")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_io")
-    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
     @patch("tkinter.messagebox.askokcancel", return_value=True)
     @patch("json.load", return_value={"new_label": ""})
     @patch("tkinter.simpledialog.askstring", return_value="new_label")
@@ -259,10 +259,10 @@ class BoxTests(TestMainDiagram):
                                                                     ask_string_mock,
                                                                     json_load_mock,
                                                                     ask_ok_cancel_mock,
-                                                                    tag_bind_mock,
-                                                                    update_io_mock):
+                                                                    update_io_mock,
+                                                                    bind_event_mock):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
-        tag_bind_mock.call_count = 0
+        bind_event_mock.call_count = 0
         os_stat_mock.return_value.st_size = 1
         box.edit_label()
 
@@ -273,14 +273,22 @@ class BoxTests(TestMainDiagram):
         self.assertTrue(json_load_mock.called)
         self.assertTrue(ask_ok_cancel_mock.called)
         self.assertTrue(update_io_mock.called)
-        self.assertEqual(4, tag_bind_mock.call_count)
+        self.assertTrue(bind_event_mock.called)
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
-    def test__bind_events_calls_tag_bind_6_times(self, tag_bind_mock):
+    def test__bind_events__calls_tag_bind(self, tag_bind_mock):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
         tag_bind_mock.call_count = 0
         box.bind_events()
-        self.assertEqual(6, tag_bind_mock.call_count)
+        self.assertEqual(7, tag_bind_mock.call_count)
+
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
+    def test__bind_event_label__calls_out_tag_bind(self, tag_bind_mock):
+        box = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        tag_bind_mock.call_count = 0
+        box.bind_event_label()
+
+        self.assertEqual(5, tag_bind_mock.call_count)
 
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_events")
     def test__init__calls_bind_event(self, bind_events_mock):
@@ -461,6 +469,7 @@ class BoxTests(TestMainDiagram):
     def test__on_drag__no_other_items_changes_location(self):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
         event = tkinter.Event()
+        event.state = False
         event.x = 150
         event.y = 150
 
@@ -482,6 +491,7 @@ class BoxTests(TestMainDiagram):
         box_2 = self.custom_canvas.boxes[1]
 
         event = tkinter.Event()
+        event.state = False
         event.x, event.y = 225, 225
 
         box_2.on_press(event)
@@ -500,6 +510,7 @@ class BoxTests(TestMainDiagram):
         box_1 = self.custom_canvas.boxes[0]
 
         event = tkinter.Event()
+        event.state = False
         event.x, event.y = 125, 125
 
         box_1.on_press(event)
@@ -516,6 +527,7 @@ class BoxTests(TestMainDiagram):
         self.custom_canvas.add_box(loc=(200, 100), size=(50, 50))
 
         event = tkinter.Event()
+        event.state = False
         event.x, event.y = 125, 125
 
         box_1 = self.custom_canvas.boxes[0]
@@ -533,6 +545,7 @@ class BoxTests(TestMainDiagram):
         self.custom_canvas.add_spider(loc=(200, 125))
 
         event = tkinter.Event()
+        event.state = False
         event.x, event.y = 125, 125
 
         box_1 = self.custom_canvas.boxes[0]
@@ -551,6 +564,7 @@ class BoxTests(TestMainDiagram):
         self.custom_canvas.add_spider(loc=(125, 175))
 
         event = tkinter.Event()
+        event.state = False
         event.x, event.y = 125, 125
 
         box_1 = self.custom_canvas.boxes[0]
@@ -569,6 +583,7 @@ class BoxTests(TestMainDiagram):
         self.custom_canvas.add_spider(loc=(125, 100))
 
         event = tkinter.Event()
+        event.state = False
         event.x, event.y = 125, 175
 
         box_1 = self.custom_canvas.boxes[0]
@@ -586,6 +601,7 @@ class BoxTests(TestMainDiagram):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
 
         event = tkinter.Event()
+        event.state = False
         event.x, event.y = 155, 155
 
         box.on_press(event)
