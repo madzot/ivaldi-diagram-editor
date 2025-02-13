@@ -58,7 +58,6 @@ class MainDiagram(tk.Tk):
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
-        self.toggle_treeview()
 
         # Add some items to the tree
         self.tree.insert("", "end", str(self.custom_canvas.id), text="Root")
@@ -68,6 +67,8 @@ class MainDiagram(tk.Tk):
         # Bind the treeview to the click event
         self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
         self.tree.update()
+
+        self.toggle_treeview()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
@@ -325,6 +326,7 @@ class MainDiagram(tk.Tk):
         for item in self.custom_canvas.selector.selected_items:
             item.deselect()
         self.custom_canvas.selector.selected_items.clear()
+        self.custom_canvas.reset_zoom()
         self.custom_canvas.pack_forget()
         self.custom_canvas = canvas
         self.selector.canvas = self.custom_canvas
@@ -345,7 +347,7 @@ class MainDiagram(tk.Tk):
 
     def on_tree_select(self, _):
         # Get the selected item
-        selected_item = self.tree.focus()  # Get the ID of the selected item
+        selected_item = self.tree.focus()
         if selected_item:
             new_canvas = self.canvasses[selected_item]
             self.switch_canvas(new_canvas)
@@ -495,6 +497,7 @@ class MainDiagram(tk.Tk):
             self.destroy()
 
     def save_to_file(self):
+        self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
         self.set_title(filename)
 
@@ -517,10 +520,16 @@ class MainDiagram(tk.Tk):
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
             self.tree.config(height=20)  # Number of visible rows
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
+            self.tree.update()
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=True)
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
+            self.tree.update()
+            for canvas in self.canvasses.values():
+                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=False)
 
     @staticmethod
     def pairwise(iterable):

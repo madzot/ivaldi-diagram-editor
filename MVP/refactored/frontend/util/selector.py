@@ -63,16 +63,17 @@ class Selector:
         for item in self.selected_items:
             item.deselect()
         self.selected_items.clear()
-        # Remove the selection box and reset selecting state
+
         self.canvas.delete(self.canvas.selectBox)
         self.selecting = False
 
     def create_sub_diagram(self):
         coordinates = self.find_corners_selected_items()
+        if len(self.selected_boxes) == 0 and len(self.selected_spiders) == 0:
+            return
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
         box = self.canvas.add_box((x, y), shape="rectangle")
-
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete_self("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
@@ -302,3 +303,24 @@ class Selector:
                 if item.y + item.r > most_down:
                     most_down = item.y + item.r
         return [most_left, most_up, most_right, most_down]
+
+    def select_wires_between_selected_items(self):
+        self.selected_boxes.clear()
+        self.selected_spiders.clear()
+        self.selected_wires.clear()
+        selected_connections = []
+        for item in self.selected_items:
+            if isinstance(item, Box):
+                for connection in item.connections:
+                    selected_connections.append(connection)
+            if isinstance(item, Spider):
+                selected_connections.append(item)
+        for wire in self.canvas.wires:
+            if wire.start_connection in selected_connections and wire.end_connection in selected_connections:
+                if wire not in self.canvas.selector.selected_items:
+                    wire.select()
+                    self.canvas.selector.selected_items.append(wire)
+            if wire.start_connection not in selected_connections or wire.end_connection not in selected_connections:
+                if wire in self.canvas.selector.selected_items:
+                    wire.deselect()
+                    self.canvas.selector.selected_items.remove(wire)

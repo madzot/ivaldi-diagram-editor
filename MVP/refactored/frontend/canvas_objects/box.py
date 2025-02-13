@@ -62,12 +62,13 @@ class Box:
         self.id = id_
 
     def bind_events(self):
+        self.canvas.tag_bind(self.rect, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.rect, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
-        self.canvas.tag_bind(self.rect, '<Double-Button-1>', self.set_inputs_outputs)
+        self.canvas.tag_bind(self.rect, '<Double-Button-1>', lambda _: self.handle_double_click())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -116,9 +117,14 @@ class Box:
             return
         self.canvas.main_diagram.save_box_to_diagram_menu(self)
 
-    def set_inputs_outputs(self, _):
-        # TODO idea: double click on box with sub diagram opens the sub-diagram?
-        if self.locked or self.sub_diagram:
+    def handle_double_click(self):
+        if self.sub_diagram:
+            self.canvas.main_diagram.switch_canvas(self.sub_diagram)
+        else:
+            self.set_inputs_outputs()
+
+    def set_inputs_outputs(self):
+        if self.locked:
             return
         # ask for inputs amount
         inputs = simpledialog.askstring(title="Inputs (left connections)", prompt="Enter amount")
@@ -205,6 +211,9 @@ class Box:
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         for item in self.canvas.selector.selected_items:
             item.deselect()
+        self.canvas.selector.selected_boxes.clear()
+        self.canvas.selector.selected_spiders.clear()
+        self.canvas.selector.selected_wires.clear()
         self.canvas.selector.selected_items.clear()
         self.select()
         self.canvas.selector.selected_items.append(self)
@@ -213,7 +222,18 @@ class Box:
         self.x_dif = event.x - self.x
         self.y_dif = event.y - self.y
 
+    def on_control_press(self):
+        if self in self.canvas.selector.selected_items:
+            self.canvas.selector.selected_items.remove(self)
+            self.deselect()
+        else:
+            self.select()
+            self.canvas.selector.selected_items.append(self)
+        self.canvas.selector.select_wires_between_selected_items()
+
     def on_drag(self, event):
+        if event.state & 0x4:
+            return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
         self.start_x = event.x
@@ -303,6 +323,13 @@ class Box:
         if self.label:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
+    def bind_event_label(self):
+        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
+        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
+        self.canvas.tag_bind(self.label, '<Double-Button-1>', lambda _: self.handle_double_click())
+        self.canvas.tag_bind(self.label, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
+        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
+
     def edit_label(self, new_label=None):
         if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
@@ -329,10 +356,7 @@ class Box:
                 self.sub_diagram.set_name(self.label_text)
                 self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
 
-        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
-        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
-        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+        self.bind_event_label()
 
     def change_label(self):
         if self.receiver.listener:
@@ -346,10 +370,7 @@ class Box:
     def set_label(self, new_label):
         self.label_text = new_label
         self.change_label()
-        self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
-        self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
-        self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
-        self.canvas.tag_bind(self.label, '<Double-Button-1>', self.set_inputs_outputs)
+        self.bind_event_label()
 
     def on_resize_press(self, event):
         self.start_x = event.x

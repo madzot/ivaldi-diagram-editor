@@ -113,10 +113,10 @@ class CustomCanvas(tk.Canvas):
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
 
-        c1 = Corner(None, None, "left", [0, 0], self, 0)
-        c2 = Corner(None, None, "left", [0, self.winfo_height()], self, 0)
-        c3 = Corner(None, None, "left", [self.winfo_width(), 0], self, 0)
-        c4 = Corner(None, None, "left", [self.winfo_width(), self.winfo_height()], self, 0)
+        c1 = Corner([0, 0], self, 0)
+        c2 = Corner([0, self.winfo_height()], self, 0)
+        c3 = Corner([self.winfo_width(), 0], self, 0)
+        c4 = Corner([self.winfo_width(), self.winfo_height()], self, 0)
         self.corners.append(c1)
         self.corners.append(c2)
         self.corners.append(c3)
@@ -204,6 +204,27 @@ class CustomCanvas(tk.Canvas):
     def delete(self, *args):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
+
+    def update_after_treeview(self, canvas_width, treeview_width, to_left):
+        if to_left:
+            old_canvas_width = canvas_width + treeview_width
+        else:
+
+            old_canvas_width = canvas_width - treeview_width
+
+        for box in self.boxes:
+            relative_pos = ((box.x + box.x + box.size[0]) / 2) / old_canvas_width * canvas_width
+            box.x = relative_pos - box.size[0] / 2
+            box.update_size(box.size[0], box.size[1])
+            box.move_label()
+
+        for spider in self.spiders:
+            relative_pos = (spider.x / old_canvas_width) * canvas_width
+            spider.x = relative_pos
+            spider.move_to((spider.x, spider.y))
+
+        for wire in self.wires:
+            wire.update()
 
     def handle_right_click(self, event):
         if self.selector.selecting:
@@ -330,15 +351,6 @@ class CustomCanvas(tk.Canvas):
                 y_offset = -next_location[1] * multiplier
                 if round(next_location[1]) > self.canvasy(self.winfo_height()) / 2:
                     y_offset = (self.canvasy(self.winfo_height()) - next_location[1]) * multiplier
-            # TODO does this part also need canvas coords
-            # if 0 < round(next_location[0]) < self.winfo_width():
-            #     x_offset = -next_location[0] * multiplier
-            #     if round(next_location[0]) > self.winfo_width() / 2:
-            #         x_offset = (self.winfo_width() - next_location[0]) * multiplier
-            # if 0 < round(next_location[1]) < self.winfo_height():
-            #     y_offset = -next_location[1] * multiplier
-            #     if round(next_location[1]) > self.winfo_height() / 2:
-            #         y_offset = (self.winfo_height() - next_location[1]) * multiplier
         is_allowed = x_offset == 0 == y_offset
         return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
 
@@ -347,10 +359,6 @@ class CustomCanvas(tk.Canvas):
         min_y = self.canvasy(0)
         max_x = self.canvasx(self.winfo_width())
         max_y = self.canvasy(self.winfo_height())
-        # min_x = 0
-        # min_y = 0
-        # max_x = self.winfo_width()
-        # max_y = self.winfo_height()
         count = 0
         locations = [
             [min_x, min_y],
@@ -386,16 +394,13 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.add_command(label="Add undefined box",
                                           command=lambda loc=(event.x, event.y): self.add_box(loc))
 
-            # noinspection PyUnresolvedReferences
-            if len(self.master.quick_create_boxes) > 0:
+            if len(self.main_diagram.quick_create_boxes) > 0:
                 sub_menu = tk.Menu(self.context_menu, tearoff=0)
                 self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
-                # noinspection PyUnresolvedReferences
-                for box in self.master.quick_create_boxes:
-                    # noinspection PyUnresolvedReferences
+                for box in self.main_diagram.quick_create_boxes:
                     sub_menu.add_command(label=box,
                                          command=lambda loc=(event.x, event.y), name=box:
-                                         self.master.importer.add_box_from_menu(self, name, loc))
+                                         self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))
@@ -584,6 +589,7 @@ class CustomCanvas(tk.Canvas):
 
     # OTHER BUTTON FUNCTIONALITY
     def save_as_png(self):
+        self.reset_zoom()
         filetypes = [('png files', '*.png')]
         file_path = filedialog.asksaveasfilename(defaultextension='.png', filetypes=filetypes,
                                                  title="Save png file")
@@ -638,8 +644,6 @@ class CustomCanvas(tk.Canvas):
 
         self.update_inputs_outputs()
         self.update_prev_winfo_size()
-        # self.offset_items(self.corners[0].location[0], self.corners[0].location[1])
-        # TODO here or somewhere else limit resize if it would mess up output/input display
 
     @staticmethod
     def debounce(wait_time):
@@ -887,6 +891,7 @@ class CustomCanvas(tk.Canvas):
         return c
 
     def export_hypergraph(self):
+        self.reset_zoom()
         self.hypergraph_exporter.export()
 
     @staticmethod
@@ -937,5 +942,6 @@ class CustomCanvas(tk.Canvas):
         self.delete_selected_items()
 
     def create_sub_diagram(self):
-        if len(self.selector.selected_items) > 1:
+        if len(list(filter(lambda x: isinstance(x, Spider) or isinstance(x, Box), self.selector.selected_items))) > 1:
             self.selector.create_sub_diagram()
+            self.selector.selected_items = []
