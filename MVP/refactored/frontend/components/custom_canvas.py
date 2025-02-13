@@ -1005,6 +1005,7 @@ class CustomCanvas(tk.Canvas):
                             area_x1 = item.x + item.size[0]
                         if x < item.x < area_x2:
                             area_x2 = item.x
+                            print(area_x1)
                     if not (item.x > area_x2 or item.x + item.size[0] < area_x1):
                         if y > item.y + item.size[1] > area_y1:
                             area_y1 = item.y + item.size[1]
@@ -1021,9 +1022,10 @@ class CustomCanvas(tk.Canvas):
                             area_y1 = item.y + item.r
                         if y < item.y - item.r < area_y2:
                             area_y2 = item.y - item.r
-
-        area_x1 = area_x1 + 10
-        area_x2 = area_x2 - 10
+        if area_x1 != x - x_length / 2:
+            area_x1 = area_x1 + 10
+        if area_x2 != x + x_length / 2:
+            area_x2 = area_x2 - 10
         x_multiplier = round((area_x2 - area_x1) / x_length, 3)
         y_multiplier = round((area_y2 - area_y1) / y_length, 3)
         return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
