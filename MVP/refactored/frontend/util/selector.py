@@ -193,8 +193,6 @@ class Selector:
                     connection = wire.start_connection
                 elif wire.start_connection not in connection_list and wire.end_connection in connection_list:
                     connection = wire.end_connection
-                else:
-                    continue
                 if connection:
                     if connection.side == "left":
                         self.add_copied_wire(connection, True)
@@ -212,6 +210,7 @@ class Selector:
 
             middle_point = self.find_middle_point(event_x, event_y)
             wires = self.copied_left_wires + self.copied_right_wires
+            pasted_items = []
 
             for item in self.copied_items:
                 if item['component'] == "Box":
@@ -252,9 +251,11 @@ class Selector:
                                         if (connection.side == wire['original_start_side']
                                                 and connection.index == wire['original_start_index']):
                                             wire['start_connection'] = connection
+                    pasted_items.append(new_box)
                 if item['component'] == "Spider":
                     new_spider = self.canvas.add_spider((event_x + (item['location'][0] - middle_point[0]) * multi,
                                                          event_y + (item['location'][1] - middle_point[1]) * multi))
+                    pasted_items.append(new_spider)
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
                             wire['start_connection'] = new_spider
@@ -273,6 +274,11 @@ class Selector:
                 self.delete_selected_items()
                 self.reconnect_wires(self.copied_left_wires, left_connections)
                 self.reconnect_wires(self.copied_right_wires, right_connections)
+                left_copied_connections, right_copied_connections = self.find_edge_items(pasted_items)
+                if len(left_connections) > len(self.copied_left_wires):
+                    self.connect_extra_wires(left_copied_connections, left_connections, len(self.copied_right_wires))
+                if len(right_connections) > len(self.copied_right_wires):
+                    self.connect_extra_wires(right_copied_connections, right_connections, len(self.copied_right_wires))
 
     def find_middle_point(self, event_x, event_y):
         most_left, most_right, most_up, most_down = self.find_corners_copied_items()
@@ -445,9 +451,84 @@ class Selector:
         elif connection.side == "right":
             right_wires.append(wire)
         elif connection.side == "spider":
-            if connection.location[0] > (
-                    wire.end_connection.location[0] if connection == wire.start_connection
-                    else wire.start_connection.location[0]):
-                left_wires.append(wire)
-            else:
-                right_wires.append(wire)
+            if connection == wire.start_connection:
+                if connection.location[0] > wire.end_connection.location[0]:
+                    left_wires.append(wire)
+                else:
+                    right_wires.append(wire)
+            if connection == wire.end_connection:
+                if connection.location[0] > wire.start_connection.location[0]:
+                    left_wires.append(wire)
+                else:
+                    right_wires.append(wire)
+
+    @staticmethod
+    def find_edge_items(items):
+        most_left = []
+        most_left_distance = float('inf')
+        most_right = []
+        most_right_distance = 0
+        for item in items:
+            if isinstance(item, Box):
+                if item.x + item.size[0] / 2 < most_left_distance:
+                    most_left_distance = item.x + item.size[0] / 2
+                if item.x + item.size[0] / 2 > most_right_distance:
+                    most_right_distance = item.x + item.size[0] / 2
+            if isinstance(item, Spider):
+                if item.x < most_left_distance:
+                    most_left_distance = item.x
+                if item.x > most_right_distance:
+                    most_right_distance = item.x
+
+        for item in items:
+            if isinstance(item, Box):
+                if item.x + item.size[0] / 2 == most_left_distance:
+                    most_left.append(item)
+                if item.x + item.size[0] / 2 == most_right_distance:
+                    most_right.append(item)
+            if isinstance(item, Spider):
+                if item.x == most_left_distance:
+                    most_left.append(item)
+                if item.x == most_right_distance:
+                    most_right.append(item)
+
+        most_left.sort(key=lambda obj: obj.y)
+        most_right.sort(key=lambda obj: obj.y)
+
+        left_connections = []
+        right_connections = []
+
+        for item in most_left:
+            if isinstance(item, Box):
+                for connection in item.connections:
+                    if connection.side == "left" and connection.has_wire is False:
+                        left_connections.append(connection)
+            if isinstance(item, Spider):
+                left_connections.append(item)
+        for item in most_right:
+            if isinstance(item, Box):
+                for connection in item.connections:
+                    if connection.side == "right" and connection.has_wire is False:
+                        right_connections.append(connection)
+            if isinstance(item, Spider):
+                right_connections.append(item)
+
+        return left_connections, right_connections
+
+    def connect_extra_wires(self, copied_connections, connections, connected_amount):
+        multiple_connections = []
+        for connection in copied_connections:
+            if connection.side == "spider":
+                multiple_connections.append(connection)
+        if len(copied_connections) >= len(connections) - connected_amount:
+            for i in range(len(connections) - connected_amount):
+                self.canvas.start_wire_from_connection(connections[i + connected_amount])
+                self.canvas.end_wire_to_connection(copied_connections[i])
+        else:
+            for i in range(len(copied_connections)):
+                self.canvas.start_wire_from_connection(connections[i + connected_amount])
+                self.canvas.end_wire_to_connection(copied_connections[i])
+            if len(multiple_connections) > 0:
+                for i in range(len(connections) - connected_amount - len(copied_connections)):
+                    self.canvas.start_wire_from_connection(connections[i + connected_amount + len(copied_connections)])
+                    self.canvas.end_wire_to_connection(multiple_connections[i % len(multiple_connections)])

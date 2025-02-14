@@ -985,14 +985,14 @@ class CustomCanvas(tk.Canvas):
         if len(left) != 0 or len(right) != 0:
             for connection in left:
                 if connection.side == "spider":
-                    if connection.location[0] + connection.r > area_x1:
+                    if x > connection.location[0] + connection.r > area_x1:
                         area_x1 = connection.location[0] + connection.r
                 else:
                     if connection.location[0] > area_x1:
                         area_x1 = connection.location[0]
             for connection in right:
                 if connection.side == "spider":
-                    if connection.location[0] - connection.r < area_x2:
+                    if x < connection.location[0] - connection.r < area_x2:
                         area_x2 = connection.location[0] - connection.r
                 else:
                     if connection.location[0] < area_x2:
@@ -1005,7 +1005,6 @@ class CustomCanvas(tk.Canvas):
                             area_x1 = item.x + item.size[0]
                         if x < item.x < area_x2:
                             area_x2 = item.x
-                            print(area_x1)
                     if not (item.x > area_x2 or item.x + item.size[0] < area_x1):
                         if y > item.y + item.size[1] > area_y1:
                             area_y1 = item.y + item.size[1]
