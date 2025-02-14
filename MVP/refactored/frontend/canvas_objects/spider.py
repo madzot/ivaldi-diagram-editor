@@ -54,7 +54,7 @@ class Spider(Connection):
     def delete_spider(self, action=None):
         [wire.delete_self(self) for wire in self.wires.copy()]
         self.canvas.spiders.remove(self)
-        self.delete_me()
+        self.delete()
         if self.receiver.listener:
             if action != "sub_diagram":
                 self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id)

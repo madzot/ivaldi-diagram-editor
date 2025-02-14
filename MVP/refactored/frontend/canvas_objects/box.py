@@ -163,7 +163,7 @@ class Box:
             if c.has_wire:
                 c.wire.delete_from_canvas()
 
-            c.delete_me()
+            c.delete()
             self.connections.remove(c)
             self.update_connections()
             self.update_wires()
@@ -524,7 +524,7 @@ class Box:
             self.right_connections -= 1
 
         self.connections.remove(circle)
-        circle.delete_me()
+        circle.delete()
         self.update_connections()
         self.update_wires()
         self.resize_by_connections()
@@ -533,7 +533,7 @@ class Box:
         for c in self.connections:
             if c.has_wire:
                 c.wire.delete_from_canvas()
-            c.delete_me()
+            c.delete()
 
         self.canvas.delete(self.rect)
         self.canvas.delete(self.resize_handle)

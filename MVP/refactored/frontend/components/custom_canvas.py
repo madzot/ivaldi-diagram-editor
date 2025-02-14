@@ -484,7 +484,7 @@ class CustomCanvas(tk.Canvas):
             if self.temp_end_connection.location != (self.canvasx(event.x), self.canvasy(event.y)):
                 self.previous_x = self.canvasx(event.x)
                 self.previous_y = self.canvasy(event.y)
-                self.temp_end_connection.delete_me()
+                self.temp_end_connection.delete()
                 self.temp_end_connection = Connection(None, 0, None,
                                                       (self.canvasx(event.x), self.canvasy(event.y)),
                                                       self)
@@ -539,7 +539,7 @@ class CustomCanvas(tk.Canvas):
         if event:
             self.nullify_wire_start()
         if self.temp_wire is not None:
-            self.temp_end_connection.delete_me()
+            self.temp_end_connection.delete()
             self.temp_wire.delete_self()
             self.temp_wire = None
             self.temp_end_connection = None
@@ -816,7 +816,7 @@ class CustomCanvas(tk.Canvas):
         if not self.outputs:
             return
         to_be_removed = self.outputs.pop()
-        to_be_removed.delete_me()
+        to_be_removed.delete()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_output")
@@ -841,7 +841,7 @@ class CustomCanvas(tk.Canvas):
         if not self.inputs:
             return
         to_be_removed = self.inputs.pop()
-        to_be_removed.delete_me()
+        to_be_removed.delete()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_input")
@@ -860,7 +860,7 @@ class CustomCanvas(tk.Canvas):
                 c.lessen_index_by_one()
 
         self.inputs.remove(con)
-        con.delete_me()
+        con.delete()
         self.update_inputs_outputs()
 
     def remove_specific_diagram_output(self, con):
@@ -878,7 +878,7 @@ class CustomCanvas(tk.Canvas):
 
         self.outputs.remove(con)
 
-        con.delete_me()
+        con.delete()
         self.update_inputs_outputs()
 
     def find_connection_to_remove(self, side):
