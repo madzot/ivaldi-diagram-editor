@@ -31,7 +31,6 @@ class CustomCanvas(tk.Canvas):
 
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
-
         self.master = master
         self.boxes: list[Box] = []
         self.outputs: list[Connection] = []
