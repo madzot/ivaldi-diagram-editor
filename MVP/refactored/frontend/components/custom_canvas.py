@@ -31,6 +31,7 @@ class CustomCanvas(tk.Canvas):
 
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
+
         self.master = master
         self.boxes: list[Box] = []
         self.outputs: list[Connection] = []
@@ -74,6 +75,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Left>", self.pan_horizontal)
         self.bind("<Down>", self.pan_vertical)
         self.bind("<Up>", self.pan_vertical)
+        self.bind("<Control-a>", lambda _: self.select_all())
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
         self.bind("<Control-x>", lambda event: self.cut_selected_items())
@@ -130,6 +132,17 @@ class CustomCanvas(tk.Canvas):
         self.pan_speed = 20
 
         self.resize_timer = None
+
+    def select_all(self):
+        event = tk.Event()
+        event.x, event.y = -100, -100
+        self.__select_start__(event)
+        self.selector.start_selection(event)
+
+        event.x, event.y = self.corners[3].location[0] + 100, self.corners[3].location[1] + 100
+        self.__select_motion__(event)
+
+        self.__select_release__()
 
     def update_prev_winfo_size(self):
         self.prev_width_max = self.canvasx(self.winfo_width())
