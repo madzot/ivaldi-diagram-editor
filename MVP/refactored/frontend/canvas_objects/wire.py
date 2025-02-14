@@ -29,7 +29,7 @@ class Wire:
             self.id = id_
         self.receiver = receiver
         self.is_temporary = temporary
-        if not temporary:
+        if not temporary and not self.canvas.search:
             self.handle_wire_addition_callback()
         self.update()
 
@@ -50,7 +50,7 @@ class Wire:
             self.end_connection.remove_wire(self)
 
         self.canvas.delete(self.line)
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("wire_delete", wire_id=self.id)
 
     def select(self):
@@ -114,7 +114,7 @@ class Wire:
 
     # BE callback methods
     def handle_wire_addition_callback(self):
-        if not self.receiver.listener:
+        if not self.receiver.listener or self.canvas.search:
             return
 
         start_conn_data, end_conn_data = self.connection_data_optimizer()

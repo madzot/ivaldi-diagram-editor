@@ -57,6 +57,8 @@ class SearchWindow(tk.Toplevel):
         self.search_button.pack(side=tk.RIGHT)
 
     def search(self):
+        if self.main_diagram.is_search_active:
+            self.main_diagram.custom_canvas.on_displaying_results_click()
         algorithm = SearchAlgorithm(self.search_canvas, self.main_diagram.custom_canvas, self)
         found = algorithm.contains_searchable()
         self.main_diagram.search_results = algorithm.results

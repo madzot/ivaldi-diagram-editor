@@ -42,7 +42,7 @@ class Box:
         self.bind_events()
         self.sub_diagram = None
         self.receiver = receiver
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add", generator_id=self.id)
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
@@ -54,7 +54,7 @@ class Box:
         self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-2:]
 
     def set_id(self, id_):
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback("sub_box", generator_id=self.id,
@@ -169,7 +169,8 @@ class Box:
             self.update_wires()
 
         # add new connections
-        self.receiver.receiver_callback("box_remove_connection_all", generator_id=self.id)
+        if not self.canvas.search:
+            self.receiver.receiver_callback("box_remove_connection_all", generator_id=self.id)
         if outputs:
             for _ in range(int(outputs)):
                 self.add_right_connection()
@@ -179,7 +180,7 @@ class Box:
 
     def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True, switch=True):
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
@@ -349,7 +350,7 @@ class Box:
         else:
             self.label_text = new_label
 
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
@@ -366,7 +367,7 @@ class Box:
 
     def set_label(self, new_label):
         self.label_text = new_label
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
@@ -488,7 +489,8 @@ class Box:
 
     # ADD TO/REMOVE FROM CANVAS
     def add_wire(self, wire):
-        self.wires.append(wire)
+        if wire not in self.wires:
+            self.wires.append(wire)
 
     def add_left_connection(self, id_=None):
         i = self.get_new_left_index()
@@ -498,7 +500,7 @@ class Box:
 
         self.update_connections()
         self.update_wires()
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add_left", generator_id=self.id, connection_nr=i,
                                             connection_id=connection.id)
 
@@ -514,7 +516,7 @@ class Box:
         self.connections.append(connection)
         self.update_connections()
         self.update_wires()
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add_right", generator_id=self.id, connection_nr=i,
                                             connection_id=connection.id)
         self.resize_by_connections()
@@ -525,7 +527,7 @@ class Box:
         for c in self.connections:
             if c.index > circle.index and circle.side == c.side:
                 c.lessen_index_by_one()
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_remove_connection", generator_id=self.id, connection_nr=circle.index,
                                             generator_side=circle.side)
         if circle.side == "left":
@@ -553,7 +555,7 @@ class Box:
         self.canvas.delete(self.label)
         if self.sub_diagram and not keep_sub_diagram:
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             if action != "sub_diagram":
                 self.receiver.receiver_callback("box_delete", generator_id=self.id)
 

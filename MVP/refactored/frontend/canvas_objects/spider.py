@@ -21,7 +21,7 @@ class Spider(Connection):
         self.bind_events()
         self.wires = []
         self.receiver = receiver
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
                                                 generator_id=self.canvas.diagram_source_box.id)
@@ -55,7 +55,7 @@ class Spider(Connection):
         [wire.delete_self(self) for wire in self.wires.copy()]
         self.canvas.spiders.remove(self)
         self.delete_me()
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             if action != "sub_diagram":
                 self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id)
 
@@ -64,7 +64,8 @@ class Spider(Connection):
             self.context_menu.destroy()
 
     def add_wire(self, wire):
-        self.wires.append(wire)
+        if wire not in self.wires:
+            self.wires.append(wire)
 
     # MOVING, CLICKING ETC.
     def on_press(self):
