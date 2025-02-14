@@ -164,10 +164,13 @@ class Importer:
 
     def find_multiplier(self, d):
         max_x = 0
+        min_x = float('inf')
         max_y = 0
         for box in d["boxes"]:
             if box["x"] + box["size"][0] > max_x:
                 max_x = box["x"] + box["size"][0]
+            if box["x"] < min_x:
+                min_x = box["x"]
             if box["y"] + box["size"][1] > max_y:
                 max_y = box["y"] + box["size"][1]
         for spider in d["spiders"]:
@@ -180,7 +183,7 @@ class Importer:
         multi_y = 1
 
         if self.canvas.winfo_width() < max_x:
-            max_x += 30
+            max_x += min_x
             multi_x = round(self.canvas.winfo_width() / max_x, 3)
         if self.canvas.winfo_height() < max_y:
             max_y += 30
