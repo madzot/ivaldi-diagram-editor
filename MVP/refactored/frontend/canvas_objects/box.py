@@ -164,7 +164,7 @@ class Box:
                 c.wire.delete_from_canvas()
 
             c.delete_me()
-            self.connections.remove(c)
+            self.remove_connection(c)
             self.update_connections()
             self.update_wires()
 
@@ -349,14 +349,8 @@ class Box:
         else:
             self.label_text = new_label
 
-        if self.receiver.listener:
-            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
-        if not self.label:
-            self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
-                                                 text=self.label_text, fill="black", font=('Helvetica', 14))
+        self.change_label()
 
-        else:
-            self.canvas.itemconfig(self.label, text=self.label_text)
         if self.label_text:
             if self.sub_diagram:
                 self.sub_diagram.set_name(self.label_text)
@@ -364,8 +358,7 @@ class Box:
 
         self.bind_event_label()
 
-    def set_label(self, new_label):
-        self.label_text = new_label
+    def change_label(self):
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
@@ -374,6 +367,9 @@ class Box:
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
 
+    def set_label(self, new_label):
+        self.label_text = new_label
+        self.change_label()
         self.bind_event_label()
 
     def on_resize_press(self, event):
@@ -413,15 +409,6 @@ class Box:
 
     def unlock_box(self):
         self.locked = False
-
-    def delete_sub_diagram(self):
-        self.sub_diagram.custom_canvas.delete_everything()
-        self.canvas.itemconfig(self.rect, fill="white")
-        self.sub_diagram = None
-        self.locked = False
-        self.canvas.delete(self.label)
-        self.label = None
-        self.label_text = ""
 
     # UPDATES
     def update_size(self, new_size_x, new_size_y):
@@ -487,13 +474,13 @@ class Box:
         self.connections.append(connection)
 
         self.update_connections()
+        self.left_connections += 1
         self.update_wires()
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_left", generator_id=self.id, connection_nr=i,
                                             connection_id=connection.id)
 
         self.resize_by_connections()
-        self.left_connections += 1
         return connection
 
     def add_right_connection(self, id_=None):
@@ -502,13 +489,13 @@ class Box:
         connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_)
 
         self.connections.append(connection)
+        self.right_connections += 1
         self.update_connections()
         self.update_wires()
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_right", generator_id=self.id, connection_nr=i,
                                             connection_id=connection.id)
         self.resize_by_connections()
-        self.right_connections += 1
         return connection
 
     def remove_connection(self, circle):
@@ -570,18 +557,6 @@ class Box:
                 return True
         return False
 
-    def has_left_connections(self):
-        for c in self.connections:
-            if c.side == "left":
-                return True
-        return False
-
-    def has_right_connections(self):
-        for c in self.connections:
-            if c.side == "right":
-                return True
-        return False
-
     # HELPERS
     def get_connection_coordinates(self, side, index):
         if side == "left":
@@ -593,12 +568,12 @@ class Box:
             return self.x + self.size[0], self.y + (index + 1) * self.size[1] / (i + 1)
 
     def get_new_left_index(self):
-        if not self.has_left_connections():
+        if not self.left_connections > 0:
             return 0
         return max([c.index if c.side == "left" else 0 for c in self.connections]) + 1
 
     def get_new_right_index(self):
-        if not self.has_right_connections():
+        if not self.right_connections > 0:
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
 
