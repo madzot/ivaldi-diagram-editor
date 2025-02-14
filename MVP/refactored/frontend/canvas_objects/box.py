@@ -69,6 +69,8 @@ class Box:
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
         self.canvas.tag_bind(self.rect, '<Double-Button-1>', lambda _: self.handle_double_click())
+        self.canvas.tag_bind(self.rect, "<Enter>", lambda _: self.canvas.on_hover(self))
+        self.canvas.tag_bind(self.rect, "<Leave>", lambda _: self.canvas.on_leave_hover())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -290,6 +292,21 @@ class Box:
             if index in collision:
                 collision.remove(index)
         return collision
+
+    def on_resize_scroll(self, event):
+        if event.delta == 120:
+            multiplier = 1
+        else:
+            multiplier = -1
+        if multiplier == -1:
+            if 20 > min(self.size):
+                return
+        old_size = self.size
+        self.size = (self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
+        if self.find_collisions(self.x, self.y):
+            self.size = old_size
+            return
+        self.update_size(self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
 
     def on_resize_drag(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)

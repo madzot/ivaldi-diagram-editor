@@ -41,6 +41,8 @@ class Spider(Connection):
         self.canvas.tag_bind(self.circle, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.circle, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
+        self.canvas.tag_bind(self.circle, "<Enter>", lambda _: self.canvas.on_hover(self))
+        self.canvas.tag_bind(self.circle, "<Leave>", lambda _: self.canvas.on_leave_hover())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -65,6 +67,22 @@ class Spider(Connection):
 
     def add_wire(self, wire):
         self.wires.append(wire)
+
+    def on_resize_scroll(self, event):
+        if event.delta == 120:
+            multiplier = 1
+        else:
+            multiplier = -1
+        if multiplier == -1:
+            if self.r < 5:
+                return
+        old_r = self.r
+        self.r += 2.5 * multiplier
+        if self.find_collisions(self.x, self.y):
+            self.r = old_r
+            return
+        self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
+                           self.y + self.r)
 
     # MOVING, CLICKING ETC.
     def on_press(self):
