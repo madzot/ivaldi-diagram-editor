@@ -63,7 +63,6 @@ class SearchWindow(tk.Toplevel):
         self.main_diagram.search_objects = algorithm.result_objects
         self.main_diagram.wire_objects = algorithm.wire_objects
         self.main_diagram.update_search_result_button_texts()
-        print(f"Found: {found}")
         self.main_diagram.is_search_active = found
         if found:
             self.main_diagram.highlight_search_result_by_index(0)

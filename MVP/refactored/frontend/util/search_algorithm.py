@@ -35,14 +35,17 @@ class SearchAlgorithm:
                         if len(curr_canvas_right) == len(curr_search_right) or len(
                                 curr_search_right) == 0 or isinstance(canvas_objects[curr_canvas_id], Spider):
                             if counter == 0:
-                                potential_results.append({curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
+                                res_start = {curr_canvas_id: [curr_canvas_left, curr_canvas_right]}
+                                potential_results.append(res_start)
                             else:
                                 for potential in potential_results.copy():
                                     if len(potential) == counter:
                                         for key in potential.keys():
                                             if key in curr_canvas_left or not curr_search_left:
-                                                potential_results.append(
-                                                    potential | {curr_canvas_id: [curr_canvas_left, curr_canvas_right]})
+                                                new_part = {curr_canvas_id: [curr_canvas_left, curr_canvas_right]}
+                                                if not new_part.items() <= potential.items():
+                                                    new_res = potential | new_part
+                                                    potential_results.append(new_res)
                                                 break
             counter += 1
 
@@ -161,8 +164,13 @@ class SearchAlgorithm:
                     break
 
             if temp_result_ids == list(potential_result.keys()):
-                found = True
-                result_ids.append(temp_result_ids)
+                duplicate = False
+                for res in result_ids:
+                    if set(res) == set(temp_result_ids):
+                        duplicate = True
+                if not duplicate:
+                    found = True
+                    result_ids.append(temp_result_ids)
 
         for results in result_ids:
             self.highlight_results(results, canvas_objects)
