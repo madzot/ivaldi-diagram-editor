@@ -472,9 +472,9 @@ class Box:
         conn_x, conn_y = self.get_connection_coordinates("left", i)
         connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_)
         self.connections.append(connection)
+        self.left_connections += 1
 
         self.update_connections()
-        self.left_connections += 1
         self.update_wires()
         if self.receiver.listener:
             self.receiver.receiver_callback("box_add_left", generator_id=self.id, connection_nr=i,
@@ -487,9 +487,9 @@ class Box:
         i = self.get_new_right_index()
         conn_x, conn_y = self.get_connection_coordinates("right", i)
         connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_)
+        self.right_connections += 1
 
         self.connections.append(connection)
-        self.right_connections += 1
         self.update_connections()
         self.update_wires()
         if self.receiver.listener:
