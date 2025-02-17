@@ -74,8 +74,6 @@ class Spider(Connection):
         for item in self.canvas.selector.selected_items:
             item.deselect()
         self.canvas.selector.selected_items.clear()
-        self.select()
-        self.canvas.selector.selected_items.append(self)
         if not self.canvas.draw_wire_mode:
             if self not in self.canvas.selector.selected_items:
                 self.select()
