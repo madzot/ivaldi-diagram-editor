@@ -23,7 +23,6 @@ class SearchWindow(tk.Toplevel):
         self.title("Search in Project")
 
         self.options_frame = tk.Frame(self)
-        self.options_frame.configure(background="yellow")
         self.options_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
 
         self.options_frame.rowconfigure(0, weight=1)
@@ -47,7 +46,6 @@ class SearchWindow(tk.Toplevel):
         self.match_labels_button.grid(row=1, column=1, sticky=tk.NSEW, padx=(0, 0))
 
         self.canvas_label_frame = tk.Frame(self)
-        self.canvas_label_frame.configure(background="red")
         self.canvas_label_frame.rowconfigure(0, weight=1)
         self.canvas_label_frame.columnconfigure(0, weight=1)
         self.canvas_label_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=False, pady=(20, 0))
@@ -63,7 +61,6 @@ class SearchWindow(tk.Toplevel):
         self.search_canvas.pack(padx=1, pady=1, fill=tk.BOTH, expand=True)
 
         self.result_frame = tk.Frame(self)
-        self.result_frame.configure(background="blue")
         self.result_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
 
         self.search_button = tkk.Button(self.result_frame, text="Search", command=self.search)
