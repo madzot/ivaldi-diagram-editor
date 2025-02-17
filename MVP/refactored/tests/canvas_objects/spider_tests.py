@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from MVP.refactored.backend.diagram_callback import Receiver
+from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from MVP.refactored.frontend.canvas_objects.spider import Spider
@@ -116,3 +117,76 @@ class SpiderTests(TestMainDiagram):
         spider.add_wire(wire3)
 
         self.assertEqual([wire1, wire2, wire3], spider.wires)
+
+    def test__add_wire__doesnt_add_wire_if_wire_in_spider_already(self):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+        wire1 = Wire(None, None, self.app.receiver, None, temporary=True)
+
+        spider.add_wire(wire1)
+        spider.add_wire(wire1)
+
+        self.assertEqual([wire1], spider.wires)
+
+    def test__on_press__clears_all_selections(self):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+        random_item = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        self.custom_canvas.selector.selected_items.append(random_item)
+        self.custom_canvas.selector.selected_boxes.append(random_item)
+        self.custom_canvas.selector.selected_wires.append(random_item)
+        self.custom_canvas.selector.selected_spiders.append(random_item)
+
+        spider.on_press()
+
+        self.assertTrue(spider in self.custom_canvas.selector.selected_items)
+        self.assertFalse(self.custom_canvas.selector.selected_spiders)
+        self.assertFalse(self.custom_canvas.selector.selected_boxes)
+        self.assertFalse(self.custom_canvas.selector.selected_wires)
+
+    def test__on_press__does_not_select_self_if_drawing_wire(self):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+
+        random_item = Box(self.custom_canvas, 100, 100, self.app.receiver)
+        self.custom_canvas.selector.selected_items.append(random_item)
+        self.custom_canvas.selector.selected_boxes.append(random_item)
+        self.custom_canvas.selector.selected_wires.append(random_item)
+        self.custom_canvas.selector.selected_spiders.append(random_item)
+        self.custom_canvas.draw_wire_mode = True
+
+        spider.on_press()
+
+        self.assertFalse(self.custom_canvas.selector.selected_items)
+
+    @patch("MVP.refactored.frontend.canvas_objects.spider.Spider.select")
+    def test__on_control_press__selects_self(self, select_mock):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+
+        spider.on_control_press()
+
+        self.assertTrue(spider in self.custom_canvas.selector.selected_items)
+        self.assertTrue(select_mock.called)
+
+    def test__on_control_press__deselects_self_if_selected(self):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+
+        self.custom_canvas.selector.selected_items.append(spider)
+
+        spider.on_control_press()
+
+        self.assertFalse(self.custom_canvas.selector.selected_items)
+
+    def test__on_control_press__selects_wires_between(self):
+        spider1 = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+        spider2 = Spider(None, 0, "spider", (200, 150), self.custom_canvas, self.app.receiver)
+
+        self.custom_canvas.start_wire_from_connection(spider1)
+        self.custom_canvas.end_wire_to_connection(spider2)
+
+        spider1.on_control_press()
+        spider2.on_control_press()
+
+        self.assertEqual(3, len(self.custom_canvas.selector.selected_items))
+
+
+
+
+
