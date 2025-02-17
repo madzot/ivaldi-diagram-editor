@@ -10,11 +10,16 @@ class SearchWindow(tk.Toplevel):
         super().__init__()
         self.main_diagram = main_diagram
 
+        height = round(self.winfo_screenheight() * 0.55)
+        width = round(self.winfo_screenwidth() * 0.2635)
+        self.geometry(f'{width}x{height}')
+
         self.resizable(False, False)
         self.title("Search in Project")
 
-        self.options_frame = tkk.Frame(self)
-        self.options_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.options_frame = tk.Frame(self)
+        self.options_frame.configure(background="yellow")
+        self.options_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
 
         self.options_frame.rowconfigure(0, weight=1)
         self.options_frame.rowconfigure(1, weight=1)
@@ -37,24 +42,39 @@ class SearchWindow(tk.Toplevel):
         self.match_labels_button.grid(row=1, column=1, sticky=tk.NSEW, padx=(0, 0))
 
         self.canvas_label_frame = tk.Frame(self)
+        self.canvas_label_frame.configure(background="red")
         self.canvas_label_frame.rowconfigure(0, weight=1)
         self.canvas_label_frame.columnconfigure(0, weight=1)
-        self.canvas_label_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, pady=(20, 0))
+        self.canvas_label_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=False, pady=(20, 0))
 
         self.canvas_label = tk.Label(self.canvas_label_frame, text="Canvas", font=("Arial", 14, "bold"))
         self.canvas_label.grid(row=1, column=0, sticky=tk.W, padx=(30, 0))
         self.canvas_frame = tkk.Frame(self, bootstyle=tkk.PRIMARY)
-        self.canvas_frame.pack(padx=2, pady=9)
+        self.canvas_frame.pack(padx=2, pady=9, fill=tk.BOTH, expand=True)
+
         self.search_canvas = CustomCanvas(self.canvas_frame, None, self.main_diagram.receiver,
                                           self.main_diagram, self.main_diagram, False, search=True)
         self.search_canvas.set_name("")
-        self.search_canvas.pack(padx=1, pady=1)
+        self.search_canvas.pack(padx=1, pady=1, fill=tk.BOTH, expand=True)
 
-        self.result_frame = tkk.Frame(self)
-        self.result_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.result_frame = tk.Frame(self)
+        self.result_frame.configure(background="blue")
+        self.result_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
 
         self.search_button = tkk.Button(self.result_frame, text="Search", command=self.search)
         self.search_button.pack(side=tk.RIGHT)
+        self.bind('d', self.debug)
+
+    def debug(self, event=None):
+        print(self.winfo_width())
+        print(self.winfo_height())
+        print(self.winfo_screenwidth())
+        print(self.winfo_screenheight())
+        print(self.winfo_geometry())
+        print()
+        print(self.winfo_width() / self.winfo_screenwidth())
+        print(self.winfo_height() / self.winfo_screenheight())
+        print("---")
 
     def search(self):
         if self.main_diagram.is_search_active:
