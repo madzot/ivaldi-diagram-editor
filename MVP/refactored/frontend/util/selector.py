@@ -276,7 +276,7 @@ class Selector:
                 self.reconnect_wires(self.copied_right_wires, right_connections)
                 left_copied_connections, right_copied_connections = self.find_edge_items(pasted_items)
                 if len(left_connections) > len(self.copied_left_wires):
-                    self.connect_extra_wires(left_copied_connections, left_connections, len(self.copied_right_wires))
+                    self.connect_extra_wires(left_copied_connections, left_connections, len(self.copied_left_wires))
                 if len(right_connections) > len(self.copied_right_wires):
                     self.connect_extra_wires(right_copied_connections, right_connections, len(self.copied_right_wires))
 
