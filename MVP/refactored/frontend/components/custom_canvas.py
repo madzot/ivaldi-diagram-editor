@@ -14,6 +14,7 @@ from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.util.event import Event
+from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
@@ -29,8 +30,9 @@ class CustomCanvas(tk.Canvas):
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
         if not search:
             self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+            self.selector = main_diagram.selector
         else:
-            self.configure(bg='white', width=500, height=500)
+            self.selector = Selector(main_diagram, canvas=self)
         self.update()
 
         self.parent_diagram = parent_diagram
@@ -66,7 +68,6 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
-        self.selector = main_diagram.selector
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)

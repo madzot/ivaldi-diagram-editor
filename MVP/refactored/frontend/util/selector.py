@@ -5,8 +5,11 @@ import copy
 
 
 class Selector:
-    def __init__(self, main_diagram):
-        self.canvas = main_diagram.custom_canvas
+    def __init__(self, main_diagram, canvas=None):
+        if canvas is None:
+            self.canvas = main_diagram.custom_canvas
+        else:
+            self.canvas = canvas
         self.selecting = False
         self.selected_items = []
         self.selected_boxes = []
