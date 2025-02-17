@@ -1,5 +1,6 @@
 import tkinter as tk
 import ttkbootstrap as tkk
+import ctypes
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.util.search_algorithm import SearchAlgorithm
@@ -10,8 +11,12 @@ class SearchWindow(tk.Toplevel):
         super().__init__()
         self.main_diagram = main_diagram
 
-        height = round(self.winfo_screenheight() * 0.55)
-        width = round(self.winfo_screenwidth() * 0.2635)
+        try:
+            mult = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
+        except Exception:
+            mult = 1
+        height = round(self.winfo_screenheight() * 0.55 * mult)
+        width = round(self.winfo_screenwidth() * 0.2635 * mult)
         self.geometry(f'{width}x{height}')
 
         self.resizable(False, False)
