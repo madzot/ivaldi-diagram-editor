@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from MVP.refactored.frontend.canvas_objects.spider import Spider
@@ -186,7 +187,199 @@ class SpiderTests(TestMainDiagram):
 
         self.assertEqual(3, len(self.custom_canvas.selector.selected_items))
 
+    def test__on_drag__no_other_items_changes_location(self):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+        event = tkinter.Event()
+        event.state = False
+        event.x = 100
+        event.y = 150
 
+        spider.on_drag(event)
 
+        event.x = 200
+        event.y = 250
+
+        spider.on_drag(event)
+
+        self.assertEqual(200, spider.x)
+        self.assertEqual(250, spider.y)
+
+    def test__on_drag__box_above(self):
+        self.custom_canvas.add_box()
+        self.custom_canvas.add_spider(loc=(130, 200))
+
+        spider = self.custom_canvas.spiders[0]
+
+        event = tkinter.Event()
+        event.state = False
+        event.x, event.y = 130, 200
+
+        for _ in range(100):
+            event.y -= 1
+            spider.on_drag(event)
+
+        self.assertEqual(130, spider.x)  # Should not have changed
+        self.assertEqual(171, spider.y)  # Box 1 ends at 160 so this should be 171 (radius 10 and gap 1)
+
+    def test__on_drag__box_below(self):
+        self.custom_canvas.add_spider(loc=(130, 100))
+        self.custom_canvas.add_box(loc=(100, 200))
+
+        spider = self.custom_canvas.spiders[0]
+
+        event = tkinter.Event()
+        event.state = False
+        event.x, event.y = 100, 100
+
+        for _ in range(100):
+            event.y += 1
+            spider.on_drag(event)
+
+        self.assertEqual(130, spider.x)  # Should not have changed
+        self.assertEqual(189, spider.y)  # Box 2 starts at 200 so this should be 189 (radius 10 and gap 1)
+
+    def test__on_drag__box_right_should_snap_to_box_middle(self):
+        self.custom_canvas.add_spider()
+        self.custom_canvas.add_box(loc=(200, 100), size=(50, 50))
+
+        event = tkinter.Event()
+        event.state = False
+        event.x, event.y = 100, 100
+
+        spider = self.custom_canvas.spiders[0]
+
+        for _ in range(100):
+            event.x += 1
+            spider.on_drag(event)
+
+        box = self.custom_canvas.boxes[0]
+        expected = box.x + box.size[0] / 2
+        self.assertEqual(expected, spider.x)
+
+    def test__on_drag__spider_snap_to_same_x(self):
+        self.custom_canvas.add_spider()
+        self.custom_canvas.add_spider(loc=(200, 100))
+
+        event = tkinter.Event()
+        event.state = False
+        event.x, event.y = 100, 100
+
+        spider = self.custom_canvas.spiders[0]
+
+        for _ in range(90):
+            event.x += 1
+            spider.on_drag(event)
+
+        self.assertEqual(200, spider.x)
+
+    def test__on_drag__spider_below(self):
+        self.custom_canvas.add_spider()
+        self.custom_canvas.add_spider(loc=(100, 175))
+
+        event = tkinter.Event()
+        event.state = False
+        event.x, event.y = 100, 100
+
+        spider = self.custom_canvas.spiders[0]
+
+        for _ in range(70):
+            event.y += 1
+            spider.on_drag(event)
+
+        expected_y = 175 - 10 - 10 - 1  # spider2.y - spider2.r - spider1.r - gap
+        self.assertEqual(expected_y, spider.y)
+
+    def test__on_drag__spider_above(self):
+        self.custom_canvas.add_spider(loc=(100, 150))
+        self.custom_canvas.add_spider(loc=(100, 100))
+
+        event = tkinter.Event()
+        event.state = False
+        event.x, event.y = 100, 150
+
+        spider = self.custom_canvas.spiders[0]
+
+        for _ in range(40):
+            event.y -= 1
+            spider.on_drag(event)
+
+        expected = 100 + 10 + 10 + 1  # other spider location + spider.r + spider.r + gap
+        self.assertEqual(expected, spider.y)
+
+    def test__on_drag__doesnt_change_loc_if_pulling_wire(self):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+        self.custom_canvas.pulling_wire = True
+        event = tkinter.Event()
+        event.state = False
+        event.x = 100
+        event.y = 150
+
+        spider.on_drag(event)
+
+        event.x = 200
+        event.y = 250
+
+        spider.on_drag(event)
+
+        self.assertEqual(100, spider.x)
+        self.assertEqual(150, spider.y)
+
+    def test__remove_wire__removes_wire(self):
+        spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
+        wire = Wire(self.custom_canvas, None, self.app.receiver, None, temporary=True)
+
+        spider.add_wire(wire)
+
+        self.assertTrue(wire in spider.wires)
+
+        spider.remove_wire(wire)
+
+        self.assertTrue(wire not in spider.wires)
+
+    def test__is_illegal_move__can_be_next_to_connected_connection(self):
+        spider = Spider(None, 0, "spider", (100, 100), self.custom_canvas, self.app.receiver)
+        spider2 = Spider(None, 1, "spider", (150, 100), self.custom_canvas, self.app.receiver)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, spider2, temporary=True)
+
+        spider.add_wire(wire)
+        spider2.add_wire(wire)
+
+        self.assertFalse(spider.is_illegal_move(125))
+
+    def test__is_illegal_move__cant_be_same_x_with_connected_spider(self):
+        spider = Spider(None, 0, "spider", (100, 100), self.custom_canvas, self.app.receiver)
+        spider2 = Spider(None, 1, "spider", (150, 100), self.custom_canvas, self.app.receiver)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, spider2, temporary=True)
+
+        spider.add_wire(wire)
+        spider2.add_wire(wire)
+
+        self.assertTrue(spider.is_illegal_move(145))
+        self.assertTrue(spider.is_illegal_move(150))
+        self.assertTrue(spider.is_illegal_move(155))
+
+    def test__is_illegal_move__cant_go_from_left_to_right_with_connected_connection(self):
+        spider = Spider(None, 0, "spider", (100, 100), self.custom_canvas, self.app.receiver)
+        connection = Connection(None, 1, "left", (150, 150), self.custom_canvas)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, connection, temporary=True)
+
+        spider.add_wire(wire)
+
+        x = 140
+        for _ in range(20):
+            x += 10
+            self.assertTrue(spider.is_illegal_move(x))
+
+    def test__is_illegal_move__cant_go_from_right_to_left_with_connected_connection(self):
+        spider = Spider(None, 0, "spider", (150, 150), self.custom_canvas, self.app.receiver)
+        connection = Connection(None, 1, "right", (100, 100), self.custom_canvas)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, connection, temporary=True)
+
+        spider.add_wire(wire)
+
+        x = 110
+        for _ in range(20):
+            x -= 10
+            self.assertTrue(spider.is_illegal_move(x))
 
 
