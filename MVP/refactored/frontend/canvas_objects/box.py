@@ -50,8 +50,7 @@ class Box:
 
         self.is_snapped = False
 
-        coords = self.canvas.coords(self.rect)
-        self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-2:]
+        self.collision_ids = [self.rect, self.resize_handle]
 
     def set_id(self, id_):
         if self.receiver.listener and not self.canvas.search:
@@ -68,7 +67,11 @@ class Box:
         self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
+        self.canvas.tag_bind(self.resize_handle, '<Enter>', lambda _: self.canvas.on_hover(self))
+        self.canvas.tag_bind(self.resize_handle, '<Leave>', lambda _: self.canvas.on_leave_hover())
         self.canvas.tag_bind(self.rect, '<Double-Button-1>', lambda _: self.handle_double_click())
+        self.canvas.tag_bind(self.rect, '<Enter>', lambda _: self.canvas.on_hover(self))
+        self.canvas.tag_bind(self.rect, '<Leave>', lambda _: self.canvas.on_leave_hover())
 
     def show_context_menu(self, event):
         self.close_menu()
@@ -284,13 +287,41 @@ class Box:
         self.move(go_to_x, go_to_y)
         self.move_label()
 
+    def get_self_collision_ids(self):
+        self.collision_ids = [self.rect, self.resize_handle]
+        if self.label:
+            self.collision_ids.append(self.label)
+        for connection in self.connections:
+            self.collision_ids.append(connection.circle)
+
     def find_collisions(self, go_to_x, go_to_y):
+        self.get_self_collision_ids()
         collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
         collision = list(collision)
         for index in self.collision_ids:
             if index in collision:
                 collision.remove(index)
+        for wire in self.canvas.wires:
+            tag = wire.line
+            if tag in collision:
+                collision.remove(tag)
         return collision
+
+    def on_resize_scroll(self, event):
+        if event.delta == 120:
+            multiplier = 1
+        else:
+            multiplier = -1
+        if multiplier == -1:
+            if 20 > min(self.size):
+                return
+        old_size = self.size
+        self.size = (self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
+        if self.find_collisions(self.x, self.y):
+            self.size = old_size
+            return
+        self.update_size(self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
+        self.move_label()
 
     def on_resize_drag(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
@@ -330,6 +361,8 @@ class Box:
         self.canvas.tag_bind(self.label, '<Double-Button-1>', lambda _: self.handle_double_click())
         self.canvas.tag_bind(self.label, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.label, '<ButtonPress-1>', self.on_press)
+        self.canvas.tag_bind(self.label, '<Enter>', lambda _: self.canvas.on_hover(self))
+        self.canvas.tag_bind(self.label, '<Leave>', lambda _: self.canvas.on_leave_hover())
 
     def edit_label(self, new_label=None):
         if new_label is None:
@@ -365,6 +398,7 @@ class Box:
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
+            self.collision_ids.append(self.label)
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
 
@@ -483,8 +517,9 @@ class Box:
         i = self.get_new_left_index()
         conn_x, conn_y = self.get_connection_coordinates("left", i)
         connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_)
-        self.connections.append(connection)
         self.left_connections += 1
+        self.connections.append(connection)
+        self.collision_ids.append(connection.circle)
 
         self.update_connections()
         self.update_wires()
@@ -500,8 +535,9 @@ class Box:
         conn_x, conn_y = self.get_connection_coordinates("right", i)
         connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_)
         self.right_connections += 1
-
         self.connections.append(connection)
+        self.collision_ids.append(connection.circle)
+
         self.update_connections()
         self.update_wires()
         if self.receiver.listener and not self.canvas.search:
@@ -523,6 +559,7 @@ class Box:
             self.right_connections -= 1
 
         self.connections.remove(circle)
+        self.collision_ids.remove(circle.circle)
         circle.delete_me()
         self.update_connections()
         self.update_wires()
