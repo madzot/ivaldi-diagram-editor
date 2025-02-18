@@ -40,7 +40,7 @@ class Wire:
         if not self.is_temporary:
             if self in self.canvas.wires:
                 self.canvas.wires.remove(self)
-        if not self.is_temporary:
+        if not self.is_temporary and not self.canvas.search:
             self.handle_wire_deletion_callback(action)
 
     def delete_from_canvas(self):
