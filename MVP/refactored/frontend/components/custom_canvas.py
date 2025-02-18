@@ -145,15 +145,20 @@ class CustomCanvas(tk.Canvas):
             self.hover_item.on_resize_scroll(event)
 
     def select_all(self):
-        event = tk.Event()
-        event.x, event.y = -100, -100
-        self.__select_start__(event)
-        self.selector.start_selection(event)
+        if self.main_diagram.custom_canvas == self:
+            event = tk.Event()
+            event.x, event.y = -100, -100
+            self.__select_start__(event)
 
-        event.x, event.y = self.corners[3].location[0] + 100, self.corners[3].location[1] + 100
-        self.__select_motion__(event)
+            event.x, event.y = self.corners[3].location[0] + 100, self.corners[3].location[1] + 100
+            self.__select_motion__(event)
 
-        self.__select_release__()
+            self.__select_release__()
+        else:
+            self.selector.selected_items = self.boxes + self.spiders + self.wires
+            self.selector.selected_boxes = self.boxes
+            self.selector.selected_wires = self.wires
+            self.selector.selected_spiders = self.spiders
 
     def update_prev_winfo_size(self):
         self.prev_width_max = self.canvasx(self.winfo_width())

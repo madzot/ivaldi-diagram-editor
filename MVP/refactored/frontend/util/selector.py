@@ -13,7 +13,6 @@ class Selector:
         self.selected_wires = []
         self.origin_x = None
         self.origin_y = None
-        self.connection_mapping = {}
         self.copied_items = []
         self.copied_wire_list = []
         self.copied_left_wires = []
@@ -129,7 +128,7 @@ class Selector:
         x, y = point
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
-    def copy_selected_items(self):
+    def copy_selected_items(self, canvas=None):
         if len(self.selected_items) > 0:
             self.copied_items.clear()
             self.copied_wire_list.clear()
@@ -174,7 +173,7 @@ class Selector:
                         'location': (item.x, item.y),
                         'size': copy.deepcopy(item.r),
                     })
-            self.copy_selected_wires(connection_list)
+            self.copy_selected_wires(connection_list, canvas)
 
     def paste_copied_items(self, event_x=50, event_y=50, replace=False, multi=1):
         if len(self.copied_items) > 0:
@@ -496,8 +495,10 @@ class Selector:
                     self.canvas.start_wire_from_connection(connections[i + connected_amount + len(copied_connections)])
                     self.canvas.end_wire_to_connection(multiple_connections[i % len(multiple_connections)])
 
-    def copy_selected_wires(self, connection_list):
-        for wire in self.canvas.wires:
+    def copy_selected_wires(self, connection_list, canvas=None):
+        if canvas is None:
+            canvas = self.canvas
+        for wire in canvas.wires:
             connection = None
             if wire.start_connection in connection_list and wire.end_connection in connection_list:
                 self.copied_wire_list.append({
