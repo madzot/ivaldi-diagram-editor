@@ -30,7 +30,7 @@ class Hypergraph(HyperEdge):
         self.edges: dict[int, HyperEdge] = {}
         id_dict_hypergraph[self.id] = current_hypergraph
         current_hypergraph += 1
-        logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph[self.id]}" + message_end)
+        logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph.get(self.id)}" + message_end)
 
 
     def get_all_hyper_edges(self) -> list[HyperEdge]:
