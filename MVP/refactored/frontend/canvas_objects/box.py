@@ -175,9 +175,6 @@ class Box:
 
         # remove selected connectionsS
         for c in to_be_removed:
-            if c.has_wire:
-                c.wire.delete_from_canvas()
-
             c.delete_me()
             self.remove_connection(c)
             self.update_connections()
@@ -579,8 +576,6 @@ class Box:
 
     def delete_box(self, keep_sub_diagram=False, action=None):
         for c in self.connections:
-            if c.has_wire:
-                c.wire.delete_from_canvas()
             c.delete_me()
 
         self.canvas.delete(self.rect)
