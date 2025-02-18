@@ -4,8 +4,11 @@ import copy
 
 
 class Selector:
-    def __init__(self, main_diagram):
-        self.canvas = main_diagram.custom_canvas
+    def __init__(self, main_diagram, canvas=None):
+        if canvas is None:
+            self.canvas = main_diagram.custom_canvas
+        else:
+            self.canvas = canvas
         self.selecting = False
         self.selected_items = []
         self.selected_boxes = []
@@ -21,7 +24,10 @@ class Selector:
 
     def start_selection(self, event):
         for item in self.selected_items:
-            item.deselect()
+            if item not in self.canvas.search_result_highlights:
+                item.deselect()
+            else:
+                item.search_highlight()
         self.selecting = True
         self.origin_x = event.x
         self.origin_y = event.y
@@ -62,7 +68,16 @@ class Selector:
 
     def finish_selection(self):
         for item in self.selected_items:
-            item.deselect()
+            if item not in self.canvas.search_result_highlights:
+                item.deselect()
+            else:
+                main_diagram = self.canvas.main_diagram
+                active = main_diagram.search_results[main_diagram.active_search_index]
+                active_items = [main_diagram.search_objects[index] for index in active]
+                if item in active_items:
+                    item.search_highlight_primary()
+                else:
+                    item.search_highlight_secondary()
         self.selected_items.clear()
 
         self.canvas.delete(self.canvas.selectBox)
