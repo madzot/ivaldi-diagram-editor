@@ -35,15 +35,17 @@ class Importer:
         self.load_everything_to_canvas(d, self.canvas)
 
     def load_everything_to_canvas(self, d, canvas):
-
-        self.load_boxes_to_canvas(d, canvas)
-        self.load_spiders_to_canvas(d, canvas)
+        multi_x, multi_y = self.find_multiplier(d)
+        self.load_boxes_to_canvas(d, canvas, multi_x, multi_y)
+        self.load_spiders_to_canvas(d, canvas, multi_x, multi_y)
         self.load_io_to_canvas(d, canvas)
         self.load_wires_to_canvas(d, canvas)
 
-    def load_boxes_to_canvas(self, d, canvas):
+    def load_boxes_to_canvas(self, d, canvas, multi_x, multi_y):
         for box in d["boxes"]:
-            new_box = canvas.add_box((box["x"], box["y"]), box["size"], self.get_id(box["id"]), shape=box["shape"])
+            new_box = canvas.add_box((box["x"] * multi_x, box["y"] * multi_y), (box["size"][0] * multi_x,
+                                                                                box["size"][1] * multi_y),
+                                     self.get_id(box["id"]), shape=box["shape"])
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
@@ -83,9 +85,9 @@ class Importer:
         else:
             return False
 
-    def load_spiders_to_canvas(self, d, canvas):
+    def load_spiders_to_canvas(self, d, canvas, multi_x, multi_y):
         for s in d["spiders"]:
-            canvas.add_spider((s["x"], s["y"]), self.get_id(s["id"]))
+            canvas.add_spider((s["x"] * multi_x, s["y"] * multi_y), self.get_id(s["id"]))
 
     def load_io_to_canvas(self, d, canvas):
         d = d["io"]
@@ -159,3 +161,31 @@ class Importer:
             self.id_randomize = {}
             if return_box:
                 return new_box
+
+    def find_multiplier(self, d):
+        max_x = 0
+        min_x = float('inf')
+        max_y = 0
+        for box in d["boxes"]:
+            if box["x"] + box["size"][0] > max_x:
+                max_x = box["x"] + box["size"][0]
+            if box["x"] < min_x:
+                min_x = box["x"]
+            if box["y"] + box["size"][1] > max_y:
+                max_y = box["y"] + box["size"][1]
+        for spider in d["spiders"]:
+            if spider["x"] + 10 > max_x:
+                max_x = spider["x"] + 10
+            if spider["y"] + 10 > max_y:
+                max_y = spider["y"] + 10
+
+        multi_x = 1
+        multi_y = 1
+
+        if self.canvas.winfo_width() < max_x:
+            max_x += min_x
+            multi_x = round(self.canvas.winfo_width() / max_x, 3)
+        if self.canvas.winfo_height() < max_y:
+            max_y += 30
+            multi_y = round(self.canvas.winfo_height() / max_y, 3)
+        return multi_x, multi_y

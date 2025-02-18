@@ -13,7 +13,6 @@ from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-from MVP.refactored.frontend.util.event import Event
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from constants import *
@@ -74,6 +73,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Left>", self.pan_horizontal)
         self.bind("<Down>", self.pan_vertical)
         self.bind("<Up>", self.pan_vertical)
+        self.bind("<Control-MouseWheel>", self.scale_item)
         self.bind("<Control-a>", lambda _: self.select_all())
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
@@ -131,6 +131,18 @@ class CustomCanvas(tk.Canvas):
         self.pan_speed = 20
 
         self.resize_timer = None
+
+        self.hover_item = None
+
+    def on_hover(self, item):
+        self.hover_item = item
+
+    def on_leave_hover(self):
+        self.hover_item = None
+
+    def scale_item(self, event):
+        if self.hover_item:
+            self.hover_item.on_resize_scroll(event)
 
     def select_all(self):
         event = tk.Event()
@@ -273,10 +285,16 @@ class CustomCanvas(tk.Canvas):
 
     def reset_zoom(self):
         while self.total_scale - 1 > 0.01:
-            event = Event(self.winfo_width() / 2, self.winfo_height() / 2, 5, -120)
+            event = tk.Event()
+            event.x, event.y = self.winfo_width() / 2, self.winfo_height() / 2
+            event.num = 5
+            event.delta = -120
+            event.state = False
             self.zoom(event)
 
     def zoom(self, event):
+        if event.state & 0x4:
+            return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         scale = 1
 
@@ -947,7 +965,19 @@ class CustomCanvas(tk.Canvas):
         self.selector.copy_selected_items()
 
     def paste_copied_items(self, event):
-        self.selector.paste_copied_items(event.x, event.y)
+        if len(self.selector.selected_items) > 0:
+            copied_x1, copied_x2, copied_y1, copied_y2 = self.selector.find_corners_copied_items()
+            selected_x1, selected_y1, selected_x2, selected_y2 = self.selector.find_corners_selected_items()
+            selected_middle_x = (selected_x1 + selected_x2) / 2
+            selected_middle_y = (selected_y1 + selected_y2) / 2
+            copied_x_length = copied_x2 - copied_x1
+            copied_y_length = copied_y2 - copied_y1
+            multi, x, y = self.find_paste_multipliers(selected_middle_x, selected_middle_y, copied_x_length,
+                                                      copied_y_length)
+
+            self.selector.paste_copied_items(x, y, True, multi)
+        else:
+            self.selector.paste_copied_items(event.x, event.y)
 
     def cut_selected_items(self):
         self.copy_selected_items()
@@ -957,3 +987,56 @@ class CustomCanvas(tk.Canvas):
         if len(list(filter(lambda x: isinstance(x, Spider) or isinstance(x, Box), self.selector.selected_items))) > 1:
             self.selector.create_sub_diagram()
             self.selector.selected_items = []
+
+    def find_paste_multipliers(self, x, y, x_length, y_length):
+        area_x1 = x - x_length / 2
+        area_x2 = x + x_length / 2
+        area_y1 = y - y_length / 2
+        area_y2 = y + y_length / 2
+        left, right = self.selector.find_side_connections()
+        if len(left) != 0 or len(right) != 0:
+            for connection in left:
+                if connection.side == "spider":
+                    if x > connection.location[0] + connection.r > area_x1:
+                        area_x1 = connection.location[0] + connection.r
+                else:
+                    if connection.location[0] > area_x1:
+                        area_x1 = connection.location[0]
+            for connection in right:
+                if connection.side == "spider":
+                    if x < connection.location[0] - connection.r < area_x2:
+                        area_x2 = connection.location[0] - connection.r
+                else:
+                    if connection.location[0] < area_x2:
+                        area_x2 = connection.location[0]
+        for item in self.boxes + self.spiders:
+            if item not in self.selector.selected_items:
+                if isinstance(item, Box):
+                    if not (item.y + item.size[1] < area_y1 or item.y > area_y2):
+                        if x > item.x + item.size[0] > area_x1:
+                            area_x1 = item.x + item.size[0]
+                        if x < item.x < area_x2:
+                            area_x2 = item.x
+                    if not (item.x > area_x2 or item.x + item.size[0] < area_x1):
+                        if y > item.y + item.size[1] > area_y1:
+                            area_y1 = item.y + item.size[1]
+                        if y < item.y < area_y2:
+                            area_y2 = item.y
+                if isinstance(item, Spider):
+                    if not (item.y + item.r < area_y1 or item.y - item.r > area_y2):
+                        if x > item.x + item.r > area_x1:
+                            area_x1 = item.x + item.r
+                        if x < item.x - item.r < area_x2:
+                            area_x2 = item.x - item.r
+                    if not (item.x - item.r > area_x2 or item.x + item.r < area_x1):
+                        if y > item.y + item.r > area_y1:
+                            area_y1 = item.y + item.r
+                        if y < item.y - item.r < area_y2:
+                            area_y2 = item.y - item.r
+        if area_x1 != x - x_length / 2:
+            area_x1 = area_x1 + 10
+        if area_x2 != x + x_length / 2:
+            area_x2 = area_x2 - 10
+        x_multiplier = round((area_x2 - area_x1) / x_length, 3)
+        y_multiplier = round((area_y2 - area_y1) / y_length, 3)
+        return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
