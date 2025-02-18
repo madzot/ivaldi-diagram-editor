@@ -13,7 +13,6 @@ from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-from MVP.refactored.frontend.util.event import Event
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from constants import *
@@ -74,6 +73,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<Left>", self.pan_horizontal)
         self.bind("<Down>", self.pan_vertical)
         self.bind("<Up>", self.pan_vertical)
+        self.bind("<Control-MouseWheel>", self.scale_item)
         self.bind("<Control-a>", lambda _: self.select_all())
         self.bind("<Control-c>", lambda event: self.copy_selected_items())
         self.bind("<Control-v>", self.paste_copied_items)
@@ -131,6 +131,18 @@ class CustomCanvas(tk.Canvas):
         self.pan_speed = 20
 
         self.resize_timer = None
+
+        self.hover_item = None
+
+    def on_hover(self, item):
+        self.hover_item = item
+
+    def on_leave_hover(self):
+        self.hover_item = None
+
+    def scale_item(self, event):
+        if self.hover_item:
+            self.hover_item.on_resize_scroll(event)
 
     def select_all(self):
         event = tk.Event()
@@ -273,10 +285,16 @@ class CustomCanvas(tk.Canvas):
 
     def reset_zoom(self):
         while self.total_scale - 1 > 0.01:
-            event = Event(self.winfo_width() / 2, self.winfo_height() / 2, 5, -120)
+            event = tk.Event()
+            event.x, event.y = self.winfo_width() / 2, self.winfo_height() / 2
+            event.num = 5
+            event.delta = -120
+            event.state = False
             self.zoom(event)
 
     def zoom(self, event):
+        if event.state & 0x4:
+            return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         scale = 1
 
