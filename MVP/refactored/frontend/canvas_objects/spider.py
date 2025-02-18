@@ -21,7 +21,7 @@ class Spider(Connection):
         self.bind_events()
         self.wires = []
         self.receiver = receiver
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
                                                 generator_id=self.canvas.diagram_source_box.id)
@@ -56,7 +56,7 @@ class Spider(Connection):
         [wire.delete_self(self) for wire in self.wires.copy()]
         self.canvas.spiders.remove(self)
         self.delete()
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             if action != "sub_diagram":
                 self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id)
 
@@ -65,7 +65,8 @@ class Spider(Connection):
             self.context_menu.destroy()
 
     def add_wire(self, wire):
-        self.wires.append(wire)
+        if wire not in self.wires:
+            self.wires.append(wire)
 
     def on_resize_scroll(self, event):
         if event.delta == 120:
@@ -157,6 +158,8 @@ class Spider(Connection):
 
                     counter += 1
 
+        self.switch_wire_start_and_end()
+
         self.is_snapped = found
 
         self.location = [go_to_x, go_to_y]
@@ -166,6 +169,24 @@ class Spider(Connection):
         self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
                            self.y + self.r)
         [w.update() for w in self.wires]
+
+    def switch_wire_start_and_end(self):
+        for connection in list(filter(lambda x: (x is not None and x != self),
+                                      [w.end_connection for w in self.wires] + [w.start_connection for w in
+                                                                                self.wires])):
+            switch = False
+            wire = list(filter(lambda w: (w.end_connection == self or w.start_connection == self),
+                               connection.wires))[0]
+            if connection.side == "spider":
+                if wire.start_connection == self and wire.end_connection.x < self.x:
+                    switch = True
+                if wire.end_connection == self and wire.start_connection.x > self.x:
+                    switch = True
+            if switch:
+                start = wire.end_connection
+                end = wire.start_connection
+                wire.start_connection = start
+                wire.end_connection = end
 
     def find_collisions(self, go_to_x, go_to_y):
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,

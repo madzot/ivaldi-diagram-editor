@@ -13,24 +13,31 @@ from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
+from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from constants import *
 
 
 class CustomCanvas(tk.Canvas):
     def __init__(self, master, diagram_source_box, receiver, main_diagram,
-                 parent_diagram, add_boxes, id_=None, **kwargs):
+                 parent_diagram, add_boxes, id_=None, search=False, **kwargs):
         super().__init__(master, **kwargs)
 
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
-        self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+        if not search:
+            self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+            self.selector = main_diagram.selector
+        else:
+            self.selector = Selector(main_diagram, canvas=self)
         self.update()
 
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
         self.master = master
+        self.search = search
         self.boxes: list[Box] = []
         self.outputs: list[Connection] = []
         self.inputs: list[Connection] = []
@@ -60,7 +67,6 @@ class CustomCanvas(tk.Canvas):
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
-        self.selector = main_diagram.selector
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)
@@ -92,13 +98,17 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
-        self.tree_logo = (Image.open(ASSETS_DIR + "/file-tree-outline.png"))
-        self.tree_logo = self.tree_logo.resize((20, 15))
-        self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
+        if not search:
+            self.tree_logo = (Image.open(ASSETS_DIR + "/file-tree-outline.png"))
+            self.tree_logo = self.tree_logo.resize((20, 15))
+            self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
 
-        button = ttk.Button(self, image=self.tree_logo,
-                            command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
-        button.place(x=28, y=20, anchor=tk.CENTER)
+            tree_button = ttk.Button(self, image=self.tree_logo,
+                                     command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
+            tree_button.place(x=28, y=20, anchor=tk.CENTER)
+
+        self.search_result_button = SearchResultButton(self, self.main_diagram, self)
+
         self.box_shape = "rectangle"
         self.is_wire_pressed = False
 
@@ -133,6 +143,7 @@ class CustomCanvas(tk.Canvas):
         self.resize_timer = None
 
         self.hover_item = None
+        self.search_result_highlights = []
 
     def on_hover(self, item):
         self.hover_item = item
@@ -143,6 +154,26 @@ class CustomCanvas(tk.Canvas):
     def scale_item(self, event):
         if self.hover_item:
             self.hover_item.on_resize_scroll(event)
+
+    def toggle_displaying_results_button(self):
+        if self.main_diagram.is_search_active:
+            self.search_result_button.place(x=self.winfo_width() - 90, y=20, anchor=tk.CENTER, width=175, height=30)
+        else:
+            self.search_result_button.place_forget()
+
+    def update_search_results_button(self):
+        if self.main_diagram.is_search_active:
+            self.search_result_button.place_forget()
+            self.search_result_button.place(x=self.winfo_width() - 90, y=20, anchor=tk.CENTER, width=175, height=30)
+
+    def on_displaying_results_click(self):
+        self.main_diagram.cancel_search_results()
+
+    def remove_search_highlights(self):
+        for item in self.search_result_highlights:
+            item.deselect()
+        self.search_result_highlights = []
+        self.toggle_displaying_results_button()
 
     def select_all(self):
         event = tk.Event()
@@ -400,10 +431,10 @@ class CustomCanvas(tk.Canvas):
         for corner in self.corners:
             for location in locations:
                 if ((abs(round(self.canvasx(corner.location[0])) - location[0]) < 2
-                    and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
+                     and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
                         or
-                    (abs(round(corner.location[0]) - location[0]) < 2
-                        and abs(round(corner.location[1]) - location[1]) < 2)):
+                        (abs(round(corner.location[0]) - location[0]) < 2
+                         and abs(round(corner.location[1]) - location[1]) < 2)):
                     count += 1
         return count >= 4
 
@@ -549,7 +580,8 @@ class CustomCanvas(tk.Canvas):
         if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
                                                                               connection) or bypass_legality_check:
             self.cancel_wire_pulling()
-            self.current_wire = Wire(self, self.current_wire_start, self.receiver, connection)
+            start_end = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
+            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1])
             self.wires.append(self.current_wire)
 
             if self.current_wire_start.box is not None:
@@ -631,10 +663,13 @@ class CustomCanvas(tk.Canvas):
         tikz_window = tk.Toplevel(self)
         tikz_window.title("TikZ Generator")
 
-        tk.Label(tikz_window, text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.", justify="left").pack()
+        tk.Label(tikz_window,
+                 text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.",
+                 justify="left").pack()
 
         pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
-        pgfplotsset_text.insert(tk.END, "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.insert(tk.END,
+                                "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
         pgfplotsset_text.config(state=tk.DISABLED)
         pgfplotsset_text.pack()
 
@@ -819,7 +854,7 @@ class CustomCanvas(tk.Canvas):
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
                                            "left", [0, 0], self,
-                                           r=5*self.total_scale, id_=id_)
+                                           r=5 * self.total_scale, id_=id_)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -856,7 +891,7 @@ class CustomCanvas(tk.Canvas):
         if len(self.inputs) != 0:
             input_index += 1
         new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
-                               r=5*self.total_scale, id_=id_)
+                               r=5 * self.total_scale, id_=id_)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id)

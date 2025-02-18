@@ -5,9 +5,9 @@ class Connection:
     def __init__(self, box, index, side, location, canvas, r=5, id_=None):
         self.canvas = canvas
         self.id = id(self)
-        self.box = box  # None if connection is diagram input/output
+        self.box = box  # None if connection is diagram input/output/spider
         self.index = index
-        self.side = side
+        self.side = side  # 'spider' if connection is a spider
         self.location = location
         self.wire = None
         self.has_wire = False
@@ -110,6 +110,14 @@ class Connection:
 
     def select(self):
         self.canvas.itemconfig(self.circle, fill="green")
+
+    def search_highlight_secondary(self):
+        self.canvas.itemconfig(self.circle, fill="orange")
+        self.canvas.search_result_highlights.append(self)
+
+    def search_highlight_primary(self):
+        self.canvas.itemconfig(self.circle, fill="cyan")
+        self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
         self.canvas.itemconfig(self.circle, fill="black")

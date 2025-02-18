@@ -29,7 +29,7 @@ class Wire:
             self.id = id_
         self.receiver = receiver
         self.is_temporary = temporary
-        if not temporary:
+        if not temporary and not self.canvas.search:
             self.handle_wire_addition_callback()
         self.update()
 
@@ -40,7 +40,7 @@ class Wire:
         if not self.is_temporary:
             if self in self.canvas.wires:
                 self.canvas.wires.remove(self)
-        if not self.is_temporary:
+        if not self.is_temporary and not self.canvas.search:
             self.handle_wire_deletion_callback(action)
 
     def delete_from_canvas(self):
@@ -50,11 +50,19 @@ class Wire:
             self.end_connection.remove_wire(self)
 
         self.canvas.delete(self.line)
-        if self.receiver.listener:
+        if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("wire_delete", wire_id=self.id)
 
     def select(self):
         self.canvas.itemconfig(self.line, fill="green")
+
+    def search_highlight_secondary(self):
+        self.canvas.itemconfig(self.line, fill="orange")
+        self.canvas.search_result_highlights.append(self)
+
+    def search_highlight_primary(self):
+        self.canvas.itemconfig(self.line, fill="cyan")
+        self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
         # make sure connections have wires attached after select and deselect as copying between canvasses can remove
@@ -106,7 +114,7 @@ class Wire:
 
     # BE callback methods
     def handle_wire_addition_callback(self):
-        if not self.receiver.listener:
+        if not self.receiver.listener or self.canvas.search:
             return
 
         start_conn_data, end_conn_data = self.connection_data_optimizer()
