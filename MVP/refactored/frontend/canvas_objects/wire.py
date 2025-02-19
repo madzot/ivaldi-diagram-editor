@@ -70,6 +70,7 @@ class Wire:
                     *curved_line(self.start_connection.location, self.end_connection.location),
                     fill="black", width=self.wire_width)
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
+            self.canvas.tag_lower(self.line)
 
     def show_context_menu(self, event):
         self.canvas.is_wire_pressed = True
