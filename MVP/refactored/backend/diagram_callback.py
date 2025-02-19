@@ -144,7 +144,6 @@ class Receiver:
 
                     new_node = HypergraphManager.create_new_node(resource.id, canvas_id)
                     for connection in resource.connections:
-                        conn_index, box_id, side, conn_id = connection
                         if connection.has_box(): # connection with box(hyper edge)
                             if connection.side == ConnectionSide.LEFT:
                                 HypergraphManager.connect_node_with_output(new_node, connection.box_id)
@@ -162,13 +161,13 @@ class Receiver:
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
 
-    def spider_handle_delete_connection(self, spider, connection):
+    def spider_handle_delete_connection(self, spider, side: ConnectionSide):
         if spider:
-            for resource in list(spider.connections):
-                if resource[2] == connection:
-                    spider.connections.remove(resource)
+            for connection in list(spider.connections):
+                if connection.side == side:
+                    spider.connections.remove(connection)
 
-    def wire_handle_delete_resource(self, resource):
+    def wire_handle_delete_resource(self, resource: Resource):
         """Establish inner removal for connection."""
         if resource:
             if resource.connections:
@@ -208,32 +207,32 @@ class Receiver:
         else:
             logger.warning(f"Resource with id not found.")
 
-    def wire_main_input_output(self, connection_nr, connection_box_id, connection_side, id):
-        logger.info(f"Handling main input/output wiring with id: {id}")
+    def wire_main_input_output(self, connection_nr, connection_box_id, connection_side, resource_id):
+        logger.info(f"Handling main input/output wiring with id: {resource_id}")
         if connection_side == 'left':
-            temp = [connection_nr, connection_box_id] + [id]
+            temp = [connection_nr, connection_box_id] + [resource_id]
             self.diagram.output[connection_nr] = temp
         else:
-            temp = [connection_nr, connection_box_id] + [id]
+            temp = [connection_nr, connection_box_id] + [resource_id]
             self.diagram.input[connection_nr] = temp
 
-    def wire_add_to_atomic_box(self, connection_nr, box, connection_side, id):
-        logger.info(f"Adding connection to atomic box: {box.id}, side: {connection_side}, id: {id}, nr {connection_nr}")
+    def wire_add_to_atomic_box(self, connection_nr, box, connection_side, resource_id):
+        logger.info(f"Adding connection to atomic box: {box.id}, side: {connection_side}, id: {resource_id}, nr {connection_nr}")
         if connection_side == 'left':
             connection = box.left[connection_nr]
-            box.left[connection_nr] = connection + [id]
+            box.left[connection_nr] = connection + [resource_id]
         elif connection_side == 'right':
             connection = box.right[connection_nr]
-            box.right[connection_nr] = connection + [id]
+            box.right[connection_nr] = connection + [resource_id]
 
-    def wire_add_to_compound_box(self, id, connection_nr, box, connection_id):
-        logger.info(f"Adding connection to compound box: {box.id}, connection_id: {connection_id}, id: {id}")
+    def wire_add_to_compound_box(self, resource_id, connection_nr, box, connection_id):
+        logger.info(f"Adding connection to compound box: {box.id}, connection_id: {connection_id}, id: {resource_id}")
         sides = ['left', 'right', 'left_inner', 'right_inner']
         for side in sides:
             side_list = getattr(box, side)
             for con in side_list:
                 if connection_id in con:
-                    side_list[connection_nr] += [id]
+                    side_list[connection_nr] += [resource_id]
 
     def wire_handle_resource_action(self, resource: Resource, resource_id, connection_nr, connection_box_id, connection_side,
                                     connection_id):
@@ -250,22 +249,22 @@ class Receiver:
                     self.wire_add_to_compound_box(resource_id, connection_nr, box, connection_id)
         resource.add_connection(ConnectionInfo(connection_nr, connection_side, connection_id, connection_box_id))
 
-    def wire_create_new_resource(self, id, connection_nr, connection_box_id, connection_side,
+    def wire_create_new_resource(self, wire_id, connection_nr, connection_box_id, connection_side,
                                  connection_id) -> Resource:
         """
-        :param id:
+        :param wire_id:
         :param connection_nr:
         :param connection_box_id:
         :param connection_side:
         :param connection_id:
         :return created resource:
         """
-        logger.info(f"Creating new resource with id: {id}")
-        resource = Resource(id)
-        self.wire_handle_resource_action(resource, id, connection_nr, connection_box_id, connection_side,
+        logger.info(f"Creating new resource with id: {wire_id}")
+        resource = Resource(wire_id)
+        self.wire_handle_resource_action(resource, wire_id, connection_nr, connection_box_id, connection_side,
                                          connection_id)
         self.diagram.add_resource(resource)
-        logger.warning(f"Added connection to resource with id {id} connections {resource.connections}.")
+        logger.warning(f"Added connection to resource with id {wire_id} connections {resource.connections}.")
         logger.info(f"Resources: {self.diagram.resources}")
         logger.info(f"Number of Resources: {len(self.diagram.resources)}")
         logger.info(f"Overall input and output: {self.diagram.input} and {self.diagram.output}")
@@ -401,60 +400,60 @@ class Receiver:
     def generator_remove_box_connection(self, box, connection_id, connection_side):
         if box.type == 0:
             if connection_side == ConnectionSide.LEFT:
-                if len(box.left[connection_id]) == 4:
-                    if self.wire_get_resource_by_id(box.left[connection_id].id):
-                        self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.left[connection_id].id))
-                    else:
-                        self.spider_handle_delete_connection(
-                            self.spider_get_resource_by_connection_id(box.left[connection_id].id),
-                            box.left[connection_id][2])
+                # if len(box.left[connection_id]) == 4:
+                if self.wire_get_resource_by_id(box.left[connection_id].id):
+                    self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.left[connection_id].id))
+                else:
+                    self.spider_handle_delete_connection(
+                        self.spider_get_resource_by_connection_id(box.left[connection_id].id),
+                        box.left[connection_id].side)
                 box.remove_left_atomic(connection_id)
             elif connection_side == ConnectionSide.RIGHT:
-                if len(box.right[connection_id]) == 4:
-                    if self.wire_get_resource_by_id(box.right[connection_id][3]):
-                        self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.right[connection_id][3]))
-                    else:
-                        self.spider_handle_delete_connection(
-                            self.spider_get_resource_by_connection_id(box.right[connection_id][3]),
-                            box.right[connection_id][2])
+                # if len(box.right[connection_id]) == 4:
+                if self.wire_get_resource_by_id(box.right[connection_id].id):
+                    self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.right[connection_id].id))
+                else:
+                    self.spider_handle_delete_connection(
+                        self.spider_get_resource_by_connection_id(box.right[connection_id].id),
+                        box.right[connection_id].side)
                 box.remove_right_atomic(connection_id)
         else:
             if connection_side == ConnectionSide.LEFT:
-                if len(box.left[connection_id]) == 4:
-                    if self.wire_get_resource_by_id(box.left[connection_id][3]):
-                        self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.left[connection_id][3]))
-                    else:
-                        self.spider_handle_delete_connection(
-                            self.spider_get_resource_by_connection_id(box.left[connection_id][3]),
-                            box.left[connection_id][2])
+                # if len(box.left[connection_id]) == 4:
+                if self.wire_get_resource_by_id(box.left[connection_id].id):
+                    self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.left[connection_id].id))
+                else:
+                    self.spider_handle_delete_connection(
+                        self.spider_get_resource_by_connection_id(box.left[connection_id].id),
+                        box.left[connection_id].side)
                 box.remove_left([connection_id, box.id])
             elif connection_side == ConnectionSide.RIGHT:
-                if len(box.right[connection_id]) == 4:
-                    if self.wire_get_resource_by_id(box.right[connection_id][3]):
-                        self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.right[connection_id][3]))
-                    else:
-                        self.spider_handle_delete_connection(
-                            self.spider_get_resource_by_connection_id(box.right[connection_id][3]),
-                            box.right[connection_id][2])
+                # if len(box.right[connection_id]) == 4:
+                if self.wire_get_resource_by_id(box.right[connection_id].id):
+                    self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.right[connection_id].id))
+                else:
+                    self.spider_handle_delete_connection(
+                        self.spider_get_resource_by_connection_id(box.right[connection_id].id),
+                        box.right[connection_id].side)
                 box.remove_right([connection_id, box.id])
             elif connection_side == ConnectionSide.INNER_LEFT:
-                if len(box.left_inner[connection_id]) == 4:
-                    if self.wire_get_resource_by_id(box.left_inner[connection_id][3]):
-                        self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.left_inner[connection_id][3]))
-                    else:
-                        self.spider_handle_delete_connection(
-                            self.spider_get_resource_by_connection_id(box.left_inner[connection_id][3]),
-                            box.left_inner[connection_id][2])
+                # if len(box.left_inner[connection_id]) == 4:
+                if self.wire_get_resource_by_id(box.left_inner[connection_id].id):
+                    self.wire_handle_delete_resource(self.wire_get_resource_by_id(box.left_inner[connection_id].id))
+                else:
+                    self.spider_handle_delete_connection(
+                        self.spider_get_resource_by_connection_id(box.left_inner[connection_id].id),
+                        box.left_inner[connection_id].side)
                 box.left_inner.pop()
             elif connection_side == ConnectionSide.INNER_RIGHT:
-                if len(box.right_inner[connection_id]) == 4:
-                    if self.wire_get_resource_by_id(box.right_inner[connection_id][3]):
-                        self.wire_handle_delete_resource(
-                            self.wire_get_resource_by_id(box.right_inner[connection_id][3]))
-                    else:
-                        self.spider_handle_delete_connection(
-                            self.spider_get_resource_by_connection_id(box.right_inner[connection_id][3]),
-                            box.right_inner[connection_id][2])
+                # if len(box.right_inner[connection_id]) == 4:
+                if self.wire_get_resource_by_id(box.right_inner[connection_id].id):
+                    self.wire_handle_delete_resource(
+                        self.wire_get_resource_by_id(box.right_inner[connection_id].id))
+                else:
+                    self.spider_handle_delete_connection(
+                        self.spider_get_resource_by_connection_id(box.right_inner[connection_id].id),
+                        box.right_inner[connection_id].side)
                 box.right_inner.pop()
         logger.info(f"Removed associated resource: {connection_id}, side {connection_side}")
 
