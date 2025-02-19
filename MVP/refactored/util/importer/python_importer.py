@@ -83,7 +83,7 @@ class PythonImporter(Importer):
         main_logic = data["main_logic"]
 
         possible_outputs = {}
-        boxes_gap = 1000 / (len(main_logic) - 1)
+        boxes_gap = 900 / (len(main_logic) - 1)
         box_x = 100
 
         box_right_connection_spiders = {}
@@ -94,7 +94,7 @@ class PythonImporter(Importer):
             for assigned_variable in function_call["assigned_variables"]:
                 possible_outputs[assigned_variable] = function_call["function_name"]
 
-            new_box = canvas.create_new_box(loc=(box_x, elements_y_position))
+            new_box = canvas.add_box(loc=(box_x, elements_y_position))
             new_box.set_label(function_call["function_name"])
 
             for arg in args:
@@ -149,4 +149,4 @@ class PythonImporter(Importer):
                     break
 
             output = canvas.add_diagram_output()
-            canvas.end_wire_to_connection(output)
+            canvas.end_wire_to_connection(output, True)
