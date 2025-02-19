@@ -212,7 +212,7 @@ class Spider(Connection):
                 if new_x + self.r >= connection.location[0] - connection.width_between_boxes:
                     return True
             if connection.side == "right":
-                if new_x - self.r <= connection.location[0] - connection.width_between_boxes:
+                if new_x - self.r <= connection.location[0] + connection.width_between_boxes:
                     return True
         return False
 
