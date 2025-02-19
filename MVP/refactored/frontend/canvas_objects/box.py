@@ -100,6 +100,7 @@ class Box:
         if not self.locked:
             self.context_menu.add_command(label="Edit label", command=self.edit_label)
             self.context_menu.add_command(label="Edit Sub-Diagram", command=self.edit_sub_diagram)
+            self.context_menu.add_command(label="Unfold sub-diagram", command=self.unfold)
             self.context_menu.add_command(label="Lock Box", command=self.lock_box)
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
         if self.sub_diagram:
@@ -109,6 +110,17 @@ class Box:
         self.context_menu.add_separator()
         self.context_menu.add_command(label="Cancel")
         self.context_menu.tk_popup(event.x_root, event.y_root)
+
+    def unfold(self):
+        if not self.sub_diagram:
+            return
+        event = tk.Event()
+        event.x = self.x + self.size[0] / 2
+        event.y = self.y + self.size[1] / 2
+        self.sub_diagram.select_all()
+        self.canvas.selector.copy_selected_items(canvas=self.sub_diagram)
+        self.on_press(event)
+        self.canvas.paste_copied_items(event)
 
     def open_editor(self):
         CodeEditor(self.canvas.main_diagram, box=self)
@@ -163,9 +175,6 @@ class Box:
 
         # remove selected connectionsS
         for c in to_be_removed:
-            if c.has_wire:
-                c.wire.delete_from_canvas()
-
             c.delete()
             self.remove_connection(c)
             self.update_connections()
@@ -567,8 +576,6 @@ class Box:
 
     def delete_box(self, keep_sub_diagram=False, action=None):
         for c in self.connections:
-            if c.has_wire:
-                c.wire.delete_from_canvas()
             c.delete()
 
         self.canvas.delete(self.rect)

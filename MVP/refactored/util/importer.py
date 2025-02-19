@@ -45,7 +45,7 @@ class Importer:
         for box in d["boxes"]:
             new_box = canvas.add_box((box["x"] * multi_x, box["y"] * multi_y), (box["size"][0] * multi_x,
                                                                                 box["size"][1] * multi_y),
-                                     self.get_id(box["id"]), shape=box["shape"])
+                                     self.get_id(box["id"]), shape=box.get("shape", "rectangle"))
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
@@ -137,7 +137,7 @@ class Importer:
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box(loc, shape=box["shape"])
+            new_box = canvas.add_box(loc, shape=box.get("shape", "rectangle"))
             if box["label"]:
                 new_box.set_label(box["label"])
             for _ in range(box["left_c"]):
@@ -182,10 +182,10 @@ class Importer:
         multi_x = 1
         multi_y = 1
 
-        if self.canvas.winfo_width() < max_x:
+        if self.canvas.main_diagram.custom_canvas.winfo_width() < max_x:
             max_x += min_x
-            multi_x = round(self.canvas.winfo_width() / max_x, 3)
-        if self.canvas.winfo_height() < max_y:
+            multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_width() / max_x, 3)
+        if self.canvas.main_diagram.custom_canvas.winfo_height() < max_y:
             max_y += 30
-            multi_y = round(self.canvas.winfo_height() / max_y, 3)
+            multi_y = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_y, 3)
         return multi_x, multi_y

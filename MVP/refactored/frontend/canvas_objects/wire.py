@@ -43,16 +43,6 @@ class Wire:
         if not self.is_temporary and not self.canvas.search:
             self.handle_wire_deletion_callback(action)
 
-    def delete_from_canvas(self):
-        if self.start_connection and self.start_connection.is_spider():
-            self.start_connection.remove_wire(self)
-        if self.end_connection and self.end_connection.is_spider():
-            self.end_connection.remove_wire(self)
-
-        self.canvas.delete(self.line)
-        if self.receiver.listener and not self.canvas.search:
-            self.receiver.receiver_callback("wire_delete", wire_id=self.id)
-
     def select(self):
         self.canvas.itemconfig(self.line, fill="green")
 
