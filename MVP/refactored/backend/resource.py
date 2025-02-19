@@ -1,7 +1,11 @@
+from MVP.refactored.backend.connection_info import ConnectionInfo
+
+
 class Resource:
+    """Resource is backend representation of wire and spider."""
     def __init__(self, id):
         self.id = id
-        self.connections = []
+        self.connections: list[ConnectionInfo] = []
         self.spider = False
         self.spider_connection = None
         self.parent = None
@@ -16,11 +20,11 @@ class Resource:
     def to_dict(self):
         return {
             "id": self.id,
-            "connections": self.connections
+            "connections": map(lambda c: c.to_list(), self.connections)
         }
 
     @classmethod
     def from_dict(cls, data):
         resource = cls(data["id"])
-        resource.connections = data.get("connections")
+        resource.connections = map(lambda c: ConnectionInfo.from_list(c), data.get("connections"))
         return resource

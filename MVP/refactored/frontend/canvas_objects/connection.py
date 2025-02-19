@@ -1,16 +1,18 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from MVP.refactored.backend.connection_side import ConnectionSide
+
 import tkinter as tk
 
 
 class Connection:
-    def __init__(self, box, index, side, location, canvas, r=5, id_=None):
+    def __init__(self, box, index, side: ConnectionSide, location, canvas, r=5, id_=None):
         self.canvas = canvas
         self.id = id(self)
         self.box = box  # None if connection is diagram input/output
         self.index = index
-        self.side = side
+        self.side: ConnectionSide = side
         self.location = location
         self.wire = None
         self.has_wire = False

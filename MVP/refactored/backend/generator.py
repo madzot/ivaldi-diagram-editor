@@ -1,26 +1,30 @@
+from MVP.refactored.backend.connection_info import ConnectionInfo
+
+
 class Generator:
+    """Backend representation of frontend box."""
     def __init__(self, id):
         self.id = id
         self.type = 0  # 0-atomic 1-compound None-undefined
-        self.left = []
-        self.right = []
-        self.left_inner = []
-        self.right_inner = []
+        self.left: list[ConnectionInfo] = []
+        self.right: list[ConnectionInfo] = []
+        self.left_inner: list[ConnectionInfo] = []
+        self.right_inner: list[ConnectionInfo] = []
         self.subset = []
         self.parent = None
         self.spiders = []
         self.operand = None
 
-    def add_left(self, left):
+    def add_left(self, left: ConnectionInfo):
         self.left.append(left)
 
-    def add_right(self, right):
+    def add_right(self, right: ConnectionInfo):
         self.right.append(right)
 
-    def add_left_inner(self, left):
+    def add_left_inner(self, left: ConnectionInfo):
         self.left_inner.append(left)
 
-    def add_right_inner(self, right):
+    def add_right_inner(self, right: ConnectionInfo):
         self.right_inner.append(right)
 
     def add_operand(self, operand):
@@ -36,40 +40,40 @@ class Generator:
         self.type = None
 
     def remove_all_left(self):
-        self.left = []
+        self.left.clear()
 
     def remove_all_right(self):
-        self.right = []
+        self.right.clear()
 
-    def remove_left(self, connection=None):
-        self.left.pop(connection[0])
+    def remove_left(self, connection: ConnectionInfo=None):
+        self.left.pop(connection.index)
         for i, resource in enumerate(self.left):
-            resource[0] = i
+            resource.index = i
 
-    def remove_right(self, connection=None):
-        self.right.pop(connection[0])
+    def remove_right(self, connection: ConnectionInfo=None):
+        self.right.pop(connection.index)
         for i, resource in enumerate(self.right):
-            resource[0] = i
+            resource.index = i
 
-    def remove_left_inner(self, connection=None):
-        self.left_inner.pop(connection[0])
+    def remove_left_inner(self, connection: ConnectionInfo=None):
+        self.left_inner.pop(connection.index)
         for i, resource in enumerate(self.left_inner):
-            resource[0] = i
+            resource.index = i
 
-    def remove_right_inner(self, connection=None):
-        self.right_inner.pop(connection[0])
+    def remove_right_inner(self, connection: ConnectionInfo=None):
+        self.right_inner.pop(connection.index)
         for i, resource in enumerate(self.right_inner):
-            resource[0] = i
+            resource.index = i
 
-    def remove_left_atomic(self, connection_id):
+    def remove_left_atomic(self, connection_id: int):
         self.left.pop(connection_id)
         for i, resource in enumerate(self.left):
-            resource[0] = i
+            resource.index = i
 
-    def remove_right_atomic(self, connection_id):
+    def remove_right_atomic(self, connection_id: int):
         self.right.pop(connection_id)
         for i, resource in enumerate(self.left):
-            resource[0] = i
+            resource.index = i
 
     def to_dict(self):
         return {
