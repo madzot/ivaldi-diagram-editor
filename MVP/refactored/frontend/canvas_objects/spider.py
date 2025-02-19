@@ -176,19 +176,19 @@ class Spider(Connection):
         for connection in list(filter(lambda x: (x is not None and x != self),
                                       [w.end_connection for w in self.wires] + [w.start_connection for w in
                                                                                 self.wires])):
-            switch = False
-            wire = list(filter(lambda w: (w.end_connection == self or w.start_connection == self),
-                               connection.wires))[0]
             if connection.side == "spider":
+                switch = False
+                wire = list(filter(lambda w: (w.end_connection == self or w.start_connection == self),
+                                   connection.wires))[0]
                 if wire.start_connection == self and wire.end_connection.x < self.x:
                     switch = True
                 if wire.end_connection == self and wire.start_connection.x > self.x:
                     switch = True
-            if switch:
-                start = wire.end_connection
-                end = wire.start_connection
-                wire.start_connection = start
-                wire.end_connection = end
+                if switch:
+                    start = wire.end_connection
+                    end = wire.start_connection
+                    wire.start_connection = start
+                    wire.end_connection = end
 
     def find_collisions(self, go_to_x, go_to_y):
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
