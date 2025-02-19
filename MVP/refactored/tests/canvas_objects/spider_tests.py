@@ -51,7 +51,7 @@ class SpiderTests(TestMainDiagram):
 
         spider.bind_events()
 
-        self.assertEqual(4, tag_bind_mock.call_count)
+        self.assertEqual(6, tag_bind_mock.call_count)
 
     @patch("tkinter.Menu.add_command")
     @patch("tkinter.Menu.tk_popup")
