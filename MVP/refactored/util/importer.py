@@ -45,7 +45,7 @@ class Importer:
         for box in d["boxes"]:
             new_box = canvas.add_box((box["x"] * multi_x, box["y"] * multi_y), (box["size"][0] * multi_x,
                                                                                 box["size"][1] * multi_y),
-                                     self.get_id(box["id"]), shape=box["shape"])
+                                     self.get_id(box["id"]), shape=box.get("shape", "rectangle"))
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
@@ -137,7 +137,7 @@ class Importer:
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box(loc, shape=box["shape"])
+            new_box = canvas.add_box(loc, shape=box.get("shape", "rectangle"))
             if box["label"]:
                 new_box.set_label(box["label"])
             for _ in range(box["left_c"]):
