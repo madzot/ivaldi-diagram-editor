@@ -537,6 +537,7 @@ class Selector:
                 elif connection.side == "right":
                     self.add_copied_wire(connection, False)
                 elif connection.side == "spider":
+                    is_left = None
                     if wire.start_connection in connection_list:
                         if wire.end_connection.side == "left":
                             is_left = False
@@ -551,7 +552,8 @@ class Selector:
                             is_left = True
                         else:
                             is_left = connection.location[0] > wire.start_connection.location[0]
-                    self.add_copied_wire(connection, is_left)
+                    if is_left is not None:
+                        self.add_copied_wire(connection, is_left)
 
     def add_edge_wires(self, pasted_items):
         left_connections, right_connections = self.find_side_connections()
