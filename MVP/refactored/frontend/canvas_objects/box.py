@@ -9,7 +9,6 @@ from tkinter import simpledialog
 
 from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
@@ -97,34 +96,6 @@ class Box:
 
         self.wires.remove(wire)
 
-    def _get_all_left_connected_nodes(self, connection: Connection) -> list[HyperEdge]:
-        if connection.box is not None:
-            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.box.id)]
-
-        if isinstance(connection, Spider):
-            output = list()
-            for conn in connection.connections:
-                if conn.side == "left":
-                    if conn.wire is not None and conn.wire.start_connection is not None:
-                        output.extend(self._get_all_left_connected_nodes(conn.wire.start_connection))
-            return output
-        else:
-            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.id)] # it is diagram input
-
-    def _get_all_right_connected_nodes(self, connection: Connection) -> list[HyperEdge]:
-        if connection.box is not None:
-            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.box.id)]
-
-        if isinstance(connection, Spider):
-            output = list()
-            for conn in connection.connections:
-                if conn.side == "right":
-                    if conn.wire is not None and conn.wire.end_connection is not None:
-                        output.extend(self._get_all_right_connected_nodes(conn.wire.end_connection))
-            return output
-        else:
-            return [BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(connection.id)] # it is diagram output
-
     def set_id(self, id_):
         if self.receiver.listener:
             self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_, canvas_id=self.canvas.id)
@@ -196,8 +167,6 @@ class Box:
     def set_function(self, name, code=None):
         self.box_function = BoxFunction(name, code)
 
-        node = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(self.id)
-        node.set_box_function(self.box_function)
 
     def count_inputs(self) -> int:
         count = 0

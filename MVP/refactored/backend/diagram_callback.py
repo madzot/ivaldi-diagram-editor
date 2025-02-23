@@ -220,10 +220,12 @@ class Receiver:
         logger.info(f"Adding connection to atomic box: {box.id}, side: {connection_side}, id: {resource_id}, nr {connection_nr}")
         if connection_side == 'left':
             connection = box.left[connection_nr]
-            box.left[connection_nr] = connection + [resource_id]
+            # box.left[connection_nr] = connection + [resource_id]
+            box.left[connection_nr].id = resource_id
         elif connection_side == 'right':
             connection = box.right[connection_nr]
-            box.right[connection_nr] = connection + [resource_id]
+            # box.right[connection_nr] = connection + [resource_id]
+            box.right[connection_nr].id = resource_id
 
     def wire_add_to_compound_box(self, resource_id, connection_nr, box, connection_id):
         logger.info(f"Adding connection to compound box: {box.id}, connection_id: {connection_id}, id: {resource_id}")
@@ -311,9 +313,11 @@ class Receiver:
                 box.id = connection_id
             elif action == "change_connection_id":
                 if generator_side == ConnectionSide.LEFT:
-                    box.left[-1] = connection_id
+                    # box.left[-1] = connection_id
+                    box.left.id = connection_id
                 else:
-                    box.right[-1] = connection_id
+                    # box.right[-1] = connection_id
+                    box.right.id = connection_id
         # TODO create or delete nodes when diagram input/output added/removed
         elif action == 'add_diagram_output':
             self.add_main_diagram_output()

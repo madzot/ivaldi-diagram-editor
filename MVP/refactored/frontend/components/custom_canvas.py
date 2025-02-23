@@ -9,7 +9,6 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
-from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.frontend.canvas_objects.box import Box

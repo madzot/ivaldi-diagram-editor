@@ -163,11 +163,11 @@ class Wire:
         self.end_connection = connection
         if connection.box and self.receiver.listener:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
-                                            start_connection=[connection.index, connection.box.id, connection.side],
+                                            start_connection=ConnectionInfo(connection.index, connection.side, connection.id, connection.box.id),
                                             connection_id=connection.id, canvas_id=self.canvas.id)
         elif connection.box is None and self.receiver.listener and self.start_connection.box is not None:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
-                                            start_connection=[connection.index, None, connection.side],
+                                            start_connection=ConnectionInfo(connection.index, connection.side, connection.id),
                                             connection_id=connection.id, canvas_id=self.canvas.id)
 
 

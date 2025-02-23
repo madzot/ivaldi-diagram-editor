@@ -47,9 +47,11 @@ class Titlebar(ttk.Frame):
         self.view_menu = tk.Menu(self.view_button, tearoff=False)
         self.view_button.config(menu=self.view_menu)
 
-        # View menu buttons
+        # # View menu buttons
+        # self.view_menu.add_command(label="Visualize hypergraph",
+        #                            command=lambda: self.main_diagram.visualize_as_graph(self.custom_canvas))
         self.view_menu.add_command(label="Visualize hypergraph",
-                                   command=lambda: self.main_diagram.visualize_as_graph(self.custom_canvas))
+                                   command=lambda: self.main_diagram.get_all())
 
         self.view_button.pack(side=ttk.LEFT)
 
