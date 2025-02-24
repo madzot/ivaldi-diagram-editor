@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import font  # Import the font module
 from tkinter import messagebox
 
+#import hupper
+
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 
@@ -62,5 +64,10 @@ class Launcher:
         self.root.destroy()
 
 
-if __name__ == '__main__':
+def start_program():
     Launcher()
+
+
+if __name__ == '__main__':
+  #  hupper.start_reloader('launcher.start_program')
+    start_program()
