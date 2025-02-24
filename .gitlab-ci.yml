@@ -9,5 +9,4 @@ test:
     - uname
     - pip install -r requirements.txt
     - export DISPLAY=:0
-    - export DISPLAY=unix$DISPLAY
     - python -m unittest discover
