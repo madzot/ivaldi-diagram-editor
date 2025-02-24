@@ -8,8 +8,7 @@ test:
   script:
     - pip install -r requirements.txt
     - apt update
-    - apt install xvfb
-    - echo y
+    - echo y | apt install xvfb
     - Xvfb :1 -screen 0 1920x1080x24+32 -fbdir /var/tmp &
     - export DISPLAY=:1
     - python -m unittest discover
