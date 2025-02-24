@@ -7,5 +7,5 @@ test:
   stage: test
   script:
     - pip install -r requirements.txt
-    - export DISPLAY=:0.0
+    - export MPLBACKEND='Agg'
     - python -m unittest discover
