@@ -6,6 +6,7 @@ stages:
 test:
   stage: test
   script:
-    - pip install -r requirements.txt
-    - export DISPLAY=$(grep nameserver /etc/resolv.conf | awk '{print $2}'):0.0
+    - echo "Display is '$DISPLAY'"
+    - export DISPLAY=:0.0
+    - export DISPLAY=unix$DISPLAY
     - python -m unittest discover
