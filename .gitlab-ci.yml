@@ -7,4 +7,5 @@ test:
   stage: test
   script:
     - pip install -r requirements.txt
+    - echo "backend: Agg" > ~/.config/matplotlib/matplotlibrc
     - python -m unittest discover
