@@ -36,7 +36,7 @@ class BoxTests(TestMainDiagram):
 
         self.assertEqual((expected_width, expected_height), box.size)
 
-        self.assertFalse(box.connections)
+        self.assertListEqual([], box.connections)
 
         self.assertEqual(0, box.left_connections)
         self.assertEqual(0, box.right_connections)
@@ -44,7 +44,7 @@ class BoxTests(TestMainDiagram):
         self.assertIsNone(box.label)
 
         self.assertFalse(box.label_text)
-        self.assertFalse(box.wires)
+        self.assertListEqual([], box.wires)
 
         self.assertIsNone(box.node)
 
