@@ -56,7 +56,7 @@ class Connection:
                         self.box.sub_diagram.remove_specific_diagram_output(i)
                         return
             self.box.remove_connection(self)
-            self.delete_me()
+            self.delete()
             return
 
         if self in self.canvas.inputs:
@@ -80,7 +80,7 @@ class Connection:
     def lessen_index_by_one(self):
         self.index -= 1
 
-    def delete_me(self):
+    def delete(self):
         self.canvas.delete(self.circle)
         if self.has_wire:
             self.canvas.delete(self.wire)

@@ -175,7 +175,7 @@ class Box:
 
         # remove selected connectionsS
         for c in to_be_removed:
-            c.delete_me()
+            c.delete()
             self.remove_connection(c)
             self.update_connections()
             self.update_wires()
@@ -569,14 +569,14 @@ class Box:
 
         self.connections.remove(circle)
         self.collision_ids.remove(circle.circle)
-        circle.delete_me()
+        circle.delete()
         self.update_connections()
         self.update_wires()
         self.resize_by_connections()
 
     def delete_box(self, keep_sub_diagram=False, action=None):
         for c in self.connections:
-            c.delete_me()
+            c.delete()
 
         self.canvas.delete(self.rect)
         self.canvas.delete(self.resize_handle)
