@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from MVP.refactored.frontend.canvas_objects.box import Box
 
@@ -197,5 +198,97 @@ class ConnectionTests(TestApplication):
 
         self.assertEqual(1, connection.index)
 
+    @patch('MVP.refactored.frontend.components.custom_canvas.CustomCanvas.delete')
+    def test__delete__no_wire_calls_delete_once(self, delete_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.delete()
 
+        self.assertEqual(1, delete_mock.call_count)
 
+    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.delete_self')
+    @patch('MVP.refactored.frontend.components.custom_canvas.CustomCanvas.delete')
+    def test__delete__has_wire_calls_delete_twice(self, delete_mock, delete_self_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, None, temporary=True)
+        connection.wire = wire
+        connection.has_wire = True
+        connection.delete()
+
+        self.assertEqual(2, delete_mock.call_count)
+        self.assertEqual(1, delete_self_mock.call_count)
+
+    def test__add_wire__adds_wire(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection2 = Connection(None, 1011, "right", (222, 222), self.custom_canvas)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, temporary=True)
+        self.assertIsNone(connection.wire)
+        self.assertFalse(connection.has_wire)
+
+        connection.add_wire(wire)
+        self.assertEqual(wire, connection.wire)
+        self.assertTrue(connection.has_wire)
+
+    def test__add_wire__does_not_change_wire_if_connection_has_wire(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection2 = Connection(None, 1011, "right", (222, 222), self.custom_canvas)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, temporary=True)
+        wire2 = Wire(self.custom_canvas, connection2, self.app.receiver, connection, temporary=True)
+
+        connection.add_wire(wire)
+
+        connection.add_wire(wire2)
+
+        self.assertEqual(wire, connection.wire)
+        self.assertTrue(connection.has_wire)
+
+    def test__is_spider__returns_false(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        self.assertFalse(connection.is_spider())
+
+    def test__remove_wire__removes_wire(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection2 = Connection(None, 1011, "right", (222, 222), self.custom_canvas)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, temporary=True)
+
+        connection.add_wire(wire)
+        self.assertEqual(wire, connection.wire)
+        self.assertTrue(connection.has_wire)
+
+        connection.remove_wire(wire)
+        self.assertIsNone(connection.wire)
+        self.assertFalse(connection.has_wire)
+
+    def test__select__turns_item_green(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        self.assertTrue("black" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+
+        connection.select()
+        self.assertTrue("green" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+
+    def test__search_highlight_secondary__turns_item_orange_and_adds_to_search_highlights(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        self.assertTrue("black" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+        self.assertListEqual([], self.custom_canvas.search_result_highlights)
+
+        connection.search_highlight_secondary()
+        self.assertTrue("orange" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+        self.assertListEqual([connection], self.custom_canvas.search_result_highlights)
+
+    def test__search_highlight_primary__turns_item_cyan_and_adds_to_search_highlights(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        self.assertTrue("black" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+        self.assertListEqual([], self.custom_canvas.search_result_highlights)
+
+        connection.search_highlight_primary()
+        self.assertTrue("cyan" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+        self.assertListEqual([connection], self.custom_canvas.search_result_highlights)
+
+    def test__deselect__turns_item_black(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.select()
+        self.assertTrue("green" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+        self.assertFalse("black" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+
+        connection.deselect()
+        self.assertFalse("green" in self.custom_canvas.itemconfig(connection.circle)["fill"])
+        self.assertTrue("black" in self.custom_canvas.itemconfig(connection.circle)["fill"])
