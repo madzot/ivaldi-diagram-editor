@@ -187,6 +187,7 @@ class Selector:
                         'id': copy.deepcopy(item.id),
                         'location': (item.x, item.y),
                         'size': copy.deepcopy(item.r),
+                        'type': copy.deepcopy(item.type)
                     })
             self.copy_selected_wires(connection_list, canvas)
 
@@ -239,7 +240,8 @@ class Selector:
                     pasted_items.append(new_box)
                 if item['component'] == "Spider":
                     new_spider = self.canvas.add_spider((event_x + (item['location'][0] - middle_point[0]) * multi,
-                                                         event_y + (item['location'][1] - middle_point[1]) * multi))
+                                                         event_y + (item['location'][1] - middle_point[1]) * multi),
+                                                        connection_type=item['type'])
                     pasted_items.append(new_spider)
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
@@ -520,6 +522,7 @@ class Selector:
                     'wire': "Wire",
                     'start_connection': None,
                     'end_connection': None,
+                    'type': copy.deepcopy(wire.type),
                     'original_start_connection': copy.deepcopy(wire.start_connection.id),
                     'original_start_index': copy.deepcopy(wire.start_connection.index),
                     'original_start_side': copy.deepcopy(wire.start_connection.side),

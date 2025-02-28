@@ -1,12 +1,13 @@
 import tkinter as tk
 
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 
 
 class Spider(Connection):
-    def __init__(self, box, index, side, location, canvas, receiver, id_=None):
+    def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC):
         self.r = 10
-        super().__init__(box, index, side, location, canvas, self.r)
+        super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
         self.x = location[0]
         self.y = location[1]

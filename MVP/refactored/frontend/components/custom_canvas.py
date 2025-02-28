@@ -12,6 +12,7 @@ from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
@@ -645,8 +646,8 @@ class CustomCanvas(tk.Canvas):
             return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
         return None
 
-    def add_spider(self, loc=(100, 100), id_=None):
-        spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
+    def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC):
+        spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_, connection_type=connection_type)
         self.spiders.append(spider)
         return spider
 
