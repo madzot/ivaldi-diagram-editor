@@ -174,8 +174,8 @@ class Selector:
                         'sub-diagram': copy.deepcopy(item.sub_diagram.id) if item.sub_diagram else None
                     })
                     if item.sub_diagram:
-                        if item.label_text not in self.canvas.master.project_exporter.get_current_d():
-                            self.canvas.master.save_box_to_diagram_menu(item)
+                        if item.label_text not in self.canvas.main_diagram.project_exporter.get_current_data():
+                            self.canvas.main_diagram.save_box_to_diagram_menu(item)
 
                 if isinstance(item, Spider):
                     for wire in item.wires:
