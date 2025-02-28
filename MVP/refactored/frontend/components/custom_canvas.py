@@ -520,7 +520,7 @@ class CustomCanvas(tk.Canvas):
         if not self.quick_pull and not self.draw_wire_mode:
             self.quick_pull = True
             connection = self.get_connection_from_location(event)
-            if connection is not None and not connection.has_wire or connection.is_spider():
+            if connection is not None and (not connection.has_wire or connection.is_spider()):
                 self.toggle_draw_wire_mode()
                 self.on_canvas_click(event, connection)
             else:
@@ -858,13 +858,13 @@ class CustomCanvas(tk.Canvas):
             self.nullify_wire_start()
         self.toggle_draw_wire_mode()
 
-    def add_diagram_output(self, id_=None):
+    def add_diagram_output(self, id_=None, connection_type=ConnectionType.GENERIC):
         output_index = max([o.index for o in self.outputs] + [0])
         if len(self.outputs) != 0:
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
                                            "left", [0, 0], self,
-                                           r=5 * self.total_scale, id_=id_)
+                                           r=5 * self.total_scale, id_=id_, connection_type=connection_type)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -896,12 +896,12 @@ class CustomCanvas(tk.Canvas):
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_output")
 
-    def add_diagram_input(self, id_=None):
+    def add_diagram_input(self, id_=None, connection_type=ConnectionType.GENERIC):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
         new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
-                               r=5 * self.total_scale, id_=id_)
+                               r=5 * self.total_scale, id_=id_, connection_type=connection_type)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id)
