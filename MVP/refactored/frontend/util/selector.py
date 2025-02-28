@@ -159,7 +159,8 @@ class Selector:
                         connections_copy.append({
                             'id': copy.deepcopy(connection.id),
                             'side': copy.deepcopy(connection.side),
-                            'index': copy.deepcopy(connection.index)
+                            'index': copy.deepcopy(connection.index),
+                            'type': copy.deepcopy(connection.type)
                         })
 
                     self.copied_items.append({
@@ -212,9 +213,9 @@ class Selector:
                                                       shape=item['shape'])
                         for c in item['connections']:
                             if c['side'] == "right":
-                                new_box.add_right_connection()
+                                new_box.add_right_connection(connection_type=c['type'])
                             if c['side'] == "left":
-                                new_box.add_left_connection()
+                                new_box.add_left_connection(connection_type=c['type'])
                         new_box.set_label(item['label'])
 
                     for wire in self.copied_wire_list:
