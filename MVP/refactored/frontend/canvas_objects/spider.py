@@ -42,12 +42,16 @@ class Spider(Connection):
         self.canvas.tag_bind(self.circle, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.circle, "<Enter>", lambda _: self.canvas.on_hover(self))
         self.canvas.tag_bind(self.circle, "<Leave>", lambda _: self.canvas.on_leave_hover())
+        self.canvas.tag_bind(self.circle, '<Button-2>', lambda x: self.increment_type())
 
     def show_context_menu(self, event):
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
+        self.add_type_choice_to_context_menu()
+
         self.context_menu.add_command(label="Delete Spider", command=self.delete_spider)
+        self.context_menu.add_separator()
         self.context_menu.add_command(label="Cancel")
 
         self.context_menu.tk_popup(event.x_root, event.y_root)
@@ -67,6 +71,7 @@ class Spider(Connection):
     def add_wire(self, wire):
         if wire not in self.wires:
             self.wires.append(wire)
+            self.has_wire = True
 
     def on_resize_scroll(self, event):
         if event.delta == 120:
@@ -216,3 +221,4 @@ class Spider(Connection):
     def remove_wire(self, wire=None):
         if wire and wire in self.wires:
             self.wires.remove(wire)
+            self.has_wire = len(self.wires) > 0

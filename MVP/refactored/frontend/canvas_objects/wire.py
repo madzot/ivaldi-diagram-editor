@@ -1,5 +1,7 @@
 import tkinter as tk
 
+from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
+
 
 def curved_line(start, end, det=15):
     sx = start[0]
@@ -16,7 +18,8 @@ def curved_line(start, end, det=15):
 
 
 class Wire:
-    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False):
+    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False,
+                 wire_type=WireType.GENERIC):
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.start_connection = start_connection
@@ -31,6 +34,7 @@ class Wire:
         self.is_temporary = temporary
         if not temporary and not self.canvas.search:
             self.handle_wire_addition_callback()
+        self.type = wire_type
         self.update()
 
     def delete_self(self, action=None):
@@ -68,7 +72,7 @@ class Wire:
             else:
                 self.line = self.canvas.create_line(
                     *curved_line(self.start_connection.location, self.end_connection.location),
-                    fill="black", width=self.wire_width)
+                    fill="black", width=self.wire_width, dash=self.type.value)
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
             self.canvas.tag_lower(self.line)
 

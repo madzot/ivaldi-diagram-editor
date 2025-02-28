@@ -12,11 +12,12 @@ from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from constants import *
 
 
@@ -379,6 +380,7 @@ class CustomCanvas(tk.Canvas):
             i_o.location = i_o_location
             self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
                         i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
+            self.itemconfig(i_o.circle, width=i_o.r * 2 / 10)
 
         for box in self.boxes:
             box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
@@ -393,6 +395,7 @@ class CustomCanvas(tk.Canvas):
             spider.r *= scale
             self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
                         spider.y + spider.r)
+            self.itemconfig(spider.circle, width=spider.r * 2 / 10)
 
         for wire in self.wires:
             wire.wire_width *= scale
@@ -431,7 +434,6 @@ class CustomCanvas(tk.Canvas):
             [min_x, max_y],
             [max_x, min_y],
             [max_x, max_y]
-
         ]
         for corner in self.corners:
             for location in locations:
@@ -517,7 +519,7 @@ class CustomCanvas(tk.Canvas):
         if not self.quick_pull and not self.draw_wire_mode:
             self.quick_pull = True
             connection = self.get_connection_from_location(event)
-            if connection is not None and not connection.has_wire:
+            if connection is not None and not connection.has_wire or connection.is_spider():
                 self.toggle_draw_wire_mode()
                 self.on_canvas_click(event, connection)
             else:
@@ -553,11 +555,12 @@ class CustomCanvas(tk.Canvas):
                 self.temp_end_connection.delete()
                 self.temp_end_connection = Connection(None, 0, None,
                                                       (self.canvasx(event.x), self.canvasy(event.y)),
-                                                      self)
-            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True)
+                                                      self, connection_type=self.current_wire_start.type)
+            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True,
+                                  wire_type=WireType[self.current_wire_start.type.name])
 
     def handle_connection_click(self, c, event):
-        if c.has_wire or not self.draw_wire_mode:
+        if c.has_wire and not c.is_spider() or not self.draw_wire_mode:
             return
         if not self.current_wire_start:
             self.start_wire_from_connection(c, event)
@@ -582,11 +585,12 @@ class CustomCanvas(tk.Canvas):
             self.nullify_wire_start()
             self.cancel_wire_pulling()
 
-        if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
-                                                                              connection) or bypass_legality_check:
+        if (self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start, connection)
+                and self.current_wire_start.type == connection.type
+                or bypass_legality_check):
             self.cancel_wire_pulling()
             start_end = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
-            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1])
+            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1], wire_type=WireType[start_end[0].type.name])
             self.wires.append(self.current_wire)
 
             if self.current_wire_start.box is not None:
