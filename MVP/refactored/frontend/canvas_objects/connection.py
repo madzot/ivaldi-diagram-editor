@@ -61,12 +61,13 @@ class Connection:
             self.context_menu.post(event.x_root, event.y_root)
 
     def add_type_choice_to_context_menu(self):
-        sub_menu = tk.Menu(self.context_menu, tearoff=0)
-        self.context_menu.add_cascade(menu=sub_menu, label="Connection type")
-        sub_menu.add_command(label="Generic", command=lambda: self.change_type(0))
-        sub_menu.add_command(label="Magenta", command=lambda: self.change_type(1))
-        sub_menu.add_command(label="Cyan", command=lambda: self.change_type(2))
-        sub_menu.add_command(label="Red", command=lambda: self.change_type(3))
+        if not self.has_wire:
+            sub_menu = tk.Menu(self.context_menu, tearoff=0)
+            self.context_menu.add_cascade(menu=sub_menu, label="Connection type")
+            sub_menu.add_command(label="Generic", command=lambda: self.change_type(0))
+            sub_menu.add_command(label="Magenta", command=lambda: self.change_type(1))
+            sub_menu.add_command(label="Cyan", command=lambda: self.change_type(2))
+            sub_menu.add_command(label="Red", command=lambda: self.change_type(3))
 
     def close_menu(self):
         if self.context_menu:
