@@ -15,6 +15,7 @@ from ttkbootstrap.constants import *
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Titlebar
 from MVP.refactored.frontend.util.selector import Selector
@@ -666,7 +667,17 @@ class MainDiagram(tk.Tk):
             spl = make_interp_spline(x, y, k=3)
             y_line = spl(x_linspace)
 
-            plt.plot(x_linspace, y_line, color="black")
+            match wire.type:
+                case WireType.FIRST:
+                    style = ":"
+                case WireType.SECOND:
+                    style = "-."
+                case WireType.THIRD:
+                    style = "--"
+                case _:
+                    style = "-"
+
+            plt.plot(x_linspace, y_line, style, color="black", linewidth=1)
 
         ax.set_xlim(0, x_max)
         ax.set_ylim(0, y_max)
