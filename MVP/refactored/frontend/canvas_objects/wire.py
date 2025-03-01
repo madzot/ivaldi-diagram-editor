@@ -35,6 +35,8 @@ class Wire:
         if not temporary and not self.canvas.search:
             self.handle_wire_addition_callback()
         self.type = wire_type
+        self.color = wire_type.value[0]
+        self.dash_style = wire_type.value[1]
         self.update()
 
     def delete_self(self, action=None):
@@ -72,7 +74,7 @@ class Wire:
             else:
                 self.line = self.canvas.create_line(
                     *curved_line(self.start_connection.location, self.end_connection.location),
-                    fill="black", width=self.wire_width, dash=self.type.value)
+                    fill=self.color, width=self.wire_width, dash=self.dash_style)
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
             self.canvas.tag_lower(self.line)
 
