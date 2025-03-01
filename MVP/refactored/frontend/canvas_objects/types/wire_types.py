@@ -2,7 +2,13 @@ from enum import Enum
 
 
 class WireType(Enum):
-    GENERIC = ()
-    FIRST = (5, 1)
-    SECOND = (5, 2, 2, 2)
-    THIRD = (255, 50)
+    GENERIC = ("black", "")
+    FIRST = ("black", ".")
+    SECOND = ("black", "-")
+    THIRD = ("black", "-.")
+    FOURTH = ("black", "-..")
+    FIFTH = ("RoyalBlue1", "")
+    SIXTH = ("lime green", "")
+    SEVENTH = ("spring green", "")
+    EIGHTH = ("light slate blue", "")
+
