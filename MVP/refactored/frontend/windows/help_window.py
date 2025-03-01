@@ -46,13 +46,14 @@ class HelpWindow(Toplevel):
         self.backward_logo = ImageTk.PhotoImage(self.backward_logo)
 
         self.backward = tk.Button(self.pagination_frame, image=self.backward_logo, command=self.previous_page)
+        self.backward.config(bg="white", activebackground="white")
 
         self.forward_logo = (Image.open(ASSETS_DIR + "/chevron-right-circle-outline.png"))
         self.forward_logo = self.forward_logo.resize((35, 35))
         self.forward_logo = ImageTk.PhotoImage(self.forward_logo)
 
         self.forward = tk.Button(self.pagination_frame, image=self.forward_logo, command=self.next_page)
-
+        self.forward.config(bg="white", activebackground="white")
         self.pagination_frame.columnconfigure(0, weight=1)
         self.pagination_frame.columnconfigure(1, weight=1)
 
