@@ -396,7 +396,7 @@ class CustomCanvas(tk.Canvas):
             spider.r *= scale
             self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
                         spider.y + spider.r)
-            self.itemconfig(spider.circle, width=spider.r * 2 / 10)
+            self.itemconfig(spider.circle, width=round(min(spider.r / 5, 5)))
 
         for wire in self.wires:
             wire.wire_width *= scale

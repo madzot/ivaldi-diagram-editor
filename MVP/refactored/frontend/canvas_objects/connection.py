@@ -24,13 +24,14 @@ class Connection:
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.circle = self.canvas.create_oval(location[0] - self.r, location[1] - self.r, location[0] + self.r,
                                               location[1] + self.r, fill="black",
-                                              outline=ConnectionType.COLORS.value[self.type.value], width=self.r / 5)
+                                              outline=ConnectionType.COLORS.value[self.type.value],
+                                              width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
         self.bind_events()
 
     def update(self):
         self.canvas.itemconfig(self.circle, outline=ConnectionType.COLORS.value[self.type.value])
-        self.canvas.itemconfig(self.circle, width=self.r / 5)
+        self.canvas.itemconfig(self.circle, width=round(min(self.r / 5, 5)))
         self.canvas.update()
 
     def bind_events(self):
