@@ -39,8 +39,6 @@ class HelpWindow(Toplevel):
         self.pagination_frame = Frame(self, pady=10)
         self.pagination_frame.pack(side=tk.BOTTOM, fill=tk.BOTH)
 
-        # These pagination buttons are for the future when we need to have more than 1 page of help
-
         self.backward_logo = Image.open(ASSETS_DIR + "/chevron-left-circle-outline.png")
         self.backward_logo = self.backward_logo.resize((35, 35))
         self.backward_logo = ImageTk.PhotoImage(self.backward_logo)
@@ -54,8 +52,11 @@ class HelpWindow(Toplevel):
 
         self.forward = tk.Button(self.pagination_frame, image=self.forward_logo, command=self.next_page)
         self.forward.config(bg="white", activebackground="white")
+
         self.pagination_frame.columnconfigure(0, weight=1)
         self.pagination_frame.columnconfigure(1, weight=1)
+
+        self.pagination_frame.rowconfigure(0, weight=1)
 
         self.backward.grid(column=0, row=0, sticky="e", padx=(0, 15))
         self.forward.grid(column=1, row=0, sticky="w", padx=(15, 0))
