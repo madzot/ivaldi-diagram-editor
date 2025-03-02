@@ -155,45 +155,13 @@ class Selector:
 
             for item in self.selected_items:
                 if isinstance(item, Box):
-                    connections_copy = []
-                    for connection in item.connections:
-                        connection_list.append(connection)
-                        connections_copy.append({
-                            'id': copy.deepcopy(connection.id),
-                            'side': copy.deepcopy(connection.side),
-                            'index': copy.deepcopy(connection.index)
-                        })
-
-                    self.copied_items.append({
-                        'component': "Box",
-                        'id': copy.deepcopy(item.id),
-                        'label': copy.deepcopy(item.label_text),
-                        'location': (item.x, item.y),
-                        'size': copy.deepcopy(item.size),
-                        'shape': copy.deepcopy(item.shape),
-                        'connections': connections_copy,
-                        'sub-diagram': copy.deepcopy(item.sub_diagram.id) if item.sub_diagram else None
-                    })
-                    # Replace it
-                    if item.sub_diagram:
-                        self.copy_canvas(item.sub_diagram)
+                    self.copied_items.append(self.copy_box(item, connection_list))
 
                 if isinstance(item, Spider):
-                    for wire in item.wires:
-                        if wire.start_connection == item:
-                            connection_list.append(wire.start_connection)
-                        else:
-                            connection_list.append(wire.end_connection)
-                    self.copied_items.append({
-                        'component': "Spider",
-                        'id': copy.deepcopy(item.id),
-                        'location': (item.x, item.y),
-                        'size': copy.deepcopy(item.r),
-                    })
+                    self.copied_items.append(self.copy_spider(item, connection_list))
             self.copy_selected_wires(connection_list, canvas)
 
     def paste_copied_items(self, event_x=50, event_y=50, replace=False, multi=1):
-        from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
         if len(self.copied_items) > 0:
 
             middle_point = self.find_middle_point(event_x, event_y)
@@ -204,44 +172,10 @@ class Selector:
                 if item['component'] == "Box":
                     loc = (event_x + (item['location'][0] - middle_point[0]) * multi,
                            event_y + (item['location'][1] - middle_point[1]) * multi)
-                    # Replace it
-                    new_box = self.canvas.add_box(loc, size=(item['size'][0] * multi, item['size'][1] * multi),
-                                                  shape=item['shape'])
-                    for c in item['connections']:
-                        if c['side'] == "right":
-                            new_box.add_right_connection()
-                        if c['side'] == "left":
-                            new_box.add_left_connection()
-                    new_box.set_label(item['label'])
-                    if item["sub-diagram"]:
-                        print("made into sub-diagram")
-                        sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
-                        print(sub_diagram)
-                        self.paste_canvas(sub_diagram, item["sub-diagram"])
-                        sub_diagram.set_name(item['label'])
-                        self.canvas.main_diagram.add_canvas(sub_diagram)
 
-                    for wire in self.copied_wire_list:
-                        for box_connection in item['connections']:
-                            if wire['original_start_connection'] == box_connection['id']:
-                                for connection in new_box.connections:
-                                    if (connection.side == wire['original_start_side']
-                                            and connection.index == wire['original_start_index']):
-                                        wire['start_connection'] = connection
-                            if wire['original_end_connection'] == box_connection['id']:
-                                for connection in new_box.connections:
-                                    if (connection.side == wire['original_end_side']
-                                            and connection.index == wire['original_end_index']):
-                                        wire['end_connection'] = connection
-                    if replace:
-                        for wire in wires:
-                            for box_connection in item['connections']:
-                                if wire['original_start_connection'] == box_connection['id']:
-                                    for connection in new_box.connections:
-                                        if (connection.side == wire['original_start_side']
-                                                and connection.index == wire['original_start_index']):
-                                            wire['start_connection'] = connection
+                    new_box = self.paste_box(item, loc, self.copied_wire_list, wires, self.canvas, multi, replace, True)
                     pasted_items.append(new_box)
+
                 if item['component'] == "Spider":
                     new_spider = self.canvas.add_spider((event_x + (item['location'][0] - middle_point[0]) * multi,
                                                          event_y + (item['location'][1] - middle_point[1]) * multi))
@@ -261,6 +195,41 @@ class Selector:
                 self.canvas.end_wire_to_connection(wire['end_connection'])
             if replace:
                 self.add_edge_wires(pasted_items)
+
+    def paste_canvas(self, canvas, canvas_id):
+        for diagram in self.copied_sub_diagrams:
+            if canvas_id == diagram['Canvas']:
+                for item in diagram['Components']:
+                    if item['component'] == 'Box':
+                        self.paste_box(item, item['location'], diagram['Wires'], [], canvas)
+
+                    if item['component'] == 'Spider':
+                        new_spider = canvas.add_spider(item['location'])
+                        for wire in diagram['Wires']:
+                            if wire['original_start_connection'] == item['id']:
+                                wire['start_connection'] = new_spider
+                            if wire['original_end_connection'] == item['id']:
+                                wire['end_connection'] = new_spider
+
+                    if item['component'] == "Input":
+                        i = canvas.add_diagram_input(item['id'])
+                        for wire in diagram['Wires']:
+                            if wire['original_start_connection'] == item['id']:
+                                wire['start_connection'] = i
+                            if wire['original_end_connection'] == item['id']:
+                                wire['end_connection'] = i
+
+                    if item['component'] == "Output":
+                        o = canvas.add_diagram_output(item['id'])
+                        for wire in diagram['Wires']:
+                            if wire['original_start_connection'] == item['id']:
+                                wire['start_connection'] = o
+                            if wire['original_end_connection'] == item['id']:
+                                wire['end_connection'] = o
+
+                for item in diagram['Wires']:
+                    canvas.start_wire_from_connection(item['start_connection'])
+                    canvas.end_wire_to_connection(item['end_connection'], True)
 
     def find_middle_point(self, event_x, event_y):
         most_left, most_right, most_up, most_down = self.find_corners_copied_items()
@@ -575,35 +544,9 @@ class Selector:
         copied_items = []
         connection_list = []
         for box in canvas.boxes:
-            connections_copy = []
-            for connection in box.connections:
-                connection_list.append(connection)
-                connections_copy.append({
-                    'id': copy.deepcopy(connection.id),
-                    'side': copy.deepcopy(connection.side),
-                    'index': copy.deepcopy(connection.index)
-                })
-
-            copied_items.append({
-                'component': "Box",
-                'id': copy.deepcopy(box.id),
-                'label': copy.deepcopy(box.label_text),
-                'location': (box.x, box.y),
-                'size': copy.deepcopy(box.size),
-                'shape': copy.deepcopy(box.shape),
-                'connections': connections_copy,
-                'sub-diagram': copy.deepcopy(box.sub_diagram.id) if box.sub_diagram else None
-            })
-            if box.sub_diagram:
-                self.copy_canvas(box.sub_diagram)
+            copied_items.append(self.copy_box(box, connection_list))
         for spider in canvas.spiders:
-            connection_list.append(spider)
-            copied_items.append({
-                'component': "Spider",
-                'id': copy.deepcopy(spider.id),
-                'location': (spider.x, spider.y),
-                'size': copy.deepcopy(spider.r),
-            })
+            copied_items.append(self.copy_spider(spider, connection_list))
         for i in canvas.inputs:
             connection_list.append(i)
             copied_items.append({
@@ -627,63 +570,75 @@ class Selector:
             'Wires': wires
         })
 
-    def paste_canvas(self, canvas, id):
-        for diagram in self.copied_sub_diagrams:
-            if id == diagram['Canvas']:
-                for item in diagram['Components']:
-                    if item['component'] == 'Box':
-                        # Replace it
-                        new_box = canvas.add_box(item['location'], size=(item['size'][0], item['size'][1]),
-                                                      shape=item['shape'])
-                        for c in item['connections']:
-                            if c['side'] == "right":
-                                new_box.add_right_connection()
-                            if c['side'] == "left":
-                                new_box.add_left_connection()
-                        new_box.set_label(item['label'])
-                        if item["sub-diagram"]:
-                            sub_diagram = new_box.edit_sub_diagram(save_to_canvasses=False)
-                            self.paste_canvas(sub_diagram, item["sub-diagram"])
-                            sub_diagram.set_name(item['label'])
-                            canvas.main_diagram.add_canvas(sub_diagram)
+    def copy_box(self, box, connection_list):
+        connections_copy = []
+        for connection in box.connections:
+            connection_list.append(connection)
+            connections_copy.append({
+                'id': copy.deepcopy(connection.id),
+                'side': copy.deepcopy(connection.side),
+                'index': copy.deepcopy(connection.index)
+            })
 
-                        for wire in diagram['Wires']:
-                            for box_connection in item['connections']:
-                                if wire['original_start_connection'] == box_connection['id']:
-                                    for connection in new_box.connections:
-                                        if (connection.side == wire['original_start_side']
-                                                and connection.index == wire['original_start_index']):
-                                            wire['start_connection'] = connection
-                                if wire['original_end_connection'] == box_connection['id']:
-                                    for connection in new_box.connections:
-                                        if (connection.side == wire['original_end_side']
-                                                and connection.index == wire['original_end_index']):
-                                            wire['end_connection'] = connection
+        box_info = ({
+            'component': "Box",
+            'id': copy.deepcopy(box.id),
+            'label': copy.deepcopy(box.label_text),
+            'location': (box.x, box.y),
+            'size': copy.deepcopy(box.size),
+            'shape': copy.deepcopy(box.shape),
+            'connections': connections_copy,
+            'sub-diagram': copy.deepcopy(box.sub_diagram.id) if box.sub_diagram else None
+        })
+        if box.sub_diagram:
+            self.copy_canvas(box.sub_diagram)
+        return box_info
 
-                    if item['component'] == 'Spider':
-                        new_spider = canvas.add_spider(item['location'])
-                        for wire in diagram['Wires']:
-                            if wire['original_start_connection'] == item['id']:
-                                wire['start_connection'] = new_spider
-                            if wire['original_end_connection'] == item['id']:
-                                wire['end_connection'] = new_spider
+    @staticmethod
+    def copy_spider(spider, connection_list):
+        connection_list.append(spider)
+        spider_info = ({
+            'component': "Spider",
+            'id': copy.deepcopy(spider.id),
+            'location': (spider.x, spider.y),
+            'size': copy.deepcopy(spider.r),
+        })
+        return spider_info
 
-                    if item['component'] == "Input":
-                        i = canvas.add_diagram_input(item['id'])
-                        for wire in diagram['Wires']:
-                            if wire['original_start_connection'] == item['id']:
-                                wire['start_connection'] = i
-                            if wire['original_end_connection'] == item['id']:
-                                wire['end_connection'] = i
+    def paste_box(self, box, loc, wires, side_wires, canvas, multi=1, replace=False, return_box=False):
+        from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+        new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'])
+        for c in box['connections']:
+            if c['side'] == "right":
+                new_box.add_right_connection()
+            if c['side'] == "left":
+                new_box.add_left_connection()
+        new_box.set_label(box['label'])
+        if box["sub-diagram"]:
+            sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
+            self.paste_canvas(sub_diagram, box["sub-diagram"])
+            sub_diagram.set_name(box['label'])
+            self.canvas.main_diagram.add_canvas(sub_diagram)
 
-                    if item['component'] == "Output":
-                        o = canvas.add_diagram_output(item['id'])
-                        for wire in diagram['Wires']:
-                            if wire['original_start_connection'] == item['id']:
-                                wire['start_connection'] = o
-                            if wire['original_end_connection'] == item['id']:
-                                wire['end_connection'] = o
-
-                for item in diagram['Wires']:
-                    canvas.start_wire_from_connection(item['start_connection'])
-                    canvas.end_wire_to_connection(item['end_connection'], True)
+        for wire in wires:
+            for box_connection in box['connections']:
+                if wire['original_start_connection'] == box_connection['id']:
+                    for connection in new_box.connections:
+                        if (connection.side == wire['original_start_side']
+                                and connection.index == wire['original_start_index']):
+                            wire['start_connection'] = connection
+                if wire['original_end_connection'] == box_connection['id']:
+                    for connection in new_box.connections:
+                        if (connection.side == wire['original_end_side']
+                                and connection.index == wire['original_end_index']):
+                            wire['end_connection'] = connection
+        if replace:
+            for wire in side_wires:
+                for box_connection in box['connections']:
+                    if wire['original_start_connection'] == box_connection['id']:
+                        for connection in new_box.connections:
+                            if (connection.side == wire['original_start_side']
+                                    and connection.index == wire['original_start_index']):
+                                wire['start_connection'] = connection
+        if return_box:
+            return new_box
