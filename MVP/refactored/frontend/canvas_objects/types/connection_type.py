@@ -12,10 +12,14 @@ class ConnectionType(Enum):
     SEVENTH = 7
     EIGHTH = 8
     NINTH = 9
+    TENTH = 10
+    ELEVENTH = 11
 
-    COLORS = ['black', 'magenta', 'cyan',
-              'firebrick1', 'gold2', 'RoyalBlue1',
-              'lime green', 'spring green', 'light slate blue']
+    COLORS = ['black', 'light slate gray', 'steel blue',
+              'cyan', 'green yellow', 'hot pink',
+              'NavajoWhite4', 'SlateBlue1', 'SeaGreen1',
+              'DarkOliveGreen1', 'goldenrod2', 'red3',]
 
     def next(self):
-        return ConnectionType((self.value + 1) % 9)
+        self.COLORS: Enum
+        return ConnectionType((self.value + 1) % len(self.COLORS.value))
