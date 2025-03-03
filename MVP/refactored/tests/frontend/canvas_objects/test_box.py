@@ -36,7 +36,7 @@ class BoxTests(TestMainDiagram):
 
         self.assertEqual((expected_width, expected_height), box.size)
 
-        self.assertFalse(box.connections)
+        self.assertListEqual([], box.connections)
 
         self.assertEqual(0, box.left_connections)
         self.assertEqual(0, box.right_connections)
@@ -44,7 +44,7 @@ class BoxTests(TestMainDiagram):
         self.assertIsNone(box.label)
 
         self.assertFalse(box.label_text)
-        self.assertFalse(box.wires)
+        self.assertListEqual([], box.wires)
 
         self.assertIsNone(box.node)
 
@@ -280,7 +280,7 @@ class BoxTests(TestMainDiagram):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
         tag_bind_mock.call_count = 0
         box.bind_events()
-        self.assertEqual(7, tag_bind_mock.call_count)
+        self.assertEqual(11, tag_bind_mock.call_count)
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
     def test__bind_event_label__calls_out_tag_bind(self, tag_bind_mock):
@@ -288,7 +288,7 @@ class BoxTests(TestMainDiagram):
         tag_bind_mock.call_count = 0
         box.bind_event_label()
 
-        self.assertEqual(5, tag_bind_mock.call_count)
+        self.assertEqual(7, tag_bind_mock.call_count)
 
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_events")
     def test__init__calls_bind_event(self, bind_events_mock):
@@ -314,7 +314,7 @@ class BoxTests(TestMainDiagram):
         box.show_context_menu(event)
 
         self.assertEqual(1, close_menu_mock.call_count)
-        self.assertEqual(11, add_command_mock.call_count)
+        self.assertEqual(12, add_command_mock.call_count)
         self.assertEqual(1, entry_config_mock.call_count)
         self.assertEqual(1, add_separator_mock.call_count)
         self.assertEqual(1, add_cascade_mock.call_count)
@@ -341,7 +341,7 @@ class BoxTests(TestMainDiagram):
         box.show_context_menu(event)
 
         self.assertEqual(1, close_menu_mock.call_count)
-        self.assertEqual(13, add_command_mock.call_count)
+        self.assertEqual(14, add_command_mock.call_count)
         self.assertEqual(1, entry_config_mock.call_count)
         self.assertEqual(1, add_separator_mock.call_count)
         self.assertEqual(1, add_cascade_mock.call_count)
@@ -379,13 +379,13 @@ class BoxTests(TestMainDiagram):
     @patch("tkinter.Menu.add_separator")
     @patch("tkinter.Menu.tk_popup")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.close_menu")
-    def test__show_context_menu__sub_diagram_box(self,
-                                                 close_menu_mock,
-                                                 tk_popup_mock,
-                                                 add_separator_mock,
-                                                 entry_config_mock,
-                                                 add_cascade_mock,
-                                                 add_command_mock):
+    def test__show_context_menu__sub_diagram_box_not_locked(self,
+                                                            close_menu_mock,
+                                                            tk_popup_mock,
+                                                            add_separator_mock,
+                                                            entry_config_mock,
+                                                            add_cascade_mock,
+                                                            add_command_mock):
         box = Box(self.custom_canvas, 100, 100, self.app.receiver)
         box.sub_diagram = True
         event = tkinter.Event()
@@ -393,7 +393,7 @@ class BoxTests(TestMainDiagram):
         box.show_context_menu(event)
 
         self.assertEqual(1, close_menu_mock.call_count)
-        self.assertEqual(6, add_command_mock.call_count)
+        self.assertEqual(7, add_command_mock.call_count)
         self.assertEqual(0, entry_config_mock.call_count)
         self.assertEqual(1, add_separator_mock.call_count)
         self.assertEqual(0, add_cascade_mock.call_count)
@@ -613,9 +613,3 @@ class BoxTests(TestMainDiagram):
 
         self.assertEqual((110, 110), box.size)
         self.assertEqual(50, move_label_mock.call_count)
-
-
-
-
-
-

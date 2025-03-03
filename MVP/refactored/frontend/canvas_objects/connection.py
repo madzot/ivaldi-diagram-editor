@@ -52,12 +52,12 @@ class Connection:
 
     def show_context_menu(self, event):
         self.close_menu()
-        if self.box and not (self.box.sub_diagram or self.box.locked):
+        if (self.box and not self.box.locked) or self.box is None:
             self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
             self.add_type_choice_to_context_menu()
 
-            self.context_menu.add_command(label="Delete Connection", command=self.manually_delete_self)
+            self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
             self.context_menu.add_separator()
             self.context_menu.add_command(label="Cancel")
 
@@ -88,7 +88,7 @@ class Connection:
         if self.context_menu:
             self.context_menu.destroy()
 
-    def manually_delete_self(self):
+    def delete_from_parent(self):
         if self.box:
             if self.box.sub_diagram and self.side == "left":
                 for i in self.box.sub_diagram.inputs:
@@ -113,9 +113,6 @@ class Connection:
 
     def color_black(self):
         self.canvas.itemconfig(self.circle, fill='black')
-
-    def color_yellow(self):
-        self.canvas.itemconfig(self.circle, fill='yellow')
 
     def color_green(self):
         self.canvas.itemconfig(self.circle, fill='green')
