@@ -633,19 +633,19 @@ class MainDiagram(tk.Tk):
             if show_connections:
                 for connection in box.connections:
                     circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
-                                            connection.r / 100, color="black")
+                                            connection.r / 100, color="black", zorder=2)
                     ax.add_patch(circle)
 
             plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
-                     horizontalalignment="center", verticalalignment="center")
+                     horizontalalignment="center", verticalalignment="center", zorder=2)
             ax.add_patch(polygon)
 
         for spider in canvas.spiders:
-            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black")
+            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black", zorder=2)
             ax.add_patch(circle)
 
         for i_o in canvas.inputs + canvas.outputs:
-            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black")
+            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black", zorder=2)
             ax.add_patch(con)
 
         for wire in canvas.wires:
@@ -667,20 +667,41 @@ class MainDiagram(tk.Tk):
             spl = make_interp_spline(x, y, k=3)
             y_line = spl(x_linspace)
 
-            match wire.type:
-                case WireType.FIRST:
-                    style = ":"
-                case WireType.SECOND:
-                    style = "-."
-                case WireType.THIRD:
-                    style = "--"
-                case _:
-                    style = "-"
+            color, style = self.get_wire_style(wire)
 
-            plt.plot(x_linspace, y_line, style, color="black", linewidth=1)
+            plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
 
         ax.set_xlim(0, x_max)
         ax.set_ylim(0, y_max)
         plt.axis('off')
 
         return fig, ax
+
+    @staticmethod
+    def get_wire_style(wire):
+        match wire.type:
+            case WireType.FIRST:
+                style = "black", ":"
+            case WireType.SECOND:
+                style = "black", "--"
+            case WireType.THIRD:
+                style = "black", "-."
+            case WireType.FOURTH:
+                style = "greenyellow", ""
+            case WireType.FIFTH:
+                style = "hotpink", ""
+            case WireType.SIXTH:
+                style = "navajowhite", ""
+            case WireType.SEVENTH:
+                style = "slateblue", ""
+            case WireType.EIGHTH:
+                style = "seagreen", ""
+            case WireType.NINTH:
+                style = "darkolivegreen", ""
+            case WireType.TENTH:
+                style = "goldenrod", ""
+            case WireType.ELEVENTH:
+                style = "red", ""
+            case _:
+                style = "black", ""
+        return style
