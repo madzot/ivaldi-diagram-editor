@@ -3,6 +3,9 @@ from MVP.refactored.frontend.canvas_objects.types.connection_type import Connect
 
 
 class Connection:
+
+    active_types = 1
+
     def __init__(self, box, index, side, location, canvas, r=5, id_=None, connection_type=ConnectionType.GENERIC):
         self.canvas = canvas
         self.id = id(self)
@@ -27,7 +30,6 @@ class Connection:
                                               outline=ConnectionType.COLORS.value[self.type.value],
                                               width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
-        self.active_types = 1
         self.bind_events()
 
     def update(self):
@@ -69,20 +71,21 @@ class Connection:
             self.context_menu.add_cascade(menu=sub_menu, label="Connection type")
             sub_menu.add_command(label="Generic", command=lambda: self.change_type(0))
 
-            for i in range(1, self.active_types):
+            for i in range(1, Connection.active_types):
                 sub_menu.add_command(label=ConnectionType.COLOR_NAMES.value[i],
                                      command=lambda c_type=i: self.change_type(c_type))
 
-            if self.active_types < len(ConnectionType.COLORS.value):
+            if Connection.active_types < len(ConnectionType.COLORS.value):
                 sub_menu.add_separator()
                 sub_menu.add_command(label="Add new type", command=lambda: self.add_active_new_type())
 
     def add_active_new_type(self):
-        self.change_type(self.active_types)
+        self.change_type(Connection.active_types)
         self.increment_active_types()
 
-    def increment_active_types(self):
-        self.active_types += 1
+    @staticmethod
+    def increment_active_types():
+        Connection.active_types += 1
 
     def close_menu(self):
         if self.context_menu:
