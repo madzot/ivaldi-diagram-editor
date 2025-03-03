@@ -77,9 +77,9 @@ class Connection:
 
             if Connection.active_types < len(ConnectionType.COLORS.value):
                 sub_menu.add_separator()
-                sub_menu.add_command(label="Add new type", command=lambda: self.add_active_new_type())
+                sub_menu.add_command(label="Add new type", command=lambda: self.add_active_type())
 
-    def add_active_new_type(self):
+    def add_active_type(self):
         self.change_type(Connection.active_types)
         self.increment_active_types()
 
