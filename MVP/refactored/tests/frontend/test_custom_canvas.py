@@ -21,11 +21,11 @@ class TestCustomCanvas(unittest.TestCase):
 
 class Tests(TestCustomCanvas):
     def test__init__no_objects_at_start(self):
-        self.assertFalse(self.custom_canvas.boxes)
-        self.assertFalse(self.custom_canvas.outputs)
-        self.assertFalse(self.custom_canvas.inputs)
-        self.assertFalse(self.custom_canvas.spiders)
-        self.assertFalse(self.custom_canvas.wires)
+        self.assertListEqual([], self.custom_canvas.boxes)
+        self.assertListEqual([], self.custom_canvas.outputs)
+        self.assertListEqual([], self.custom_canvas.inputs)
+        self.assertListEqual([], self.custom_canvas.spiders)
+        self.assertListEqual([], self.custom_canvas.wires)
 
     def test__init__other_values(self):
         self.assertIsNone(self.custom_canvas.temp_wire)
