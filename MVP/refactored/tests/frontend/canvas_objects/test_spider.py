@@ -51,12 +51,13 @@ class SpiderTests(TestMainDiagram):
 
         spider.bind_events()
 
-        self.assertEqual(6, tag_bind_mock.call_count)
+        self.assertEqual(7, tag_bind_mock.call_count)
 
+    @patch("MVP.refactored.frontend.canvas_objects.spider.Spider.add_type_choice")
     @patch("tkinter.Menu.add_command")
     @patch("tkinter.Menu.tk_popup")
     @patch("MVP.refactored.frontend.canvas_objects.spider.Spider.close_menu")
-    def test__show_context_menu__callouts(self, close_menu_mock, tk_popup_mock, add_command_mock):
+    def test__show_context_menu__callouts(self, close_menu_mock, tk_popup_mock, add_command_mock, type_choice_mock):
         spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
         event = tkinter.Event()
         event.x_root = 100
@@ -64,6 +65,7 @@ class SpiderTests(TestMainDiagram):
 
         spider.show_context_menu(event)
 
+        self.assertTrue(type_choice_mock.called)
         self.assertEqual(1, close_menu_mock.call_count)
         self.assertEqual(1, tk_popup_mock.call_count)
         self.assertEqual(2, add_command_mock.call_count)
