@@ -49,7 +49,7 @@ class Spider(Connection):
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
-        self.add_type_choice_to_context_menu()
+        self.add_type_choice()
 
         self.context_menu.add_command(label="Delete Spider", command=self.delete_spider)
         self.context_menu.add_separator()
