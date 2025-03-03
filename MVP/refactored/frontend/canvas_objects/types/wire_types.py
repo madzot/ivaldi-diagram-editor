@@ -6,7 +6,7 @@ class WireType(Enum):
     FIRST = ("black", ".")
     SECOND = ("black", "-")
     THIRD = ("black", "-.")
-    FOURTH = ("black", "-..")
+    FOURTH = ("green yellow", "")
     FIFTH = ("hot pink", "")
     SIXTH = ("NavajoWhite4", "")
     SEVENTH = ("SlateBlue1", "")
