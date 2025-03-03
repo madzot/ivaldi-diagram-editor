@@ -55,7 +55,7 @@ class Connection:
         if (self.box and not self.box.locked) or self.box is None:
             self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
-            self.add_type_choice_to_context_menu()
+            self.add_type_choice()
 
             self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
             self.context_menu.add_separator()
@@ -63,7 +63,7 @@ class Connection:
 
             self.context_menu.tk_popup(event.x_root, event.y_root)
 
-    def add_type_choice_to_context_menu(self):
+    def add_type_choice(self):
         if not self.has_wire:
             sub_menu = tk.Menu(self.context_menu, tearoff=0)
             self.context_menu.add_cascade(menu=sub_menu, label="Connection type")
@@ -78,8 +78,8 @@ class Connection:
                 sub_menu.add_command(label="Add new type", command=lambda: self.add_active_new_type())
 
     def add_active_new_type(self):
+        self.change_type(self.active_types)
         self.increment_active_types()
-        self.change_type(self.active_types - 1)
 
     def increment_active_types(self):
         self.active_types += 1
