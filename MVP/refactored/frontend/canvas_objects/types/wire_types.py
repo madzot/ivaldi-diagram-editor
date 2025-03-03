@@ -14,4 +14,3 @@ class WireType(Enum):
     NINTH = ("DarkOliveGreen1", "")
     TENTH = ("goldenrod2", "")
     ELEVENTH = ("red3", "")
-

@@ -20,6 +20,11 @@ class ConnectionType(Enum):
               'NavajoWhite4', 'SlateBlue1', 'SeaGreen1',
               'DarkOliveGreen1', 'goldenrod2', 'red3',]
 
+    COLOR_NAMES = ['Black', 'Light Gray', 'Blue',
+                   'Cyan', 'Green Yellow', 'Hot Pink',
+                   'Navajo', 'Slate Blue', 'Sea Green',
+                   'Olive Green', 'Gold', 'Red']
+
     def next(self):
         self.COLORS: Enum
         return ConnectionType((self.value + 1) % len(self.COLORS.value))

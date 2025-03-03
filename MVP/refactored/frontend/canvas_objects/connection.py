@@ -27,6 +27,7 @@ class Connection:
                                               outline=ConnectionType.COLORS.value[self.type.value],
                                               width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
+        self.active_types = 1
         self.bind_events()
 
     def update(self):
@@ -41,6 +42,7 @@ class Connection:
     def increment_type(self):
         if not self.has_wire:
             self.type = self.type.next()
+            self.increment_active_types()
             self.update()
 
     def change_type(self, type_id):
@@ -59,16 +61,28 @@ class Connection:
             self.context_menu.add_separator()
             self.context_menu.add_command(label="Cancel")
 
-            self.context_menu.post(event.x_root, event.y_root)
+            self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def add_type_choice_to_context_menu(self):
         if not self.has_wire:
             sub_menu = tk.Menu(self.context_menu, tearoff=0)
             self.context_menu.add_cascade(menu=sub_menu, label="Connection type")
             sub_menu.add_command(label="Generic", command=lambda: self.change_type(0))
-            sub_menu.add_command(label="Magenta", command=lambda: self.change_type(1))
-            sub_menu.add_command(label="Cyan", command=lambda: self.change_type(2))
-            sub_menu.add_command(label="Red", command=lambda: self.change_type(3))
+
+            for i in range(1, self.active_types):
+                sub_menu.add_command(label=ConnectionType.COLOR_NAMES.value[i],
+                                     command=lambda c_type=i: self.change_type(c_type))
+
+            if self.active_types < len(ConnectionType.COLORS.value):
+                sub_menu.add_separator()
+                sub_menu.add_command(label="Add new type", command=lambda: self.add_active_new_type())
+
+    def add_active_new_type(self):
+        self.increment_active_types()
+        self.change_type(self.active_types - 1)
+
+    def increment_active_types(self):
+        self.active_types += 1
 
     def close_menu(self):
         if self.context_menu:
