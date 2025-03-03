@@ -5,6 +5,7 @@ from unittest.mock import patch
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from MVP.refactored.frontend.canvas_objects.spider import Spider
@@ -36,7 +37,8 @@ class SpiderTests(TestMainDiagram):
         self.assertEqual((100, 150), spider.location)
 
         self.assertTrue(isinstance(spider.connections, list))
-        self.assertFalse(spider.wires)
+        self.assertListEqual([], spider.wires)
+        self.assertEqual(ConnectionType.GENERIC, spider.type)
         self.assertFalse(spider.is_snapped)
 
     def test__is_spider__returns_true(self):
