@@ -4,7 +4,6 @@ import tkinter as tk
 class Connection:
     def __init__(self, box, index, side, location, canvas, r=5, id_=None):
         self.canvas = canvas
-        self.id = id(self)
         self.box = box  # None if connection is diagram input/output/spider
         self.index = index
         self.side = side  # 'spider' if connection is a spider
@@ -14,10 +13,8 @@ class Connection:
         self.r = r
         if not id_:
             self.id = id(self)
-
         else:
             self.id = id_
-        self.node = None
 
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 

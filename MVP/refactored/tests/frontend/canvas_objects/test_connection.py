@@ -36,7 +36,6 @@ class ConnectionTests(TestApplication):
         self.assertIsNone(connection.wire)
         self.assertFalse(connection.has_wire)
         self.assertEqual(5, connection.r)
-        self.assertIsNone(connection.node)
         self.assertEqual(1, connection.width_between_boxes)
         self.assertTrue(bind_events_mock.called)
 
