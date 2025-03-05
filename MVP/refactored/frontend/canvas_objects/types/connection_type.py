@@ -12,17 +12,15 @@ class ConnectionType(Enum):
     SEVENTH = 7
     EIGHTH = 8
     NINTH = 9
-    TENTH = 10
-    ELEVENTH = 11
 
-    COLORS = ['black', 'light slate gray', 'steel blue',
+    COLORS = ['black', 'steel blue',
               'cyan', 'green yellow', 'hot pink',
-              'NavajoWhite4', 'SlateBlue1', 'SeaGreen1',
+              'SlateBlue1', 'SeaGreen1',
               'DarkOliveGreen1', 'goldenrod2', 'red3',]
 
-    COLOR_NAMES = ['Black', 'Light Gray', 'Blue',
+    COLOR_NAMES = ['Black', 'Blue',
                    'Cyan', 'Green Yellow', 'Hot Pink',
-                   'Navajo', 'Slate Blue', 'Sea Green',
+                   'Slate Blue', 'Sea Green',
                    'Olive Green', 'Gold', 'Red']
 
     def next(self):
