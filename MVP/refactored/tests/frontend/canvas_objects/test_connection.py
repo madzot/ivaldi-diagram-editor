@@ -199,10 +199,12 @@ class ConnectionTests(TestApplication):
 
     def test__increment_active_types__adds_1_to_active_type(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.type = ConnectionType.FIRST
 
         connection.increment_active_types()
         self.assertEqual(2, Connection.active_types)
 
+        connection.type = ConnectionType.SECOND
         connection.increment_active_types()
         self.assertEqual(3, Connection.active_types)
 
