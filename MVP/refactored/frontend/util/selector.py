@@ -88,7 +88,7 @@ class Selector:
             return
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
-        box = self.canvas.add_box((x, y), shape="rectangle")
+        box = self.canvas.add_box(loc=(x, y), shape="rectangle")
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete_self("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
