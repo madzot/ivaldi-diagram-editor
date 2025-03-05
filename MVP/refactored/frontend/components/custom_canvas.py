@@ -586,12 +586,21 @@ class CustomCanvas(tk.Canvas):
             self.nullify_wire_start()
             self.cancel_wire_pulling()
 
-        if (self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start, connection)
-                and self.current_wire_start.type == connection.type
+        if (self.current_wire_start
+                and self.is_wire_between_connections_legal(self.current_wire_start, connection)
+                and (self.current_wire_start.type == connection.type or
+                     ConnectionType.GENERIC in (self.current_wire_start.type, connection.type))
                 or bypass_legality_check):
             self.cancel_wire_pulling()
             start_end = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
-            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1], wire_type=WireType[start_end[0].type.name])
+
+            if start_end[0].type == ConnectionType.GENERIC:
+                start_end[0].change_type(start_end[1].type.value)
+            if start_end[1].type == ConnectionType.GENERIC:
+                start_end[1].change_type(start_end[0].type.value)
+
+            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1],
+                                     wire_type=WireType[start_end[0].type.name])
             self.wires.append(self.current_wire)
 
             if self.current_wire_start.box is not None:
@@ -647,7 +656,8 @@ class CustomCanvas(tk.Canvas):
         return None
 
     def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC):
-        spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_, connection_type=connection_type)
+        spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_,
+                        connection_type=connection_type)
         self.spiders.append(spider)
         return spider
 
