@@ -5,6 +5,7 @@ import string
 from tkinter import filedialog
 from tkinter import messagebox
 
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from constants import *
 
@@ -42,6 +43,19 @@ class Importer:
         self.load_spiders_to_canvas(d, canvas, multi_x, multi_y)
         self.load_io_to_canvas(d, canvas)
         self.load_wires_to_canvas(d, canvas)
+        self.import_active_type_amount(canvas)
+
+    @staticmethod
+    def import_active_type_amount(canvas):
+        highest = 0
+        for connection in canvas.spiders + canvas.inputs + canvas.outputs:
+            if highest < connection.type.value:
+                highest = connection.type.value
+        for box in canvas.boxes:
+            for connection in box.connections:
+                if highest < connection.type.value:
+                    highest = connection.type.value
+        Connection.active_types = highest + 1
 
     def load_boxes_to_canvas(self, d, canvas, multi_x, multi_y):
         for box in d["boxes"]:
