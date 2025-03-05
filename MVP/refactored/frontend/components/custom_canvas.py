@@ -808,6 +808,8 @@ class CustomCanvas(tk.Canvas):
         while len(self.inputs) > 0:
             self.remove_diagram_input()
 
+        Connection.active_types = 1
+
     # STATIC HELPERS
     @staticmethod
     def is_wire_between_connections_legal(start, end):
