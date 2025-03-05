@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from MVP.refactored.backend.connection_info import ConnectionInfo
+from MVP.refactored.backend.types.connection_info import ConnectionInfo
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 
 

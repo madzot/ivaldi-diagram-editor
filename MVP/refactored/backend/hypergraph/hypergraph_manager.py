@@ -66,6 +66,7 @@ class HypergraphManager:
                     hypergraph.remove_node(id)
                     break
         # check if new hyper graphs were created
+        if _hypergraph is None: return
         source_nodes_and_potentially_source_nodes: list[Node] = _hypergraph.get_hypergraph_source() + removed_node_outputs_and_directly_connected  # TODO
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
         for source_node in source_nodes_and_potentially_source_nodes:

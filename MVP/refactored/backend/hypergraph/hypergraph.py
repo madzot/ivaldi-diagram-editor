@@ -18,12 +18,14 @@ message_end = "\x1b[0m"
 current_hypergraph = 0
 
 id_dict_hypergraph = {}
-class Hypergraph(HyperEdge):
+class Hypergraph:
     """Hypergraph class."""
 
     def __init__(self, hypergraph_id=None, canvas_id=None):
         global current_hypergraph
-        super().__init__(hypergraph_id)
+        self.id = hypergraph_id
+        if hypergraph_id is None:
+            self.id = id(self)
         self.canvas_id = canvas_id
         self.hypergraph_source: dict[int, Node] = {}
         self.nodes: dict[int, Node] = {}
@@ -109,14 +111,6 @@ class Hypergraph(HyperEdge):
     def set_hypergraph_sources(self, nodes: list[Node]):
         self.hypergraph_source.clear()
         self.add_hypergraph_sources(nodes)
-
-    def get_node_by_input(self, input_id: int) -> HyperEdge | None:
-        # TODO rewrite, input now is wire id => Node id, and Node is hyperedge
-        return None
-
-    def get_node_by_output(self, output_id: int) -> HyperEdge | None:
-        # TODO rewrite, output now is wire id => Node id, and Node is hyperedge
-        return None
 
     def get_canvas_id(self) -> int:
         return self.canvas_id

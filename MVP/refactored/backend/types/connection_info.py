@@ -1,4 +1,4 @@
-from MVP.refactored.backend.connection_side import ConnectionSide
+from MVP.refactored.backend.types.connection_side import ConnectionSide
 
 from typing import Self
 
@@ -14,6 +14,9 @@ class ConnectionInfo:
 
     def to_list(self)-> list:
         return [self.index, self.box_id, self.side, self.id]
+
+    def is_all_fields_exists(self) -> bool:
+        return self.index is not None and self.box_id is not None and self.side is not None and self.id is not None
 
     @classmethod
     def from_list(cls, data)-> Self:

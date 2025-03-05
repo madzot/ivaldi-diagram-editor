@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.connection_side import ConnectionSide
+from MVP.refactored.backend.types.connection_side import ConnectionSide
 
 import tkinter as tk
 

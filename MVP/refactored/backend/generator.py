@@ -1,11 +1,12 @@
-from MVP.refactored.backend.connection_info import ConnectionInfo
+from MVP.refactored.backend.types.GeneratorType import GeneratorType
+from MVP.refactored.backend.types.connection_info import ConnectionInfo
 
 
 class Generator:
     """Backend representation of frontend box."""
     def __init__(self, id):
         self.id = id
-        self.type = 0  # 0-atomic 1-compound None-undefined
+        self.type: GeneratorType = GeneratorType.ATOMIC  # 0-atomic 1-compound None-undefined
         self.left: list[ConnectionInfo] = []
         self.right: list[ConnectionInfo] = []
         self.left_inner: list[ConnectionInfo] = []
@@ -33,7 +34,10 @@ class Generator:
     def remove_operand(self):
         self.operand = None
 
-    def add_type(self, type):
+    def set_id(self, new_id: int):
+        self.id = new_id
+
+    def set_type(self, type: GeneratorType):
         self.type = type
 
     def remove_type(self):
@@ -45,23 +49,23 @@ class Generator:
     def remove_all_right(self):
         self.right.clear()
 
-    def remove_left(self, connection: ConnectionInfo=None):
-        self.left.pop(connection.index)
+    def remove_left(self, connection_id: int=None):
+        self.left.pop(connection_id)
         for i, resource in enumerate(self.left):
             resource.index = i
 
-    def remove_right(self, connection: ConnectionInfo=None):
-        self.right.pop(connection.index)
+    def remove_right(self, connection_id: int=None):
+        self.right.pop(connection_id)
         for i, resource in enumerate(self.right):
             resource.index = i
 
-    def remove_left_inner(self, connection: ConnectionInfo=None):
-        self.left_inner.pop(connection.index)
+    def remove_left_inner(self, connection_id: int=None):
+        self.left_inner.pop(connection_id)
         for i, resource in enumerate(self.left_inner):
             resource.index = i
 
-    def remove_right_inner(self, connection: ConnectionInfo=None):
-        self.right_inner.pop(connection.index)
+    def remove_right_inner(self, connection_id: int=None):
+        self.right_inner.pop(connection_id)
         for i, resource in enumerate(self.right_inner):
             resource.index = i
 

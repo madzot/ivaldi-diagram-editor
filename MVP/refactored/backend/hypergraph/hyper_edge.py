@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class HyperEdge:
 
-    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None):
+    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None, sub_diagram_canvas_id = None):
         if hyper_edge_id is None:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
@@ -20,6 +20,14 @@ class HyperEdge:
 
         self.source_nodes: dict[int, Node] = dict() # key is connection index, it neede for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
+
+        self.sub_diagram_canvas_id = sub_diagram_canvas_id
+
+    def is_compound(self) -> bool:
+        return bool(self.sub_diagram_canvas_id)
+
+    def set_sub_diagram_canvas_id(self, canvas_id: int):
+        self.sub_diagram_canvas_id = canvas_id
 
     def swap_id(self, new_id: int):
         self.id = new_id

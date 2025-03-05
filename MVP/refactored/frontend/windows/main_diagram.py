@@ -238,7 +238,7 @@ class MainDiagram(tk.Tk):
                 copy_button.pack(pady=5)
 
     def visualize_as_graph(self, canvas):
-        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
+        hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
         if hypergraph is None:
             messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
             return
@@ -391,7 +391,7 @@ class MainDiagram(tk.Tk):
             if self.receiver.listener:
                 self.receiver.receiver_callback("remove_inner_left",
                                                 generator_id=self.custom_canvas.diagram_source_box.id,
-                                                canvas_id=self.canvas.id)
+                                                canvas_id=self.custom_canvas.id)
         else:
             self.custom_canvas.remove_diagram_input()
 
