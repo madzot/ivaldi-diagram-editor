@@ -174,11 +174,11 @@ class ConnectionTests(TestApplication):
     @patch('tkinter.Menu.add_command')
     def test__add_type_choice__all_active_types_no_add_new_button(self, add_command_mock, add_cascade_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
-        Connection.active_types = 12
+        Connection.active_types = 10
         connection.add_type_choice()
 
         self.assertEqual(1, add_cascade_mock.call_count)
-        self.assertEqual(12, add_command_mock.call_count)
+        self.assertEqual(10, add_command_mock.call_count)
 
     @patch('tkinter.Menu.destroy')
     def test__close_menu__destroys_menu(self, destroy_mock):
