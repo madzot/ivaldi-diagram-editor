@@ -53,13 +53,19 @@ class HelpWindow(Toplevel):
         self.forward = tk.Button(self.pagination_frame, image=self.forward_logo, command=self.next_page)
         self.forward.config(bg="white", activebackground="white")
 
-        self.pagination_frame.columnconfigure(0, weight=1)
-        self.pagination_frame.columnconfigure(1, weight=1)
+        self.page_label = Label(self.pagination_frame, text="", font=self.font)
+        self.update_page_label()
+
+        self.pagination_frame.columnconfigure(0, minsize=100, weight=1)
+        self.pagination_frame.columnconfigure(1, minsize=100, weight=1)
+        self.pagination_frame.columnconfigure(2, minsize=100, weight=1)
+        self.pagination_frame.columnconfigure(3, minsize=100, weight=1)
 
         self.pagination_frame.rowconfigure(0, weight=1)
 
-        self.backward.grid(column=0, row=0, sticky="e", padx=(0, 15))
-        self.forward.grid(column=1, row=0, sticky="w", padx=(15, 0))
+        self.backward.grid(column=1, row=0, sticky="e", padx=(0, 15))
+        self.forward.grid(column=2, row=0, sticky="w", padx=(15, 0))
+        self.page_label.grid(column=3, row=0, sticky="e", padx=(0, 15))
 
     def display_key_binds(self):
         for widget in self.keybind_frame.winfo_children():
@@ -85,8 +91,14 @@ class HelpWindow(Toplevel):
         if (self.current_page + 1) * self.items_per_page < len(self.key_binds_descriptions):
             self.current_page += 1
             self.display_key_binds()
+            self.update_page_label()
 
     def previous_page(self):
         if self.current_page > 0:
             self.current_page -= 1
             self.display_key_binds()
+            self.update_page_label()
+
+    def update_page_label(self):
+        total_pages = (len(self.key_binds_descriptions) - 1) // self.items_per_page + 1
+        self.page_label.config(text=f"{self.current_page + 1}/{total_pages}")
