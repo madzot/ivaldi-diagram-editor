@@ -83,9 +83,8 @@ class Connection:
         self.change_type(Connection.active_types)
         self.increment_active_types()
 
-    @staticmethod
-    def increment_active_types():
-        if Connection.active_types < len(ConnectionType.COLORS.value):
+    def increment_active_types(self):
+        if Connection.active_types < len(ConnectionType.COLORS.value) and self.type.value >= Connection.active_types:
             Connection.active_types += 1
 
     def close_menu(self):

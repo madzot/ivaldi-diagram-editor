@@ -1,6 +1,7 @@
+import copy
+
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.spider import Spider
-import copy
 
 
 class Selector:
@@ -615,9 +616,9 @@ class Selector:
         new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'])
         for c in box['connections']:
             if c['side'] == "right":
-                new_box.add_right_connection()
+                new_box.add_right_connection(connection_type=c['type'])
             if c['side'] == "left":
-                new_box.add_left_connection()
+                new_box.add_left_connection(connection_type=c['type'])
         new_box.set_label(box['label'])
         if box["sub-diagram"]:
             sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
