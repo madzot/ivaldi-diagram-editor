@@ -173,7 +173,8 @@ class Selector:
                     loc = (event_x + (item['location'][0] - middle_point[0]) * multi,
                            event_y + (item['location'][1] - middle_point[1]) * multi)
 
-                    new_box = self.paste_box(item, loc, self.copied_wire_list, wires, self.canvas, multi, replace, True)
+                    new_box = self.paste_box(item, loc, self.copied_wire_list, wires, self.canvas, multi=multi,
+                                             replace=replace, return_box=True)
                     pasted_items.append(new_box)
 
                 if item['component'] == "Spider":
