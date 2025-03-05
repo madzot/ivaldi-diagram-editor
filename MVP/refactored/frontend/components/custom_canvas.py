@@ -588,8 +588,6 @@ class CustomCanvas(tk.Canvas):
 
         if (self.current_wire_start
                 and self.is_wire_between_connections_legal(self.current_wire_start, connection)
-                and (self.current_wire_start.type == connection.type or
-                     ConnectionType.GENERIC in (self.current_wire_start.type, connection.type))
                 or bypass_legality_check):
             self.cancel_wire_pulling()
             start_end = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
@@ -823,6 +821,16 @@ class CustomCanvas(tk.Canvas):
     # STATIC HELPERS
     @staticmethod
     def is_wire_between_connections_legal(start, end):
+        if start.type != end.type:
+            if ConnectionType.GENERIC not in (start.type, end.type):
+                return False
+            else:
+                if start.type == ConnectionType.GENERIC and start.has_wire:
+                    return False
+                if end.type == ConnectionType.GENERIC and end.has_wire:
+                    return False
+
+
         if start.is_spider() and end.is_spider():
 
             if abs(start.location[0] - end.location[0]) < 2 * start.r:
