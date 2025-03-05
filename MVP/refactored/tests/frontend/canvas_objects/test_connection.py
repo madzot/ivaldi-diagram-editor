@@ -198,10 +198,12 @@ class ConnectionTests(TestApplication):
         self.assertTrue(change_type_mock.called)
 
     def test__increment_active_types__adds_1_to_active_type(self):
-        Connection.increment_active_types()
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+
+        connection.increment_active_types()
         self.assertEqual(2, Connection.active_types)
 
-        Connection.increment_active_types()
+        connection.increment_active_types()
         self.assertEqual(3, Connection.active_types)
 
     @patch('MVP.refactored.frontend.canvas_objects.box.Box.remove_connection')
