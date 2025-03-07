@@ -1,6 +1,9 @@
 import json
 import time
 from tkinter import messagebox
+
+from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.wire import Wire
 from constants import *
 
 from MVP.refactored.util.exporter.exporter import Exporter
@@ -14,8 +17,17 @@ class ProjectExporter(Exporter):
     def create_file_content(self, filename):
         return {"file_name": filename,
                 "date": time.time(),
+                "static_variables": self.get_static_variables(),
                 "main_canvas": self.create_canvas_dict(self.canvas)
                 }
+
+    @staticmethod
+    def get_static_variables():
+        variables = {
+            "active_types": Connection.active_types,
+            "defined_wires": Wire.defined_wires
+        }
+        return variables
 
     def create_canvas_dict(self, canvas):
         return {"boxes": self.create_boxes_list(canvas),

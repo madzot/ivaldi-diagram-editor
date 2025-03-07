@@ -817,6 +817,7 @@ class CustomCanvas(tk.Canvas):
             self.remove_diagram_input()
 
         Connection.active_types = 1
+        Wire.defined_wires.clear()
 
     # STATIC HELPERS
     @staticmethod
