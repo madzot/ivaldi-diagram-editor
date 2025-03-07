@@ -642,7 +642,7 @@ class CustomCanvas(tk.Canvas):
         return None
 
     def add_spider(self, loc=(100, 100), id_=None):
-        spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
+        spider = Spider(loc, self, self.receiver, id_=id_)
         self.spiders.append(spider)
         return spider
 
