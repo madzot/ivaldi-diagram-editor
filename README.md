@@ -5,7 +5,7 @@
 Ivaldi is an application for working with string diagrams. It also allows the user to create domain-specific languages.
 
 ## Usage
-To use this application you have to do the following:
+To use this application you need python 3.10, and you have to do the following:
 ```
 1. Clone this repository
 2. Open it with an IDE of your choice that can run Python files

@@ -50,11 +50,39 @@ Below is a description of all available variables in the Connection class. It wi
         Activated from choosing 'Delete Connection' in the context menu. Deletes the selected Connection from Canvas.
 
     .color_black()
-        Changes Connection color to black
+        Changes Connection color to black.
 
     .color_green()
-        Changes Connection color to green
+        Changes Connection color to green.
 
     .move_to(location)
         Updates the canvas location of the Connection and updates the location variable
         :param location - tuple of x and y coordinates.
+
+    .lessen_index_by_one()
+        Lowers the index of a connection by 1.
+
+    .delete()
+        Used to delete the connection. Removes circle from the canvas as well as deletes connected wires.
+
+    .add_wire(wire)
+        Adds a wire to the connection if the connection is not wired already.
+
+    .is_spider()
+        Used to check if the connection is a sub-class of Connection named Spider. Returns True if it is of a Spider class.
+
+    .remove_wire(wire=None)
+        Removes the connected wire from the connection. The wire parameter is used for Spiders that need specification on what wire to remove.
+        :param wire - Wire object to be removed from Connection (if dealing with Spider sub-class)
+
+    .select()
+        Turns the color of the connection circle green.
+
+    .search_highlight_secondary()
+        Used as a secondary highlight when conducting searches. Function turns the object orange and adds it to a list of search highlighted items in CustomCanvas.
+
+    .search_highlight_primary()
+        Used as the primary highlight when conducting searches. Function turns the object cyan and adds it to a list of search highlighted items in CustomCanvas.
+
+    .deselect()
+        Changes Connectino color to black.
