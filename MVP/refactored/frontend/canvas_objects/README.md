@@ -86,3 +86,60 @@ Below is a description of all available variables in the Connection class. It wi
 
     .deselect()
         Changes Connectino color to black.
+
+
+---
+
+## Spider
+
+Spider is a subclass of Connection. Difference between Connection and Spider is mostly Spiders allowing multiple wires to be connected to it.
+
+### Spider parameters
+
+| Param                | Description                                                                                                                               |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| location: list       | Location of the Spider in the form of a list. Example: [111, 222]                                                                         |
+| canvas: CustomCanvas | CustomCanvas that the Spider is located and displayed on.                                                                                 |
+| receiver: Receiver   | Receiver used for sending events to the backend proportion of the application. The receiver is usually taken from the MainDiagram object. |
+| id_=None: int        | ID.                                                                                                                                       |
+
+
+## Spider variables
+| Variable          | Description                                                                                |
+|-------------------|--------------------------------------------------------------------------------------------|
+| x: int            | Quick variable to get the x coordinate of the Spider. It is the first number of location.  |
+| y: int            | Quick variable to get the y cooridnate of the Spider. It is the second number of location. |
+| connections: list |                                                                                            |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
