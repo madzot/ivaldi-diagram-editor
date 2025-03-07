@@ -72,7 +72,7 @@ class Connection:
             sub_menu.add_command(label="Generic", command=lambda: self.change_type(0))
 
             for i in range(1, Connection.active_types):
-                sub_menu.add_command(label=ConnectionType.COLOR_NAMES.value[i],
+                sub_menu.add_command(label=ConnectionType.LABEL_NAMES.value[i],
                                      command=lambda c_type=i: self.change_type(c_type))
 
             if Connection.active_types < len(ConnectionType.COLORS.value):

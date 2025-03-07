@@ -18,7 +18,7 @@ class ConnectionType(Enum):
               'SlateBlue1', 'SeaGreen1',
               'DarkOliveGreen1', 'goldenrod2', 'red3',]
 
-    COLOR_NAMES = ['Black', 'Blue',
+    LABEL_NAMES = ['Black', 'Blue',
                    'Cyan', 'Green Yellow', 'Hot Pink',
                    'Slate Blue', 'Sea Green',
                    'Olive Green', 'Gold', 'Red']

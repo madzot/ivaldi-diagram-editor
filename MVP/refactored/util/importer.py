@@ -51,6 +51,12 @@ class Importer:
         if "static_variables" in data:
             Connection.active_types = data["static_variables"]["active_types"]
             Wire.defined_wires = data["static_variables"]["defined_wires"]
+            Importer.update_custom_type_names()
+
+    @staticmethod
+    def update_custom_type_names():
+        for type_name in Wire.defined_wires.keys():
+            ConnectionType.LABEL_NAMES.value[ConnectionType[type_name].value] = Wire.defined_wires[type_name]
 
     def load_boxes_to_canvas(self, d, canvas, multi_x, multi_y):
         for box in d["boxes"]:

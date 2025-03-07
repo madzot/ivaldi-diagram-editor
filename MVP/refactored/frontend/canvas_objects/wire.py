@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog
 
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 
 
@@ -130,6 +131,7 @@ class Wire:
         name = simpledialog.askstring("Wire type", "Enter a name for this type of wire:")
         if name and name.strip():
             Wire.defined_wires[self.type.name] = name
+            ConnectionType.LABEL_NAMES.value[ConnectionType[self.type.name].value] = name
             self.update_wire_label()
             for canvas in self.canvas.main_diagram.canvasses.values():
                 for wire in canvas.wires:
