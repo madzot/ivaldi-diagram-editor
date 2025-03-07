@@ -207,7 +207,7 @@ class Selector:
                         self.paste_box(item, item['location'], diagram['Wires'], [], canvas)
 
                     if item['component'] == 'Spider':
-                        new_spider = canvas.add_spider(item['location'])
+                        new_spider = canvas.add_spider(item['location'], connection_type=item['type'])
                         for wire in diagram['Wires']:
                             if wire['original_start_connection'] == item['id']:
                                 wire['start_connection'] = new_spider
