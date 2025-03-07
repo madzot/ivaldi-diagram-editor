@@ -75,7 +75,7 @@ class Wire:
         # make sure connections have wires attached after select and deselect as copying between canvasses can remove
         self.start_connection.add_wire(self)
         self.end_connection.add_wire(self)
-        self.canvas.itemconfig(self.line, fill="black")
+        self.canvas.itemconfig(self.line, fill=self.type.value[0])
 
     def update(self):
         if self.end_connection:
