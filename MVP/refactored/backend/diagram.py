@@ -1,15 +1,16 @@
 import json
 from MVP.refactored.backend.generator import Generator
 from MVP.refactored.backend.resource import Resource
+from MVP.refactored.backend.types.connection_info import ConnectionInfo
 
 
 class Diagram:
     def __init__(self):
-        self.input = []
-        self.output = []
-        self.boxes = []
-        self.resources = []
-        self.spiders = []
+        self.input: list[ConnectionInfo] = []
+        self.output: list[ConnectionInfo] = []
+        self.boxes: list[Generator] = []
+        self.resources: list[Resource] = []
+        self.spiders: list[Resource] = []
         self.sub_diagrams: list[Diagram] = [] # There is sub diagram of diagram. If sub diagram contains one more sub diagram,
         # it won't be added here. Only to sub diagram`s sub diagram
 
@@ -18,6 +19,24 @@ class Diagram:
 
     def add_box(self, box):
         self.boxes.append(box)
+
+    def add_input(self, connection_info: ConnectionInfo):
+        self.input.insert(connection_info.index, connection_info)
+
+    def add_output(self, connection_info: ConnectionInfo):
+        self.output.insert(connection_info.index, connection_info)
+
+    def remove_input(self, connection_id: int):
+        for i in self.input:
+            if i.id == connection_id:
+                self.input.remove(i)
+                return
+
+    def remove_output(self, connection_id: int):
+        for i in self.output:
+            if i.id == connection_id:
+                self.output.remove(i)
+                return
 
     def remove_box(self, boxes):
         self.boxes.remove(boxes)

@@ -17,16 +17,16 @@ class Generator:
         self.operand = None
 
     def add_left(self, left: ConnectionInfo):
-        self.left.append(left)
+        self.left.insert(left.index, left)
 
     def add_right(self, right: ConnectionInfo):
-        self.right.append(right)
+        self.right.insert(right.index, right)
 
     def add_left_inner(self, left: ConnectionInfo):
-        self.left_inner.append(left)
+        self.left_inner.insert(left.index, left)
 
     def add_right_inner(self, right: ConnectionInfo):
-        self.right_inner.append(right)
+        self.right_inner.insert(right.index, right)
 
     def add_operand(self, operand):
         self.operand = operand
@@ -44,30 +44,55 @@ class Generator:
         self.type = None
 
     def remove_all_left(self):
+        for left in self.left:
+            left.set_box_id(None)
         self.left.clear()
 
     def remove_all_right(self):
+        for right in self.right:
+            right.set_box_id(None)
         self.right.clear()
 
     def remove_left(self, connection_id: int=None):
-        self.left.pop(connection_id)
-        for i, resource in enumerate(self.left):
-            resource.index = i
+        # self.left.pop(connection_id)
+        # for i, resource in enumerate(self.left):
+        #     resource.index = i
+        for connection in self.left:
+            if connection.id == connection_id:
+                connection.set_box_id(None)
+                self.left.remove(connection)
+                return
 
     def remove_right(self, connection_id: int=None):
-        self.right.pop(connection_id)
-        for i, resource in enumerate(self.right):
-            resource.index = i
+        # self.right.pop(connection_id)
+        # for i, resource in enumerate(self.right):
+        #     resource.index = i
+        for connection in self.right:
+            if connection.id == connection_id:
+                connection.set_box_id(None)
+                self.right.remove(connection)
+                return
+
 
     def remove_left_inner(self, connection_id: int=None):
-        self.left_inner.pop(connection_id)
-        for i, resource in enumerate(self.left_inner):
-            resource.index = i
+        # self.left_inner.pop(connection_id)
+        # for i, resource in enumerate(self.left_inner):
+        #     resource.index = i
+        for connection in self.left_inner:
+            if connection.id == connection_id:
+                connection.set_box_id(None)
+                self.left_inner.remove(connection)
+                return
 
     def remove_right_inner(self, connection_id: int=None):
-        self.right_inner.pop(connection_id)
-        for i, resource in enumerate(self.right_inner):
-            resource.index = i
+        # self.right_inner.pop(connection_id)
+        # for i, resource in enumerate(self.right_inner):
+        #     resource.index = i
+        for connection in self.right_inner:
+            if connection.id == connection_id:
+                connection.set_box_id(None)
+                self.right_inner.remove(connection)
+                return
 
     def remove_left_atomic(self, connection_id: int):
         self.left.pop(connection_id)

@@ -66,8 +66,6 @@ class Box:
         self.prev_snapped = None
         self.box_function: BoxFunction = None
 
-        # BoxToHyperEdgeMapping.add_new_pair(self.id, HyperEdge(self.id))
-
         coords = self.canvas.coords(self.rect)
         self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-2:]
 

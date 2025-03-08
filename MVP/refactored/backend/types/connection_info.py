@@ -12,6 +12,9 @@ class ConnectionInfo:
     def has_box(self)-> bool:
         return self.box_id is not None
 
+    def set_box_id(self, id: int|None):
+        self.box_id = id
+
     def to_list(self)-> list:
         return [self.index, self.box_id, self.side, self.id]
 

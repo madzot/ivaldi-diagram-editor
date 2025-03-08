@@ -17,6 +17,7 @@ class Receiver:
     def __init__(self):
         self.listener = True
         self.diagram = Diagram()
+        self.diagrams: dict[int, Diagram] = {} # key is canvas_id where diagram located
         logger.info("Receiver initialized.")
 
     def receiver_callback(self, action: ActionType, **kwargs):
@@ -33,64 +34,75 @@ class Receiver:
 
         logger.info(f"receiver_callback invoked with action: {action}, kwargs: {kwargs}")
         if action == ActionType.WIRE_CREATE:
-            new_resource = self.create_new_resource(resource_id)
+            new_resource = self.create_new_resource(resource_id, canvas_id)
             self.add_connections_to_resource(new_resource, [start_connection, end_connection])
         elif action == ActionType.WIRE_DELETE:
-            self.delete_resource(resource_id)
+            self.delete_resource(resource_id, canvas_id)
         elif action == ActionType.SPIDER_CREATE:
-            new_resource = self.create_new_resource(resource_id)
+            new_resource = self.create_new_resource(resource_id, canvas_id)
             new_resource.spider = True
             self.add_connections_to_resource(new_resource, [start_connection, end_connection])
         elif action == ActionType.SPIDER_PARENT_CREATE:
             pass
         elif action == ActionType.SPIDER_DELETE:
-            self.delete_resource(resource_id)
+            self.delete_resource(resource_id, canvas_id)
         elif action == ActionType.BOX_ADD_INNER_LEFT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.add_left_inner(ConnectionInfo(connection_nr, ConnectionSide.LEFT, connection_id, box.id))
         elif action == ActionType.BOX_ADD_INNER_RIGHT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.add_right_inner(ConnectionInfo(connection_nr, ConnectionSide.RIGHT, connection_id, box.id))
         elif action == ActionType.BOX_REMOVE_INNER_LEFT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.remove_left_inner(connection_id)
         elif action == ActionType.BOX_REMOVE_INNER_RIGHT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.remove_right_inner(connection_id)
         elif action == ActionType.BOX_ADD_LEFT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.add_left(ConnectionInfo(connection_nr, ConnectionSide.LEFT, connection_id, box.id))
         elif action == ActionType.BOX_ADD_RIGHT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.add_right(ConnectionInfo(connection_nr, ConnectionSide.RIGHT, connection_id, box.id))
         elif action == ActionType.BOX_REMOVE_LEFT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.remove_left(connection_id)
         elif action == ActionType.BOX_REMOVE_RIGHT:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            box.remove_right(connection_id)
         elif action == ActionType.BOX_REMOVE_ALL_CONNECTIONS:
-            pass
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
+            # TODO handle inner connections
+            box.remove_all_right()
+            box.remove_all_left()
         elif action == ActionType.BOX_CREATE:
-            self.create_new_generator(generator_id)
+            self.create_new_generator(generator_id, canvas_id)
         elif action == ActionType.BOX_DELETE:
-            self.delete_generator(generator_id)
+            self.delete_generator(generator_id, canvas_id)
         elif action == ActionType.BOX_COMPOUND:
-            box = self.generator_get_box_by_id(generator_id)
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
             box.set_type(GeneratorType.COMPOUND)
         elif action == ActionType.BOX_ATOMIC:
-            box = self.generator_get_box_by_id(generator_id)
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
             box.set_type(GeneratorType.ATOMIC)
         elif action == ActionType.BOX_SUB_BOX:
             pass
         elif action == ActionType.BOX_ADD_OPERATOR:
-            box = self.generator_get_box_by_id(generator_id)
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
             box.add_operand(operator)
         elif action == ActionType.BOX_SWAP_ID:
-            box = self.generator_get_box_by_id(generator_id)
+            box = self.generator_get_box_by_id(generator_id, canvas_id)
             box.set_id(new_id)
         elif action == ActionType.BOX_SWAP_CONNECTION_ID:
-            pass
+            pass # in original diagram callback that events is not in use. In project there no occurrences for this event
         elif action == ActionType.DIAGRAM_ADD_INPUT:
-            pass
+            self.diagrams[canvas_id].add_input(ConnectionInfo(connection_nr, ConnectionSide.LEFT, connection_id, None))
         elif action == ActionType.DIAGRAM_ADD_OUTPUT:
-            pass
+            self.diagrams[canvas_id].add_output(ConnectionInfo(connection_nr, ConnectionSide.RIGHT, connection_id, None))
         elif action == ActionType.DIAGRAM_REMOVE_INPUT:
-            pass
+            self.diagrams[canvas_id].remove_input(connection_id)
         elif action == ActionType.DIAGRAM_REMOVE_OUTPUT:
-            pass
+            self.diagrams[canvas_id].remove_output(connection_id)
 
     def spider_callback(self, action: str, **kwargs):
         pass
@@ -99,13 +111,13 @@ class Receiver:
     def box_callback(self, action: str, **kwargs):
         pass
 
-    def create_new_resource(self, id: int) -> Resource:
+    def create_new_resource(self, id: int, canvas_id: int) -> Resource:
         resource = Resource(id)
-        self.diagram.add_resource(resource)
+        self.diagrams[canvas_id].add_resource(resource)
         return resource
 
-    def delete_resource(self, id: int):
-        self.diagram.remove_resource_by_id(id)
+    def delete_resource(self, id: int, canvas_id: int):
+        self.diagrams[canvas_id].remove_resource_by_id(id)
 
     @staticmethod
     def add_connections_to_resource(resource: Resource, connections: list[ConnectionInfo|None]):
@@ -116,19 +128,19 @@ class Receiver:
             else:
                 resource.add_right_connection(connection)
 
-    def create_new_generator(self, box_id: int) -> Generator:
+    def create_new_generator(self, box_id: int, canvas_id: int) -> Generator:
         box = Generator(box_id)
-        self.diagram.add_box(box)
+        self.diagrams[canvas_id].add_box(box)
         return box
 
-    def delete_generator(self, box_id: int):
-        self.diagram.remove_box_by_id(box_id)
+    def delete_generator(self, box_id: int, canvas_id: int):
+        self.diagrams[canvas_id].remove_box_by_id(box_id)
 
-    def wire_get_resource_by_id(self, resource_id):
-        return next((r for r in self.diagram.resources if r.id == resource_id), None)
+    def wire_get_resource_by_id(self, resource_id: int, canvas_id: int):
+        return next((r for r in self.diagrams[canvas_id].resources if r.id == resource_id), None)
 
-    def generator_get_box_by_id(self, box_id) -> Generator:
-        return next((b for b in self.diagram.boxes if b.id == box_id), None)
+    def generator_get_box_by_id(self, box_id: int, canvas_id: int) -> Generator:
+        return next((b for b in self.diagrams[canvas_id].boxes if b.id == box_id), None)
 
-    def spider_get_resource_by_connection_id(self, spider_id):
-        return next((b for b in self.diagram.spiders if b.id == spider_id), None)
+    def spider_get_resource_by_connection_id(self, spider_id: int, canvas_id: int):
+        return next((b for b in self.diagrams[canvas_id].spiders if b.id == spider_id), None)
