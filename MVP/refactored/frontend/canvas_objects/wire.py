@@ -50,11 +50,12 @@ class Wire:
         self.start_connection.remove_wire(self)
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
-        if self.end_label:
-            self.canvas.delete(self.end_label)
-        if self.start_label:
-            self.canvas.delete(self.start_label)
+        self.delete_labels()
         if not self.is_temporary:
+            if self.start_connection.box:
+                self.start_connection.box.wires.remove(self)
+            if self.end_connection.box:
+                self.end_connection.box.wires.remove(self)
             if self in self.canvas.wires:
                 self.canvas.wires.remove(self)
         if not self.is_temporary and not self.canvas.search:
@@ -108,11 +109,15 @@ class Wire:
                 if not self.start_connection.is_spider():
                     self.start_label = self.canvas.create_text(self.start_connection.location[0] + size,
                                                                self.start_connection.location[1] - 10,
-                                                               text=Wire.defined_wires[self.type.name], font="Courier 10")
+                                                               text=Wire.defined_wires[self.type.name],
+                                                               font="Courier 10")
+                    self.canvas.wire_label_tags.append(self.start_label)
                 if not self.end_connection.is_spider():
                     self.end_label = self.canvas.create_text(self.end_connection.location[0] - size,
                                                              self.end_connection.location[1] - 10,
-                                                             text=Wire.defined_wires[self.type.name], font="Courier 10")
+                                                             text=Wire.defined_wires[self.type.name],
+                                                             font="Courier 10")
+                    self.canvas.wire_label_tags.append(self.end_label)
 
     def show_context_menu(self, event):
         self.canvas.is_wire_pressed = True
@@ -129,13 +134,26 @@ class Wire:
 
     def define_type(self):
         name = simpledialog.askstring("Wire type", "Enter a name for this type of wire:")
-        if name and name.strip():
+        if name and name.strip():  # When name is inputted
+            name = name.strip()
             Wire.defined_wires[self.type.name] = name
             ConnectionType.LABEL_NAMES.value[ConnectionType[self.type.name].value] = name
-            self.update_wire_label()
             for canvas in self.canvas.main_diagram.canvasses.values():
                 for wire in canvas.wires:
                     wire.update_wire_label()
+        elif name is None:  # When askstring is cancelled
+            return
+        elif not name and not name.strip():  # When input is empty or only contains whitespace
+            del Wire.defined_wires[self.type.name]
+            self.delete_labels()
+
+    def delete_labels(self):
+        if self.start_label:
+            self.canvas.delete(self.start_label)
+            self.start_label = None
+        if self.end_label:
+            self.canvas.delete(self.end_label)
+            self.end_label = None
 
     def create_spider(self, event):
         x, y = event.x, event.y

@@ -311,6 +311,9 @@ class Box:
         for index in self.collision_ids:
             if index in collision:
                 collision.remove(index)
+        for wire_label in self.canvas.wire_label_tags:
+            if wire_label in collision:
+                collision.remove(wire_label)
         for wire in self.canvas.wires:
             tag = wire.line
             if tag in collision:

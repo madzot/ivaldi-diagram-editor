@@ -147,6 +147,8 @@ class CustomCanvas(tk.Canvas):
         self.hover_item = None
         self.search_result_highlights = []
 
+        self.wire_label_tags = []
+
     def on_hover(self, item):
         self.hover_item = item
 

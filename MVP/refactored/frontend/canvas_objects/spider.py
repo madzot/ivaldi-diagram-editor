@@ -199,6 +199,9 @@ class Spider(Connection):
         collision = list(collision)
         if self.collision_id in collision:
             collision.remove(self.collision_id)
+        for wire_label in self.canvas.wire_label_tags:
+            if wire_label in collision:
+                collision.remove(wire_label)
         for wire in self.canvas.wires:
             tag = wire.line
             if tag in collision:
