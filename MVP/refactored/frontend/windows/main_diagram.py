@@ -16,6 +16,8 @@ from ttkbootstrap.constants import *
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.types.ActionType import ActionType
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Titlebar
 from MVP.refactored.frontend.util.selector import Selector
@@ -47,7 +49,7 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.selector = Selector(self)
+        self.selector = Selector(self, self.receiver)
         self.custom_canvas.selector = self.selector
 
         self.titlebar.set_custom_canvas(self.custom_canvas)
@@ -172,6 +174,7 @@ class MainDiagram(tk.Tk):
 
     def get_all(self):
         hypergraphs = HypergraphManager
+        receiver = self.receiver
         print("hi")
 
     @staticmethod
@@ -384,14 +387,14 @@ class MainDiagram(tk.Tk):
 
     def remove_diagram_input(self):
         if self.custom_canvas.diagram_source_box:
-            c = self.find_connection_to_remove("left")
+            c: Connection = self.find_connection_to_remove("left")
             if c:
                 self.custom_canvas.diagram_source_box.remove_connection(c)
             self.custom_canvas.remove_diagram_input()
             if self.receiver.listener:
-                self.receiver.receiver_callback("remove_inner_left",
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_INNER_LEFT,
                                                 generator_id=self.custom_canvas.diagram_source_box.id,
-                                                canvas_id=self.custom_canvas.id)
+                                                canvas_id=self.custom_canvas.id, connection_id=c.id)
         else:
             self.custom_canvas.remove_diagram_input()
 
@@ -403,8 +406,9 @@ class MainDiagram(tk.Tk):
                 self.custom_canvas.diagram_source_box.remove_connection(c)
             self.custom_canvas.remove_diagram_output()
             if self.receiver.listener:
-                self.receiver.receiver_callback("remove_inner_right",
-                                                generator_id=self.custom_canvas.diagram_source_box.id, canvas_id=self.canvas.id)
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_INNER_RIGHT,
+                                                generator_id=self.custom_canvas.diagram_source_box.id, canvas_id=self.custom_canvas.id,
+                                                connection_id=c.id)
         else:
             self.custom_canvas.remove_diagram_input()
 

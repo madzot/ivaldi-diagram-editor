@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
@@ -837,10 +838,11 @@ class CustomCanvas(tk.Canvas):
                                            r=5*self.total_scale, id_=id_)
 
         if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
-                                            connection_id=connection_output_new.id, canvas_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_RIGHT, generator_id=self.diagram_source_box.id,
+                                            connection_id=connection_output_new.id, connection_nr=connection_output_new.index,
+                                            canvas_id=self.id)
         elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_output", generator_id=None,
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_OUTPUT, connection_nr=connection_output_new.index,
                                             connection_id=connection_output_new.id, canvas_id=self.id)
 
         self.outputs.append(connection_output_new)
@@ -865,7 +867,7 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete_me()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_output", canvas_id=self.id)
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_OUTPUT, canvas_id=self.id, connection_id=to_be_removed.id)
 
     def add_diagram_input(self, id_=None):
         input_index = max([o.index for o in self.inputs] + [0])
@@ -874,11 +876,11 @@ class CustomCanvas(tk.Canvas):
         new_input = Connection(self.diagram_source_box, input_index, ConnectionSide.RIGHT, [0, 0], self,
                                r=5*self.total_scale, id_=id_)
         if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
-                                            connection_id=new_input.id, canvas_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_LEFT, generator_id=self.diagram_source_box.id,
+                                            connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
         elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_input", generator_id=None,
-                                            connection_id=new_input.id, canvas_id=self.id)
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_INPUT,
+                                            connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
         self.inputs.append(new_input)
         self.update_inputs_outputs()
 
@@ -891,7 +893,7 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete_me()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_input", canvas_id=self.id)
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_INPUT, canvas_id=self.id, connection_id=to_be_removed.id)
 
     def remove_specific_diagram_input(self, con):
         if not self.inputs:

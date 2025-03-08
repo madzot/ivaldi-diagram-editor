@@ -36,3 +36,4 @@ class ActionType(StrEnum):
     DIAGRAM_REMOVE_INPUT = auto(),
     DIAGRAM_REMOVE_OUTPUT = auto(),
 
+    SUB_DIAGRAM_CREATE = auto(), # canvas_id(old), new_canvas_id, resource_ids(wires and spiders), generator_ids(boxes)

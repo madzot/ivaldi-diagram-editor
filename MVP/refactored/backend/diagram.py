@@ -1,4 +1,6 @@
 import json
+from typing import Self
+
 from MVP.refactored.backend.generator import Generator
 from MVP.refactored.backend.resource import Resource
 from MVP.refactored.backend.types.connection_info import ConnectionInfo
@@ -14,17 +16,39 @@ class Diagram:
         self.sub_diagrams: list[Diagram] = [] # There is sub diagram of diagram. If sub diagram contains one more sub diagram,
         # it won't be added here. Only to sub diagram`s sub diagram
 
-    def add_resource(self, resource):
-        self.resources.append(resource)
+    def add_resource(self, resource: Resource):
+        if resource not in self.resources:
+            self.resources.append(resource)
 
-    def add_box(self, box):
-        self.boxes.append(box)
+    def add_box(self, box: Generator):
+        if box not in self.boxes:
+            self.boxes.append(box)
+
+    def add_spider(self, spider: Resource):
+        if spider not in self.spiders:
+            self.spiders.append(spider)
+
+    def add_resources(self, resources: list[Resource]):
+        for resource in resources:
+            self.add_resource(resource)
+
+    def add_boxes(self, boxes: list[Generator]):
+        for box in boxes:
+            self.add_box(box)
+
+    def add_spiders(self, spiders: list[Resource]):
+        for spider in spiders:
+            self.add_spider(spider)
 
     def add_input(self, connection_info: ConnectionInfo):
         self.input.insert(connection_info.index, connection_info)
 
     def add_output(self, connection_info: ConnectionInfo):
         self.output.insert(connection_info.index, connection_info)
+
+    def add_sub_diagram(self, diagram: Self):
+        if diagram not in self.sub_diagrams:
+            self.sub_diagrams.append(diagram)
 
     def remove_input(self, connection_id: int):
         for i in self.input:
@@ -38,18 +62,11 @@ class Diagram:
                 self.output.remove(i)
                 return
 
-    def remove_box(self, boxes):
-        self.boxes.remove(boxes)
-
     def remove_box_by_id(self, id: int):
         for box in self.boxes:
             if box.id == id:
                 self.boxes.remove(box)
                 return
-
-    def remove_resource(self, resources):
-        if resources in self.resources:
-            self.resources.remove(resources)
 
     def remove_resource_by_id(self, id: int):
         for resource in self.resources:
@@ -57,12 +74,36 @@ class Diagram:
                 self.resources.remove(resource)
                 return
 
-    def diagram_import(self, file_path):
+    def remove_box(self, box: Generator):
+        if box in self.boxes:
+            self.boxes.remove(box)
+
+    def remove_resource(self, resource: Resource):
+        if resource in self.resources:
+            self.resources.remove(resource)
+
+    def remove_spider(self, spider: Resource):
+        if spider in self.spiders:
+            self.resources.remove(spider)
+
+    def remove_boxes(self, boxes: list[Generator]):
+        for box in boxes:
+            self.remove_box(box)
+
+    def remove_resources(self, resources: list[Resource]):
+        for resource in resources:
+            self.remove_resource(resource)
+
+    def remove_spiders(self, spiders: list[Resource]):
+        for spider in spiders:
+            self.remove_spider(spider)
+
+    def diagram_import(self, file_path: str):
         with open(file_path, 'r') as file:
             data = json.load(file)
             self._from_dict(data)
 
-    def diagram_export(self, file_path):
+    def diagram_export(self, file_path: str):
         data = self._to_dict()
         with open(file_path, 'w') as file:
             json.dump(data, file, indent=4)

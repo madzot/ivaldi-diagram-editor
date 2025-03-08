@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import font  # Import the font module
 from tkinter import messagebox
 
-from MVP.refactored.backend.diagram_callback_ORIGINAL import Receiver
+from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 
 

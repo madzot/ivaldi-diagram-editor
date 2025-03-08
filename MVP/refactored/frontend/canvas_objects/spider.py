@@ -1,5 +1,6 @@
 import tkinter as tk
 
+from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 
@@ -23,11 +24,8 @@ class Spider(Connection):
         self.wires = []
         self.receiver = receiver
         if self.receiver.listener:
-            if self.canvas.diagram_source_box:
-                self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
-                                                generator_id=self.canvas.diagram_source_box.id, canvas_id=canvas.id)
-            else:
-                self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id, canvas_id=canvas.id)
+
+            self.receiver.receiver_callback(ActionType.SPIDER_CREATE, resource_id=self.id, canvas_id=canvas.id)
 
         self.is_snapped = False
         self.snapped_x = None
@@ -59,8 +57,10 @@ class Spider(Connection):
         self.canvas.spiders.remove(self)
         self.delete_me()
         if self.receiver.listener:
-            if action != "sub_diagram":
-                self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id, canvas_id=self.canvas.id)
+            # if action != "sub_diagram":
+            self.receiver.receiver_callback(ActionType.SPIDER_DELETE, recource_id=self.id, canvas_id=self.canvas.id)
+            # else:
+            #     ... # TODO with action "sub_diagram"
 
     def close_menu(self):
         if self.context_menu:
