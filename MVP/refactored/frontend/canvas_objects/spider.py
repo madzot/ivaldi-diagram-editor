@@ -30,8 +30,6 @@ class Spider(Connection):
 
         self.is_snapped = False
 
-        self.collision_id = self.circle
-
     def is_spider(self):
         return True
 
@@ -191,8 +189,8 @@ class Spider(Connection):
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
                                                  go_to_y + self.r)
         collision = list(collision)
-        if self.collision_id in collision:
-            collision.remove(self.collision_id)
+        if self.circle in collision:
+            collision.remove(self.circle)
         for wire in self.canvas.wires:
             tag = wire.line
             if tag in collision:

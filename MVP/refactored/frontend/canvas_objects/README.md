@@ -98,20 +98,29 @@ Spider is a subclass of Connection. Difference between Connection and Spider is 
 
 ### Spider parameters
 
-| Param                | Description                                                                                                                               |
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| location: list       | Location of the Spider in the form of a list. Example: [111, 222]                                                                         |
-| canvas: CustomCanvas | CustomCanvas that the Spider is located and displayed on.                                                                                 |
-| receiver: Receiver   | Receiver used for sending events to the backend proportion of the application. The receiver is usually taken from the MainDiagram object. |
-| id_=None: int        | ID.                                                                                                                                       |
+| **Param**             | **Description**                                                                                                                           |
+|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| location: list        | Location of the Spider in the form of a list. Example: [111, 222]                                                                         |
+| canvas: CustomCanvas  | CustomCanvas that the Spider is located and displayed on.                                                                                 |
+| receiver: Receiver    | Receiver used for sending events to the backend proportion of the application. The receiver is usually taken from the MainDiagram object. |
+|                       |                                                                                                                                           |
+| # **Optional params** |                                                                                                                                           |
+| id_: int              | ID.<br/> Default value is `None`                                                                                                          |
 
 
 ## Spider variables
-| Variable          | Description                                                                                |
-|-------------------|--------------------------------------------------------------------------------------------|
-| x: int            | Quick variable to get the x coordinate of the Spider. It is the first number of location.  |
-| y: int            | Quick variable to get the y coordinate of the Spider. It is the second number of location. |
-| connections: list |                                                                                            |
+
+Along with these variables Spider has Connection variables as well. Although all of them might not be used.
+
+| **Variable**               | **Description**                                                                                                                                                                      |
+|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| x: int                     | Quick variable to get the x coordinate of the Spider. It is the first number of location.                                                                                            |
+| y: int                     | Quick variable to get the y coordinate of the Spider. It is the second number of location.                                                                                           |
+| connections: list          | List of containing Connections, it is used in algebraic notation creation. During diagram editing it will not contain connections                                                    |
+| context_menu: tkinter.Menu | Variable that holds the context menu of the Spider.                                                                                                                                  |
+| wires: list                | List that contains Wire class objects that have been connected to the Spider.<br/> This is the spider version of Connection.wire.<br/> For Spiders the variable `.wire` is not used. |
+| receiver: Receiver         | Receiver object, usually taken from MainDiagram. Used to send information to the back end portion                                                                                    |
+| is_snapped: bool           | Boolean stating if the Spider is currently snapped to a column or not.                                                                                                               |
 
 
 
