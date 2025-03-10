@@ -557,7 +557,7 @@ class CustomCanvas(tk.Canvas):
         if connection.side == "spider" or not connection.has_wire:
             self.current_wire_start = connection
 
-            connection.color_green()
+            connection.change_color(color='green')
 
             if event is not None:
                 x, y = self.canvasx(event.x), self.canvasy(event.y)
@@ -606,7 +606,7 @@ class CustomCanvas(tk.Canvas):
 
     def nullify_wire_start(self):
         if self.current_wire_start:
-            self.current_wire_start.color_black()
+            self.current_wire_start.change_color(color='black')
         self.current_wire_start = None
         self.current_wire = None
 
