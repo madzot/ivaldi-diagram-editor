@@ -146,7 +146,8 @@ class Wire:
         elif not name and not name.strip():  # When input is empty or only contains whitespace
             del Wire.defined_wires[self.type.name]
             for wire in self.canvas.wires:
-                wire.delete_labels()
+                if wire.type == self.type:
+                    wire.delete_labels()
 
     def delete_labels(self):
         if self.start_label:
