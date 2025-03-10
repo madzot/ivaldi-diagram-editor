@@ -30,14 +30,15 @@ class Connection:
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
 
     def show_context_menu(self, event):
-        self.close_menu()
-        if (self.box and not self.box.locked) or self.box is None:
-            self.context_menu = tk.Menu(self.canvas, tearoff=0)
+        if not self.wire or not self.wire.is_temporary:
+            self.close_menu()
+            if (self.box and not self.box.locked) or self.box is None:
+                self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
-            self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
-            self.context_menu.add_command(label="Cancel")
+                self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
+                self.context_menu.add_command(label="Cancel")
 
-            self.context_menu.post(event.x_root, event.y_root)
+                self.context_menu.post(event.x_root, event.y_root)
 
     def close_menu(self):
         if self.context_menu:
