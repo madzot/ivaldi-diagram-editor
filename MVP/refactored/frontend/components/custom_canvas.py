@@ -542,6 +542,7 @@ class CustomCanvas(tk.Canvas):
                                                       (self.canvasx(event.x), self.canvasy(event.y)),
                                                       self)
             self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True)
+            self.temp_end_connection.wire = self.temp_wire
 
     def handle_connection_click(self, c, event):
         if c.has_wire or not self.draw_wire_mode:
