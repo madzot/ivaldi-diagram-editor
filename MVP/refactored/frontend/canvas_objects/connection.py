@@ -74,6 +74,7 @@ class Connection:
          It will change the 'fill' color of the item.
 
         :param color: string of color name.
+        :type color: str
         """
         self.canvas.itemconfig(self.circle, fill=color)
 
