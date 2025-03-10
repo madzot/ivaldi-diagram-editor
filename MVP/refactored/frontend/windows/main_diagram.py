@@ -671,6 +671,12 @@ class MainDiagram(tk.Tk):
 
             plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
 
+        for label_tag in canvas.wire_label_tags:
+            coords = canvas.coords(label_tag)
+            plt.text(coords[0] / 100, y_max - coords[1] / 100, canvas.itemconfig(label_tag)['text'][-1],
+                     horizontalalignment='center', verticalalignment='center', zorder=2,
+                     family="cmtt10", fontsize=10)
+
         ax.set_xlim(0, x_max)
         ax.set_ylim(0, y_max)
         plt.axis('off')
@@ -687,20 +693,16 @@ class MainDiagram(tk.Tk):
             case WireType.THIRD:
                 style = "black", "-."
             case WireType.FOURTH:
-                style = "greenyellow", ""
-            case WireType.FIFTH:
                 style = "hotpink", ""
-            case WireType.SIXTH:
-                style = "navajowhite", ""
-            case WireType.SEVENTH:
+            case WireType.FIFTH:
                 style = "slateblue", ""
-            case WireType.EIGHTH:
+            case WireType.SIXTH:
                 style = "seagreen", ""
-            case WireType.NINTH:
+            case WireType.SEVENTH:
                 style = "darkolivegreen", ""
-            case WireType.TENTH:
+            case WireType.EIGHTH:
                 style = "goldenrod", ""
-            case WireType.ELEVENTH:
+            case WireType.NINTH:
                 style = "red", ""
             case _:
                 style = "black", ""
