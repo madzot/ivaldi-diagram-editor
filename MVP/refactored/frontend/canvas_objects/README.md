@@ -108,7 +108,7 @@ Spider is a subclass of Connection. Difference between Connection and Spider is 
 | Variable          | Description                                                                                |
 |-------------------|--------------------------------------------------------------------------------------------|
 | x: int            | Quick variable to get the x coordinate of the Spider. It is the first number of location.  |
-| y: int            | Quick variable to get the y cooridnate of the Spider. It is the second number of location. |
+| y: int            | Quick variable to get the y coordinate of the Spider. It is the second number of location. |
 | connections: list |                                                                                            |
 
 
