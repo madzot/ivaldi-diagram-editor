@@ -9,8 +9,14 @@ class ConnectionInfo:
         self.side = connection_side
         self.id = connection_id
 
+    def get_id(self) -> int:
+        return self.id
+
     def has_box(self)-> bool:
         return self.box_id is not None
+
+    def get_box_id(self)-> int:
+        return self.box_id
 
     def set_box_id(self, id: int|None):
         self.box_id = id
@@ -24,3 +30,7 @@ class ConnectionInfo:
     @classmethod
     def from_list(cls, data)-> Self:
         return ConnectionInfo(data[0], data[2], data[3], data[1])
+
+    def __eq__(self, __value):
+        return isinstance(__value, ConnectionInfo) and self.id == __value.id
+

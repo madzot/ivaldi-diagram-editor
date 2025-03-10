@@ -652,10 +652,10 @@ class Box:
         if self.receiver.listener:
             if circle.side == ConnectionSide.LEFT:
                 self.receiver.receiver_callback(ActionType.BOX_REMOVE_LEFT, generator_id=self.id,
-                                                connection_nr=circle.index, conection_id=circle.id, canvas_id=self.canvas.id)
+                                                connection_nr=circle.index, connection_id=circle.id, canvas_id=self.canvas.id)
             elif circle.side == ConnectionSide.RIGHT:
                 self.receiver.receiver_callback(ActionType.BOX_REMOVE_RIGHT, generator_id=self.id,
-                                                connection_nr=circle.index, conection_id=circle.id,
+                                                connection_nr=circle.index, connection_id=circle.id,
                                                 canvas_id=self.canvas.id)
         if circle.side == "left":
             self.left_connections -= 1

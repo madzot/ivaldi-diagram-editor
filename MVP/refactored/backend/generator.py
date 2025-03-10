@@ -1,5 +1,6 @@
 from MVP.refactored.backend.types.GeneratorType import GeneratorType
 from MVP.refactored.backend.types.connection_info import ConnectionInfo
+from MVP.refactored.backend.types.connection_side import ConnectionSide
 
 
 class Generator:
@@ -17,10 +18,18 @@ class Generator:
         self.operand = None
 
     def add_left(self, left: ConnectionInfo):
-        self.left.insert(left.index, left)
+        if left.side != ConnectionSide.SPIDER: # because connection info with spider will always have same id
+            if left not in self.left:
+                self.left.insert(left.index, left)
+        else:
+            self.left.insert(left.index, left)
 
     def add_right(self, right: ConnectionInfo):
-        self.right.insert(right.index, right)
+        if right.side != ConnectionSide.SPIDER:  # because connection info with spider will always have same id
+            if right not in self.right:
+                self.right.insert(right.index, right)
+        else:
+            self.right.insert(right.index, right)
 
     def add_left_inner(self, left: ConnectionInfo):
         self.left_inner.insert(left.index, left)

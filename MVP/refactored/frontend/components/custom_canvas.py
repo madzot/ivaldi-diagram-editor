@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.box import Box
@@ -21,7 +22,7 @@ from MVP.refactored.frontend.canvas_objects.wire import Wire
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, diagram_source_box, receiver, main_diagram,
+    def __init__(self, master, diagram_source_box, receiver: Receiver, main_diagram,
                  parent_diagram, add_boxes, id_=None, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -57,6 +58,9 @@ class CustomCanvas(tk.Canvas):
             self.id = id(self)
         else:
             self.id = id_
+
+        self.receiver.add_new_canvas(self.id)
+
 
         self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
