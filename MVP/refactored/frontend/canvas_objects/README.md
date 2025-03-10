@@ -122,35 +122,42 @@ Along with these variables Spider has Connection variables as well. Although all
 | receiver        | Receiver     | Receiver object, usually taken from MainDiagram. Used to send information to the back end portion                                                                                    |
 | is_snapped      | bool         | Boolean stating if the Spider is currently snapped to a column or not.                                                                                                               |
 
+### Spider functions
 
+```
+    .on_resize_scroll(event)
+        Changes Spider size based on mouse scroll event. Used as a keybind function to change Spider sizes when needed.
 
+        Parameters:
+            event (tkinter.Event): Event object that is sent on key presses.
 
+    .on_press()
+        Handles Button-1 (mouse left click) press event in Spider. Clears previous selection and selects the Spider.
 
+    .on_control_press()
+        Handles ctrl + Button-1 press event bind. Toggles selection on the Spider, while not clearing previous selection.
+        
+    .on_drag(event)
+        Handles dragging the Spider. Checks snapping into columns and other collision related actions. Moves and updates Spider location.
 
+        Parameters:
+            event (tkinter.Event): Event object that is sent on key presses.
 
+    .align_wire_ends()
+        Checks if the ends of a connected wire need to be switched. Due to start connection always being on the left and end being on the right,
+         this function is used to check and realign the ends of a wire thats attached to the Spider.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    .find_collisions(go_to_x, go_to_y)
+        Checks the canvas for overlapping widgets in the location of (go_to_x, go_to_y), covers the area equal to a square around spider.
+         Wires are excluded from this. Returns list of canvas tags that are in the designated area.
+        
+        Parameters:
+            go_to_x (int): x coordinate that is at the center of the desired collision checking location.
+            go_to_y (int): y coordinate that is at the center of the desired collision checking location.
+        
+    .is_illegal_move(new_x)
+        Checks if movement to new_x is legal. Returns boolean.
+        
+        Parameters:
+            new_x (int): x coordinate that Spider would be moved to/what location legality is checked for.
+```
