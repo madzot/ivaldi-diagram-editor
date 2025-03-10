@@ -173,15 +173,15 @@ class ConnectionTests(TestApplication):
 
         self.assertTrue(output_mock.called)
 
-    def test__color_black__changes_config_fill_to_black(self):
+    def test__change_color__changes_config_fill_to_black(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
-        connection.color_black()
+        connection.change_color('black')
         config = self.custom_canvas.itemconfig(connection.circle)["fill"]
         self.assertTrue('black' in config)
 
-    def test__color_green__changes_config_fill_to_green(self):
+    def test__change_color__changes_config_fill_to_green(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
-        connection.color_green()
+        connection.change_color(color='green')
         config = self.custom_canvas.itemconfig(connection.circle)["fill"]
         self.assertTrue('green' in config)
 
