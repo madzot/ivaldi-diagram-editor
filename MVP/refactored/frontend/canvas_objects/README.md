@@ -12,29 +12,29 @@ Connections are used as diagram inputs and outputs as well as box connections. C
 
 ### Connection parameters
 
-| **Param**             | **Description**                                                                                                                                                                                                                                                                                                     |
-|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| box: Box              | Used if Connection is a box input or output. `None` if connection is not attached to a box.                                                                                                                                                                                                                         |
-| index: int            | Index of Connection among the same side of the box or diagram.                                                                                                                                                                                                                                                      |
-| side: str             | A string ("left" or "right"), that tells which side of a box or diagram the Connection is created on.<br/> Values are flipped when regarding inputs and outputs of a connection, side="left" connections are on the right side of the diagram (outputs), side="right" are on the left side of the diagram (inputs). |
-| location: tuple       | Tuple of x and y coordinates as integers. Example: (100, 200).                                                                                                                                                                                                                                                      |
-| canvas: CustomCanvas  | CustomCanvas object that the Connection will be drawn on and connected to.                                                                                                                                                                                                                                          |
-|                       |
-| # **Optional params** |                                                                                                                                                                                                                                                                                                                     |
-| r: int                | Radius of the Connection.<br/> Default value is `5`                                                                                                                                                                                                                                                                 |
-| id_: int              | ID.<br/> Default value is `None`                                                                                                                                                                                                                                                                                    |
+| **Param**             | **Type**     | **Description**                                                                                                                                                                                                                                                                                                     |
+|-----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| box                   | Box          | Used if Connection is a box input or output. `None` if connection is not attached to a box.                                                                                                                                                                                                                         |
+| index                 | int          | Index of Connection among the same side of the box or diagram.                                                                                                                                                                                                                                                      |
+| side                  | str          | A string ("left" or "right"), that tells which side of a box or diagram the Connection is created on.<br/> Values are flipped when regarding inputs and outputs of a connection, side="left" connections are on the right side of the diagram (outputs), side="right" are on the left side of the diagram (inputs). |
+| location              | tuple        | Tuple of x and y coordinates as integers. Example: (100, 200).                                                                                                                                                                                                                                                      |
+| canvas                | CustomCanvas | CustomCanvas object that the Connection will be drawn on and connected to.                                                                                                                                                                                                                                          |
+|                       |              | 
+| # **Optional params** |              |                                                                                                                                                                                                                                                                                                                     |
+| r                     | int          | Radius of the Connection.<br/> Default value is `5`                                                                                                                                                                                                                                                                 |
+| id_                   | int          | ID.<br/> Default value is `None`                                                                                                                                                                                                                                                                                    |
 
 ### Connection variables
 
 Below is a description of all available variables in the Connection class. It will not include variables of Connection parameters.
 
-| **Variable**               | **Description**                                                                                                                    |
-|----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| wire: Wire                 | Wire object that is connected to the Connection. `None` if no wire.                                                                |
-| has_wire: boolean          | Boolean that is True if a wire is connected to the Connection. Otherwise False.                                                    |
-| context_menu: tkinter.Menu | Used to create a context menu for Connections.                                                                                     |
-| circle: int                | CustomCanvas tagOrId for the circle that represents a Connection.                                                                  |
-| width_between_boxes: int   | Integer that is used to describe how close to the x axis another connected Connection can come before being unable to move closer. |
+| **Variable**        | **Type**     | **Description**                                                                                                                    |
+|---------------------|--------------|------------------------------------------------------------------------------------------------------------------------------------|
+| wire                | Wire         | Wire object that is connected to the Connection. `None` if no wire.                                                                |
+| has_wire            | boolean      | Boolean that is True if a wire is connected to the Connection. Otherwise False.                                                    |
+| context_menu        | tkinter.Menu | Used to create a context menu for Connections.                                                                                     |
+| circle              | int          | CustomCanvas tagOrId for the circle that represents a Connection.                                                                  |
+| width_between_boxes | int          | Integer that is used to describe how close to the x axis another connected Connection can come before being unable to move closer. |
 
 
 ### Connection functions
@@ -98,20 +98,19 @@ Spider is a subclass of Connection. Difference between Connection and Spider is 
 
 ### Spider parameters
 
-| Param                | Description                                                                                                                               |
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| location: list       | Location of the Spider in the form of a list. Example: [111, 222]                                                                         |
-| canvas: CustomCanvas | CustomCanvas that the Spider is located and displayed on.                                                                                 |
-| receiver: Receiver   | Receiver used for sending events to the backend proportion of the application. The receiver is usually taken from the MainDiagram object. |
-| id_=None: int        | ID.                                                                                                                                       |
+| Param     | **Type**     | Description                                                                                                                               |
+|-----------|--------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| location  | list         | Location of the Spider in the form of a list. Example: [111, 222]                                                                         |
+| canvas    | CustomCanvas | CustomCanvas that the Spider is located and displayed on.                                                                                 |
+| receiver  | Receiver     | Receiver used for sending events to the backend proportion of the application. The receiver is usually taken from the MainDiagram object. |
+| id_=None  | int          | ID.                                                                                                                                       |
 
 
 ## Spider variables
-| Variable          | Description                                                                                |
-|-------------------|--------------------------------------------------------------------------------------------|
-| x: int            | Quick variable to get the x coordinate of the Spider. It is the first number of location.  |
-| y: int            | Quick variable to get the y coordinate of the Spider. It is the second number of location. |
-| connections: list |                                                                                            |
+| Variable          | **Type** | Description                                                                                |
+|------------------|----------|--------------------------------------------------------------------------------------------|
+| x: int            |          | Quick variable to get the x coordinate of the Spider. It is the first number of location.  |
+| y: int            |          | Quick variable to get the y coordinate of the Spider. It is the second number of location. |
 
 
 
