@@ -30,7 +30,7 @@ class Connection:
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
 
     def show_context_menu(self, event):
-        if not self.wire.is_temporary:
+        if not self.wire or not self.wire.is_temporary:
             self.close_menu()
             if (self.box and not self.box.locked) or self.box is None:
                 self.context_menu = tk.Menu(self.canvas, tearoff=0)

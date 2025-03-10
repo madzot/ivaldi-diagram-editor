@@ -52,40 +52,66 @@ class ConnectionTests(TestApplication):
     @patch('tkinter.Menu.post')
     def test__show_context_menu__shows_if_no_box(self, post_mock, add_command_mock, close_menu_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection, temporary=False)
+        event = tkinter.Event()
+        event.x_root, event.y_root = 10, 10
+        connection.show_context_menu(event)
+
+        self.assertFalse(close_menu_mock.called)
+        self.assertEqual(0, add_command_mock.call_count)
+        self.assertEqual(0, post_mock.call_count)
+
+    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
+    @patch('tkinter.Menu.add_command')
+    @patch('tkinter.Menu.post')
+    def test__show_context_menu__shows_if_no_box(self, post_mock, add_command_mock,
+                                                 close_menu_mock, handle_wire_addition_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection)
         event = tkinter.Event()
         event.x_root, event.y_root = 10, 10
         connection.show_context_menu(event)
 
         self.assertTrue(close_menu_mock.called)
+        self.assertTrue(handle_wire_addition_mock.called)
         self.assertEqual(2, add_command_mock.call_count)
         self.assertEqual(1, post_mock.call_count)
 
+    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
     @patch('tkinter.Menu.add_command')
     @patch('tkinter.Menu.post')
-    def test__show_context_menu__closes_if_locked_box(self, post_mock, add_command_mock, close_menu_mock):
+    def test__show_context_menu__closes_if_locked_box(self, post_mock, add_command_mock,
+                                                      close_menu_mock, handle_wire_addition_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection)
         connection.box.locked = True
         event = tkinter.Event()
         event.x_root, event.y_root = 10, 10
         connection.show_context_menu(event)
 
         self.assertTrue(close_menu_mock.called)
+        self.assertTrue(handle_wire_addition_mock.called)
         self.assertFalse(add_command_mock.called)
         self.assertFalse(post_mock.called)
 
+    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
     @patch('tkinter.Menu.add_command')
     @patch('tkinter.Menu.post')
-    def test__show_context_menu__calls_all_if_has_box(self, post_mock, add_command_mock, close_menu_mock):
+    def test__show_context_menu__shows_all_if_has_box_and_not_temporary(self, post_mock, add_command_mock,
+                                                                        close_menu_mock, handle_wire_addition_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection)
         event = tkinter.Event()
         event.x_root, event.y_root = 10, 10
         connection.show_context_menu(event)
 
         self.assertTrue(close_menu_mock.called)
+        self.assertTrue(handle_wire_addition_mock.called)
         self.assertEqual(2, add_command_mock.call_count)
         self.assertEqual(1, post_mock.call_count)
 
