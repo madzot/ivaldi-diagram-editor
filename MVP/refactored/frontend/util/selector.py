@@ -94,7 +94,7 @@ class Selector:
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
             box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
         for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):
-            spider.delete_spider("sub_diagram")
+            spider.delete("sub_diagram")
             if self.canvas.receiver.listener:
                 self.canvas.receiver.receiver_callback(
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
@@ -134,7 +134,7 @@ class Selector:
                     action_param = None
                 item.delete_box(action=action_param)
             if isinstance(item, Spider):
-                item.delete_spider()
+                item.delete()
         self.selected_items.clear()
 
     @staticmethod

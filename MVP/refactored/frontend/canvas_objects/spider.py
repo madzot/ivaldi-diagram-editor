@@ -45,15 +45,15 @@ class Spider(Connection):
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
-        self.context_menu.add_command(label="Delete Spider", command=self.delete_spider)
+        self.context_menu.add_command(label="Delete Spider", command=self.delete)
         self.context_menu.add_command(label="Cancel")
 
         self.context_menu.tk_popup(event.x_root, event.y_root)
 
-    def delete_spider(self, action=None):
+    def delete(self, action=None):
         [wire.delete_self(self) for wire in self.wires.copy()]
         self.canvas.spiders.remove(self)
-        self.delete()
+        super().delete()
         if self.receiver.listener and not self.canvas.search:
             if action != "sub_diagram":
                 self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id)
@@ -156,7 +156,7 @@ class Spider(Connection):
 
                     counter += 1
 
-        self.switch_wire_start_and_end()
+        self.align_wire_ends()
 
         self.is_snapped = found
 
@@ -168,7 +168,7 @@ class Spider(Connection):
                            self.y + self.r)
         [w.update() for w in self.wires]
 
-    def switch_wire_start_and_end(self):
+    def align_wire_ends(self):
         for connection in list(filter(lambda x: (x is not None and x != self and x.is_spider()),
                                       [w.end_connection for w in self.wires] + [w.start_connection for w in
                                                                                 self.wires])):
