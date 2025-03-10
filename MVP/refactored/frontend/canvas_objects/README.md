@@ -59,7 +59,9 @@ Below is a description of all available variables in the Connection class. It wi
 
     .move_to(location)
         Updates the canvas location of the Connection and updates the location variable
-        :param location - tuple of x and y coordinates.
+
+        Parameters:
+            location (tuple): Tuple of x, y coordinates that Connection will move to.
 
     .lessen_index_by_one()
         Lowers the index of a connection by 1.
@@ -75,7 +77,10 @@ Below is a description of all available variables in the Connection class. It wi
 
     .remove_wire(wire=None)
         Removes the connected wire from the connection. The wire parameter is used for Spiders that need specification on what wire to remove.
-        :param wire - Wire object to be removed from Connection (if dealing with Spider sub-class)
+
+        Parameters:
+            wire (Wire): Used when dealing with Spider (not Connection). It is the wire that will be removed from the Spider.
+                          If dealing with a Connection, this parameter will have no function.
 
     .select()
         Turns the color of the connection circle green.
