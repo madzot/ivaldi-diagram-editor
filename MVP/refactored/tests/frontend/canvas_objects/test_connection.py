@@ -102,9 +102,9 @@ class ConnectionTests(TestApplication):
     def test__change_type__does_not_change_if_tied_con_is_none(self, get_tied_connection_mock, update_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
 
-        self.assertTrue(get_tied_connection_mock.called)
         self.assertEqual(ConnectionType.GENERIC, connection.type)
         connection.change_type(2)
+        self.assertTrue(get_tied_connection_mock.called)
         self.assertNotEqual(ConnectionType.SECOND, connection.type)
         self.assertFalse(update_mock.called)
 
