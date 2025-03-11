@@ -24,9 +24,21 @@ class Connection:
         self.bind_events()
 
     def bind_events(self):
+        """
+        Bind events to circle created on CustomCanvas.
+
+        :return: None
+        """
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
 
     def show_context_menu(self, event):
+        """
+        Create and display a context menu for the selected Connection.
+
+        :param event: Event sent from keybind. Location used for context menu to be created at.
+        :type event: tkinter.Event
+        :return: None
+        """
         self.close_menu()
         if (self.box and not self.box.locked) or self.box is None:
             self.context_menu = tk.Menu(self.canvas, tearoff=0)
@@ -37,10 +49,21 @@ class Connection:
             self.context_menu.post(event.x_root, event.y_root)
 
     def close_menu(self):
+        """
+        Close context menu if exists.
+
+        :return: None
+        """
         if self.context_menu:
             self.context_menu.destroy()
 
     def delete_from_parent(self):
+        """
+        Delete the selected Connection from their parent.
+
+        This deletes the specific Connection from its diagram input or outputs, or it deletes it from the Box.
+        :return: None
+        """
         if self.box:
             if self.box.sub_diagram and self.side == "left":
                 for i in self.box.sub_diagram.inputs:
