@@ -39,7 +39,6 @@ class Tests(TestCustomCanvas):
         self.assertFalse(self.custom_canvas.draw_wire_mode)
         self.assertIsNone(self.custom_canvas.selectBox)
         self.assertFalse(self.custom_canvas.selecting)
-        self.assertFalse(self.custom_canvas.is_wire_pressed)
         self.assertIsNone(self.custom_canvas.resize_timer)
 
     def test__init__default_box_shape(self):

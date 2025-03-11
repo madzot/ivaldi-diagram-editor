@@ -39,14 +39,15 @@ class Connection:
         :type event: tkinter.Event
         :return: None
         """
-        self.close_menu()
-        if (self.box and not self.box.locked) or self.box is None:
-            self.context_menu = tk.Menu(self.canvas, tearoff=0)
+        if not self.wire or not self.wire.is_temporary:
+            self.close_menu()
+            if (self.box and not self.box.locked) or self.box is None:
+                self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
-            self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
-            self.context_menu.add_command(label="Cancel")
+                self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
+                self.context_menu.add_command(label="Cancel")
 
-            self.context_menu.post(event.x_root, event.y_root)
+                self.context_menu.post(event.x_root, event.y_root)
 
     def close_menu(self):
         """
@@ -86,11 +87,17 @@ class Connection:
             self.canvas.remove_specific_diagram_output(self)
             return
 
-    def color_black(self):
-        self.canvas.itemconfig(self.circle, fill='black')
+    def change_color(self, color='black'):
+        """
+        Change the color of the connection. Without a parameter it will turn the Connection to black.
 
-    def color_green(self):
-        self.canvas.itemconfig(self.circle, fill='green')
+        The function allows usage of all Tkinter built in colors as well as hex code.
+         It will change the 'fill' color of the item.
+
+        :param color: string of color name.
+        :type color: str
+        """
+        self.canvas.itemconfig(self.circle, fill=color)
 
     def move_to(self, location):
         self.canvas.coords(self.circle, location[0] - self.r, location[1] - self.r, location[0] + self.r,
