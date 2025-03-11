@@ -85,13 +85,13 @@ class Connection:
             if (self.box and not self.box.locked) or self.box is None:
                 self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
-            self.add_type_choice()
+                self.add_type_choice()
 
-            self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
-            self.context_menu.add_separator()
-            self.context_menu.add_command(label="Cancel")
+                self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
+                self.context_menu.add_separator()
+                self.context_menu.add_command(label="Cancel")
 
-            self.context_menu.tk_popup(event.x_root, event.y_root)
+                self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def add_type_choice(self):
         if not self.has_wire:

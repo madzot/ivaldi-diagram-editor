@@ -74,13 +74,15 @@ class ConnectionTests(TestApplication):
 
         self.assertEqual(ConnectionType.SECOND, connection.type)
 
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.change_type')
     @patch('MVP.refactored.frontend.canvas_objects.types.connection_type.ConnectionType.next')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.increment_active_types')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.update')
-    def test__increment_type__callouts(self, update_mock, increment_type_mock, next_mock):
+    def test__increment_type__callouts(self, update_mock, increment_type_mock, next_mock, change_type_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.increment_type()
 
+        self.assertEqual(1, change_type_mock.call_count)
         self.assertEqual(1, next_mock.call_count)
         self.assertEqual(1, update_mock.call_count)
         self.assertEqual(1, increment_type_mock.call_count)
@@ -132,8 +134,8 @@ class ConnectionTests(TestApplication):
     @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
     @patch('tkinter.Menu.add_command')
-    @patch('tkinter.Menu.post')
-    def test__show_context_menu__closes_if_locked_box(self, post_mock, add_command_mock,
+    @patch('tkinter.Menu.tk_popup')
+    def test__show_context_menu__closes_if_locked_box(self, tk_popup_mock, add_command_mock,
                                                       close_menu_mock, handle_wire_addition_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.box = Box(self.custom_canvas, 10, 10, self.app.receiver)
@@ -146,7 +148,7 @@ class ConnectionTests(TestApplication):
         self.assertTrue(close_menu_mock.called)
         self.assertTrue(handle_wire_addition_mock.called)
         self.assertFalse(add_command_mock.called)
-        self.assertFalse(post_mock.called)
+        self.assertFalse(tk_popup_mock.called)
 
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.add_type_choice')
     @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
