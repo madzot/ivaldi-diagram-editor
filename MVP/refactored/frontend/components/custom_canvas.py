@@ -112,7 +112,6 @@ class CustomCanvas(tk.Canvas):
         self.search_result_button = SearchResultButton(self, self.main_diagram, self)
 
         self.box_shape = "rectangle"
-        self.is_wire_pressed = False
 
         self.copy_logo = (Image.open(ASSETS_DIR + "/content-copy.png"))
         self.copy_logo = self.copy_logo.resize((20, 20))
@@ -453,10 +452,6 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.destroy()
 
     def show_context_menu(self, event):
-        if self.is_wire_pressed:
-            self.close_menu()
-            self.is_wire_pressed = False
-            return
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         if not self.is_mouse_on_object(event):
             self.close_menu()
@@ -480,15 +475,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def is_mouse_on_object(self, event):
-        for box in self.boxes:
-            if (box.x <= event.x <= box.x + box.size[0]
-                    and box.y <= event.y <= box.y + box.size[1]):
-                return True
-        for spider in self.spiders:
-            if (spider.x - spider.r <= event.x <= spider.x + spider.r
-                    and spider.y - spider.r <= event.y <= spider.y + spider.r):
-                return True
-        return False
+        return bool(self.find_overlapping(event.x, event.y, event.x, event.y))
 
     # binding for drag select
     def __select_start__(self, event):
@@ -561,6 +548,7 @@ class CustomCanvas(tk.Canvas):
                                                       self, connection_type=self.current_wire_start.type)
             self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True,
                                   wire_type=WireType[self.current_wire_start.type.name])
+            self.temp_end_connection.wire = self.temp_wire
 
     def handle_connection_click(self, c, event):
         if c.has_wire and not c.is_spider() or not self.draw_wire_mode:
@@ -575,7 +563,7 @@ class CustomCanvas(tk.Canvas):
         if connection.side == "spider" or not connection.has_wire:
             self.current_wire_start = connection
 
-            connection.color_green()
+            connection.change_color(color='green')
 
             if event is not None:
                 x, y = self.canvasx(event.x), self.canvasy(event.y)
@@ -636,7 +624,7 @@ class CustomCanvas(tk.Canvas):
 
     def nullify_wire_start(self):
         if self.current_wire_start:
-            self.current_wire_start.color_black()
+            self.current_wire_start.change_color(color='black')
         self.current_wire_start = None
         self.current_wire = None
 
