@@ -591,13 +591,17 @@ class CustomCanvas(tk.Canvas):
         if (self.current_wire_start
                 and self.is_wire_between_connections_legal(self.current_wire_start, connection)
                 or bypass_legality_check):
-            self.cancel_wire_pulling()
-            start_end = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
+            start_end: list[Connection] = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
 
             if start_end[0].type == ConnectionType.GENERIC:
                 start_end[0].change_type(start_end[1].type.value)
             if start_end[1].type == ConnectionType.GENERIC:
                 start_end[1].change_type(start_end[0].type.value)
+
+            if start_end[0].type != start_end[1].type:
+                return
+
+            self.cancel_wire_pulling()
 
             self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1],
                                      wire_type=WireType[start_end[0].type.name])

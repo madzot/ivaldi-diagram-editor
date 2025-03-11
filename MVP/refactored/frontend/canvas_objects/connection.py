@@ -43,14 +43,41 @@ class Connection:
 
     def increment_type(self):
         if not self.has_wire:
-            self.type = self.type.next()
+            self.change_type(self.type.next().value)
             self.increment_active_types()
             self.update()
 
     def change_type(self, type_id):
+        tied_con = self.get_tied_connection()
+        if tied_con is None:
+            return
+        if tied_con and tied_con != self:
+            tied_con.type = ConnectionType(type_id)
+            tied_con.update()
         if not self.has_wire:
             self.type = ConnectionType(type_id)
             self.update()
+
+    def get_tied_connection(self):
+        tied_con = self
+        if self.box and self.box.sub_diagram:
+            if self.box.sub_diagram == self.canvas:
+                connections = self.box.connections
+            else:
+                connections = self.box.sub_diagram.outputs + self.box.sub_diagram.inputs
+
+            matching_side = ""
+            if self.side == "right":
+                matching_side = "left"
+            elif self.side == "left":
+                matching_side = "right"
+            for io in connections:
+                if io.side == matching_side and io.index == self.index:
+                    if io.has_wire:
+                        tied_con = None
+                    else:
+                        tied_con = io
+        return tied_con
 
     def show_context_menu(self, event):
         self.close_menu()
