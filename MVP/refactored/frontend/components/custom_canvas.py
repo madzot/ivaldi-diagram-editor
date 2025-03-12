@@ -475,7 +475,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def is_mouse_on_object(self, event):
-        return bool(self.find_overlapping(event.x, event.y, event.x, event.y))
+        return bool(self.find_overlapping(event.x, event.y - 1, event.x, event.y + 1))
 
     # binding for drag select
     def __select_start__(self, event):
