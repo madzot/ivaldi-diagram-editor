@@ -62,5 +62,9 @@ class Launcher:
         self.root.destroy()
 
 
-if __name__ == '__main__':
+def start_program():
     Launcher()
+
+
+if __name__ == '__main__':
+    start_program()

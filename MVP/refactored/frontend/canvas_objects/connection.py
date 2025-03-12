@@ -1,14 +1,19 @@
 import tkinter as tk
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 
 
 class Connection:
-    def __init__(self, box, index, side, location, canvas, r=5, id_=None):
+
+    active_types = 1
+
+    def __init__(self, box, index, side, location, canvas, r=5, id_=None, connection_type=ConnectionType.GENERIC):
         self.canvas = canvas
         self.id = id(self)
         self.box = box  # None if connection is diagram input/output/spider
         self.index = index
         self.side = side  # 'spider' if connection is a spider
         self.location = location
+        self.type = connection_type
         self.wire = None
         self.has_wire = False
         self.r = r
@@ -20,14 +25,59 @@ class Connection:
         self.node = None
 
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-
         self.circle = self.canvas.create_oval(location[0] - self.r, location[1] - self.r, location[0] + self.r,
-                                              location[1] + self.r, fill="black", outline="black")
+                                              location[1] + self.r, fill="black",
+                                              outline=ConnectionType.COLORS.value[self.type.value],
+                                              width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
         self.bind_events()
 
+    def update(self):
+        self.canvas.itemconfig(self.circle, outline=ConnectionType.COLORS.value[self.type.value])
+        self.canvas.itemconfig(self.circle, width=round(min(self.r / 5, 5)))
+        self.canvas.update()
+
     def bind_events(self):
         self.canvas.tag_bind(self.circle, '<ButtonPress-3>', self.show_context_menu)
+        self.canvas.tag_bind(self.circle, '<Button-2>', lambda x: self.increment_type())
+
+    def increment_type(self):
+        if not self.has_wire:
+            self.change_type(self.type.next().value)
+            self.increment_active_types()
+            self.update()
+
+    def change_type(self, type_id):
+        tied_con = self.get_tied_connection()
+        if tied_con is None:
+            return
+        if tied_con and tied_con != self:
+            tied_con.type = ConnectionType(type_id)
+            tied_con.update()
+        if not self.has_wire:
+            self.type = ConnectionType(type_id)
+            self.update()
+
+    def get_tied_connection(self):
+        tied_con = self
+        if self.box and self.box.sub_diagram:
+            if self.box.sub_diagram == self.canvas:
+                connections = self.box.connections
+            else:
+                connections = self.box.sub_diagram.outputs + self.box.sub_diagram.inputs
+
+            matching_side = ""
+            if self.side == "right":
+                matching_side = "left"
+            elif self.side == "left":
+                matching_side = "right"
+            for io in connections:
+                if io.side == matching_side and io.index == self.index:
+                    if io.has_wire:
+                        tied_con = None
+                    else:
+                        tied_con = io
+        return tied_con
 
     def show_context_menu(self, event):
         if not self.wire or not self.wire.is_temporary:
@@ -35,10 +85,35 @@ class Connection:
             if (self.box and not self.box.locked) or self.box is None:
                 self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
+                self.add_type_choice()
+
                 self.context_menu.add_command(label="Delete Connection", command=self.delete_from_parent)
+                self.context_menu.add_separator()
                 self.context_menu.add_command(label="Cancel")
 
-                self.context_menu.post(event.x_root, event.y_root)
+                self.context_menu.tk_popup(event.x_root, event.y_root)
+
+    def add_type_choice(self):
+        if not self.has_wire:
+            sub_menu = tk.Menu(self.context_menu, tearoff=0)
+            self.context_menu.add_cascade(menu=sub_menu, label="Connection type")
+            sub_menu.add_command(label="Generic", command=lambda: self.change_type(0))
+
+            for i in range(1, Connection.active_types):
+                sub_menu.add_command(label=ConnectionType.LABEL_NAMES.value[i],
+                                     command=lambda c_type=i: self.change_type(c_type))
+
+            if Connection.active_types < len(ConnectionType.COLORS.value):
+                sub_menu.add_separator()
+                sub_menu.add_command(label="Add new type", command=lambda: self.add_active_type())
+
+    def add_active_type(self):
+        self.change_type(Connection.active_types)
+        self.increment_active_types()
+
+    def increment_active_types(self):
+        if Connection.active_types < len(ConnectionType.COLORS.value) and self.type.value >= Connection.active_types:
+            Connection.active_types += 1
 
     def close_menu(self):
         if self.context_menu:

@@ -12,11 +12,13 @@ from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
+from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from constants import *
 
 
@@ -143,6 +145,8 @@ class CustomCanvas(tk.Canvas):
 
         self.hover_item = None
         self.search_result_highlights = []
+
+        self.wire_label_tags = []
 
     def on_hover(self, item):
         self.hover_item = item
@@ -378,6 +382,7 @@ class CustomCanvas(tk.Canvas):
             i_o.location = i_o_location
             self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
                         i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
+            self.itemconfig(i_o.circle, width=i_o.r * 2 / 10)
 
         for box in self.boxes:
             box.x = self.calculate_zoom_dif(event.x, box.x, denominator)
@@ -392,6 +397,7 @@ class CustomCanvas(tk.Canvas):
             spider.r *= scale
             self.coords(spider.circle, spider.x - spider.r, spider.y - spider.r, spider.x + spider.r,
                         spider.y + spider.r)
+            self.itemconfig(spider.circle, width=round(min(spider.r / 5, 5)))
 
         for wire in self.wires:
             wire.wire_width *= scale
@@ -430,7 +436,6 @@ class CustomCanvas(tk.Canvas):
             [min_x, max_y],
             [max_x, min_y],
             [max_x, max_y]
-
         ]
         for corner in self.corners:
             for location in locations:
@@ -470,7 +475,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def is_mouse_on_object(self, event):
-        return bool(self.find_overlapping(event.x, event.y, event.x, event.y))
+        return bool(self.find_overlapping(event.x, event.y - 1, event.x, event.y + 1))
 
     # binding for drag select
     def __select_start__(self, event):
@@ -504,7 +509,7 @@ class CustomCanvas(tk.Canvas):
         if not self.quick_pull and not self.draw_wire_mode:
             self.quick_pull = True
             connection = self.get_connection_from_location(event)
-            if connection is not None and not connection.has_wire:
+            if connection is not None and (not connection.has_wire or connection.is_spider()):
                 self.toggle_draw_wire_mode()
                 self.on_canvas_click(event, connection)
             else:
@@ -540,12 +545,13 @@ class CustomCanvas(tk.Canvas):
                 self.temp_end_connection.delete()
                 self.temp_end_connection = Connection(None, 0, None,
                                                       (self.canvasx(event.x), self.canvasy(event.y)),
-                                                      self)
-            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True)
+                                                      self, connection_type=self.current_wire_start.type)
+            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True,
+                                  wire_type=WireType[self.current_wire_start.type.name])
             self.temp_end_connection.wire = self.temp_wire
 
     def handle_connection_click(self, c, event):
-        if c.has_wire or not self.draw_wire_mode:
+        if c.has_wire and not c.is_spider() or not self.draw_wire_mode:
             return
         if not self.current_wire_start:
             self.start_wire_from_connection(c, event)
@@ -570,11 +576,23 @@ class CustomCanvas(tk.Canvas):
             self.nullify_wire_start()
             self.cancel_wire_pulling()
 
-        if self.current_wire_start and self.is_wire_between_connections_legal(self.current_wire_start,
-                                                                              connection) or bypass_legality_check:
+        if (self.current_wire_start
+                and self.is_wire_between_connections_legal(self.current_wire_start, connection)
+                or bypass_legality_check):
+            start_end: list[Connection] = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
+
+            if start_end[0].type == ConnectionType.GENERIC:
+                start_end[0].change_type(start_end[1].type.value)
+            if start_end[1].type == ConnectionType.GENERIC:
+                start_end[1].change_type(start_end[0].type.value)
+
+            if start_end[0].type != start_end[1].type:
+                return
+
             self.cancel_wire_pulling()
-            start_end = sorted([self.current_wire_start, connection], key=lambda x: x.location[0])
-            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1])
+
+            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1],
+                                     wire_type=WireType[start_end[0].type.name])
             self.wires.append(self.current_wire)
 
             if self.current_wire_start.box is not None:
@@ -629,8 +647,9 @@ class CustomCanvas(tk.Canvas):
             return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
         return None
 
-    def add_spider(self, loc=(100, 100), id_=None):
-        spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_)
+    def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC):
+        spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_,
+                        connection_type=connection_type)
         self.spiders.append(spider)
         return spider
 
@@ -791,9 +810,22 @@ class CustomCanvas(tk.Canvas):
         while len(self.inputs) > 0:
             self.remove_diagram_input()
 
+        Connection.active_types = 1
+        Wire.defined_wires.clear()
+
     # STATIC HELPERS
     @staticmethod
     def is_wire_between_connections_legal(start, end):
+        if start.type != end.type:
+            if ConnectionType.GENERIC not in (start.type, end.type):
+                return False
+            else:
+                if start.type == ConnectionType.GENERIC and start.has_wire:
+                    return False
+                if end.type == ConnectionType.GENERIC and end.has_wire:
+                    return False
+
+
         if start.is_spider() and end.is_spider():
 
             if abs(start.location[0] - end.location[0]) < 2 * start.r:
@@ -841,13 +873,13 @@ class CustomCanvas(tk.Canvas):
             self.nullify_wire_start()
         self.toggle_draw_wire_mode()
 
-    def add_diagram_output(self, id_=None):
+    def add_diagram_output(self, id_=None, connection_type=ConnectionType.GENERIC):
         output_index = max([o.index for o in self.outputs] + [0])
         if len(self.outputs) != 0:
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
                                            "left", [0, 0], self,
-                                           r=5 * self.total_scale, id_=id_)
+                                           r=5 * self.total_scale, id_=id_, connection_type=connection_type)
 
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
@@ -879,12 +911,12 @@ class CustomCanvas(tk.Canvas):
         if self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback("remove_diagram_output")
 
-    def add_diagram_input(self, id_=None):
+    def add_diagram_input(self, id_=None, connection_type=ConnectionType.GENERIC):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
         new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
-                               r=5 * self.total_scale, id_=id_)
+                               r=5 * self.total_scale, id_=id_, connection_type=connection_type)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
                                             connection_id=new_input.id)

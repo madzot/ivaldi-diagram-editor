@@ -4,6 +4,10 @@ import random
 import string
 from tkinter import filedialog
 from tkinter import messagebox
+
+from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
+from MVP.refactored.frontend.canvas_objects.wire import Wire
 from constants import *
 
 
@@ -31,6 +35,7 @@ class Importer:
             return hex_dig
 
     def start_import(self, d):
+        self.load_static_variables(d)
         d = d["main_canvas"]
         self.load_everything_to_canvas(d, self.canvas)
 
@@ -41,6 +46,18 @@ class Importer:
         self.load_io_to_canvas(d, canvas)
         self.load_wires_to_canvas(d, canvas)
 
+    @staticmethod
+    def load_static_variables(data):
+        if "static_variables" in data:
+            Connection.active_types = data["static_variables"]["active_types"]
+            Wire.defined_wires = data["static_variables"]["defined_wires"]
+            Importer.update_custom_type_names()
+
+    @staticmethod
+    def update_custom_type_names():
+        for type_name in Wire.defined_wires.keys():
+            ConnectionType.LABEL_NAMES.value[ConnectionType[type_name].value] = Wire.defined_wires[type_name]
+
     def load_boxes_to_canvas(self, d, canvas, multi_x, multi_y):
         for box in d["boxes"]:
             new_box = canvas.add_box((box["x"] * multi_x, box["y"] * multi_y), (box["size"][0] * multi_x,
@@ -50,9 +67,9 @@ class Importer:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
                 if c["side"] == "left":
-                    new_box.add_left_connection(self.get_id(c["id"]))
+                    new_box.add_left_connection(self.get_id(c["id"]), connection_type=ConnectionType[c.get('type', "GENERIC")])
                 if c["side"] == "right":
-                    new_box.add_right_connection(self.get_id(c["id"]))
+                    new_box.add_right_connection(self.get_id(c["id"]), connection_type=ConnectionType[c.get('type', "GENERIC")])
 
             if box["sub_diagram"]:
                 sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
@@ -87,14 +104,14 @@ class Importer:
 
     def load_spiders_to_canvas(self, d, canvas, multi_x, multi_y):
         for s in d["spiders"]:
-            canvas.add_spider((s["x"] * multi_x, s["y"] * multi_y), self.get_id(s["id"]))
+            canvas.add_spider((s["x"] * multi_x, s["y"] * multi_y), self.get_id(s["id"]), connection_type=ConnectionType[s.get("type", "GENERIC")])
 
     def load_io_to_canvas(self, d, canvas):
         d = d["io"]
         for i in d["inputs"]:
-            canvas.add_diagram_input(self.get_id(i["id"]))
+            canvas.add_diagram_input(self.get_id(i["id"]), connection_type=ConnectionType[i.get('type', "GENERIC")])
         for o in d["outputs"]:
-            canvas.add_diagram_output(self.get_id(o["id"]))
+            canvas.add_diagram_output(self.get_id(o["id"]), connection_type=ConnectionType[o.get('type', "GENERIC")])
 
     def load_wires_to_canvas(self, d, canvas):
         for w in d["wires"]:
@@ -140,10 +157,10 @@ class Importer:
             new_box = canvas.add_box(loc, shape=box.get("shape", "rectangle"))
             if box["label"]:
                 new_box.set_label(box["label"])
-            for _ in range(box["left_c"]):
-                new_box.add_left_connection()
+            for i in range(box["left_c"]):
+                new_box.add_left_connection(connection_type=ConnectionType[box["left_c_types"][i]])
             for _ in range(box["right_c"]):
-                new_box.add_right_connection()
+                new_box.add_right_connection(connection_type=ConnectionType[box["right_c_types"][i]])
 
             if box["sub_diagram"]:
                 sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)

@@ -8,6 +8,11 @@ from ._axes import _mpl_cmap2pgf_cmap
 from ._hatches import _mpl_hatch2pgfp_pattern
 from ._markers import _mpl_marker2pgfp_marker
 from ._util import get_legend_text, has_legend
+from matplotlib.lines import Line2D
+from matplotlib.legend import Legend
+Line2D._us_dashSeq = property(lambda self: self._dash_pattern[1])
+Line2D._us_dashOffset = property(lambda self: self._dash_pattern[0])
+Legend._ncol = property(lambda self: self._ncols)
 
 
 def draw_path(data, path, draw_options=None, simplify=None):
