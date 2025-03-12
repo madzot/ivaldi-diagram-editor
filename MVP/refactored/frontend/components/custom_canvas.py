@@ -785,7 +785,7 @@ class CustomCanvas(tk.Canvas):
                 sub_diagram = None
             self.boxes[0].delete_box(action=sub_diagram)
         while len(self.spiders) > 0:
-            self.spiders[0].delete_spider()
+            self.spiders[0].delete()
         while len(self.outputs) > 0:
             self.remove_diagram_output()
         while len(self.inputs) > 0:

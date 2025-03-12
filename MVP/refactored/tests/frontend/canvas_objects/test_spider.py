@@ -69,27 +69,27 @@ class SpiderTests(TestMainDiagram):
         self.assertEqual(2, add_command_mock.call_count)
 
     @patch("MVP.refactored.backend.diagram_callback.Receiver.receiver_callback")
-    def test__delete_spider__calls_receiver_if_sub_diagram(self, receiver_mock):
+    def test__delete__calls_receiver_if_sub_diagram(self, receiver_mock):
         spider = Spider((100, 150), self.custom_canvas, self.app.receiver)
         self.custom_canvas.spiders.append(spider)
 
-        spider.delete_spider(action="sub_diagram")
+        spider.delete(action="sub_diagram")
 
         self.assertTrue(receiver_mock.called)
 
     @patch("MVP.refactored.frontend.canvas_objects.spider.Spider.delete")
-    def test__delete_spider__calls_delete_function(self, delete_mock):
+    def test__delete__calls_delete_function(self, delete_mock):
         spider = Spider((100, 150), self.custom_canvas, self.app.receiver)
         self.custom_canvas.spiders.append(spider)
 
-        spider.delete_spider()
+        spider.delete()
         self.assertTrue(delete_mock.called)
 
-    def test__delete_spider__removes_spider_from_canvas_list(self):
+    def test__delete__removes_spider_from_canvas_list(self):
         spider = Spider((100, 150), self.custom_canvas, self.app.receiver)
         self.custom_canvas.spiders.append(spider)
 
-        spider.delete_spider()
+        spider.delete()
 
         self.assertFalse(self.custom_canvas.spiders)
 
