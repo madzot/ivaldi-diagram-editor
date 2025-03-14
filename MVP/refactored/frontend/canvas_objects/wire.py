@@ -6,6 +6,14 @@ from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 
 
 def curved_line(start, end, det=15):
+    """
+    Calculate the coordinates for a curved line.
+
+    :param start: x, y coordinates where the line is starting from.
+    :param end: x,y coordinates where the line ends.
+    :param det: (Optional) parameter used for calculating wire curvature.
+    :return:
+    """
     sx = start[0]
     sy = start[1]
     dx = end[0] - sx

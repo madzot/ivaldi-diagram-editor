@@ -12,7 +12,7 @@ class Connection:
 
     active_types = 1
 
-    def __init__(self, box, index, side, location, canvas, r=5, id_=None):
+    def __init__(self, box, index, side, location, canvas, r=5, id_=None, connection_type=ConnectionType.GENERIC):
         """
         Connection constructor.
 
@@ -26,10 +26,12 @@ class Connection:
         :type location: tuple
         :param canvas: CustomCanvas that the Connection is created on.
         :type canvas: CustomCanvas
-        :param r: Radius of the circle that represents the Connection.
+        :param r: (Optional) Radius of the circle that represents the Connection.
         :type r: int
-        :param id_: ID of Connection
+        :param id_: (Optional) ID of Connection
         :type id_: int
+        :param connection_type: (Optional) Type of Connection.
+        :type connection_type: ConnectionType
         """
         self.canvas = canvas
         self.box = box  # None if connection is diagram input/output/spider
@@ -54,6 +56,11 @@ class Connection:
         self.bind_events()
 
     def update(self):
+        """
+        Update the style of the Connection circle using its type.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.circle, outline=ConnectionType.COLORS.value[self.type.value])
         self.canvas.itemconfig(self.circle, width=round(min(self.r / 5, 5)))
         self.canvas.update()
@@ -68,12 +75,26 @@ class Connection:
         self.canvas.tag_bind(self.circle, '<Button-2>', lambda x: self.increment_type())
 
     def increment_type(self):
+        """
+        Change the Connection type to the next possible type.
+
+        Will not change it if a Wire is connected to it.
+
+        :return: None
+        """
         if not self.has_wire:
             self.change_type(self.type.next().value)
             self.increment_active_types()
             self.update()
 
     def change_type(self, type_id):
+        """
+        Change type of the Connection to selected type and update style.
+
+        :param type_id: Integer value of the ConnectionType to change to.
+        :type type_id: int
+        :return: None
+        """
         tied_con = self.get_tied_connection()
         if tied_con is None:
             return
@@ -85,6 +106,14 @@ class Connection:
             self.update()
 
     def get_tied_connection(self):
+        """
+        Return the Connection that is its sub-diagram or sub-diagram box counterpart.
+
+        If a Connection is an input/output for a box that is a sub-diagram. Then this function will return the
+        corresponding Connection inside the sub-diagram or on the sub-diagram box.
+
+        :return: Connection
+        """
         tied_con = self
         if self.box and self.box.sub_diagram:
             if self.box.sub_diagram == self.canvas:
@@ -127,6 +156,13 @@ class Connection:
                 self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def add_type_choice(self):
+        """
+        Add a type choosing sub-menu into the context menu.
+
+        This method will not add type picking if the Connection has a wire.
+
+        :return: None
+        """
         if not self.has_wire:
             sub_menu = tk.Menu(self.context_menu, tearoff=0)
             self.context_menu.add_cascade(menu=sub_menu, label="Connection type")
@@ -141,10 +177,24 @@ class Connection:
                 sub_menu.add_command(label="Add new type", command=lambda: self.add_active_type())
 
     def add_active_type(self):
+        """
+        Add a new active type for Connections.
+
+        Increases the amount of ConnectionTypes available to be chosen in the context sub-menu.
+
+        :return: None
+        """
         self.change_type(Connection.active_types)
         self.increment_active_types()
 
     def increment_active_types(self):
+        """
+        Increments active_types variable.
+
+        Will not increment if value would go above the amount of different types.
+
+        :return: None
+        """
         if Connection.active_types < len(ConnectionType.COLORS.value) and self.type.value >= Connection.active_types:
             Connection.active_types += 1
 
