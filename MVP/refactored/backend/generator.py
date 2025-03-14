@@ -17,6 +17,22 @@ class Generator:
         self.spiders = []
         self.operand = None
 
+    def get_left_by_id(self, id: int):
+        for left in self.left:
+            if left.id == id:
+                return left
+
+    def get_right_by_id(self, id: int):
+        for right in self.right:
+            if right.id == id:
+                return right
+
+    def get_left(self) -> list[ConnectionInfo]:
+        return self.left
+
+    def get_right(self) -> list[ConnectionInfo]:
+        return self.right
+
     def add_left(self, left: ConnectionInfo):
         if left.side != ConnectionSide.SPIDER: # because connection info with spider will always have same id
             if left not in self.left:
@@ -66,42 +82,66 @@ class Generator:
         # self.left.pop(connection_id)
         # for i, resource in enumerate(self.left):
         #     resource.index = i
+        is_found_connection = False
+        to_be_removed: ConnectionInfo|None = None
         for connection in self.left:
             if connection.id == connection_id:
                 connection.set_box_id(None)
-                self.left.remove(connection)
-                return
+                to_be_removed = connection
+                is_found_connection = True
+            elif is_found_connection: # same as in Resource class
+                connection.index -= 1
+        if to_be_removed is not None:
+            self.left.remove(to_be_removed)
 
     def remove_right(self, connection_id: int=None):
         # self.right.pop(connection_id)
         # for i, resource in enumerate(self.right):
         #     resource.index = i
+        is_found_connection = False
+        to_be_removed: ConnectionInfo|None = None
         for connection in self.right:
             if connection.id == connection_id:
                 connection.set_box_id(None)
-                self.right.remove(connection)
-                return
+                to_be_removed = connection
+                is_found_connection = True
+            elif is_found_connection:  # same as in Resource class
+                connection.index -= 1
+        if to_be_removed is not None:
+            self.right.remove(to_be_removed)
 
 
     def remove_left_inner(self, connection_id: int=None):
         # self.left_inner.pop(connection_id)
         # for i, resource in enumerate(self.left_inner):
         #     resource.index = i
+        is_found_connection = False
+        to_be_removed: ConnectionInfo|None = None
         for connection in self.left_inner:
             if connection.id == connection_id:
                 connection.set_box_id(None)
-                self.left_inner.remove(connection)
-                return
+                to_be_removed = connection
+                is_found_connection = True
+            elif is_found_connection:  # same as in Resource class
+                connection.index -= 1
+        if to_be_removed is not None:
+            self.left_inner.remove(to_be_removed)
 
     def remove_right_inner(self, connection_id: int=None):
         # self.right_inner.pop(connection_id)
         # for i, resource in enumerate(self.right_inner):
         #     resource.index = i
+        is_found_connection = False
+        to_be_removed: ConnectionInfo|None = None
         for connection in self.right_inner:
             if connection.id == connection_id:
                 connection.set_box_id(None)
-                self.right_inner.remove(connection)
-                return
+                to_be_removed = connection
+                is_found_connection = True
+            elif is_found_connection:  # same as in Resource class
+                connection.index -= 1
+        if to_be_removed is not None:
+            self.right_inner.remove(to_be_removed)
 
     def remove_left_atomic(self, connection_id: int):
         self.left.pop(connection_id)

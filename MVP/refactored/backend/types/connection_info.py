@@ -34,3 +34,9 @@ class ConnectionInfo:
     def __eq__(self, __value):
         return isinstance(__value, ConnectionInfo) and self.id == __value.id
 
+    def __str__(self):
+        return f"index: {self.index}, box_id: {self.box_id}, side: {self.side}, id: {self.id}"
+
+    def __repr__(self):
+        return str(self)
+

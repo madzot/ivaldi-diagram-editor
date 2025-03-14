@@ -33,8 +33,21 @@ class Resource:
             if connection not in self.spider_connection:
                 self.spider_connection.append(connection)
         else:
-            # if resource is spider, all connections have same id as spider
-            self.spider_connection.append(connection)
+            # if resource is spider, all connections have same id as spider so we don`t have if
+            # and all spider connections should be in order by index
+            self.spider_connection.insert(connection.index, connection)
+
+    def remove_spider_connection_by_index(self, index: int):
+        is_found_connection_with_index = False
+        to_be_removed: ConnectionInfo|None = None
+        for connection in self.spider_connection:
+            if connection.index == index:
+                to_be_removed = connection
+                is_found_connection_with_index = True
+            elif is_found_connection_with_index: # From all connections that come after the removed one, is needed to subtract index
+                connection.index -= 1
+        if to_be_removed is not None:
+            self.spider_connection.remove(to_be_removed)
 
     def get_left_connections(self):
         """Return left connections sorted by index.
@@ -49,7 +62,7 @@ class Resource:
         return sorted(self.right_connection, key=lambda connection: connection.index)
 
     def get_spider_connections(self):
-        return sorted(self.spider_connection, key=lambda connection: connection.index)
+        return self.spider_connection
 
     def to_dict(self):
         return {

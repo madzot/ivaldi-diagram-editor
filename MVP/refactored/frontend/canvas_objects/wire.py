@@ -3,6 +3,7 @@ import tkinter as tk
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_info import ConnectionInfo
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.spider import Spider
 
 
 def curved_line(start, end, det=15):

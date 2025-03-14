@@ -847,7 +847,8 @@ class CustomCanvas(tk.Canvas):
                                             canvas_id=self.id)
         elif self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_OUTPUT, connection_nr=connection_output_new.index,
-                                            connection_id=connection_output_new.id, canvas_id=self.id)
+                                            connection_id=connection_output_new.id,
+                                            connection_side=connection_output_new.side, canvas_id=self.id)
 
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
@@ -884,7 +885,8 @@ class CustomCanvas(tk.Canvas):
                                             connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
         elif self.diagram_source_box is None and self.receiver.listener:
             self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_INPUT,
-                                            connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
+                                            connection_id=new_input.id, connection_nr=new_input.index,
+                                            connection_side=new_input.side, canvas_id=self.id)
         self.inputs.append(new_input)
         self.update_inputs_outputs()
 

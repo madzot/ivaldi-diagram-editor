@@ -190,3 +190,4 @@ class Spider(Connection):
     def remove_wire(self, wire=None):
         if wire and wire in self.wires:
             self.wires.remove(wire)
+
