@@ -220,5 +220,42 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
         Used as the primary highlight when conducting searches. Function turns the object cyan and adds it to a list of search highlighted items in CustomCanvas.
 
     .deselect()
-        Turns the line black
+        Turns the line back to it's original color. This method also readds the wire to it's start and end connection.
+        
+    .update()
+        Creates or moves the Wire line as well as labels at wire ends if type name is defined.
+
+    .show_context_menu(event)
+        Creates and displays a context menu for the Wire. 
+
+        Parameters:
+            event (tkinter.Event): Event object sent from key press. It holds the location for where the context menu will be displayed.
+    
+    .define_type()
+        Opens an askstring dialog, where you can define the select wire type. This will then add the Wire type to defined wires
+         and labels will be created for wires of that type.
+
+    .delete_labels()
+        Removes Wire labels from the canvas if they exist.
+
+    .create_spider(event)
+        Adds a Spider to the selected part of the Wire.
+
+        Parameters:
+            event (tkinter.Event): Event object sent from key press.
+
+    .close_menu()
+        Destroys the context menu.
+
+    .connection_data_optimizer()
+        Returns 2 lists containing information about the Connections the Wire is attached to.
+
+    .handle_wire_addition_callback()
+        Sends Wire creation information to the backend.
+
+    .handle_wire_deletion_callback()
+        Sends Wire deletion information to the backend.
+
+    .add_end_connection()
+        Sends Wire end connection information to the backend.
         
