@@ -446,9 +446,9 @@ class ConnectionTests(TestApplication):
 
         self.assertEqual(1, delete_mock.call_count)
 
-    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.delete_self')
+    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.delete')
     @patch('MVP.refactored.frontend.components.custom_canvas.CustomCanvas.delete')
-    def test__delete__has_wire_calls_delete_twice(self, delete_mock, delete_self_mock):
+    def test__delete__has_wire_calls_delete_twice(self, delete_mock, delete_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection, self.app.receiver, None, is_temporary=True)
         connection.wire = wire
@@ -456,7 +456,7 @@ class ConnectionTests(TestApplication):
         connection.delete()
 
         self.assertEqual(2, delete_mock.call_count)
-        self.assertEqual(1, delete_self_mock.call_count)
+        self.assertEqual(1, delete_mock.call_count)
 
     def test__add_wire__adds_wire(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
