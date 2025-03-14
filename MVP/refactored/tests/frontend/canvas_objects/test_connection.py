@@ -456,7 +456,7 @@ class ConnectionTests(TestApplication):
         connection.delete()
 
         self.assertEqual(2, delete_mock.call_count)
-        self.assertEqual(1, delete_mock_wire.call_count)
+        self.assertEqual(1, delete_wire_mock.call_count)
 
     def test__add_wire__adds_wire(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
