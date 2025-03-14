@@ -1,6 +1,7 @@
+import copy
+
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.spider import Spider
-import copy
 
 
 class Selector:
@@ -89,7 +90,7 @@ class Selector:
             return
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
-        box = self.canvas.add_box((x, y), shape="rectangle")
+        box = self.canvas.add_box(loc=(x, y), shape="rectangle")
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
@@ -179,7 +180,8 @@ class Selector:
 
                 if item['component'] == "Spider":
                     new_spider = self.canvas.add_spider((event_x + (item['location'][0] - middle_point[0]) * multi,
-                                                         event_y + (item['location'][1] - middle_point[1]) * multi))
+                                                         event_y + (item['location'][1] - middle_point[1]) * multi),
+                                                        connection_type=item['type'])
                     pasted_items.append(new_spider)
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
@@ -205,7 +207,7 @@ class Selector:
                         self.paste_box(item, item['location'], diagram['Wires'], [], canvas)
 
                     if item['component'] == 'Spider':
-                        new_spider = canvas.add_spider(item['location'])
+                        new_spider = canvas.add_spider(item['location'], connection_type=item['type'])
                         for wire in diagram['Wires']:
                             if wire['original_start_connection'] == item['id']:
                                 wire['start_connection'] = new_spider
@@ -495,6 +497,7 @@ class Selector:
                     'component': "Wire",
                     'start_connection': None,
                     'end_connection': None,
+                    'type': copy.deepcopy(wire.type),
                     'original_start_connection': copy.deepcopy(wire.start_connection.id),
                     'original_start_index': copy.deepcopy(wire.start_connection.index),
                     'original_start_side': copy.deepcopy(wire.start_connection.side),
@@ -578,7 +581,8 @@ class Selector:
             connections_copy.append({
                 'id': copy.deepcopy(connection.id),
                 'side': copy.deepcopy(connection.side),
-                'index': copy.deepcopy(connection.index)
+                'index': copy.deepcopy(connection.index),
+                'type': copy.deepcopy(connection.type)
             })
 
         box_info = ({
@@ -603,6 +607,7 @@ class Selector:
             'id': copy.deepcopy(spider.id),
             'location': (spider.x, spider.y),
             'size': copy.deepcopy(spider.r),
+            'type': copy.deepcopy(spider.type)
         })
         return spider_info
 
@@ -611,9 +616,9 @@ class Selector:
         new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'])
         for c in box['connections']:
             if c['side'] == "right":
-                new_box.add_right_connection()
+                new_box.add_right_connection(connection_type=c['type'])
             if c['side'] == "left":
-                new_box.add_left_connection()
+                new_box.add_left_connection(connection_type=c['type'])
         new_box.set_label(box['label'])
         if box["sub-diagram"]:
             sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)

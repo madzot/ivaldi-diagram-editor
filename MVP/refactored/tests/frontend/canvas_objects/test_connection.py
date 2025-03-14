@@ -4,7 +4,9 @@ from unittest.mock import patch
 
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from MVP.refactored.frontend.canvas_objects.box import Box
 
@@ -17,6 +19,7 @@ class TestApplication(unittest.TestCase):
     def setUp(self):
         self.app = MainDiagram(Receiver())
         self.custom_canvas = self.app.custom_canvas
+        Connection.active_types = 1
         self._start_app()
 
     def tearDown(self):
@@ -37,19 +40,165 @@ class ConnectionTests(TestApplication):
         self.assertFalse(connection.has_wire)
         self.assertEqual(5, connection.r)
         self.assertEqual(1, connection.width_between_boxes)
+        self.assertEqual(ConnectionType.GENERIC, connection.type)
         self.assertTrue(bind_events_mock.called)
+
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.bind_events')
+    def test__init__type_set(self, bind_events_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas,
+                                connection_type=ConnectionType.FIFTH)
+
+        self.assertEqual(ConnectionType.FIFTH, connection.type)
+        self.assertTrue(bind_events_mock.called)
+
+    @patch('tkinter.Canvas.itemconfig')
+    @patch('tkinter.Canvas.update')
+    def test__update__callouts(self, update_mock, itemconfig_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.update()
+
+        self.assertEqual(2, itemconfig_mock.call_count)
+        self.assertEqual(1, update_mock.call_count)
 
     @patch('MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind')
     def test__bind_events__number_of_tag_binds(self, tag_bind_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         tag_bind_mock.call_count = 0
         connection.bind_events()
-        self.assertEqual(1, tag_bind_mock.call_count)
+        self.assertEqual(2, tag_bind_mock.call_count)
 
+    def test__increment_type__changes_type(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas,
+                                connection_type=ConnectionType.FIRST)
+        connection.increment_type()
+
+        self.assertEqual(ConnectionType.SECOND, connection.type)
+
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.change_type')
+    @patch('MVP.refactored.frontend.canvas_objects.types.connection_type.ConnectionType.next')
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.increment_active_types')
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.update')
+    def test__increment_type__callouts(self, update_mock, increment_type_mock, next_mock, change_type_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.increment_type()
+
+        self.assertEqual(1, change_type_mock.call_count)
+        self.assertEqual(1, next_mock.call_count)
+        self.assertEqual(1, update_mock.call_count)
+        self.assertEqual(1, increment_type_mock.call_count)
+
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.update')
+    def test__change_type__changes_type(self, update_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+
+        self.assertEqual(ConnectionType.GENERIC, connection.type)
+        connection.change_type(2)
+        self.assertEqual(ConnectionType.SECOND, connection.type)
+        self.assertTrue(update_mock.called)
+
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.update')
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.get_tied_connection', return_value=None)
+    def test__change_type__does_not_change_if_tied_con_is_none(self, get_tied_connection_mock, update_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+
+        self.assertEqual(ConnectionType.GENERIC, connection.type)
+        connection.change_type(2)
+        self.assertTrue(get_tied_connection_mock.called)
+        self.assertNotEqual(ConnectionType.SECOND, connection.type)
+        self.assertFalse(update_mock.called)
+
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.update')
+    def test__change_type__updates_tied_con_if_found(self, update_mock):
+        box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        sub_diagram = CustomCanvas(self.app, box, self.app.receiver, self.app, self.custom_canvas, False)
+        connection = Connection(box, 0, "right", (111, 222), self.custom_canvas)
+
+        box.sub_diagram = sub_diagram
+        box.connections.append(connection)
+
+        sub_diagram.add_diagram_output()
+
+        self.assertEqual(ConnectionType.GENERIC, connection.type)
+        self.assertEqual(ConnectionType.GENERIC, sub_diagram.outputs[0].type)
+        connection.change_type(2)
+        self.assertEqual(ConnectionType.SECOND, connection.type)
+        self.assertEqual(ConnectionType.SECOND, sub_diagram.outputs[0].type)
+        self.assertEqual(2, update_mock.call_count)
+
+    def test__get_tied_connection__returns_self_if_no_box(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+
+        self.assertEqual(connection, connection.get_tied_connection())
+
+    def test__get_tied_connection__returns_self_if_input_and_output_differ(self):
+        box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        sub_diagram = CustomCanvas(self.app, box, self.app.receiver, self.app, self.custom_canvas, False)
+        connection = Connection(box, 0, "left", (111, 222), self.custom_canvas)
+
+        box.sub_diagram = sub_diagram
+        box.connections.append(connection)
+
+        sub_diagram.add_diagram_output()
+
+        self.assertEqual(connection, connection.get_tied_connection())
+
+    def test__get_tied_connection__return_none_if_inner_connection_has_wire(self):
+        box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        sub_diagram = CustomCanvas(self.app, box, self.app.receiver, self.app, self.custom_canvas, False)
+        connection = Connection(box, 0, "right", (111, 222), self.custom_canvas)
+
+        box.sub_diagram = sub_diagram
+        box.connections.append(connection)
+
+        sub_diagram.add_diagram_output()
+        sub_diagram.outputs[0].has_wire = True
+
+        self.assertIsNone(connection.get_tied_connection())
+
+    def test__get_tied_connection__return_io_if_outer_connection_has_no_wire(self):
+        box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        sub_diagram = CustomCanvas(self.app, box, self.app.receiver, self.app, self.custom_canvas, False)
+        connection = Connection(box, 0, "right", (111, 222), self.custom_canvas)
+
+        box.sub_diagram = sub_diagram
+        box.connections.append(connection)
+
+        sub_diagram.add_diagram_output()
+
+        self.assertEqual(sub_diagram.outputs[0], connection.get_tied_connection())
+
+    def test__get_tied_connection__return_self_if_index_differ(self):
+        box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        sub_diagram = CustomCanvas(self.app, box, self.app.receiver, self.app, self.custom_canvas, False)
+        connection = Connection(box, 2, "right", (111, 222), self.custom_canvas)
+
+        box.sub_diagram = sub_diagram
+        box.connections.append(connection)
+
+        sub_diagram.add_diagram_output()
+        sub_diagram.add_diagram_output()
+
+        self.assertEqual(connection, connection.get_tied_connection())
+
+    def test__get_tied_connection__return_io_with_correct_index(self):
+        box = Box(self.custom_canvas, 10, 10, self.app.receiver)
+        sub_diagram = CustomCanvas(self.app, box, self.app.receiver, self.app, self.custom_canvas, False)
+        connection = Connection(box, 1, "right", (111, 222), self.custom_canvas)
+
+        box.sub_diagram = sub_diagram
+        box.connections.append(connection)
+
+        sub_diagram.add_diagram_output()
+        sub_diagram.add_diagram_output()
+        sub_diagram.add_diagram_output()
+
+        self.assertEqual(sub_diagram.outputs[1], connection.get_tied_connection())
+
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.add_type_choice')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
     @patch('tkinter.Menu.add_command')
-    @patch('tkinter.Menu.post')
-    def test__show_context_menu__shows_if_no_box(self, post_mock, add_command_mock, close_menu_mock):
+    @patch('tkinter.Menu.tk_popup')
+    def test__show_context_menu__shows_if_no_box(self, tk_popup_mock, add_command_mock, close_menu_mock, add_type_choice_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection, is_temporary=False)
         event = tkinter.Event()
@@ -57,15 +206,18 @@ class ConnectionTests(TestApplication):
         connection.show_context_menu(event)
 
         self.assertFalse(close_menu_mock.called)
+        self.assertFalse(add_type_choice_mock.called)
         self.assertEqual(0, add_command_mock.call_count)
-        self.assertEqual(0, post_mock.call_count)
+        self.assertEqual(0, tk_popup_mock.call_count)
 
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.add_type_choice')
     @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
     @patch('tkinter.Menu.add_command')
-    @patch('tkinter.Menu.post')
-    def test__show_context_menu__shows_if_no_box(self, post_mock, add_command_mock,
-                                                 close_menu_mock, handle_wire_addition_mock):
+    @patch('tkinter.Menu.tk_popup')
+    def test__show_context_menu__shows_if_no_box(self, tk_popup_mock, add_command_mock,
+                                                 close_menu_mock, handle_wire_addition_mock,
+                                                 type_choice_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection)
         event = tkinter.Event()
@@ -73,15 +225,16 @@ class ConnectionTests(TestApplication):
         connection.show_context_menu(event)
 
         self.assertTrue(close_menu_mock.called)
+        self.assertTrue(type_choice_mock.called)
         self.assertTrue(handle_wire_addition_mock.called)
         self.assertEqual(2, add_command_mock.call_count)
-        self.assertEqual(1, post_mock.call_count)
+        self.assertEqual(1, tk_popup_mock.call_count)
 
     @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
     @patch('tkinter.Menu.add_command')
-    @patch('tkinter.Menu.post')
-    def test__show_context_menu__closes_if_locked_box(self, post_mock, add_command_mock,
+    @patch('tkinter.Menu.tk_popup')
+    def test__show_context_menu__closes_if_locked_box(self, tk_popup_mock, add_command_mock,
                                                       close_menu_mock, handle_wire_addition_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.box = Box(self.custom_canvas, 10, 10, self.app.receiver)
@@ -94,14 +247,16 @@ class ConnectionTests(TestApplication):
         self.assertTrue(close_menu_mock.called)
         self.assertTrue(handle_wire_addition_mock.called)
         self.assertFalse(add_command_mock.called)
-        self.assertFalse(post_mock.called)
+        self.assertFalse(tk_popup_mock.called)
 
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.add_type_choice')
     @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback')
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.close_menu')
     @patch('tkinter.Menu.add_command')
-    @patch('tkinter.Menu.post')
-    def test__show_context_menu__shows_all_if_has_box_and_not_temporary(self, post_mock, add_command_mock,
-                                                                        close_menu_mock, handle_wire_addition_mock):
+    @patch('tkinter.Menu.tk_popup')
+    def test__show_context_menu__calls_all_if_has_box(self, tk_popup, add_command_mock,
+                                                      close_menu_mock, handle_wire_addition_mock,
+                                                      type_choice_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection.box = Box(self.custom_canvas, 10, 10, self.app.receiver)
         connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection)
@@ -110,9 +265,49 @@ class ConnectionTests(TestApplication):
         connection.show_context_menu(event)
 
         self.assertTrue(close_menu_mock.called)
+        self.assertTrue(type_choice_mock.called)
         self.assertTrue(handle_wire_addition_mock.called)
         self.assertEqual(2, add_command_mock.call_count)
-        self.assertEqual(1, post_mock.call_count)
+        self.assertEqual(1, tk_popup.call_count)
+
+    @patch('tkinter.Menu.add_cascade')
+    @patch('tkinter.Menu.add_command')
+    def test__add_type_choice__no_callouts_with_wire(self, add_command_mock, add_cascade_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.has_wire = True
+        connection.add_type_choice()
+
+        self.assertFalse(add_command_mock.called)
+        self.assertFalse(add_cascade_mock.called)
+
+    @patch('tkinter.Menu.add_cascade')
+    @patch('tkinter.Menu.add_command')
+    def test__add_type_choice__no_active_types(self, add_command_mock, add_cascade_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.add_type_choice()
+
+        self.assertEqual(1, add_cascade_mock.call_count)
+        self.assertEqual(2, add_command_mock.call_count)
+
+    @patch('tkinter.Menu.add_cascade')
+    @patch('tkinter.Menu.add_command')
+    def test__add_type_choice__some_active_types(self, add_command_mock, add_cascade_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        Connection.active_types = 4
+        connection.add_type_choice()
+
+        self.assertEqual(1, add_cascade_mock.call_count)
+        self.assertEqual(5, add_command_mock.call_count)
+
+    @patch('tkinter.Menu.add_cascade')
+    @patch('tkinter.Menu.add_command')
+    def test__add_type_choice__all_active_types_no_add_new_button(self, add_command_mock, add_cascade_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        Connection.active_types = 10
+        connection.add_type_choice()
+
+        self.assertEqual(1, add_cascade_mock.call_count)
+        self.assertEqual(10, add_command_mock.call_count)
 
     @patch('tkinter.Menu.destroy')
     def test__close_menu__destroys_menu(self, destroy_mock):
@@ -120,6 +315,27 @@ class ConnectionTests(TestApplication):
 
         connection.close_menu()
         self.assertTrue(destroy_mock.called)
+
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.change_type')
+    @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.increment_active_types')
+    def test__add_active_type__callouts(self, increment_mock, change_type_mock):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+
+        connection.add_active_type()
+
+        self.assertTrue(increment_mock.called)
+        self.assertTrue(change_type_mock.called)
+
+    def test__increment_active_types__adds_1_to_active_type(self):
+        connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
+        connection.type = ConnectionType.FIRST
+
+        connection.increment_active_types()
+        self.assertEqual(2, Connection.active_types)
+
+        connection.type = ConnectionType.SECOND
+        connection.increment_active_types()
+        self.assertEqual(3, Connection.active_types)
 
     @patch('MVP.refactored.frontend.canvas_objects.box.Box.remove_connection')
     @patch('MVP.refactored.frontend.components.custom_canvas.CustomCanvas.remove_specific_diagram_output')

@@ -6,12 +6,11 @@ Ivaldi is an application for working with string diagrams. It also allows the us
 
 ## Usage
 To use this application you need python 3.10, and you have to do the following:
-```
-1. Clone this repository
-2. Open it with an IDE of your choice that can run Python files
-3. After this open a terminal in the repository and use the following command "pip install -r requirements.txt"
-4. Go to ivaldi->MVP->refactored->launcher.py and run the file.
-```
+    
+    1. Clone this repository.
+    2. Open it with an IDE of your choice that can run Python files.
+    3. After this open a terminal in the repository and use the following command "pip install -r requirements.txt".
+    4. Go to ivaldi->MVP->refactored->launcher.py and run the file.
 
 ## Roadmap
 TBD
