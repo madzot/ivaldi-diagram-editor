@@ -91,7 +91,7 @@ class Selector:
         y = (coordinates[1] + coordinates[3]) / 2
         box = self.canvas.add_box((x, y), shape="rectangle")
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
-            wire.delete_self("sub_diagram")
+            wire.delete("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
             box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
         for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):

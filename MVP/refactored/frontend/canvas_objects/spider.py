@@ -93,7 +93,7 @@ class Spider(Connection):
         :type action: str
         :return: None
         """
-        [wire.delete_self(self) for wire in self.wires.copy()]
+        [wire.delete(self) for wire in self.wires.copy()]
         self.canvas.spiders.remove(self)
         super().delete()
         if self.receiver.listener and not self.canvas.search:

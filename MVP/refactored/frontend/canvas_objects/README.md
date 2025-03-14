@@ -10,6 +10,8 @@ Connection is an object that allows wires to be connected to it. It is represent
 
 Connections are used as diagram inputs and outputs as well as box connections. Connection is a superclass of Spider.
 
+Connections have multiple different types that are differentiated by a different color of outline around the Connection.
+
 ### Connection parameters
 
 | **Param**             | **Type**     | **Description**                                                                                                                                                                                                                                                                                                     |
@@ -113,7 +115,7 @@ Spider is a subclass of Connection. Difference between Connection and Spider is 
 | id_                   | int          | ID.<br/> Default value is `None`                                                                                                          |
 
 
-## Spider variables
+### Spider variables
 
 Along with these variables Spider has Connection variables as well. Although all of them might not be used.
 
@@ -166,3 +168,57 @@ Along with these variables Spider has Connection variables as well. Although all
         Parameters:
             new_x (int): x coordinate that Spider would be moved to/what location legality is checked for.
 ```
+
+---
+
+## Wire
+
+A Wire is a line that connects to Connections, it ties Connections to one-another. On the canvas it is represented as
+a line.
+
+The Wire object has multiple types, the types are differentiated by different styles of dashes and colors.
+
+The Wire type can not be manually changed, it is defined by the type of Connections it is added to.
+
+### Wire parameters
+
+| **Param**             | **type**     | **Description**                                                                                                                                        |
+|-----------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| canvas                | CustomCanvas | The CustomCanvas that the Wire will be created on.                                                                                                     |
+| start_connection      | Connection   | The starting Connection of the Wire. This represents the Connection on the left side of the wire.                                                      |
+| receiver              | Receiver     | Receiver object used to send information back to the backend.                                                                                          |
+| end_connection        | Connection   | The end Connection of the Wire. This represents the Connection on the right side of the wire.                                                          |
+|                       |              |                                                                                                                                                        |
+| # **Optional params** |              |                                                                                                                                                        |
+| id_                   | int          | An ID for the Wire. Default value is None.                                                                                                             |
+| is_temporary          | boolean      | A boolean that tells whether the Wire created is a temporary Wire used for Wire pulling. If this is True it will disable backend for the created Wire. |
+
+### Wire variables
+
+| **Variable** | **Type**     | **Description**                                                             |
+|--------------|--------------|-----------------------------------------------------------------------------|
+| context_menu | tkinter.Menu | The Menu that is used for creating a context menu on the Wire.              |
+| line         | int          | A tag that represents the line created on the CustomCanvas.                 |
+| wire_width   | int          | An integer that controls the width of the line created on the CustomCanvas. |
+| id           | int          | An ID that represents the Wire.                                             |
+
+### Wire functions
+
+    .delete(action)
+        Deletes Wire and removes itself from it's Connections and deletes the line in CustomCanvas.
+        
+        Parameters:
+            action (string): A string that contains the action that will be sent to the backend
+
+    .select()
+        Turns the color of the line to green. Used for displaying a selected line.
+
+    .search_highlight_secondary()
+        Used as a secondary highlight when conducting searches. Function turns the object orange and adds it to a list of search highlighted items in CustomCanvas.
+
+    .search_highlight_primary()
+        Used as the primary highlight when conducting searches. Function turns the object cyan and adds it to a list of search highlighted items in CustomCanvas.
+
+    .deselect()
+        Turns the line black
+        

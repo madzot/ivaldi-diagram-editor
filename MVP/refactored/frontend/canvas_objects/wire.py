@@ -16,7 +16,7 @@ def curved_line(start, end, det=15):
 
 
 class Wire:
-    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False):
+    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, is_temporary=False):
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.start_connection = start_connection
@@ -28,12 +28,12 @@ class Wire:
         else:
             self.id = id_
         self.receiver = receiver
-        self.is_temporary = temporary
-        if not temporary and not self.canvas.search:
+        self.is_temporary = is_temporary
+        if not is_temporary and not self.canvas.search:
             self.handle_wire_addition_callback()
         self.update()
 
-    def delete_self(self, action=None):
+    def delete(self, action=None):
         self.start_connection.remove_wire(self)
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
@@ -78,13 +78,13 @@ class Wire:
             self.context_menu = tk.Menu(self.canvas, tearoff=0)
             self.context_menu.add_command(label="Create Spider",
                                           command=lambda bound_arg=event: self.create_spider(event))
-            self.context_menu.add_command(label="Delete wire", command=self.delete_self)
+            self.context_menu.add_command(label="Delete wire", command=self.delete)
             self.context_menu.add_command(label="Cancel")
             self.context_menu.post(event.x_root, event.y_root)
 
     def create_spider(self, event):
         x, y = event.x, event.y
-        self.delete_self()
+        self.delete()
         self.canvas.add_spider_with_wires(self.start_connection, self.end_connection, x, y)
 
     def close_menu(self):

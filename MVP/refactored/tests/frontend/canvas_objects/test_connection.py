@@ -51,7 +51,7 @@ class ConnectionTests(TestApplication):
     @patch('tkinter.Menu.post')
     def test__show_context_menu__shows_if_no_box(self, post_mock, add_command_mock, close_menu_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
-        connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection, temporary=False)
+        connection.wire = Wire(self.custom_canvas, connection, self.app.receiver, connection, is_temporary=False)
         event = tkinter.Event()
         event.x_root, event.y_root = 10, 10
         connection.show_context_menu(event)
@@ -234,7 +234,7 @@ class ConnectionTests(TestApplication):
     @patch('MVP.refactored.frontend.components.custom_canvas.CustomCanvas.delete')
     def test__delete__has_wire_calls_delete_twice(self, delete_mock, delete_self_mock):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, self.app.receiver, None, temporary=True)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, None, is_temporary=True)
         connection.wire = wire
         connection.has_wire = True
         connection.delete()
@@ -245,7 +245,7 @@ class ConnectionTests(TestApplication):
     def test__add_wire__adds_wire(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection2 = Connection(None, 1011, "right", (222, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, temporary=True)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, is_temporary=True)
         self.assertIsNone(connection.wire)
         self.assertFalse(connection.has_wire)
 
@@ -256,8 +256,8 @@ class ConnectionTests(TestApplication):
     def test__add_wire__does_not_change_wire_if_connection_has_wire(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection2 = Connection(None, 1011, "right", (222, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, temporary=True)
-        wire2 = Wire(self.custom_canvas, connection2, self.app.receiver, connection, temporary=True)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, is_temporary=True)
+        wire2 = Wire(self.custom_canvas, connection2, self.app.receiver, connection, is_temporary=True)
 
         connection.add_wire(wire)
 
@@ -273,7 +273,7 @@ class ConnectionTests(TestApplication):
     def test__remove_wire__removes_wire(self):
         connection = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
         connection2 = Connection(None, 1011, "right", (222, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, temporary=True)
+        wire = Wire(self.custom_canvas, connection, self.app.receiver, connection2, is_temporary=True)
 
         connection.add_wire(wire)
         self.assertEqual(wire, connection.wire)

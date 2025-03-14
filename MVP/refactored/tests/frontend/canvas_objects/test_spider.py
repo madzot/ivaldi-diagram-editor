@@ -109,9 +109,9 @@ class SpiderTests(TestMainDiagram):
 
     def test__add_wire__adds_wire(self):
         spider = Spider((100, 150), self.custom_canvas, self.app.receiver)
-        wire1 = Wire(None, None, self.app.receiver, None, temporary=True)
-        wire2 = Wire(None, None, self.app.receiver, None, temporary=True)
-        wire3 = Wire(None, None, self.app.receiver, None, temporary=True)
+        wire1 = Wire(None, None, self.app.receiver, None, is_temporary=True)
+        wire2 = Wire(None, None, self.app.receiver, None, is_temporary=True)
+        wire3 = Wire(None, None, self.app.receiver, None, is_temporary=True)
 
         spider.add_wire(wire1)
         spider.add_wire(wire2)
@@ -121,7 +121,7 @@ class SpiderTests(TestMainDiagram):
 
     def test__add_wire__doesnt_add_wire_if_wire_in_spider_already(self):
         spider = Spider((100, 150), self.custom_canvas, self.app.receiver)
-        wire1 = Wire(None, None, self.app.receiver, None, temporary=True)
+        wire1 = Wire(None, None, self.app.receiver, None, is_temporary=True)
 
         spider.add_wire(wire1)
         spider.add_wire(wire1)
@@ -326,7 +326,7 @@ class SpiderTests(TestMainDiagram):
 
     def test__remove_wire__removes_wire(self):
         spider = Spider((100, 150), self.custom_canvas, self.app.receiver)
-        wire = Wire(self.custom_canvas, None, self.app.receiver, None, temporary=True)
+        wire = Wire(self.custom_canvas, None, self.app.receiver, None, is_temporary=True)
 
         spider.add_wire(wire)
 
@@ -339,7 +339,7 @@ class SpiderTests(TestMainDiagram):
     def test__is_illegal_move__can_be_next_to_connected_connection(self):
         spider = Spider((100, 100), self.custom_canvas, self.app.receiver)
         spider2 = Spider((150, 100), self.custom_canvas, self.app.receiver)
-        wire = Wire(self.custom_canvas, spider, self.app.receiver, spider2, temporary=True)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, spider2, is_temporary=True)
 
         spider.add_wire(wire)
         spider2.add_wire(wire)
@@ -349,7 +349,7 @@ class SpiderTests(TestMainDiagram):
     def test__is_illegal_move__cant_be_same_x_with_connected_spider(self):
         spider = Spider((100, 100), self.custom_canvas, self.app.receiver)
         spider2 = Spider((150, 100), self.custom_canvas, self.app.receiver)
-        wire = Wire(self.custom_canvas, spider, self.app.receiver, spider2, temporary=True)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, spider2, is_temporary=True)
 
         spider.add_wire(wire)
         spider2.add_wire(wire)
@@ -361,7 +361,7 @@ class SpiderTests(TestMainDiagram):
     def test__is_illegal_move__cant_go_from_left_to_right_with_connected_connection(self):
         spider = Spider((100, 100), self.custom_canvas, self.app.receiver)
         connection = Connection(None, 1, "left", (150, 150), self.custom_canvas)
-        wire = Wire(self.custom_canvas, spider, self.app.receiver, connection, temporary=True)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, connection, is_temporary=True)
 
         spider.add_wire(wire)
 
@@ -373,7 +373,7 @@ class SpiderTests(TestMainDiagram):
     def test__is_illegal_move__cant_go_from_right_to_left_with_connected_connection(self):
         spider = Spider((150, 150), self.custom_canvas, self.app.receiver)
         connection = Connection(None, 1, "right", (100, 100), self.custom_canvas)
-        wire = Wire(self.custom_canvas, spider, self.app.receiver, connection, temporary=True)
+        wire = Wire(self.custom_canvas, spider, self.app.receiver, connection, is_temporary=True)
 
         spider.add_wire(wire)
 

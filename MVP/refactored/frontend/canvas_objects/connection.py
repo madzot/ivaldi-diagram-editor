@@ -156,7 +156,7 @@ class Connection:
         self.canvas.delete(self.circle)
         if self.has_wire:
             self.canvas.delete(self.wire)
-            self.wire.delete_self()
+            self.wire.delete()
 
             if self.box and self.wire in self.box.wires:
                 self.box.wires.remove(self.wire)
