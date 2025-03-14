@@ -12,7 +12,7 @@ def curved_line(start, end, det=15):
     :param start: x, y coordinates where the line is starting from.
     :param end: x,y coordinates where the line ends.
     :param det: (Optional) parameter used for calculating wire curvature.
-    :return:
+    :return: List of coordinates for a curved line from start to end.
     """
     sx = start[0]
     sy = start[1]
@@ -28,11 +28,31 @@ def curved_line(start, end, det=15):
 
 
 class Wire:
+    """
+    Wire.
+
+    A Wire is used to create a connection between 2 Connections. On the CustomCanvas it is represented as a line.
+
+    Wire has multiple types. They are differentiated by dash style and color. The Wire type is defined by the
+    Connections it is connected to.
+    """
 
     defined_wires = {}
 
     def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, is_temporary=False,
                  wire_type=WireType.GENERIC):
+        """
+        Wire constructor.
+
+        :param canvas: CustomCanvas object that Wire will be created on.
+        :param start_connection: Connection object that will mark the start of the Wire.
+        :param receiver: Receiver object from MainDiagram mostly that is used to send information to backend.
+        :param end_connection: Connection object that will mark the end of the Wire.
+        :param id_: (Optional) Integer ID of the Wire.
+        :param is_temporary: (Optional) Boolean value that determines whether the Wire is temporary. Default is False.
+        :param wire_type: (Optional) WireType object that will state the wire type and style.
+            Default is WireType.GENERIC.
+        """
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.start_connection = start_connection
@@ -55,6 +75,15 @@ class Wire:
         self.update()
 
     def delete(self, action=None):
+        """
+        Delete the Wire.
+
+        Will remove itself from its start and end Connections. Delete itself from the CustomCanvas. Will delete any
+        labels attached to the Wire. Removes itself from Box wires if necessary.
+
+        :param action: (Optional) String stating whether deletion is done with sub-diagram.
+        :return: None
+        """
         self.start_connection.remove_wire(self)
         self.end_connection.remove_wire(self)
         self.canvas.delete(self.line)
@@ -70,23 +99,59 @@ class Wire:
             self.handle_wire_deletion_callback(action)
 
     def select(self):
+        """
+        Turn the Wire to the color chosen for selection.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.line, fill="green")
 
     def search_highlight_secondary(self):
+        """
+        Apply the secondary highlight to the Wire.
+
+        Turns the color of Wire to the secondary highlight color and adds the Wire to CustomCanvas search highlighted
+        objects list.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.line, fill="orange")
         self.canvas.search_result_highlights.append(self)
 
     def search_highlight_primary(self):
+        """
+        Apply the secondary highlight to the Wire.
+
+        Turns the color of Wire to the primary highlight color and adds the Wire to CustomCanvas search highlighted
+        objects list.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.line, fill="cyan")
         self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
+        """
+        Deselect Wire.
+
+        Adds the Wire to it's end and start Connections. Turns color back to original color.
+
+        :return: None
+        """
         # make sure connections have wires attached after select and deselect as copying between canvasses can remove
         self.start_connection.add_wire(self)
         self.end_connection.add_wire(self)
         self.canvas.itemconfig(self.line, fill=self.type.value[0])
 
     def update(self):
+        """
+        Update Wire.
+
+        If no line exists then a line will be created on the CustomCanvas along with labels if needed. If a line already
+        exists then it's location and labels are updated. Wire lines are moved to the lowest layer of CustomCanvas.
+
+        :return: None
+        """
         if self.end_connection:
             if self.line:
                 self.canvas.coords(self.line,
@@ -100,6 +165,13 @@ class Wire:
             self.canvas.tag_lower(self.line)
 
     def update_wire_label(self):
+        """
+        Update Wire labels.
+
+        Creates and moves labels at wire ends.
+
+        :return: None
+        """
         if self.type.name in Wire.defined_wires and not self.is_temporary:
             size = len(Wire.defined_wires[self.type.name]) * 5
             if self.start_label or self.end_label:
@@ -128,6 +200,12 @@ class Wire:
                     self.canvas.wire_label_tags.append(self.end_label)
 
     def show_context_menu(self, event):
+        """
+        Create context menu for Wire.
+
+        :param event: tkinter.Event object that holds location for context menu.
+        :return: None
+        """
         if not self.is_temporary:
             self.close_menu()
             self.context_menu = tk.Menu(self.canvas, tearoff=0)
@@ -140,6 +218,14 @@ class Wire:
             self.context_menu.post(event.x_root, event.y_root)
 
     def define_type(self):
+        """
+        Define Wire type.
+
+        Will ask user for string input for Wire name. If entered labels will be created for all Wires of this type
+        and displayed at the ends of wires.
+
+        :return: None
+        """
         name = simpledialog.askstring("Wire type", "Enter a name for this type of wire:")
         if name and name.strip():  # When name is inputted
             name = name.strip()
@@ -157,6 +243,13 @@ class Wire:
                     wire.delete_labels()
 
     def delete_labels(self):
+        """
+        Delete Wire labels.
+
+        Removes labels from CustomCanvas.
+
+        :return: None
+        """
         if self.start_label:
             self.canvas.delete(self.start_label)
             self.start_label = None
@@ -165,16 +258,34 @@ class Wire:
             self.end_label = None
 
     def create_spider(self, event):
+        """
+        Create Spider in Wire.
+
+        Will take the current Wire and cut it into two, connecting the new Wires with a Spider.
+
+        :param event: tkinter.Event object where the Spider will be created.
+        :return: None
+        """
         x, y = event.x, event.y
         self.delete()
         self.canvas.add_spider_with_wires(self.start_connection, self.end_connection, x, y)
 
     def close_menu(self):
+        """
+        Closes Wire context menu.
+
+        :return: None
+        """
         if self.context_menu:
             self.context_menu.destroy()
 
     # BE callback methods
     def connection_data_optimizer(self):
+        """
+        Return 2 lists containing information about the Connections the Wire is attached to.
+
+        :return: List of information about Wire start and end Connections.
+        """
         start_conn_data = [self.start_connection.index, None, self.start_connection.side, self.start_connection.id]
         end_conn_data = [self.end_connection.index, None, self.end_connection.side, self.end_connection.id]
 
@@ -186,6 +297,11 @@ class Wire:
 
     # BE callback methods
     def handle_wire_addition_callback(self):
+        """
+        Send Wire creation information to the backend.
+
+        :return: None
+        """
         if not self.receiver.listener or self.canvas.search:
             return
 
@@ -209,6 +325,12 @@ class Wire:
 
     # BE callback methods
     def handle_wire_deletion_callback(self, action):
+        """
+        Send Wire deletion information to the backend.
+
+        :param action: string detailing whether action is done for a sub-diagram or not.
+        :return: None
+        """
         if not self.receiver.listener:
             return
         if action != "sub_diagram":
@@ -232,6 +354,12 @@ class Wire:
 
     # BE callback methods
     def add_end_connection(self, connection):
+        """
+        Send end Connection information to the backend.
+
+        :param connection: Connection object that is the end connection of the Wire
+        :return: None
+        """
         self.end_connection = connection
         if connection.box and self.receiver.listener:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,

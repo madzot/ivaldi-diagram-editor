@@ -296,9 +296,15 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
     .handle_wire_addition_callback()
         Sends Wire creation information to the backend.
 
-    .handle_wire_deletion_callback()
+    .handle_wire_deletion_callback(action)
         Sends Wire deletion information to the backend.
 
-    .add_end_connection()
+        Parameters:
+            action (string): string detailing whether action is done for a sub-diagram or not.
+
+    .add_end_connection(connection)
         Sends Wire end connection information to the backend.
+
+        Parameters:
+            connection (Connection): the end Connection of the Wire.
         
