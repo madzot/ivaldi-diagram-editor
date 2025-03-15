@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
@@ -16,9 +15,9 @@ class HyperEdge:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
         # if box_function is null it can be input/output in diagram or user didn`t specified box function
-        self.box_function: BoxFunction|None = box_function
+        self.box_function: BoxFunction | None = box_function
 
-        self.source_nodes: dict[int, Node] = dict() # key is connection index, it neede for keeping the right queue
+        self.source_nodes: dict[int, Node] = dict()  # key is connection index, it neede for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
 
     def swap_id(self, new_id: int):
@@ -84,13 +83,13 @@ class HyperEdge:
         for node in nodes:
             self.append_source_node(node)
 
-    def get_source_node_connection_index(self, node: Node) -> int|None:
+    def get_source_node_connection_index(self, node: Node) -> int | None:
         for conn_index, source_node in self.source_nodes.items():
             if source_node == node:
                 return conn_index
         return None
 
-    def get_target_node_connection_index(self, node: Node) -> int|None:
+    def get_target_node_connection_index(self, node: Node) -> int | None:
         for conn_index, target_node in self.target_nodes.items():
             if target_node == node:
                 return conn_index
@@ -125,7 +124,6 @@ class HyperEdge:
 
     def is_valid(self) -> bool:
         return self._children_nodes or self._parent_nodes
-
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the node."""

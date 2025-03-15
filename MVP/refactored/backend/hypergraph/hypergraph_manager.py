@@ -120,7 +120,7 @@ class HypergraphManager:
         for hypergraph in HypergraphManager.hypergraphs:
             if hypergraph.get_hyper_edge_by_id(id) is not None:
                 _hypergraph = hypergraph
-                deleted_hyper_edge = hypergraph.remove_hyper_edge(id) # remove hyper edge from hypergraph
+                deleted_hyper_edge = hypergraph.remove_hyper_edge(id)  # remove hyper edge from hypergraph
                 break
         # check if new hypergraph appears
         source_nodes: list[Node] = _hypergraph.get_source_nodes() + deleted_hyper_edge.get_target_nodes()
