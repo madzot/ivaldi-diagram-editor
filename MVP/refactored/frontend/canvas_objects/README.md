@@ -201,31 +201,31 @@ The coordinates of a Box are the top left corner for it.
 
 ### Box variables
 
-| **Variable**      | **Type**     | **Description**                                          |
-|-------------------|--------------|----------------------------------------------------------|
-| shape             | string       | Describes shape of Box, as described in Box parameters.  |
-| canvas            | CustomCanvas | The CustomCanvas object that the Box is drawn on.        |
-| x                 | int          | X coordinate of the top left corner of the Box.          |
-| y                 | int          |                                                          |
-| start_x           | int          |                                                          |
-| start_y           |              |                                                          |
-| size              |              |                                                          |
-| x_dif             |              |                                                          |
-| y_dif             |              |                                                          |
-| connections       |              |                                                          |
-| left_connections  |              |                                                          |
-| right_connections |              |                                                          |
-| label             |              |                                                          |
-| label_text        |              |                                                          |
-| wires             |              |                                                          |
-| id                |              |                                                          |
-| context_menu      |              |                                                          |
-| rect              |              |                                                          |
-| resize_handle     |              |                                                          |
-| locked            |              |                                                          |
-| sub_diagram       |              |                                                          |
-| receiver          |              |                                                          |
-| is_snapped        |              |                                                          |
-| collision_ids     |              |                                                          |
+| **Variable**      | **Type**     | **Description**                                                                                                                                                                                         |
+|-------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| shape             | string       | Describes shape of Box, as described in Box parameters.                                                                                                                                                 |
+| canvas            | CustomCanvas | The CustomCanvas object that the Box is drawn on.                                                                                                                                                       |
+| x                 | int          | X coordinate of the top left corner of the Box.                                                                                                                                                         |
+| y                 | int          | Y coordinate of the top left corner of the Box.                                                                                                                                                         |
+| start_x           | int          | Used as the x position where to start moving the Box from when dragging.                                                                                                                                |
+| start_y           | int          | Used as the y position where to start moving the Box from when dragging.                                                                                                                                |
+| size              | tuple        | Contains the height and width in a tuple.                                                                                                                                                               |
+| x_dif             | int          | Used in dragging to determine the x distance of the mouse from the top left corner.                                                                                                                     |
+| y_dif             | int          | Used in dragging to determine the y distance of the mouse from the top left corner.                                                                                                                     |
+| connections       | list         | List of Connections attached to the Box.                                                                                                                                                                |
+| left_connections  | int          | Number of connections on the left side.                                                                                                                                                                 |
+| right_connections | int          | Number of Connections on the right side.                                                                                                                                                                |
+| label             | int          | CustomCanvas tag that represents the Box label.                                                                                                                                                         |
+| label_text        | string       | Text that is in the label of the Box.                                                                                                                                                                   |
+| wires             | list         | List of Wires attached to the Box's Connections.                                                                                                                                                        |
+| id                | int          | ID of the Box.                                                                                                                                                                                          |
+| context_menu      | tkinter.Menu | Context menu used for Box.                                                                                                                                                                              |
+| rect              | int          | CustomCanvas tag that represents the Box rectangle or other shape in the canvas.                                                                                                                        |
+| resize_handle     | int          | CustomCanvas tag that represents the resizing handle in the Box.                                                                                                                                        |
+| locked            | boolean      | Determines if the Box is locked or not. While locked some feature's are hidden.                                                                                                                         |
+| sub_diagram       | CustomCanvas | CustomCanvas object that is the sub-diagram of the Box. It is None if the Box is not a sub-diagram Box.                                                                                                 |
+| receiver          | Receiver     | Receiver object used to send information to the backend.                                                                                                                                                |
+| is_snapped        | boolean      | Shows if the Box is currently snapped to a column or not.                                                                                                                                               |
+| collision_ids     | list         | List of integers that hold all tags that are attached to the Box. Connections, labels, box rext and resize handle.<br/> This is used to remove collision with self when checking for colliding objects. |
 
 
