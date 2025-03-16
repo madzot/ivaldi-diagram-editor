@@ -17,6 +17,12 @@ class Box:
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
+        if self.canvas.main_diagram.rotate:
+            self.visual_x = y
+            self.visual_y = x
+        else:
+            self.visual_x = x
+            self.visual_y = y
         self.start_x = x
         self.start_y = y
         self.size = size
@@ -424,6 +430,7 @@ class Box:
         self.start_x = event.x
         self.start_y = event.y
 
+    # Change this for rotate
     def move(self, new_x, new_y):
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
@@ -469,12 +476,14 @@ class Box:
         self.locked = False
 
     # UPDATES
+    # changes this
     def update_size(self, new_size_x, new_size_y):
         self.size = (new_size_x, new_size_y)
         self.update_position()
         self.update_connections()
         self.update_wires()
 
+    # changes this
     def update_position(self):
         if self.shape == "rectangle":
             self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
@@ -486,6 +495,7 @@ class Box:
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                            self.x + self.size[0], self.y + self.size[1])
 
+    # changes this
     def update_connections(self):
         for c in self.connections:
             conn_x, conn_y = self.get_connection_coordinates(c.side, c.index)
@@ -620,6 +630,7 @@ class Box:
         return False
 
     # HELPERS
+    # Change this
     def get_connection_coordinates(self, side, index):
         if side == "left":
             i = self.get_new_left_index()
@@ -639,6 +650,7 @@ class Box:
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
 
+    # Change this
     def create_rect(self):
         w, h = self.size
         if self.shape == "rectangle":
@@ -647,7 +659,6 @@ class Box:
         if self.shape == "triangle":
             return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
                                               self.x, self.y + h, outline="black", fill="white")
-
     def change_shape(self, shape):
         if shape == "rectangle":
             new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")

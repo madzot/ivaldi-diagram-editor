@@ -5,6 +5,7 @@ from MVP.refactored.frontend.canvas_objects.types.connection_type import Connect
 
 
 class Spider(Connection):
+    # Change
     def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC):
         self.r = 10
         super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type)
@@ -112,6 +113,7 @@ class Spider(Connection):
             self.canvas.selector.selected_items.append(self)
         self.canvas.selector.select_wires_between_selected_items()
 
+    # Change
     def on_drag(self, event):
         if event.state & 0x4:
             return
