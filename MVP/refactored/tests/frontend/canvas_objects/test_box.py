@@ -46,8 +46,6 @@ class BoxTests(TestMainDiagram):
         self.assertFalse(box.label_text)
         self.assertListEqual([], box.wires)
 
-        self.assertIsNone(box.node)
-
         self.assertTrue(isinstance(box.context_menu, tkinter.Menu))
 
         self.assertFalse(False, box.locked)

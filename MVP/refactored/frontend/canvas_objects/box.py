@@ -32,7 +32,6 @@ class Box:
             self.id = id(self)
         else:
             self.id = id_
-        self.node = None
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.rect = self.create_rect()
 
