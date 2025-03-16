@@ -166,3 +166,66 @@ Along with these variables Spider has Connection variables as well. Although all
         Parameters:
             new_x (int): x coordinate that Spider would be moved to/what location legality is checked for.
 ```
+
+
+---
+
+## Box
+
+A box is a rectangle on the CustomCanvas. A box can have Connections on it's left and right side. 
+
+Boxes represent a function, the function itself can be defined by the user. 
+
+Boxes are also used to contain sub-diagrams. The sub-diagram is accessible from the treeview on canvases on the left side of the application.
+
+Boxes can contain code. The functions are findable in the "Manage methods" window. Applying code to boxes can be done
+by renaming them to match an existing function or by adding code to them yourself through the code editor.
+Code can only be added to a box with an existing label.
+
+The coordinates of a Box are the top left corner for it.
+
+### Box parameters
+
+| **Parameter**         | **Type**     | **Description**                                                                                                                 |
+|-----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------|
+| canvas                | CustomCanvas | The CustomCanvas object that the Box will be drawn on.                                                                          |
+| x                     | int          | X coordinate for the Box.                                                                                                       |
+| y                     | int          | Y coordinate for the Box.                                                                                                       |
+| receiver              | Receiver     | Receiver object used to send information to the backend.                                                                        |
+|                       |              |                                                                                                                                 |
+| # **Optional params** |              |                                                                                                                                 |
+| size                  | tuple        | A list containing the height and width of the box. Default value is (60, 60)                                                    |
+| id_                   | int          | Box ID. If no value is given then Box will receive a random ID.                                                                 |
+| shape                 | string       | String describing the shape of the Box. Default value is "rectangle".<br/> Usable values for this are: `rectangle`,  `triangle` |
+
+
+### Box variables
+
+| **Variable**      | **Type**     | **Description**                                          |
+|-------------------|--------------|----------------------------------------------------------|
+| shape             | string       | Describes shape of Box, as described in Box parameters.  |
+| canvas            | CustomCanvas | The CustomCanvas object that the Box is drawn on.        |
+| x                 | int          | X coordinate of the top left corner of the Box.          |
+| y                 | int          |                                                          |
+| start_x           | int          |                                                          |
+| start_y           |              |                                                          |
+| size              |              |                                                          |
+| x_dif             |              |                                                          |
+| y_dif             |              |                                                          |
+| connections       |              |                                                          |
+| left_connections  |              |                                                          |
+| right_connections |              |                                                          |
+| label             |              |                                                          |
+| label_text        |              |                                                          |
+| wires             |              |                                                          |
+| id                |              |                                                          |
+| context_menu      |              |                                                          |
+| rect              |              |                                                          |
+| resize_handle     |              |                                                          |
+| locked            |              |                                                          |
+| sub_diagram       |              |                                                          |
+| receiver          |              |                                                          |
+| is_snapped        |              |                                                          |
+| collision_ids     |              |                                                          |
+
+
