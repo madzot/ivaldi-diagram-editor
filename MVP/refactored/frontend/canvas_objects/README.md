@@ -291,7 +291,7 @@ The coordinates of a Box are the top left corner for it.
         Parameters:
             event (tkinter.Event): Event object that holds locations for moving the Box.
 
-    .get_self_collision_ids()
+    .update_self_collision_ids()
         Updates the collision_ids variable by adding connection tags and label tags into the list.
 
     .find_collisions(go_to_x, go_to_y)
@@ -432,4 +432,30 @@ The coordinates of a Box are the top left corner for it.
             new_x (int): X coordinate where to check legality from.
 
     .get_connection_coordinates(side, index)
+        Returns a set of coordinates for a Connection of index at left or right side.
 
+        Parameters:
+            side (string): String specifying what side the Connection coordinates will be located on.
+            index (int): Index of Connection to get coordinates for 
+
+    .get_new_left_index()
+        Returns new left side Connection index.
+
+    .get_new_right_index()
+        Returns new right side Connection index.
+
+    .create_shape()
+        Creates the Box shape on CustomCanvas. Returns the tag associated with the shape.
+
+    .change_shape(shape)
+        Changes the shape of the Box. This is done by Creating a new Box and copying the existing Boxs attributes into
+        the new Box and then deleting the old Box.
+
+        Parameters:
+            shape (string): String that will define the shape of the Box.
+
+    .get_input_output_amount_off_code(code)
+        Returns the amount of inputs and outputs based on code.
+
+        Parameters:
+            code (string): Code that will be searched for inputs and outputs.

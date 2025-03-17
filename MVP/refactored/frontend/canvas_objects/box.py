@@ -11,7 +11,31 @@ from constants import *
 
 
 class Box:
+    """
+    A box is a rectangle on the CustomCanvas. A box can have Connections on it's left and right side.
+
+    Boxes represent a function, the function itself can be defined by the user.
+
+    Boxes are also used to contain sub-diagrams. The sub-diagram is accessible from the treeview on canvases on the left side of the application.
+
+    Boxes can contain code. The functions are findable in the "Manage methods" window. Applying code to boxes can be done
+    by renaming them to match an existing function or by adding code to them yourself through the code editor.
+    Code can only be added to a box with an existing label.
+
+    The coordinates of a Box are the top left corner for it.
+    """
     def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
+        """
+        Box constructor.
+
+        :param canvas: CustomCanvas object that Box will be created on.
+        :param x: X coordinate of the Box.
+        :param y: Y coordinate of the Box.
+        :param receiver: Receiver object that
+        :param size: (Optional) Tuple with width and height of box.
+        :param id_: (Optional) ID of the box.
+        :param shape: (Optional) Shape of the box.
+        """
         self.shape = shape
         self.canvas = canvas
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
@@ -33,7 +57,7 @@ class Box:
         else:
             self.id = id_
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.rect = self.create_rect()
+        self.rect = self.create_shape()
 
         self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                                                           self.x + self.size[0], self.y + self.size[1],
@@ -53,6 +77,12 @@ class Box:
         self.collision_ids = [self.rect, self.resize_handle]
 
     def set_id(self, id_):
+        """
+        Set Box ID.
+
+        :param id_: New ID of the box.
+        :return: None
+        """
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
             if self.canvas.diagram_source_box:
@@ -61,6 +91,11 @@ class Box:
         self.id = id_
 
     def bind_events(self):
+        """
+        Bind events to Box rectangle and resize handle.
+
+        :return: None
+        """
         self.canvas.tag_bind(self.rect, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.rect, '<B1-Motion>', self.on_drag)
@@ -74,6 +109,12 @@ class Box:
         self.canvas.tag_bind(self.rect, '<Leave>', lambda _: self.canvas.on_leave_hover())
 
     def show_context_menu(self, event):
+        """
+        Create and display Box context menu.
+
+        :param event: tkinter.Event object that holds location where menu is created.
+        :return: None
+        """
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
@@ -112,6 +153,13 @@ class Box:
         self.context_menu.tk_popup(event.x_root, event.y_root)
 
     def unfold(self):
+        """
+        Unfold sub-diagram contained in Box.
+
+        If a Box is a sub-diagram then this is used for bringing the sub-diagram to its parent canvas.
+
+        :return: None
+        """
         if not self.sub_diagram:
             return
         event = tk.Event()
@@ -123,9 +171,21 @@ class Box:
         self.canvas.paste_copied_items(event)
 
     def open_editor(self):
+        """
+        Open a CodeEditor for Box.
+
+        :return: None
+        """
         CodeEditor(self.canvas.main_diagram, box=self)
 
     def save_box_to_menu(self):
+        """
+        Save Box to config file.
+
+        Saves the Box and it's attributes to a config file, which allows the Box to be imported from menus.
+
+        :return: None
+        """
         if not self.label_text:
             self.edit_label()
         if not self.label_text:
@@ -133,12 +193,28 @@ class Box:
         self.canvas.main_diagram.save_box_to_diagram_menu(self)
 
     def handle_double_click(self):
+        """
+        Handle double click action on Box.
+
+        Allows user to select input and output amounts unless the Box has a sub-diagram, in which case the user will
+        be moved to the sub-diagram canvas.
+
+        :return: None
+        """
         if self.sub_diagram:
             self.canvas.main_diagram.switch_canvas(self.sub_diagram)
         else:
             self.set_inputs_outputs()
 
     def set_inputs_outputs(self):
+        """
+        Set input and output amounts for Box.
+
+        Opens 2 dialogs requiring the user to input the wanted amounts of inputs and outputs.
+        The entered amounts will be applied to the Box.
+
+        :return: None
+        """
         if self.locked:
             return
         # ask for inputs amount
@@ -191,6 +267,17 @@ class Box:
                 self.add_left_connection()
 
     def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True, switch=True):
+        """
+        Edit the Box sub-diagram.
+
+        Will create a sub-diagram in the Box. If a sub-diagram already exists it will open it. Returns sub-diagram
+        CustomCanvas object.
+
+        :param save_to_canvasses: boolean to save canvas
+        :param add_boxes: boolean if boxes should be added to new sub-diagram
+        :param switch: boolean for switching canvas to sub-diagram after creation.
+        :return: CustomCanvas sub-diagram
+        """
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("compound", generator_id=self.id)
@@ -216,11 +303,24 @@ class Box:
             return self.sub_diagram
 
     def close_menu(self):
+        """
+        Close the Box context menu.
+
+        :return: None
+        """
         if self.context_menu:
             self.context_menu.destroy()
 
     # MOVING, CLICKING ETC.
     def on_press(self, event):
+        """
+        Handle press action for Box.
+
+        Sets variables to allow dragging of the Box. Clears previous selection and selects the Box.
+
+        :param event: tkinter.Event object holding the location of the action.
+        :return: None
+        """
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         for item in self.canvas.selector.selected_items:
             item.deselect()
@@ -236,6 +336,14 @@ class Box:
         self.y_dif = event.y - self.y
 
     def on_control_press(self):
+        """
+        Handle control press action for Box.
+
+        This method will select or unselect the Box depending on previous select state. It will not clear the previously
+        selected items.
+
+        :return: None
+        """
         if self in self.canvas.selector.selected_items:
             self.canvas.selector.selected_items.remove(self)
             self.deselect()
@@ -245,6 +353,12 @@ class Box:
         self.canvas.selector.select_wires_between_selected_items()
 
     def on_drag(self, event):
+        """
+        Handle dragging action for Box.
+
+        :param event: tkinter.Event for dragging locations.
+        :return: None
+        """
         if event.state & 0x4:
             return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
@@ -296,7 +410,14 @@ class Box:
         self.move(go_to_x, go_to_y)
         self.move_label()
 
-    def get_self_collision_ids(self):
+    def update_self_collision_ids(self):
+        """
+        Update collision ids that are attached to the Box.
+
+        Will update collision_ids with new label tag or Connections tags.
+
+        :return: None
+        """
         self.collision_ids = [self.rect, self.resize_handle]
         if self.label:
             self.collision_ids.append(self.label)
@@ -304,7 +425,14 @@ class Box:
             self.collision_ids.append(connection.circle)
 
     def find_collisions(self, go_to_x, go_to_y):
-        self.get_self_collision_ids()
+        """
+        Return list of tags that would be colliding with the Box if it was at go_to_x and go_to_y coordinates.
+
+        :param go_to_x: X coordinate where the Box would be.
+        :param go_to_y: Y coordinate where the Box would be.
+        :return: List of tags that would be colliding with the Box in the given location.
+        """
+        self.update_self_collision_ids()
         collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
         collision = list(collision)
         for index in self.collision_ids:
@@ -320,6 +448,14 @@ class Box:
         return collision
 
     def on_resize_scroll(self, event):
+        """
+        Resize the Box based on event.
+
+        Handles the ctrl + scroll event on Box. Will resize it accordingly to delta attribute of tkinter.Event.
+
+        :param event: tkinter.Event object.
+        :return: None
+        """
         if event.delta == 120:
             multiplier = 1
         else:
@@ -336,6 +472,14 @@ class Box:
         self.move_label()
 
     def on_resize_drag(self, event):
+        """
+        Resize the Box based on mouse movement.
+
+        Handles dragging on the resize handle.
+
+        :param event: tkinter.Event object.
+        :return: None
+        """
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         resize_x = self.x + self.size[0] - 10
         resize_y = self.y + self.size[1] - 10
@@ -356,6 +500,13 @@ class Box:
         self.move_label()
 
     def resize_by_connections(self):
+        """
+        Resize the Box based on the amount of Connections.
+
+        Resizes the Box so all Connections could have an appropriate amount of space between them.
+
+        :return: None
+        """
         # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
         height = max([50 * nr_cs, 50])
@@ -364,10 +515,20 @@ class Box:
             self.move_label()
 
     def move_label(self):
+        """
+        Move label to the center of the Box.
+
+        :return: None
+        """
         if self.label:
             self.canvas.coords(self.label, self.x + self.size[0] / 2, self.y + self.size[1] / 2)
 
     def bind_event_label(self):
+        """
+        Bind events to the Box label.
+
+        :return: None
+        """
         self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
         self.canvas.tag_bind(self.label, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.label, '<Double-Button-1>', lambda _: self.handle_double_click())
@@ -377,6 +538,15 @@ class Box:
         self.canvas.tag_bind(self.label, '<Leave>', lambda _: self.canvas.on_leave_hover())
 
     def edit_label(self, new_label=None):
+        """
+        Edit Box label.
+
+        If no parameters are given, the user will be asked to enter a label for the Box.
+        With parameters asking the user for input is skipped and the new label will be applied to the box immediately.
+
+        :param new_label: (Optional) New label for the box.
+        :return: None
+        """
         if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
@@ -395,7 +565,7 @@ class Box:
         else:
             self.label_text = new_label
 
-        self.change_label()
+        self.update_label()
 
         if self.label_text:
             if self.sub_diagram:
@@ -404,7 +574,14 @@ class Box:
 
         self.bind_event_label()
 
-    def change_label(self):
+    def update_label(self):
+        """
+        Create or update label.
+
+        This will create or update a label based on the label_text variable
+
+        :return: None
+        """
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
@@ -415,15 +592,38 @@ class Box:
             self.canvas.itemconfig(self.label, text=self.label_text)
 
     def set_label(self, new_label):
+        """
+        Set label for Box.
+
+        :param new_label: New label text.
+        :return: None
+        """
         self.label_text = new_label
-        self.change_label()
+        self.update_label()
         self.bind_event_label()
 
     def on_resize_press(self, event):
+        """
+        Handles pressing on the resize handle.
+
+        Sets variables start_(x/y) to allow for dragging.
+
+        :param event: tkinter.Event object.
+        :return: None
+        """
         self.start_x = event.x
         self.start_y = event.y
 
     def move(self, new_x, new_y):
+        """
+        Move the Box to a new location.
+
+        Will move the Box to a new location unless the move is not legal.
+
+        :param new_x: X coordinate Box will be moved to.
+        :param new_y: Y coordinate Box will be moved to.
+        :return:
+        """
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
         is_bad = False
@@ -444,37 +644,95 @@ class Box:
             self.update_wires()
 
     def select(self):
+        """
+        Apply the select style to the Box.
+
+        Turns the Box outline and Connections into green.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.rect, outline="green")
         [c.select() for c in self.connections]
 
     def search_highlight_secondary(self):
+        """
+        Apply the secondary search highlight style.
+
+        Applies the secondary search highlight style to the Box. Changes outline color and Connections colors. Will
+        add the Box to CustomCanvas list containing search highlighted objects.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.rect, outline="orange")
         [c.search_highlight_secondary() for c in self.connections]
         self.canvas.search_result_highlights.append(self)
 
     def search_highlight_primary(self):
+        """
+        Apply primary search highlight style.
+
+        Applies the primary search highlight style to the Box. Changes outline color and Connections colors. Will
+        add the Box to CustomCanvas list containing search highlighted objects.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.rect, outline="cyan")
         [c.search_highlight_primary() for c in self.connections]
         self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
+        """
+        Deselect the Box.
+
+        Turns the outline of the Box to black along with it's Connections.
+
+        :return: None
+        """
         self.canvas.itemconfig(self.rect, outline="black")
         [c.deselect() for c in self.connections]
 
     def lock_box(self):
+        """
+        Lock the Box.
+
+        Turns locked value to True.
+
+        :return: None
+        """
         self.locked = True
 
     def unlock_box(self):
+        """
+        Unlock the Box.
+
+        Turns the locked value to False.
+
+        :return: None
+        """
         self.locked = False
 
     # UPDATES
     def update_size(self, new_size_x, new_size_y):
+        """
+        Update Box size.
+
+        Update the Size and locations of items attached to the Box.
+
+        :param new_size_x: New width
+        :param new_size_y: New height
+        :return: None
+        """
         self.size = (new_size_x, new_size_y)
         self.update_position()
         self.update_connections()
         self.update_wires()
 
     def update_position(self):
+        """
+        Update the CustomCanvas position of the Box.
+
+        :return: None
+        """
         if self.shape == "rectangle":
             self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
         if self.shape == "triangle":
@@ -486,15 +744,33 @@ class Box:
                            self.x + self.size[0], self.y + self.size[1])
 
     def update_connections(self):
+        """
+        Update Connection locations of Box.
+
+        :return: None
+        """
         for c in self.connections:
             conn_x, conn_y = self.get_connection_coordinates(c.side, c.index)
             c.move_to((conn_x, conn_y))
 
     def update_wires(self):
+        """
+        Update Wires.
+
+        Updates Wires that are connected to the Box.
+
+        :return: None
+        """
         [wire.update() for wire in self.wires]
 
     def update_io(self):
-        """Update inputs and outputs based on label and code."""
+        """
+        Update inputs and outputs of Box.
+
+        Updates the inputs and outputs of a Box based on the code that is added to it.
+
+        :return: None
+        """
         with open(FUNCTIONS_CONF, "r") as file:
             data = json.load(file)
             for label, code in data.items():
@@ -522,10 +798,25 @@ class Box:
 
     # ADD TO/REMOVE FROM CANVAS
     def add_wire(self, wire):
+        """
+        Add a wire to the Box.
+
+        :param wire: Wire to be added.
+        :return: None
+        """
         if wire not in self.wires:
             self.wires.append(wire)
 
     def add_left_connection(self, id_=None, connection_type=ConnectionType.GENERIC):
+        """
+        Add a Connection to the left side of the Box.
+
+        Creates and adds a Connection to the left side of the Box.
+
+        :param id_: (Optional) ID that will be added to the Connection.
+        :param connection_type: (Optional) Type of Connection that will be added.
+        :return: Connection object
+        """
         i = self.get_new_left_index()
         conn_x, conn_y = self.get_connection_coordinates("left", i)
         connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_,
@@ -544,6 +835,15 @@ class Box:
         return connection
 
     def add_right_connection(self, id_=None, connection_type=ConnectionType.GENERIC):
+        """
+        Add a Connection to the right side of the Box.
+
+        Creates and adds a Connection to the right side of the Box.
+
+        :param id_: (Optional) ID that will be added to the Connection.
+        :param connection_type: (Optional) Type of Connection that will be added.
+        :return: Connection object
+        """
         i = self.get_new_right_index()
         conn_x, conn_y = self.get_connection_coordinates("right", i)
         connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_,
@@ -561,6 +861,14 @@ class Box:
         return connection
 
     def remove_connection(self, circle):
+        """
+        Remove a Connection from the box.
+
+        Removes the given Connection from the Box.
+
+        :param circle: Connection that will be removed
+        :return: None
+        """
         for c in self.connections:
             if c.index > circle.index and circle.side == c.side:
                 c.lessen_index_by_one()
@@ -580,6 +888,15 @@ class Box:
         self.resize_by_connections()
 
     def delete_box(self, keep_sub_diagram=False, action=None):
+        """
+        Delete Box.
+
+        Delete the Box, its Connections and sub-diagram if chosen to.
+
+        :param keep_sub_diagram: (Optional) Specify whether the sub-diagram will be kept.
+        :param action: (Optional) Specify if the deletion is done for creating a sub-diagram.
+        :return: None
+        """
         for c in self.connections:
             c.delete()
 
@@ -597,6 +914,15 @@ class Box:
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x):
+        """
+        Check whether move to new_x is illegal.
+
+        Will take a Connection and an x coordinate and check whether moving the connection to the x coordinate is legal.
+
+        :param connection: Connection that the new location
+        :param new_x: x coordinate to move to.
+        :return: boolean if move is illegal
+        """
         wire = connection.wire
         if connection.side == "left":
             if connection == wire.start_connection:
@@ -620,6 +946,15 @@ class Box:
 
     # HELPERS
     def get_connection_coordinates(self, side, index):
+        """
+        Return coordinates for a Connection.
+
+        Returns coordinates for a Connection at one side of the Box at index.
+
+        :param side: Side of Box that the Connection would be on.
+        :param index: Index at which the Connection would be on the given side.
+        :return: Tuple of coordinates for a Connection.
+        """
         if side == "left":
             i = self.get_new_left_index()
             return self.x, self.y + (index + 1) * self.size[1] / (i + 1)
@@ -629,16 +964,31 @@ class Box:
             return self.x + self.size[0], self.y + (index + 1) * self.size[1] / (i + 1)
 
     def get_new_left_index(self):
+        """
+        Return a new index for the left side of the Box.
+
+        :return: int
+        """
         if not self.left_connections > 0:
             return 0
         return max([c.index if c.side == "left" else 0 for c in self.connections]) + 1
 
     def get_new_right_index(self):
+        """
+        Return a new index for the right side of the Box.
+
+        :return: int
+        """
         if not self.right_connections > 0:
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
 
-    def create_rect(self):
+    def create_shape(self):
+        """
+        Create a CustomCanvas shape for the Box.
+
+        :return: Tag that represents the Box in CustomCanvas.
+        """
         w, h = self.size
         if self.shape == "rectangle":
             return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
@@ -648,6 +998,14 @@ class Box:
                                               self.x, self.y + h, outline="black", fill="white")
 
     def change_shape(self, shape):
+        """
+        Change shape of Box.
+
+        Works by creating a new copied Box with a different shape.
+
+        :param shape: Shape of new Box
+        :return: None
+        """
         if shape == "rectangle":
             new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")
         elif shape == "triangle":
@@ -659,6 +1017,14 @@ class Box:
 
     @staticmethod
     def get_input_output_amount_off_code(code):
+        """
+        Return amount of inputs and outputs based off code.
+
+        Returns the amount of inputs and outputs in code.
+
+        :param code: String code
+        :return: Tuple of input and output amount
+        """
         inputs = re.search(r"\((.*)\)", code).group(1)
         outputs = re.search(r"return (.*)\n*", code).group(1)
         inputs_amount = len(inputs.split(","))
