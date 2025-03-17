@@ -228,4 +228,208 @@ The coordinates of a Box are the top left corner for it.
 | is_snapped        | boolean      | Shows if the Box is currently snapped to a column or not.                                                                                                                                               |
 | collision_ids     | list         | List of integers that hold all tags that are attached to the Box. Connections, labels, box rext and resize handle.<br/> This is used to remove collision with self when checking for colliding objects. |
 
+### Box functions
+
+    .set_id(id_)
+        Set Box ID.
+
+        Parameters:
+            id_ (int): ID that the Box will be given.
+
+    .bind_events()
+        Binds events to Box rectangle and Box resizing handle.
+
+    .show_context_menu(event)
+        Create and display the Box context menu.
+
+        Parameters:
+            event (tkinter.Event): Event object that cointains information.
+
+    .unfold()
+        Unfolds the sub-diagram contained in the box. If the Box does not contain a sub-diagram this will not do
+        anything.
+
+    .open_editor()
+        Opens a CodeEditor for the selected Box. Will display either existing code attached to the Box or will generate 
+        a template for the user to enter code.
+
+    .save_box_to_menu()
+        Will save the selected Box to config files, allowing it to be selected and created from menus.
+
+    .handle_double_click()
+        Handles double click event on Box. If the Box has a sub-diagram it will open the sub-diagram.
+
+    .set_inputs_outputs()
+        Opens dialogs that will ask for input/output amounts on a Box. Afterwards the amount of inputs/outputs is
+        changed depending on what was written in the dialogs.
+
+    .edit_sub_diagram(save_to_canvasses, add_boxes, switch)
+        Will create a sub-diagram in the Box. If a sub-diagram already exists it will open it. Returns sub-diagram
+        CustomCanvas object.
+
+        Parameters:
+            save_to_canvasses (boolean): (Optional) If true will save the sub-diagram to existing canvases, accessible
+                                                    from the left side treeview. Default value is True.
+            add_boxes (boolean): (Optional) If true will add boxes to the created sub-diagram. This is used for
+                                            CustomCanvas add_boxes value. Default value is True.
+            switch (boolean): (Optional) If true will switch to the sub-diagram after creation. Default value is True.
+
+    .close_menu()
+        Closes context menu.
+
+    .on_press()
+        Handles pressing event on Box. Clears selection, selects box. Sets start_(x/y) and (x/y)_dif variables
+        for movement.
+
+    .on_control_press()
+        Handles ctrl + button-1 on Box. Will select or unselect current Box depending on previous selection status.
+        Will not clear previous selection.
+
+    .on_drag(event)
+        Handles dragging/moving the Box.
+
+        Parameters:
+            event (tkinter.Event): Event object that holds locations for moving the Box.
+
+    .get_self_collision_ids()
+        Updates the collision_ids variable by adding connection tags and label tags into the list.
+
+    .find_collisions(go_to_x, go_to_y)
+        Returns a list of tags that (go_to_x, go_to_y) is colliding with. Uses the size of the Box for checking.
+    
+        Parameters:
+            go_to_x (int): x coordinate where to check for collisions.
+            go_to_y (int): y coordinate where to check for collisions.
+
+    .on_resize_scroll(event)
+        Handles ctrl + scroll  on the Box. Will change the size of the Box.
+
+        Parameters:
+            event (tkinter.Event): Event object that determines whether the Box will be made smaller or larger, based on
+                                   delta value.
+
+    .on_resize_drag(event)
+        Changes the size of the Box based on mouse movement. This is used when pressing and dragging the resize handle.
+
+        Parameters:
+            event (tkinter.Event): Event object holding the location of the mouse that the size is changed from.
+
+    .resize_by_connections()
+        Resizes the Box to allow all Connections to have space between them.
+
+    .move_label()
+        Moves label to the center of the Box.
+
+    .bind_event_label()
+        Bind events to the Box label, this is needed because otherwise clicking on the label would disable Box events.
+
+    .edit_label(new_label)
+        Asks the user to input a new label, unless a new label is given to the function. Will change the label text.
+
+        Parameters:
+            new_label (string): (Optional) If this is given then the application will not ask the user for input and
+                                           will change the label to the given string.
+
+    .change_label()
+        Creates or updates a label or label text.
+
+    .set_label(new_label)
+        Changes label text to given string.
+
+        Parameters:
+            new_label (string): Text that the new label will be set to.
+
+    .on_resize_press(event)
+        Sets start_(x/y) variables to allow for dragging.
+
+        Parameters:
+            event (tkinter.Event): Event object used for start_(x/y) locations.
+
+    .move(new_x, new_y)
+        Moves the Box and all objects attached to it to a new location.
+
+        Parameters:
+            new_x (int): x coordinate of where to move the Box.
+            new_y (int): y coordinate of thwere to move the Box.
+
+    .select()
+        Changes the Box outline along with the color of it's Connections to green.
+
+    .search_highlight_secondary()
+        Applies the secondary search highlight style to the Box. Changes outline color and Connections colors. Will
+        add the Box to CustomCanvas list containing search highlighted objects.
+
+    .search_highlight_primary()
+        Applies the primary search highlight style to the Box. Changes outline color and Connections colors. Will 
+        add the Box to CustomCanvas list containing search highlighted objects.
+
+    .deselect()
+        Turns the outline of the Box and its Connections to black.
+
+    .lock_box()
+        Changes locked value of the Box to True.
+
+    .unlock_box()
+        Changes locked value of the Box to False.
+
+    .update_size(new_size_x, new_size_y)
+        Changes size of the Box. Width to new_size_x and height to new_size_y.
+
+        Parameters:
+            new_size_x (int): New width of the Box.
+            new_size_y (int): New height of the Box.
+
+    .update_position()
+        Updates the position of the Box on the CustomCanvas.
+
+    .update_connections()
+        Updates Connection locations that are attached to the Box.
+
+    .update_wires()
+        Updates Wire that are attached to the Box.
+
+    .update_io()
+        Updates Box inputs and outputs based on the Box code.
+
+    .add_wire(wire)
+        Adds Wire to Box.
+        
+        Parameters:
+            wire (Wire): Wire that will be added to the Box.
+
+    .add_left_connection(id_, connection_type)
+        Adds a Connection to the left side of the Box. The type of the Connection can be specified.
+
+        Parameters:
+            id_ (int): ID that will be added to the Connection.
+            connection_type (ConnectionType): The type that will be added to the Connection.
+
+    .add_right_connection()
+        Adds a Connection to the right side of the Box. The type of the Connection can be specified.
+
+        Parameters:
+            id_ (int): ID that will be added to the Connection.
+            connection_type (ConnectionType): The type that will be added to the Connection.
+
+    .remove_connection(circle)
+        Removes a certain Connection from the Box.
+
+        Parameters:
+            circle (Connection): The Connection that will be removed from the Box.
+
+    .delete_box(keep_sub_diagram, action)
+        Deletes the Box.
+
+        Parameters:
+            keep_sub_diagram (boolean): Determines whether to delete the sub-diagram if it exists in the Box.
+            action (string): Determines if the action of deleting the box is done for sub-diagram creation.
+    
+    .is_illegal_move(connection, new_x)
+        Returns boolean stating whether or not movement to the new_x location is legal based on a given Connection.
+            
+        Parameters:
+            connection (Connection): The Connection that move legality to new_x will be checked for.
+            new_x (int): X coordinate where to check legality from.
+
+    .get_connection_coordinates(side, index)
 
