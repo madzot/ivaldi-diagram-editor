@@ -35,7 +35,7 @@ class HyperEdge:
         """
         if conn_index in self.source_nodes:
             del self.source_nodes[conn_index]
-        for key in self.source_nodes.keys():
+        for key in list(self.source_nodes.keys()):
             if key > conn_index:
                 self.source_nodes[key - 1] = self.source_nodes[key]
                 del self.source_nodes[key]
@@ -46,7 +46,7 @@ class HyperEdge:
         """
         if conn_index in self.source_nodes:
             del self.target_nodes[conn_index]
-        for key in self.target_nodes.keys():
+        for key in list(self.target_nodes.keys()):
             if key > conn_index:
                 self.target_nodes[key - 1] = self.target_nodes[key]
                 del self.target_nodes[key]
