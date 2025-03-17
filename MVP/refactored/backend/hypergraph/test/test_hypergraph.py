@@ -1,31 +1,32 @@
 from unittest import TestCase
 from unittest.mock import MagicMock
 
-import networkx as nx
-import numpy as np
-from matplotlib import pyplot as plt
-
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
 
+def _create_nodes(count: int) -> list[Node]:
+    return [Node(node_id=i) for i in range(count)]
+
+
+def _create_edges(ids: list[int]) -> list[HyperEdge]:
+    return [HyperEdge(edge_id) for edge_id in ids]
+
+
+def _create_hypergraph(hypergraph_id: int) -> Hypergraph:
+    return Hypergraph(hypergraph_id)
+
+
 class TestHypergraph(TestCase):
     def setUp(self):
-        # create nodes
-        self.node0 = Node(0)
-        self.node1 = Node(1)
-        self.node2 = Node(2)
-        self.node3 = Node(3)
-        self.node4 = Node(4)
-        self.node5 = Node(5)
-        # create hyper edges
-        self.edge0 = HyperEdge(100)
-        self.edge1 = HyperEdge(101)
-        self.edge2 = HyperEdge(102)
-        self.edge3 = HyperEdge(103)
-        # create hypergraph
-        self.hypergraph = Hypergraph(201)
+        self.nodes = _create_nodes(6)
+        self.node0, self.node1, self.node2, self.node3, self.node4, self.node5 = self.nodes
+
+        self.edges = _create_edges([100, 101, 102, 103])
+        self.edge0, self.edge1, self.edge2, self.edge3 = self.edges
+
+        self.hypergraph = _create_hypergraph(hypergraph_id=201)
 
     # Tests add_node/add_nodes
     # --------------------------------------
@@ -122,11 +123,11 @@ class TestHypergraph(TestCase):
         self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
 
     def test_remove_node_with_directly_connected(self):
-        self.node0.get_united_with_nodes = lambda: [self.node1]
-        self.node1.get_united_with_nodes = lambda: [self.node0, self.node2]
-        self.node2.get_united_with_nodes = lambda: [self.node1, self.node3]
-        self.node3.get_united_with_nodes = lambda: [self.node2, self.node4]
-        self.node4.get_united_with_nodes = lambda: [self.node3]
+        self.node0.directly_connected_to = [self.node1]
+        self.node1.directly_connected_to = [self.node0, self.node2]
+        self.node2.directly_connected_to = [self.node1, self.node3]
+        self.node3.directly_connected_to = [self.node2, self.node4]
+        self.node4.directly_connected_to = [self.node3]
 
         self.hypergraph.add_nodes([self.node0, self.node1, self.node2, self.node3, self.node4])
         self.hypergraph.remove_node(self.node1.id)
@@ -187,7 +188,6 @@ class TestHypergraph(TestCase):
         self.assertIn(self.edge3.id, self.hypergraph.edges)
 
     def test_remove_hyper_verify_remove_self_called(self):
-        # TODO if remove_self() does nothing than test is useless
         self.edge1.remove_self = MagicMock()
 
         self.hypergraph.add_edge(self.edge1)
@@ -268,38 +268,45 @@ class TestHypergraph(TestCase):
         self.assertEqual(len(self.hypergraph.nodes), 0)
 
     def test_update_source_nodes_descendants_with_complex_graph_one_source(self):
-        nodes = [Node(i) for i in range(11)]
+        nodes = [Node(i) for i in range(12)]
 
-        nodes[0].get_children_nodes = lambda: []
-        nodes[1].get_children_nodes = lambda: []
-        nodes[2].get_children_nodes = lambda: []
-        nodes[3].get_children_nodes = lambda: []
-        nodes[4].get_children_nodes = lambda: []
-        nodes[5].get_children_nodes = lambda: []
+        nodes[0].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
+        nodes[1].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
+        nodes[2].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
+        nodes[3].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
+        nodes[4].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
+        nodes[5].get_children_nodes = lambda: [nodes[7], nodes[9]]
         nodes[6].get_children_nodes = lambda: []
         nodes[7].get_children_nodes = lambda: []
         nodes[8].get_children_nodes = lambda: []
         nodes[9].get_children_nodes = lambda: []
         nodes[10].get_children_nodes = lambda: []
+        nodes[11].get_children_nodes = lambda: []
 
-        nodes[0].get_united_with_nodes = lambda: []
-        nodes[1].get_united_with_nodes = lambda: []
-        nodes[2].get_united_with_nodes = lambda: []
-        nodes[3].get_united_with_nodes = lambda: []
-        nodes[4].get_united_with_nodes = lambda: []
+        nodes[0].get_united_with_nodes = lambda: [nodes[1], nodes[2], nodes[3], nodes[4]]
+        nodes[1].get_united_with_nodes = lambda: [nodes[0], nodes[2], nodes[3], nodes[4]]
+        nodes[2].get_united_with_nodes = lambda: [nodes[1], nodes[0], nodes[3], nodes[4]]
+        nodes[3].get_united_with_nodes = lambda: [nodes[1], nodes[2], nodes[0], nodes[4]]
+        nodes[4].get_united_with_nodes = lambda: [nodes[1], nodes[2], nodes[3], nodes[0]]
         nodes[5].get_united_with_nodes = lambda: []
+        nodes[6].get_united_with_nodes = lambda: [nodes[8], nodes[10], nodes[11]]
+        nodes[7].get_united_with_nodes = lambda: [nodes[9]]
+        nodes[8].get_united_with_nodes = lambda: [nodes[6], nodes[10], nodes[11]]
+        nodes[9].get_united_with_nodes = lambda: [nodes[7]]
+        nodes[10].get_united_with_nodes = lambda: [nodes[8], nodes[6], nodes[11]]
+        nodes[11].get_united_with_nodes = lambda: [nodes[8], nodes[10], nodes[6]]
 
         edge1 = HyperEdge(100)
-        edge1.append_source_nodes()
-        edge1.append_target_node()
+        edge1.append_source_node(nodes[1])
+        edge1.append_target_node(nodes[5])
 
         edge2 = HyperEdge(101)
-        edge2.append_source_nodes()
-        edge2.append_target_node()
+        edge2.append_source_node(nodes[5])
+        edge2.append_target_node(nodes[7])
 
         edge3 = HyperEdge(102)
-        edge3.append_source_nodes()
-        edge3.append_target_node()
+        edge3.append_source_node(nodes[4])
+        edge3.append_target_node(nodes[6])
 
         self.hypergraph.add_edge(edge1)
         self.hypergraph.add_edge(edge2)
@@ -312,46 +319,73 @@ class TestHypergraph(TestCase):
         for edge in self.hypergraph.edges.values():
             for node in edge.get_source_nodes() + edge.get_target_nodes():
                 self.assertIn(node.id, self.hypergraph.nodes)
+        # TODO check structure of hypergraph
 
     def test_update_source_nodes_descendants_with_complex_graph_two_sources(self):
-        nodes = [Node(i) for i in range(16)]
+        nodes = [Node(i) for i in range(0, 17)]
 
-        nodes[0].get_children_nodes = lambda: []
-        nodes[1].get_children_nodes = lambda: []
-        nodes[2].get_children_nodes = lambda: []
-        nodes[3].get_children_nodes = lambda: []
+        nodes[0].get_children_nodes = lambda: [nodes[3]]
+        nodes[1].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                               nodes[14], nodes[15]]
+        nodes[2].get_children_nodes = lambda: [nodes[3]]
+        nodes[3].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                               nodes[14], nodes[15]]
         nodes[4].get_children_nodes = lambda: []
         nodes[5].get_children_nodes = lambda: []
         nodes[6].get_children_nodes = lambda: []
         nodes[7].get_children_nodes = lambda: []
-        nodes[8].get_children_nodes = lambda: []
-        nodes[9].get_children_nodes = lambda: []
-        nodes[10].get_children_nodes = lambda: []
+        nodes[8].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                               nodes[14], nodes[15]]
+        nodes[9].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                               nodes[14], nodes[15]]
+        nodes[10].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                                nodes[14], nodes[15]]
         nodes[11].get_children_nodes = lambda: []
         nodes[12].get_children_nodes = lambda: []
         nodes[13].get_children_nodes = lambda: []
         nodes[14].get_children_nodes = lambda: []
         nodes[15].get_children_nodes = lambda: []
-        nodes[16].get_children_nodes = lambda: []
+        nodes[16].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                                nodes[14], nodes[15]]
 
-        nodes[0].get_united_with_nodes = lambda: []
-        nodes[1].get_united_with_nodes = lambda: []
-        nodes[2].get_united_with_nodes = lambda: []
+        nodes[0].get_united_with_nodes = lambda: [nodes[2]]
+        nodes[1].get_united_with_nodes = lambda: [nodes[8], nodes[16], nodes[9], nodes[10]]
+        nodes[2].get_united_with_nodes = lambda: [nodes[0]]
         nodes[3].get_united_with_nodes = lambda: []
-        nodes[4].get_united_with_nodes = lambda: []
-        nodes[5].get_united_with_nodes = lambda: []
+        nodes[4].get_united_with_nodes = lambda: [nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                                  nodes[14], nodes[15]]
+        nodes[5].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                                  nodes[14], nodes[15]]
+        nodes[6].get_united_with_nodes = lambda: [nodes[5], nodes[4], nodes[7], nodes[11], nodes[12], nodes[13],
+                                                  nodes[14], nodes[15]]
+        nodes[7].get_united_with_nodes = lambda: [nodes[5], nodes[6], nodes[4], nodes[11], nodes[12], nodes[13],
+                                                  nodes[14], nodes[15]]
+        nodes[8].get_united_with_nodes = lambda: [nodes[1], nodes[16], nodes[9], nodes[10]]
+        nodes[9].get_united_with_nodes = lambda: [nodes[1], nodes[16], nodes[8], nodes[10]]
+        nodes[10].get_united_with_nodes = lambda: [nodes[1], nodes[16], nodes[8], nodes[9]]
+        nodes[11].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[4], nodes[12], nodes[13],
+                                                   nodes[14], nodes[15]]
+        nodes[12].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[4], nodes[13],
+                                                   nodes[14], nodes[15]]
+        nodes[13].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[4],
+                                                   nodes[14], nodes[15]]
+        nodes[14].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                                   nodes[4], nodes[15]]
+        nodes[15].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
+                                                   nodes[14], nodes[4]]
+        nodes[16].get_united_with_nodes = lambda: [nodes[1], nodes[8], nodes[9], nodes[10]]
 
         edge1 = HyperEdge(100)
-        edge1.append_source_nodes()
-        edge1.append_target_node()
+        edge1.append_source_nodes([nodes[3]])
+        edge1.append_target_node(nodes[4])
 
         edge2 = HyperEdge(101)
-        edge2.append_source_nodes()
-        edge2.append_target_node()
+        edge2.append_source_nodes([nodes[4], nodes[10]])
+        edge2.append_target_node(nodes[5])
 
         edge3 = HyperEdge(102)
-        edge3.append_source_nodes()
-        edge3.append_target_node()
+        edge3.append_source_nodes([nodes[11]])
+        edge3.append_target_node(nodes[12])
 
         self.hypergraph.add_edge(edge1)
         self.hypergraph.add_edge(edge2)
@@ -367,3 +401,66 @@ class TestHypergraph(TestCase):
 
     # Test update_edges
     # --------------------------------------
+    def test_update_edges_with_single_source_node(self):
+        self.hypergraph.add_hypergraph_source(self.node1)
+        self.node1.get_output_hyper_edges = lambda: [self.edge1]
+        self.node1.get_input_hyper_edges = lambda: []
+        self.node1.get_children_nodes = lambda: []
+        self.node1.get_united_with_nodes = lambda: []
+
+        self.hypergraph.update_edges()
+
+        self.assertIn(self.edge1.id, self.hypergraph.edges)
+        self.assertEqual(self.hypergraph.edges[self.edge1.id], self.edge1)
+
+    def test_update_edges_with_multiple_source_nodes(self):
+        self.hypergraph.add_hypergraph_sources([self.node1, self.node2])
+        self.node1.get_output_hyper_edges = lambda: [self.edge1]
+        self.node1.get_input_hyper_edges = lambda: []
+        self.node2.get_output_hyper_edges = lambda: [self.edge2]
+        self.node2.get_input_hyper_edges = lambda: []
+
+        self.hypergraph.update_edges()
+
+        self.assertIn(self.edge1.id, self.hypergraph.edges)
+        self.assertIn(self.edge2.id, self.hypergraph.edges)
+        self.assertEqual(self.hypergraph.edges[self.edge1.id], self.edge1)
+        self.assertEqual(self.hypergraph.edges[self.edge2.id], self.edge2)
+
+    def test_update_edges_with_connected_nodes(self):
+        self.hypergraph.add_hypergraph_source(self.node1)
+        self.node1.get_output_hyper_edges = lambda: [self.edge1]
+        self.node1.get_input_hyper_edges = lambda: []
+        self.node1.get_children_nodes = lambda: [self.node2]
+        self.node1.get_united_with_nodes = lambda: []
+
+        self.node2.get_output_hyper_edges = lambda: [self.edge2]
+        self.node2.get_input_hyper_edges = lambda: [self.edge1]
+        self.node2.get_children_nodes = lambda: []
+        self.node2.get_united_with_nodes = lambda: []
+
+        self.hypergraph.update_edges()
+
+        self.assertIn(self.edge1.id, self.hypergraph.edges)
+        self.assertIn(self.edge2.id, self.hypergraph.edges)
+        self.assertEqual(self.hypergraph.edges[self.edge1.id], self.edge1)
+        self.assertEqual(self.hypergraph.edges[self.edge2.id], self.edge2)
+
+    def test_update_edges_with_united_nodes(self):
+        self.hypergraph.add_hypergraph_source(self.node1)
+        self.node1.get_output_hyper_edges = lambda: [self.edge1]
+        self.node1.get_input_hyper_edges = lambda: []
+        self.node1.get_children_nodes = lambda: []
+        self.node1.get_united_with_nodes = lambda: [self.node2]
+
+        self.node2.get_output_hyper_edges = lambda: [self.edge2]
+        self.node2.get_input_hyper_edges = lambda: []
+        self.node2.get_children_nodes = lambda: []
+        self.node2.get_united_with_nodes = lambda: []
+
+        self.hypergraph.update_edges()
+
+        self.assertIn(self.edge1.id, self.hypergraph.edges)
+        self.assertIn(self.edge2.id, self.hypergraph.edges)
+        self.assertEqual(self.hypergraph.edges[self.edge1.id], self.edge1)
+        self.assertEqual(self.hypergraph.edges[self.edge2.id], self.edge2)
