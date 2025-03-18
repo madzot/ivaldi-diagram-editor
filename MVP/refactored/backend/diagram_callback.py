@@ -60,12 +60,15 @@ class Receiver:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.add_left_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_LEFT, connection_id, related_object=box))
         elif action == ActionType.BOX_ADD_INNER_RIGHT:
+            return
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.add_right_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_RIGHT, connection_id, related_object=box))
         elif action == ActionType.BOX_REMOVE_INNER_LEFT:
+            return
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.remove_left_inner(connection_id)
         elif action == ActionType.BOX_REMOVE_INNER_RIGHT:
+            return
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.remove_right_inner(connection_id)
         elif action == ActionType.BOX_ADD_LEFT:
