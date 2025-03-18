@@ -538,7 +538,7 @@ class CustomCanvas(tk.Canvas):
     def start_pulling_wire(self, event):
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
-                self.temp_wire.delete_self()
+                self.temp_wire.delete()
             if self.temp_end_connection.location != (self.canvasx(event.x), self.canvasy(event.y)):
                 self.previous_x = self.canvasx(event.x)
                 self.previous_y = self.canvasy(event.y)
@@ -613,7 +613,7 @@ class CustomCanvas(tk.Canvas):
             self.nullify_wire_start()
         if self.temp_wire is not None:
             self.temp_end_connection.delete()
-            self.temp_wire.delete_self()
+            self.temp_wire.delete()
             self.temp_wire = None
             self.temp_end_connection = None
             self.pulling_wire = False
@@ -795,7 +795,7 @@ class CustomCanvas(tk.Canvas):
 
     def delete_everything(self):
         while len(self.wires) > 0:
-            self.wires[0].delete_self()
+            self.wires[0].delete()
         while len(self.boxes) > 0:
             if self.boxes[0].sub_diagram:
                 sub_diagram = 'sub_diagram'

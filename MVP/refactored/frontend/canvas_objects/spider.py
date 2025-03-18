@@ -23,6 +23,8 @@ class Spider(Connection):
         :type receiver: Receiver
         :param id_: Optional id parameter
         :type id_: int
+        :param connection_type: ConnectionType that will define the style of the Connection.
+        :type connection_type: ConnectionType
         """
         self.r = 10
         super().__init__(None, 0, "spider", location, canvas, self.r, connection_type=connection_type)
@@ -98,7 +100,7 @@ class Spider(Connection):
         :type action: str
         :return: None
         """
-        [wire.delete_self(self) for wire in self.wires.copy()]
+        [wire.delete(self) for wire in self.wires.copy()]
         self.canvas.spiders.remove(self)
         super().delete()
         if self.receiver.listener and not self.canvas.search:
