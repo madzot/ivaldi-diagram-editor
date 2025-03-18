@@ -123,11 +123,10 @@ class TestHypergraph(TestCase):
         self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
 
     def test_remove_node_with_directly_connected(self):
-        self.node0.directly_connected_to = [self.node1]
-        self.node1.directly_connected_to = [self.node0, self.node2]
-        self.node2.directly_connected_to = [self.node1, self.node3]
-        self.node3.directly_connected_to = [self.node2, self.node4]
-        self.node4.directly_connected_to = [self.node3]
+        self.node0.union(self.node1)
+        self.node1.union(self.node2)
+        self.node2.union(self.node3)
+        self.node3.union(self.node4)
 
         self.hypergraph.add_nodes([self.node0, self.node1, self.node2, self.node3, self.node4])
         self.hypergraph.remove_node(self.node1.id)
