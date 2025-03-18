@@ -4,20 +4,20 @@ import logging
 from queue import Queue
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
 
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', )
 logger = logging.getLogger(__name__)
-
 message_start = "\x1b[33;20m"
 message_end = "\x1b[0m"
 
 current_hypergraph = 0
-
 id_dict_hypergraph = {}
+
+
 class Hypergraph(HyperEdge):
     """Hypergraph class."""
 
@@ -32,9 +32,35 @@ class Hypergraph(HyperEdge):
         current_hypergraph += 1
         logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph.get(self.id)}" + message_end)
 
+    def get_all_nodes(self) -> list[Node]:
+        return list(self.nodes.values())
 
     def get_all_hyper_edges(self) -> list[HyperEdge]:
         return list(self.edges.values())
+
+    def get_hyper_edge_by_id(self, hyper_edge_id: int) -> HyperEdge | None:
+        return self.edges.get(hyper_edge_id)
+
+    def get_hypergraph_source(self) -> list[Node]:
+        return list(self.hypergraph_source.values())
+
+    def get_canvas_id(self) -> int:
+        return self.canvas_id
+
+    def get_node_by_input(self, input_id: int) -> HyperEdge | None:
+        # TODO rewrite, input now is wire id => Node id, and Node is hyperedge
+        return None
+
+    def get_node_by_output(self, output_id: int) -> HyperEdge | None:
+        # TODO rewrite, output now is wire id => Node id, and Node is hyperedge
+        return None
+
+    def set_hypergraph_sources(self, nodes: list[Node]):
+        self.hypergraph_source.clear()
+        self.add_hypergraph_sources(nodes)
+
+    def set_canvas_id(self, canvas_id: int) -> None:
+        self.canvas_id = canvas_id
 
     def add_node(self, node: Node):
         self.nodes[node.id] = node
@@ -58,43 +84,6 @@ class Hypergraph(HyperEdge):
         for edge in edges:
             self.add_edge(edge)
 
-    def get_all_nodes(self) -> list[Node]:
-        return list(self.nodes.values())
-
-    def get_hypergraph_source(self) -> list[Node]:
-        return list(self.hypergraph_source.values())
-
-    def remove_node(self, node_to_remove_id: int):
-        removed_node = self.nodes.pop(node_to_remove_id)
-        removed_node_united_with_nodes = removed_node.get_united_with_nodes()
-        removed_node.remove_self()
-
-        if node_to_remove_id in self.hypergraph_source:
-            self.hypergraph_source.pop(node_to_remove_id)
-
-        for directly_connected in removed_node_united_with_nodes:
-            for source_node in self.hypergraph_source.values():
-                if not source_node.is_connected_to(directly_connected):
-                    self.nodes.pop(directly_connected.id)
-                    if directly_connected.id in self.hypergraph_source:
-                        self.hypergraph_source.pop(directly_connected.id)
-                    break
-
-    def remove_hyper_edge(self, edge_to_remove_id: int) -> HyperEdge:
-        self.edges[edge_to_remove_id].remove_self()
-        return self.edges.pop(edge_to_remove_id)
-
-    def swap_hyper_edge_id(self, prev_id: int, new_id: int):
-        self.edges[prev_id].swap_id(new_id)
-        self.edges[new_id] = self.edges[prev_id]
-        self.edges.pop(prev_id)
-
-    def get_hyper_edge_by_id(self, hyper_edge_id: int) -> HyperEdge|None:
-        return self.edges.get(hyper_edge_id)
-
-    def contains_node(self, node: Node) -> bool:
-        return node in self.nodes.values()
-
     def add_hypergraph_source(self, node: Node):
         self.hypergraph_source[node.id] = node
         self.nodes[node.id] = node
@@ -106,27 +95,36 @@ class Hypergraph(HyperEdge):
         for node in nodes:
             self.add_hypergraph_source(node)
 
-    def set_hypergraph_sources(self, nodes: list[Node]):
-        self.hypergraph_source.clear()
-        self.add_hypergraph_sources(nodes)
+    def remove_node(self, node_to_remove_id: int):
+        removed_node = self.nodes.pop(node_to_remove_id, None)
+        if removed_node is None:
+            return
 
-    def get_node_by_input(self, input_id: int) -> HyperEdge | None:
-        # TODO rewrite, input now is wire id => Node id, and Node is hyperedge
-        return None
+        removed_node_united_with_nodes = removed_node.get_united_with_nodes()
+        removed_node.remove_self()
 
-    def get_node_by_output(self, output_id: int) -> HyperEdge | None:
-        # TODO rewrite, output now is wire id => Node id, and Node is hyperedge
-        return None
+        self.hypergraph_source.pop(node_to_remove_id, None)
 
-    def get_canvas_id(self) -> int:
-        return self.canvas_id
+        for directly_connected_to_removed_node in removed_node_united_with_nodes:
+            for source_node in self.hypergraph_source.values():
+                if not source_node.is_connected_to(directly_connected_to_removed_node):
+                    self.nodes.pop(directly_connected_to_removed_node.id)
+                    if directly_connected_to_removed_node.id in self.hypergraph_source:
+                        self.hypergraph_source.pop(directly_connected_to_removed_node.id)
+                    break
 
-    def set_canvas_id(self, canvas_id: int) -> None:
-        self.canvas_id = canvas_id
+    def remove_hyper_edge(self, edge_to_remove_id: int) -> HyperEdge:
+        self.edges[edge_to_remove_id].remove_self()  # TODO do nothing?
+        return self.edges.pop(edge_to_remove_id)
 
-    def _is_valid(self) -> bool:
-        # TODO
-        return True
+    def swap_hyper_edge_id(self, prev_id: int, new_id: int):
+        if prev_id != new_id:
+            self.edges[prev_id].swap_id(new_id)
+            self.edges[new_id] = self.edges[prev_id]
+            self.edges.pop(prev_id)
+
+    def contains_node(self, node: Node) -> bool:
+        return node in self.nodes.values()
 
     def update_source_nodes_descendants(self):
         """
