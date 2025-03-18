@@ -218,13 +218,14 @@ class TestHypergraph(TestCase):
         self.assertEqual(self.hypergraph.edges[self.edge1.id], self.edge1)
 
     def test_swap_hyper_edge_id_with_mocked_swap_id(self):
-        self.edge1.swap_id = MagicMock()
-
+        prev_id = self.edge1.id
+        new_id = 201
         self.hypergraph.add_edge(self.edge1)
-        self.hypergraph.add_edge(self.edge2)
-        self.hypergraph.swap_hyper_edge_id(self.edge1.id, self.edge2.id)
 
-        self.edge1.swap_id.assert_called_once_with(self.edge2.id)
+        self.hypergraph.swap_hyper_edge_id(prev_id, new_id)
+
+        self.assertIn(new_id, self.hypergraph.edges)
+        self.assertEqual(self.edge1.id, new_id)
 
     def test_swap_hyper_edge_id_after_removal(self):
         self.hypergraph.add_edge(self.edge1)
