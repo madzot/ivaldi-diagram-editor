@@ -176,7 +176,6 @@ class HypergraphManager:
         current_count_node += 1
         logger.debug(message_start + f"Creating new node with id {id_dict_node.get(id)}" + message_end)
 
-
         new_hypergraph: Hypergraph = Hypergraph(canvas_id=canvas_id)
         new_node = Node(id)
 
