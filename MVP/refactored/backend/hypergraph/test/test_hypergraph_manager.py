@@ -1,3 +1,4 @@
+from random import sample
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -12,6 +13,7 @@ class TestHypergraphManager(TestCase):
     def setUp(self):
         HypergraphManager.hypergraphs.clear()
         self.sample_node = Node(1)
+        self.sample_node_ = Node(2)
         self.sample_hypergraph = Hypergraph(canvas_id=123)
         self.sample_hyper_edge = HyperEdge(10)
 
@@ -41,28 +43,22 @@ class TestHypergraphManager(TestCase):
     # TEST: Getters
     # ----------------------------------------------------------
     def test_get_graph_by_node_id_returns_correct_hypergraph(self):
-        self.sample_hypergraph.nodes = {self.sample_node.id: self.sample_node}
+        self.sample_hypergraph.add_node(self.sample_node)
         HypergraphManager.add_hypergraph(self.sample_hypergraph)
 
         graph = HypergraphManager.get_graph_by_node_id(self.sample_node.id)
         self.assertEqual(graph, self.sample_hypergraph)
 
     def test_get_graph_by_source_node_id_handles_union_properly(self):
-        source_node = Node(1)
-        union_node = Node(999)
+        self.sample_node.union(self.sample_node_)
+        self.sample_hypergraph.add_hypergraph_source(self.sample_node)
+        HypergraphManager.add_hypergraph(self.sample_hypergraph)
 
-        source_node.get_united_with_nodes = MagicMock(return_value=[union_node])
-
-        hypergraph = Hypergraph(canvas_id=321)
-        hypergraph.get_hypergraph_source = MagicMock(return_value=[source_node])
-
-        HypergraphManager.add_hypergraph(hypergraph)
-
-        result = HypergraphManager.get_graph_by_source_node_id(union_node.id)
-        self.assertEqual(result, hypergraph)
+        result = HypergraphManager.get_graph_by_source_node_id(self.sample_node_.id)
+        self.assertEqual(result, self.sample_hypergraph)
 
     def test_get_graph_by_hyper_edge_id_returns_correct_hypergraph(self):
-        self.sample_hypergraph.edges = {self.sample_hyper_edge.id: self.sample_hyper_edge}
+        self.sample_hypergraph.add_edge(self.sample_hyper_edge)
         HypergraphManager.add_hypergraph(self.sample_hypergraph)
 
         graph = HypergraphManager.get_graph_by_hyper_edge_id(self.sample_hyper_edge.id)
@@ -90,8 +86,8 @@ class TestHypergraphManager(TestCase):
 
         graph_a = Hypergraph(canvas_id=1)
         graph_b = Hypergraph(canvas_id=1)
-        graph_a.nodes = {node_a.id: node_a}
-        graph_b.nodes = {node_b.id: node_b}
+        graph_a.add_node(node_a)
+        graph_b.add_node(node_b)
 
         HypergraphManager.add_hypergraph(graph_a)
         HypergraphManager.add_hypergraph(graph_b)
@@ -108,26 +104,19 @@ class TestHypergraphManager(TestCase):
     # ----------------------------------------------------------
     def test_connect_node_with_input_creates_new_edge_if_none_exists(self):
         node = HypergraphManager.create_new_node(1, 999)
-
         graph = HypergraphManager.get_graph_by_node_id(node.id)
-        print(len(graph.source_nodes))
-        print(len(graph.edges))
-        print(len(graph.nodes))
+
         HypergraphManager.connect_node_with_input(node, hyper_edge_id=111)
-        graph.update_source_nodes_descendants()
-        graph.update_edges()
-        print(len(graph.edges))
-        print(len(graph.nodes))
-        self.assertTrue(any(node in edge.target_nodes for edge in graph.get_all_hyper_edges()))
+        self.assertTrue(any(node in edge.target_nodes.values() for edge in graph.get_all_hyper_edges()))
 
     def test_connect_node_with_output_creates_new_edge_if_none_exists(self):
         node = HypergraphManager.create_new_node(2, 888)
-        HypergraphManager.connect_node_with_output(node, hyper_edge_id=222)
-
         graph = HypergraphManager.get_graph_by_node_id(node.id)
-        self.assertTrue(any(node in edge.source_nodes for edge in graph.get_all_hyper_edges()))
 
-    # TEST: Node/Edge Removal – Requires internal graph state TODO
+        HypergraphManager.connect_node_with_output(node, hyper_edge_id=222)
+        self.assertTrue(any(node in edge.source_nodes.values() for edge in graph.get_all_hyper_edges()))
+
+    # TEST: Node/Edge Removal – Requires internal graph state
     # ----------------------------------------------------------
     def test_remove_node_splits_hypergraph_correctly(self):
         # Create three nodes: A -- B -- C (A connected to B, B connected to C)
@@ -135,41 +124,48 @@ class TestHypergraphManager(TestCase):
         node_b = Node(2)
         node_c = Node(3)
 
-        # Simulate basic is_connected_to behavior
-        node_a.is_connected_to = MagicMock(side_effect=lambda other: other.id == 2)
-        node_b.is_connected_to = MagicMock(side_effect=lambda other: other.id in [1, 3])
-        node_c.is_connected_to = MagicMock(side_effect=lambda other: other.id == 2)
+        node_a.union(node_b)
+        node_b.union(node_c)
 
-        # Node children & united nodes empty for simplicity
-        node_a.get_node_children = MagicMock(return_value=[])
-        node_b.get_node_children = MagicMock(return_value=[])
-        node_c.get_node_children = MagicMock(return_value=[])
-
-        node_a.directly_connected_to = [node_b]
-        node_b.directly_connected_to = [node_a, node_c]
-        node_c.directly_connected_to = [node_b]
-
-        # Create and register initial hypergraph
         hypergraph = Hypergraph(canvas_id=123)
-        hypergraph.nodes = {1: node_a, 2: node_b, 3: node_c}
-        hypergraph.source_nodes = {1: node_a}
+        hypergraph.add_nodes([node_a, node_b, node_c])
+        hypergraph.add_hypergraph_source(node_a)
 
         HypergraphManager.add_hypergraph(hypergraph)
 
-        # Remove the center node (node B)
         HypergraphManager.remove_node(2)
 
-        # Now check that two new hypergraphs have been created (A and C should be disconnected)
         self.assertEqual(len(HypergraphManager.hypergraphs), 2)
 
-        # Each new graph should contain only one node (A or C)
         all_nodes = [list(graph.get_all_nodes()) for graph in HypergraphManager.hypergraphs]
         all_node_ids = sorted([node.id for nodes in all_nodes for node in nodes])
         self.assertEqual(all_node_ids, [1, 3])
 
     def test_remove_hyper_edge_splits_hypergraph_correctly(self):
-        # Placeholder for future implementation
-        pass
+        # Create hypergraph: A -- B -- EDGE -- C (A connected to B, B connected to EDGE, EDGE connected to C)
+        hypergraph = Hypergraph(canvas_id=123)
+        edge = HyperEdge(1)
+        node_a = Node(1)
+        node_b = Node(2)
+        node_c = Node(3)
+
+        node_a.union(node_b)
+        node_a.append_output(edge)
+        node_b.append_output(edge)
+        node_c.append_input(edge)
+
+        edge.append_source_nodes([node_a, node_b])
+        edge.append_target_node(node_c)
+
+        hypergraph.add_nodes([node_a, node_b, node_c])
+        hypergraph.add_hypergraph_sources([node_a, node_b])
+        hypergraph.add_edge(edge)
+
+        HypergraphManager.add_hypergraph(hypergraph)
+
+        HypergraphManager.remove_hyper_edge(1)
+
+        self.assertEqual(len(HypergraphManager.hypergraphs), 2)
 
     # TEST: Swap edge ID
     # ----------------------------------------------------------
@@ -184,4 +180,3 @@ class TestHypergraphManager(TestCase):
             HypergraphManager.swap_hyper_edge_id(prev_id=10, new_id=20)
 
         graph.swap_hyper_edge_id.assert_called_once_with(10, 20)
-
