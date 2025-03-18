@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import tkinter as tk
 from tkinter import messagebox
@@ -7,11 +8,11 @@ from tkinter import simpledialog
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
-from constants import *
+import constants as const
 
 
 class Box:
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
+    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape=const.RECTANGLE):
         self.shape = shape
         self.canvas = canvas
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
@@ -38,7 +39,7 @@ class Box:
 
         self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                                                           self.x + self.size[0], self.y + self.size[1],
-                                                          outline="black", fill="black")
+                                                          outline=const.BLACK, fill=const.BLACK)
         self.locked = False
         self.bind_events()
         self.sub_diagram = None
@@ -93,8 +94,8 @@ class Box:
 
             sub_menu = tk.Menu(self.context_menu, tearoff=0)
             self.context_menu.add_cascade(menu=sub_menu, label="Shape")
-            sub_menu.add_command(label="Rectangle", command=lambda shape="rectangle": self.change_shape(shape))
-            sub_menu.add_command(label="Triangle", command=lambda shape="triangle": self.change_shape(shape))
+            sub_menu.add_command(label="Rectangle", command=lambda shape=const.RECTANGLE: self.change_shape(shape))
+            sub_menu.add_command(label="Triangle", command=lambda shape=const.TRIANGLE: self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -169,9 +170,9 @@ class Box:
 
         to_be_removed = []
         for c in self.connections:
-            if c.side == "right" and outputs:
+            if c.side == const.RIGHT and outputs:
                 to_be_removed.append(c)
-            if c.side == "left" and inputs:
+            if c.side == const.LEFT and inputs:
                 to_be_removed.append(c)
 
         # remove selected connectionsS
@@ -382,8 +383,8 @@ class Box:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
                 self.label_text = text
-            if os.stat(FUNCTIONS_CONF).st_size != 0:
-                with open(FUNCTIONS_CONF, "r") as file:
+            if os.stat(const.FUNCTIONS_CONF).st_size != 0:
+                with open(const.FUNCTIONS_CONF, "r") as file:
                     data = json.load(file)
                     for label, code in data.items():
                         if label == self.label_text:
@@ -410,7 +411,7 @@ class Box:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
-                                                 text=self.label_text, fill="black", font=('Helvetica', 14))
+                                                 text=self.label_text, fill=const.BLACK, font=('Helvetica', 14))
             self.collision_ids.append(self.label)
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
@@ -445,21 +446,21 @@ class Box:
             self.update_wires()
 
     def select(self):
-        self.canvas.itemconfig(self.rect, outline="green")
+        self.canvas.itemconfig(self.rect, outline=const.SELECT_COLOR)
         [c.select() for c in self.connections]
 
     def search_highlight_secondary(self):
-        self.canvas.itemconfig(self.rect, outline="orange")
+        self.canvas.itemconfig(self.rect, outline=const.SECONDARY_SEARCH_COLOR)
         [c.search_highlight_secondary() for c in self.connections]
         self.canvas.search_result_highlights.append(self)
 
     def search_highlight_primary(self):
-        self.canvas.itemconfig(self.rect, outline="cyan")
+        self.canvas.itemconfig(self.rect, outline=const.PRIMARY_SEARCH_COLOR)
         [c.search_highlight_primary() for c in self.connections]
         self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
-        self.canvas.itemconfig(self.rect, outline="black")
+        self.canvas.itemconfig(self.rect, outline=const.BLACK)
         [c.deselect() for c in self.connections]
 
     def lock_box(self):
@@ -476,9 +477,9 @@ class Box:
         self.update_wires()
 
     def update_position(self):
-        if self.shape == "rectangle":
+        if self.shape == const.RECTANGLE:
             self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
-        if self.shape == "triangle":
+        if self.shape == const.TRIANGLE:
             self.canvas.coords(self.rect,
                                self.x + self.size[0], self.y + self.size[1] / 2,
                                self.x, self.y,
@@ -496,7 +497,7 @@ class Box:
 
     def update_io(self):
         """Update inputs and outputs based on label and code."""
-        with open(FUNCTIONS_CONF, "r") as file:
+        with open(const.FUNCTIONS_CONF, "r") as file:
             data = json.load(file)
             for label, code in data.items():
                 if label == self.label_text:
@@ -507,7 +508,7 @@ class Box:
                     elif inputs_amount < self.left_connections:
                         for j in range(self.left_connections - inputs_amount):
                             for con in self.connections[::-1]:
-                                if con.side == "left":
+                                if con.side == const.LEFT:
                                     self.remove_connection(con)
                                     break
 
@@ -517,7 +518,7 @@ class Box:
                     elif outputs_amount < self.right_connections:
                         for i in range(self.right_connections - outputs_amount):
                             for con in self.connections[::-1]:
-                                if con.side == "right":
+                                if con.side == const.RIGHT:
                                     self.remove_connection(con)
                                     break
 
@@ -528,8 +529,8 @@ class Box:
 
     def add_left_connection(self, id_=None, connection_type=ConnectionType.GENERIC):
         i = self.get_new_left_index()
-        conn_x, conn_y = self.get_connection_coordinates("left", i)
-        connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_,
+        conn_x, conn_y = self.get_connection_coordinates(const.LEFT, i)
+        connection = Connection(self, i, const.LEFT, (conn_x, conn_y), self.canvas, id_=id_,
                                 connection_type=connection_type)
         self.left_connections += 1
         self.connections.append(connection)
@@ -546,8 +547,8 @@ class Box:
 
     def add_right_connection(self, id_=None, connection_type=ConnectionType.GENERIC):
         i = self.get_new_right_index()
-        conn_x, conn_y = self.get_connection_coordinates("right", i)
-        connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_,
+        conn_x, conn_y = self.get_connection_coordinates(const.RIGHT, i)
+        connection = Connection(self, i, const.RIGHT, (conn_x, conn_y), self.canvas, id_=id_,
                                 connection_type=connection_type)
         self.right_connections += 1
         self.connections.append(connection)
@@ -568,9 +569,9 @@ class Box:
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_remove_connection", generator_id=self.id, connection_nr=circle.index,
                                             generator_side=circle.side)
-        if circle.side == "left":
+        if circle.side == const.LEFT:
             self.left_connections -= 1
-        elif circle.side == "right":
+        elif circle.side == const.RIGHT:
             self.right_connections -= 1
 
         self.connections.remove(circle)
@@ -599,7 +600,7 @@ class Box:
     # BOOLEANS
     def is_illegal_move(self, connection, new_x):
         wire = connection.wire
-        if connection.side == "left":
+        if connection.side == const.LEFT:
             if connection == wire.start_connection:
                 other_connection = wire.end_connection
             else:
@@ -608,7 +609,7 @@ class Box:
             if other_x + other_connection.width_between_boxes >= new_x:
                 return True
 
-        if connection.side == "right":
+        if connection.side == const.RIGHT:
             if connection == wire.start_connection:
                 other_connection = wire.end_connection
             else:
@@ -621,38 +622,38 @@ class Box:
 
     # HELPERS
     def get_connection_coordinates(self, side, index):
-        if side == "left":
+        if side == const.LEFT:
             i = self.get_new_left_index()
             return self.x, self.y + (index + 1) * self.size[1] / (i + 1)
 
-        elif side == "right":
+        elif side == const.RIGHT:
             i = self.get_new_right_index()
             return self.x + self.size[0], self.y + (index + 1) * self.size[1] / (i + 1)
 
     def get_new_left_index(self):
         if not self.left_connections > 0:
             return 0
-        return max([c.index if c.side == "left" else 0 for c in self.connections]) + 1
+        return max([c.index if c.side == const.LEFT else 0 for c in self.connections]) + 1
 
     def get_new_right_index(self):
         if not self.right_connections > 0:
             return 0
-        return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
+        return max([c.index if c.side == const.RIGHT else 0 for c in self.connections]) + 1
 
     def create_rect(self):
         w, h = self.size
-        if self.shape == "rectangle":
+        if self.shape == const.RECTANGLE:
             return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
-                                                outline="black", fill="white")
-        if self.shape == "triangle":
+                                                outline=const.BLACK, fill=const.WHITE)
+        if self.shape == const.TRIANGLE:
             return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
-                                              self.x, self.y + h, outline="black", fill="white")
+                                              self.x, self.y + h, outline=const.BLACK, fill=const.WHITE)
 
     def change_shape(self, shape):
-        if shape == "rectangle":
-            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")
-        elif shape == "triangle":
-            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="triangle")
+        if shape == const.RECTANGLE:
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape=const.RECTANGLE)
+        elif shape == const.TRIANGLE:
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape=const.TRIANGLE)
         else:
             return
         self.canvas.copier.copy_box(self, new_box)

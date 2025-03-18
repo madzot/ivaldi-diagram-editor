@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
@@ -25,7 +26,7 @@ from MVP.refactored.frontend.windows.search_window import SearchWindow
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer import Importer
-from constants import *
+import constants as const
 
 
 class MainDiagram(tk.Tk):
@@ -172,13 +173,13 @@ class MainDiagram(tk.Tk):
 
     @staticmethod
     def calculate_boxes_json_file_hash():
-        with open(BOXES_CONF, "r") as file:
+        with open(const.BOXES_CONF, "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
     def load_functions(self):
-        if os.stat(FUNCTIONS_CONF).st_size != 0:
-            with open(FUNCTIONS_CONF, "r") as file:
+        if os.stat(const.FUNCTIONS_CONF).st_size != 0:
+            with open(const.FUNCTIONS_CONF, "r") as file:
                 self.label_content = json.load(file)
 
     def generate_code(self):
@@ -433,7 +434,7 @@ class MainDiagram(tk.Tk):
 
     def remove_diagram_input(self):
         if self.custom_canvas.diagram_source_box:
-            c = self.find_connection_to_remove("left")
+            c = self.find_connection_to_remove(const.LEFT)
             if c:
                 self.custom_canvas.diagram_source_box.remove_connection(c)
             self.custom_canvas.remove_diagram_input()
@@ -446,7 +447,7 @@ class MainDiagram(tk.Tk):
     def remove_diagram_output(self):
         if self.custom_canvas.diagram_source_box:
 
-            c = self.find_connection_to_remove("right")
+            c = self.find_connection_to_remove(const.RIGHT)
             if c:
                 self.custom_canvas.diagram_source_box.remove_connection(c)
             self.custom_canvas.remove_diagram_output()
@@ -571,7 +572,7 @@ class MainDiagram(tk.Tk):
             self.set_title(filename.replace(".json", ""))
 
     def update_shape_dropdown_menu(self):
-        shapes = ["rectangle", "triangle"]
+        shapes = [const.RECTANGLE, const.TRIANGLE]
         self.shape_dropdown_menu.delete(0, tk.END)
 
         for shape in shapes:
@@ -622,18 +623,19 @@ class MainDiagram(tk.Tk):
         ax.set_aspect('equal', adjustable='box')
 
         for box in canvas.boxes:
-            if box.shape == "triangle":
+            if box.shape == const.TRIANGLE:
                 polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
                                            (box.x / 100, y_max - box.y / 100),
                                            (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),
-                                          edgecolor="black", facecolor="none")
+                                          edgecolor=const.BLACK, facecolor="none")
             else:
                 polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
-                                            box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
+                                            box.size[1] / 100, label="_nolegend_", edgecolor=const.BLACK,
+                                            facecolor="none")
             if show_connections:
                 for connection in box.connections:
                     circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
-                                            connection.r / 100, color="black", zorder=2)
+                                            connection.r / 100, color=const.BLACK, zorder=2)
                     ax.add_patch(circle)
 
             plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
@@ -641,11 +643,13 @@ class MainDiagram(tk.Tk):
             ax.add_patch(polygon)
 
         for spider in canvas.spiders:
-            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black", zorder=2)
+            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100,
+                                    color=const.BLACK, zorder=2)
             ax.add_patch(circle)
 
         for i_o in canvas.inputs + canvas.outputs:
-            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black", zorder=2)
+            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100,
+                                 color=const.BLACK, zorder=2)
             ax.add_patch(con)
 
         for wire in canvas.wires:
