@@ -176,7 +176,8 @@ class Hypergraph(HyperEdge):
     def to_dict(self) -> dict:
         """Return a dictionary representation of the hypergraph."""
         hypergraph_dict = super().to_dict()
-        hypergraph_dict["nodes"] = [node.to_dict() for node in self.nodes]
+        hypergraph_dict["hyper_edges"] = [hyper_edge.to_dict() for hyper_edge in self.get_all_hyper_edges()]
+
         return hypergraph_dict
 
     def __str__(self) -> str:

@@ -128,11 +128,11 @@ class HyperEdge:
 
 
     def to_dict(self) -> dict:
-        """Return a dictionary representation of the node."""
+        """Return a dictionary representation of the hyper edge."""
         return {
             "id": self.id,
-            "inputs": self.inputs,
-            "outputs": self.outputs,
+            "source_nodes": [node.to_dict() for node in self.get_source_nodes()],
+            "target_nodes": [node.to_dict() for node in self.get_target_nodes()],
         }
 
     def __str__(self) -> str:
