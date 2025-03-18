@@ -23,7 +23,7 @@ class Diagram:
     def get_resource_by_id(self, resource_id: int) -> Resource:
         return next((r for r in self.resources if r.id == resource_id), None)
 
-    def get_spider_by_id(self, spider_id: int) -> Resource:
+    def get_spider_by_id(self, spider_id: int) -> Resource|None:
         return next((s for s in self.spiders if s.id == spider_id), None)
 
     def get_input_by_id(self, input_id):

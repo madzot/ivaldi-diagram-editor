@@ -1,6 +1,11 @@
+from __future__ import annotations
 from MVP.refactored.backend.types.GeneratorType import GeneratorType
-from MVP.refactored.backend.types.connection_info import ConnectionInfo
 from MVP.refactored.backend.types.connection_side import ConnectionSide
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from MVP.refactored.backend.types.connection_info import ConnectionInfo
 
 
 class Generator:
@@ -174,3 +179,8 @@ class Generator:
         box.right_inner = data.get("right_inner", [])
         box.operand = data.get("operand")
         return box
+
+    def __eq__(self, __value):
+        return isinstance(__value, type(self)) and __value.id == self.id
+
+

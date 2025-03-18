@@ -175,7 +175,7 @@ class MainDiagram(tk.Tk):
     def get_all(self):
         hypergraphs = HypergraphManager
         receiver = self.receiver
-        canvas = self.custom_canvas.spiders
+        canvas = self.custom_canvas
         print("hi")
 
     @staticmethod

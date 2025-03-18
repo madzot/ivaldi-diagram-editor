@@ -106,9 +106,13 @@ class Wire:
 
         if self.start_connection.box:
             start_conn_data.box_id = self.start_connection.box.id
-            # [1] = self.start_connection.box.id
+            # [1] = self.start_connection.box.id]
+        elif isinstance(self.start_connection, Spider):
+            start_conn_data.resource_id = self.start_connection.id
         if self.end_connection.box:
             end_conn_data.box_id = self.end_connection.box.id
+        elif isinstance(self.end_connection, Spider):
+            end_conn_data.resource_id = self.end_connection.id
         return start_conn_data, end_conn_data
 
     # BE callback methods
@@ -166,7 +170,10 @@ class Wire:
                                             connection_id=connection.id, canvas_id=self.canvas.id)
         elif connection.box is None and self.receiver.listener and self.start_connection.box is not None:
             self.receiver.receiver_callback(ActionType.WIRE_CREATE, resource_id=self.id,
-                                                        start_connection=ConnectionInfo(connection.index, connection.side, connection.id),
+                                                        start_connection=ConnectionInfo(connection.index,
+                                                                                        connection.side,
+                                                                                        connection.id,
+                                                                                        related_resource_id=connection.id if isinstance(connection, Spider) else None),
                                                         connection_id=connection.id, canvas_id=self.canvas.id)
 
     def __eq__(self, other):

@@ -841,11 +841,12 @@ class CustomCanvas(tk.Canvas):
                                            ConnectionSide.LEFT, [0, 0], self,
                                            r=5*self.total_scale, id_=id_)
 
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_RIGHT, generator_id=self.diagram_source_box.id,
-                                            connection_id=connection_output_new.id, connection_nr=connection_output_new.index,
-                                            canvas_id=self.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
+        # if self.diagram_source_box and self.receiver.listener:
+        #     self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_RIGHT, generator_id=self.diagram_source_box.id,
+        #                                     connection_id=connection_output_new.id, connection_nr=connection_output_new.index,
+        #                                     canvas_id=self.id)
+        # elif self.diagram_source_box is None and self.receiver.listener
+        if self.receiver.listener:
             self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_OUTPUT, connection_nr=connection_output_new.index,
                                             connection_id=connection_output_new.id,
                                             connection_side=connection_output_new.side, canvas_id=self.id)
@@ -880,10 +881,11 @@ class CustomCanvas(tk.Canvas):
             input_index += 1
         new_input = Connection(self.diagram_source_box, input_index, ConnectionSide.RIGHT, [0, 0], self,
                                r=5*self.total_scale, id_=id_)
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_LEFT, generator_id=self.diagram_source_box.id,
-                                            connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
+        # if self.diagram_source_box and self.receiver.listener:
+        #     self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_LEFT, generator_id=self.diagram_source_box.id,
+        #                                     connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
+        # elif self.diagram_source_box is None and self.receiver.listener:
+        if self.receiver.listener:
             self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_INPUT,
                                             connection_id=new_input.id, connection_nr=new_input.index,
                                             connection_side=new_input.side, canvas_id=self.id)

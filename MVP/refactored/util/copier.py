@@ -11,8 +11,8 @@ class Copier:
     def copy_over_spiders(spiders, canvas):
         for spider in spiders:
             # TODO seems like this will add spider to new_diagram
-            new_spider = canvas.add_spider(spider.location)
-            new_spider.id = spider.id
+            new_spider = canvas.add_spider(spider.location, id_=spider.id)
+            # new_spider.id = spider.id
 
     @staticmethod
     def copy_over_boxes(boxes, canvas):
@@ -157,13 +157,13 @@ class Copier:
     def copy_box(old_box, new_box, remember_connections=True):
         for connection in old_box.connections:
             if connection.side == "right":
-                new_connection = new_box.add_right_connection()
-                if remember_connections:
-                    new_connection.id = connection.id
+                new_connection = new_box.add_right_connection(id_=connection.id if remember_connections else None)
+                # if remember_connections:
+                #     new_connection.id = connection.id
             if connection.side == "left":
-                new_connection = new_box.add_left_connection()
-                if remember_connections:
-                    new_connection.id = connection.id
+                new_connection = new_box.add_left_connection(id_=connection.id if remember_connections else None)
+                # if remember_connections:
+                #     new_connection.id = connection.id
         new_box.set_label(old_box.label_text)
 
     @staticmethod

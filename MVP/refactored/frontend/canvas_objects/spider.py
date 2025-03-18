@@ -58,7 +58,7 @@ class Spider(Connection):
         self.delete_me()
         if self.receiver.listener:
             # if action != "sub_diagram":
-            self.receiver.receiver_callback(ActionType.SPIDER_DELETE, recource_id=self.id, canvas_id=self.canvas.id)
+            self.receiver.receiver_callback(ActionType.SPIDER_DELETE, resource_id=self.id, canvas_id=self.canvas.id)
             # else:
             #     ... # TODO with action "sub_diagram"
 

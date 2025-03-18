@@ -23,6 +23,7 @@ class Receiver:
 
     def add_new_canvas(self, canvas_id: int):
         self.diagrams[canvas_id] = Diagram()
+        return self.diagrams[canvas_id]
 
     def receiver_callback(self, action: ActionType, **kwargs):
         resource_id = kwargs.get('resource_id')
@@ -55,11 +56,12 @@ class Receiver:
         elif action == ActionType.SPIDER_DELETE:
             self.delete_resource(resource_id, canvas_id, spider=True)
         elif action == ActionType.BOX_ADD_INNER_LEFT:
+            return
             box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_left_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_LEFT, connection_id, box.id))
+            box.add_left_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_LEFT, connection_id, related_object=box))
         elif action == ActionType.BOX_ADD_INNER_RIGHT:
             box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_right_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_RIGHT, connection_id, box.id))
+            box.add_right_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_RIGHT, connection_id, related_object=box))
         elif action == ActionType.BOX_REMOVE_INNER_LEFT:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.remove_left_inner(connection_id)
@@ -68,10 +70,10 @@ class Receiver:
             box.remove_right_inner(connection_id)
         elif action == ActionType.BOX_ADD_LEFT:
             box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_left(ConnectionInfo(connection_nr, ConnectionSide.LEFT, connection_id, box.id))
+            box.add_left(ConnectionInfo(connection_nr, ConnectionSide.LEFT, connection_id, related_object=box))
         elif action == ActionType.BOX_ADD_RIGHT:
             box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_right(ConnectionInfo(connection_nr, ConnectionSide.RIGHT, connection_id, box.id))
+            box.add_right(ConnectionInfo(connection_nr, ConnectionSide.RIGHT, connection_id, related_object=box))
         elif action == ActionType.BOX_REMOVE_LEFT:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.remove_left(connection_id)
@@ -104,9 +106,9 @@ class Receiver:
         elif action == ActionType.BOX_SWAP_CONNECTION_ID:
             pass # in original diagram callback that events is not in use. In project there no occurrences for this event
         elif action == ActionType.DIAGRAM_ADD_INPUT:
-            self.diagrams[canvas_id].add_input(ConnectionInfo(connection_nr, connection_side, connection_id, None))
+            self.diagrams[canvas_id].add_input(ConnectionInfo(connection_nr, connection_side, connection_id))
         elif action == ActionType.DIAGRAM_ADD_OUTPUT:
-            self.diagrams[canvas_id].add_output(ConnectionInfo(connection_nr, connection_side, connection_id, None))
+            self.diagrams[canvas_id].add_output(ConnectionInfo(connection_nr, connection_side, connection_id))
         elif action == ActionType.DIAGRAM_REMOVE_INPUT:
             self.diagrams[canvas_id].remove_input(connection_id)
         elif action == ActionType.DIAGRAM_REMOVE_OUTPUT:
@@ -114,22 +116,37 @@ class Receiver:
         elif action == ActionType.SUB_DIAGRAM_CREATE:
             generators = self.get_generators_by_ids(generator_ids, canvas_id)
             resources = self.get_resources_by_ids(resource_ids, canvas_id)
-            spider_ids = []
-            spiders = self.get_spiders_by_ids(spider_ids, canvas_id) # TODO
+            spiders = self.get_spiders_by_ids(resource_ids, canvas_id)
 
             diagram = self.diagrams[canvas_id]
-            new_diagram = Diagram()
+            new_diagram = self.add_new_canvas(new_canvas_id)
 
             diagram.remove_boxes(generators)
-            diagram.remove_spiders(resources)
+            diagram.remove_spiders(spiders)
             diagram.remove_resources(resources)
             diagram.add_sub_diagram(new_diagram)
 
-            new_diagram.add_input(...)
-            new_diagram.add_output(...)
+            # new_diagram.add_input(...)
+            # new_diagram.add_output(...)
             new_diagram.add_boxes(generators)
-            new_diagram.add_spiders(resources)
+            new_diagram.add_spiders(spiders)
             new_diagram.add_resources(resources)
+
+
+            spider_connections_to_save: set[ConnectionInfo] = set()
+            for wire in resources:
+                spider_connections_to_save = spider_connections_to_save.union(wire.get_spider_connections())
+                for connection in wire.get_left_connections() + wire.get_right_connections():
+                    if not connection.is_input_output_connection():
+                        related_object: Generator = connection.get_related_object() # it is not input/output, and this is not spider, because it is not in spider_connection. So it is generator(box)
+                        if related_object not in new_diagram.boxes:
+                            if connection.side == ConnectionSide.LEFT:
+                                pass # TODO connect to diagram output
+                            else:
+                                pass # TODO connect to diagram input
+            for spider in spiders:
+                spider.spider_connection = filter(lambda conn: conn in spider_connections_to_save, spider.get_spider_connections())
+
 
         print("All")
 
@@ -163,6 +180,11 @@ class Receiver:
             if connection.side == ConnectionSide.LEFT:
                 if connection.has_box():
                     box = self.get_generator_by_id(connection.get_box_id(), canvas_id)
+                    if box is None:
+                        # TODO it is sub diagram output, that connection from frontend have box = sub diagram box
+                        output = self.get_output_by_id(connection.get_id(), canvas_id)
+                        resource.add_left_connection(output)
+                        continue
                     resource.add_left_connection(box.get_left_by_id(connection.get_id())) # We don`t simply add connection from loop (connection in connection),
                     # because we want that box(or input/output) connection and wire connection will be the same object,
                     # if we use from frontend connection they will differ.
@@ -172,6 +194,11 @@ class Receiver:
             elif connection.side == ConnectionSide.RIGHT:
                 if connection.has_box():
                     box = self.get_generator_by_id(connection.get_box_id(), canvas_id)
+                    if box is None:
+                        # TODO it is sub diagram input, that connection from frontend have box = sub diagram box
+                        input = self.get_input_by_id(connection.get_id(), canvas_id)
+                        resource.add_right_connection(input)
+                        continue
                     resource.add_right_connection(box.get_right_by_id(connection.get_id()))
                 else: # it is input
                     input = self.get_input_by_id(connection.get_id(), canvas_id)
@@ -179,6 +206,7 @@ class Receiver:
             elif connection.side == ConnectionSide.SPIDER:
                 spider = self.get_spider_by_id(connection.get_id(), canvas_id)
                 connection.index = len(spider.get_spider_connections()) # we use here that rule, that when we add wire to spider
+                connection.set_related_object(spider)
                 # it always appends to the last connection
                 spider.add_spider_connection(connection)
                 resource.add_spider_connection(connection)
@@ -197,7 +225,9 @@ class Receiver:
     def get_generators_by_ids(self, generator_ids: list[int], canvas_id: int) -> list[Generator]:
         generators: list[Generator] = []
         for generator_id in generator_ids:
-            generators.append(self.get_generator_by_id(generator_id, canvas_id))
+            generator = self.get_generator_by_id(generator_id, canvas_id)
+            if generator is not None:
+                generators.append(generator)
         return generators
 
     def get_input_by_id(self, id: int, canvas_id: int) -> ConnectionInfo:
@@ -212,14 +242,18 @@ class Receiver:
     def get_resources_by_ids(self, resource_ids: list[int], canvas_id: int) -> list[Resource]:
         resources: list[Resource] = []
         for resource_id in resource_ids:
-            resources.append(self.get_resource_by_id(resource_id, canvas_id))
+            resource = self.get_resource_by_id(resource_id, canvas_id)
+            if resource is not None:
+                resources.append(resource)
         return resources
 
-    def get_spider_by_id(self, spider_id: int, canvas_id: int) -> Resource:
+    def get_spider_by_id(self, spider_id: int, canvas_id: int) -> Resource|None:
         return self.diagrams[canvas_id].get_spider_by_id(spider_id)
 
     def get_spiders_by_ids(self, spider_ids: list[int], canvas_id: int) -> list[Resource]:
         resources: list[Resource] = []
         for resource_id in spider_ids:
-            resources.append(self.get_spider_by_id(resource_id, canvas_id))
+            spider = self.get_spider_by_id(resource_id, canvas_id)
+            if spider is not None:
+                resources.append(spider)
         return resources
