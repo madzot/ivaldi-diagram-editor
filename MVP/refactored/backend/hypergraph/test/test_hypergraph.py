@@ -283,18 +283,23 @@ class TestHypergraph(TestCase):
         nodes[10].get_children_nodes = MagicMock(return_value=[])
         nodes[11].get_children_nodes = MagicMock(return_value=[])
 
-        nodes[0].directly_connected_to = [nodes[1], nodes[2], nodes[3], nodes[4]]
-        nodes[1].directly_connected_to = [nodes[0], nodes[2], nodes[3], nodes[4]]
-        nodes[2].directly_connected_to = [nodes[1], nodes[0], nodes[3], nodes[4]]
-        nodes[3].directly_connected_to = [nodes[1], nodes[2], nodes[0], nodes[4]]
-        nodes[4].directly_connected_to = [nodes[1], nodes[2], nodes[3], nodes[0]]
-        nodes[5].directly_connected_to = []
-        nodes[6].directly_connected_to = [nodes[8], nodes[10], nodes[11]]
-        nodes[7].directly_connected_to = [nodes[9]]
-        nodes[8].directly_connected_to = [nodes[6], nodes[10], nodes[11]]
-        nodes[9].directly_connected_to = [nodes[7]]
-        nodes[10].directly_connected_to = [nodes[8], nodes[6], nodes[11]]
-        nodes[11].directly_connected_to = [nodes[8], nodes[10], nodes[6]]
+        nodes[0].union(nodes[1])
+        nodes[0].union(nodes[2])
+        nodes[0].union(nodes[3])
+        nodes[0].union(nodes[4])
+        nodes[1].union(nodes[2])
+        nodes[1].union(nodes[3])
+        nodes[1].union(nodes[4])
+        nodes[2].union(nodes[3])
+        nodes[2].union(nodes[4])
+        nodes[3].union(nodes[4])
+        nodes[6].union(nodes[8])
+        nodes[6].union(nodes[10])
+        nodes[6].union(nodes[11])
+        nodes[7].union(nodes[9])
+        nodes[8].union(nodes[10])
+        nodes[8].union(nodes[11])
+        nodes[10].union(nodes[11])
 
         edge1 = HyperEdge(100)
         edge1.append_source_node(nodes[1])
@@ -348,32 +353,32 @@ class TestHypergraph(TestCase):
         nodes[16].get_children_nodes = MagicMock(return_value=[nodes[4], nodes[5], nodes[6], nodes[7], nodes[11],
                                                                nodes[12], nodes[13], nodes[14], nodes[15]])
 
-        nodes[0].directly_connected_to = [nodes[2]]
-        nodes[1].directly_connected_to = [nodes[8], nodes[16], nodes[9], nodes[10]]
-        nodes[2].directly_connected_to = [nodes[0]]
-        nodes[3].directly_connected_to = []
-        nodes[4].directly_connected_to = [nodes[5], nodes[6], nodes[7], nodes[11],
-                                          nodes[12], nodes[13], nodes[14], nodes[15]]
-        nodes[5].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
-                                          nodes[12], nodes[13], nodes[14], nodes[15]]
-        nodes[6].directly_connected_to = [nodes[5], nodes[4], nodes[7], nodes[11],
-                                          nodes[12], nodes[13], nodes[14], nodes[15]]
-        nodes[7].directly_connected_to = [nodes[5], nodes[6], nodes[4], nodes[11],
-                                          nodes[12], nodes[13], nodes[14], nodes[15]]
-        nodes[8].directly_connected_to = [nodes[1], nodes[16], nodes[9], nodes[10]]
-        nodes[9].directly_connected_to = [nodes[1], nodes[16], nodes[8], nodes[10]]
-        nodes[10].directly_connected_to = [nodes[1], nodes[16], nodes[8], nodes[9]]
-        nodes[11].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[4],
-                                           nodes[12], nodes[13], nodes[14], nodes[15]]
-        nodes[12].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
-                                           nodes[4], nodes[13], nodes[14], nodes[15]]
-        nodes[13].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
-                                           nodes[12], nodes[4], nodes[14], nodes[15]]
-        nodes[14].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
-                                           nodes[12], nodes[13], nodes[4], nodes[15]]
-        nodes[15].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
-                                           nodes[12], nodes[13], nodes[14], nodes[4]]
-        nodes[16].directly_connected_to = [nodes[1], nodes[8], nodes[9], nodes[10]]
+        nodes[0].union(nodes[2])
+        nodes[1].union(nodes[8])
+        nodes[1].union(nodes[9])
+        nodes[1].union(nodes[10])
+        nodes[1].union(nodes[16])
+        nodes[4].union(nodes[5])
+        nodes[4].union(nodes[6])
+        nodes[4].union(nodes[7])
+        nodes[4].union(nodes[11])
+        nodes[4].union(nodes[12])
+        nodes[4].union(nodes[13])
+        nodes[4].union(nodes[14])
+        nodes[4].union(nodes[15])
+        nodes[5].union(nodes[6])
+        nodes[5].union(nodes[7])
+        nodes[5].union(nodes[11])
+        nodes[6].union(nodes[7])
+        nodes[6].union(nodes[11])
+        nodes[6].union(nodes[12])
+        nodes[6].union(nodes[13])
+        nodes[6].union(nodes[14])
+        nodes[6].union(nodes[15])
+        nodes[11].union(nodes[12])
+        nodes[11].union(nodes[13])
+        nodes[11].union(nodes[14])
+        nodes[11].union(nodes[15])
 
         edge1 = HyperEdge(100)
         edge1.append_source_nodes([nodes[3]])
