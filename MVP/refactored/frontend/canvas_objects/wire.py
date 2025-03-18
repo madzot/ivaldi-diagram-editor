@@ -23,7 +23,7 @@ class Wire:
 
     defined_wires = {}
 
-    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, temporary=False,
+    def __init__(self, canvas, start_connection, end_connection, id_=None, temporary=False,
                  wire_type=WireType.GENERIC):
         self.canvas = canvas
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
@@ -35,7 +35,7 @@ class Wire:
             self.id = id(self)
         else:
             self.id = id_
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         self.is_temporary = temporary
         if not temporary and not self.canvas.search:
             self.handle_wire_addition_callback()
