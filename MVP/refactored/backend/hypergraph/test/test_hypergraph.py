@@ -42,14 +42,14 @@ class TestHypergraph(TestCase):
         self.assertIn(self.node1.id, self.hypergraph.hypergraph_source)
 
     def test_add_node_with_parents(self):
-        self.node2.get_parent_nodes = lambda: [self.node1]
+        self.node2.get_parent_nodes = MagicMock(return_value=[self.node1])
 
         self.hypergraph.add_node(self.node2)
 
         self.assertNotIn(self.node2.id, self.hypergraph.hypergraph_source)
 
     def test_add_directly_connected_nodes(self):
-        self.node1.get_united_with_nodes = lambda: [self.node2, self.node3]
+        self.node1.directly_connected_to = [self.node2, self.node3]
 
         self.hypergraph.add_node(self.node1)
 
@@ -70,8 +70,8 @@ class TestHypergraph(TestCase):
         self.assertIn(self.node2.id, self.hypergraph.hypergraph_source)
 
     def test_add_multiple_nodes_with_united_nodes(self):
-        self.node1.get_united_with_nodes = lambda: [self.node2]
-        self.node2.get_united_with_nodes = lambda: [self.node3]
+        self.node1.directly_connected_to = [self.node2]
+        self.node2.directly_connected_to = [self.node3]
 
         self.hypergraph.add_nodes([self.node1, self.node2])
 
@@ -85,7 +85,7 @@ class TestHypergraph(TestCase):
         self.assertIn(self.node1.id, self.hypergraph.hypergraph_source)
 
     def test_add_hypergraph_source_with_directly_connected_nodes(self):
-        self.node1.get_united_with_nodes = lambda: [self.node2, self.node3]
+        self.node1.directly_connected_to = [self.node2, self.node3]
         self.hypergraph.add_hypergraph_source(self.node1)
 
         self.assertIn(self.node1.id, self.hypergraph.hypergraph_source)
@@ -93,8 +93,8 @@ class TestHypergraph(TestCase):
         self.assertIn(self.node3.id, self.hypergraph.hypergraph_source)
 
     def test_add_multiple_hypergraph_sources(self):
-        self.node1.get_united_with_nodes = lambda: [self.node2]
-        self.node2.get_united_with_nodes = lambda: [self.node3]
+        self.node1.directly_connected_to = [self.node2]
+        self.node2.directly_connected_to = [self.node3]
 
         self.hypergraph.add_hypergraph_sources([self.node1, self.node2])
 
@@ -147,8 +147,8 @@ class TestHypergraph(TestCase):
         self.assertIn(self.node4.id, self.hypergraph.hypergraph_source)
 
     def test_remove_node_does_not_affect_unconnected_nodes(self):
-        self.node1.is_connected_to = lambda _: False
-        self.node2.is_connected_to = lambda _: False
+        self.node1.is_connected_to = MagicMock(return_value=False)
+        self.node2.is_connected_to = MagicMock(return_value=False)
 
         self.hypergraph.add_node(self.node1)
         self.hypergraph.add_node(self.node2)
@@ -238,8 +238,8 @@ class TestHypergraph(TestCase):
     # Test update_source_nodes_descendants
     # --------------------------------------
     def test_update_source_nodes_descendants_single_source(self):
-        self.node1.get_children_nodes = lambda: [self.node2]
-        self.node1.get_united_with_nodes = lambda: [self.node3]
+        self.node1.get_children_nodes = MagicMock(return_value=[self.node2])
+        self.node1.directly_connected_to = [self.node3]
 
         self.hypergraph.add_hypergraph_source(self.node1)
         self.hypergraph.update_source_nodes_descendants()
@@ -249,10 +249,10 @@ class TestHypergraph(TestCase):
         self.assertIn(self.node3.id, self.hypergraph.nodes)
 
     def test_update_source_nodes_descendants_multiple_sources(self):
-        self.node1.get_children_nodes = lambda: [self.node2]
-        self.node1.get_united_with_nodes = lambda: [self.node3]
-        self.node2.get_children_nodes = lambda: [self.node4]
-        self.node2.get_united_with_nodes = lambda: [self.node5]
+        self.node1.get_children_nodes = MagicMock(return_value=[self.node2])
+        self.node1.directly_connected_to = [self.node3]
+        self.node2.get_children_nodes = MagicMock(return_value=[self.node4])
+        self.node2.directly_connected_to = [self.node5]
 
         self.hypergraph.add_hypergraph_sources([self.node1, self.node2])
         self.hypergraph.update_source_nodes_descendants()
@@ -270,31 +270,31 @@ class TestHypergraph(TestCase):
     def test_update_source_nodes_descendants_with_complex_graph_one_source(self):
         nodes = [Node(i) for i in range(12)]
 
-        nodes[0].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
-        nodes[1].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
-        nodes[2].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
-        nodes[3].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
-        nodes[4].get_children_nodes = lambda: [nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]]
-        nodes[5].get_children_nodes = lambda: [nodes[7], nodes[9]]
-        nodes[6].get_children_nodes = lambda: []
-        nodes[7].get_children_nodes = lambda: []
-        nodes[8].get_children_nodes = lambda: []
-        nodes[9].get_children_nodes = lambda: []
-        nodes[10].get_children_nodes = lambda: []
-        nodes[11].get_children_nodes = lambda: []
+        nodes[0].get_children_nodes = MagicMock(return_value=[nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]])
+        nodes[1].get_children_nodes = MagicMock(return_value=[nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]])
+        nodes[2].get_children_nodes = MagicMock(return_value=[nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]])
+        nodes[3].get_children_nodes = MagicMock(return_value=[nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]])
+        nodes[4].get_children_nodes = MagicMock(return_value=[nodes[6], nodes[5], nodes[11], nodes[8], nodes[10]])
+        nodes[5].get_children_nodes = MagicMock(return_value=[nodes[7], nodes[9]])
+        nodes[6].get_children_nodes = MagicMock(return_value=[])
+        nodes[7].get_children_nodes = MagicMock(return_value=[])
+        nodes[8].get_children_nodes = MagicMock(return_value=[])
+        nodes[9].get_children_nodes = MagicMock(return_value=[])
+        nodes[10].get_children_nodes = MagicMock(return_value=[])
+        nodes[11].get_children_nodes = MagicMock(return_value=[])
 
-        nodes[0].get_united_with_nodes = lambda: [nodes[1], nodes[2], nodes[3], nodes[4]]
-        nodes[1].get_united_with_nodes = lambda: [nodes[0], nodes[2], nodes[3], nodes[4]]
-        nodes[2].get_united_with_nodes = lambda: [nodes[1], nodes[0], nodes[3], nodes[4]]
-        nodes[3].get_united_with_nodes = lambda: [nodes[1], nodes[2], nodes[0], nodes[4]]
-        nodes[4].get_united_with_nodes = lambda: [nodes[1], nodes[2], nodes[3], nodes[0]]
-        nodes[5].get_united_with_nodes = lambda: []
-        nodes[6].get_united_with_nodes = lambda: [nodes[8], nodes[10], nodes[11]]
-        nodes[7].get_united_with_nodes = lambda: [nodes[9]]
-        nodes[8].get_united_with_nodes = lambda: [nodes[6], nodes[10], nodes[11]]
-        nodes[9].get_united_with_nodes = lambda: [nodes[7]]
-        nodes[10].get_united_with_nodes = lambda: [nodes[8], nodes[6], nodes[11]]
-        nodes[11].get_united_with_nodes = lambda: [nodes[8], nodes[10], nodes[6]]
+        nodes[0].directly_connected_to = [nodes[1], nodes[2], nodes[3], nodes[4]]
+        nodes[1].directly_connected_to = [nodes[0], nodes[2], nodes[3], nodes[4]]
+        nodes[2].directly_connected_to = [nodes[1], nodes[0], nodes[3], nodes[4]]
+        nodes[3].directly_connected_to = [nodes[1], nodes[2], nodes[0], nodes[4]]
+        nodes[4].directly_connected_to = [nodes[1], nodes[2], nodes[3], nodes[0]]
+        nodes[5].directly_connected_to = []
+        nodes[6].directly_connected_to = [nodes[8], nodes[10], nodes[11]]
+        nodes[7].directly_connected_to = [nodes[9]]
+        nodes[8].directly_connected_to = [nodes[6], nodes[10], nodes[11]]
+        nodes[9].directly_connected_to = [nodes[7]]
+        nodes[10].directly_connected_to = [nodes[8], nodes[6], nodes[11]]
+        nodes[11].directly_connected_to = [nodes[8], nodes[10], nodes[6]]
 
         edge1 = HyperEdge(100)
         edge1.append_source_node(nodes[1])
@@ -324,56 +324,56 @@ class TestHypergraph(TestCase):
     def test_update_source_nodes_descendants_with_complex_graph_two_sources(self):
         nodes = [Node(i) for i in range(0, 17)]
 
-        nodes[0].get_children_nodes = lambda: [nodes[3]]
-        nodes[1].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                               nodes[14], nodes[15]]
-        nodes[2].get_children_nodes = lambda: [nodes[3]]
-        nodes[3].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                               nodes[14], nodes[15]]
-        nodes[4].get_children_nodes = lambda: []
-        nodes[5].get_children_nodes = lambda: []
-        nodes[6].get_children_nodes = lambda: []
-        nodes[7].get_children_nodes = lambda: []
-        nodes[8].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                               nodes[14], nodes[15]]
-        nodes[9].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                               nodes[14], nodes[15]]
-        nodes[10].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                                nodes[14], nodes[15]]
-        nodes[11].get_children_nodes = lambda: []
-        nodes[12].get_children_nodes = lambda: []
-        nodes[13].get_children_nodes = lambda: []
-        nodes[14].get_children_nodes = lambda: []
-        nodes[15].get_children_nodes = lambda: []
-        nodes[16].get_children_nodes = lambda: [nodes[4], nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                                nodes[14], nodes[15]]
+        nodes[0].get_children_nodes = MagicMock(return_value=[nodes[3]])
+        nodes[1].get_children_nodes = MagicMock(return_value=[nodes[4], nodes[5], nodes[6], nodes[7], nodes[11],
+                                                              nodes[12], nodes[13], nodes[14], nodes[15]])
+        nodes[2].get_children_nodes = MagicMock(return_value=[nodes[3]])
+        nodes[3].get_children_nodes = MagicMock(return_value=[nodes[4], nodes[5], nodes[6], nodes[7], nodes[11],
+                                                              nodes[12], nodes[13], nodes[14], nodes[15]])
+        nodes[4].get_children_nodes = MagicMock(return_value=[])
+        nodes[5].get_children_nodes = MagicMock(return_value=[])
+        nodes[6].get_children_nodes = MagicMock(return_value=[])
+        nodes[7].get_children_nodes = MagicMock(return_value=[])
+        nodes[8].get_children_nodes = MagicMock(return_value=[nodes[4], nodes[5], nodes[6], nodes[7], nodes[11],
+                                                              nodes[12], nodes[13], nodes[14], nodes[15]])
+        nodes[9].get_children_nodes = MagicMock(return_value=[nodes[4], nodes[5], nodes[6], nodes[7], nodes[11],
+                                                              nodes[12], nodes[13], nodes[14], nodes[15]])
+        nodes[10].get_children_nodes = MagicMock(return_value=[nodes[4], nodes[5], nodes[6], nodes[7], nodes[11],
+                                                               nodes[12], nodes[13], nodes[14], nodes[15]])
+        nodes[11].get_children_nodes = MagicMock(return_value=[])
+        nodes[12].get_children_nodes = MagicMock(return_value=[])
+        nodes[13].get_children_nodes = MagicMock(return_value=[])
+        nodes[14].get_children_nodes = MagicMock(return_value=[])
+        nodes[15].get_children_nodes = MagicMock(return_value=[])
+        nodes[16].get_children_nodes = MagicMock(return_value=[nodes[4], nodes[5], nodes[6], nodes[7], nodes[11],
+                                                               nodes[12], nodes[13], nodes[14], nodes[15]])
 
-        nodes[0].get_united_with_nodes = lambda: [nodes[2]]
-        nodes[1].get_united_with_nodes = lambda: [nodes[8], nodes[16], nodes[9], nodes[10]]
-        nodes[2].get_united_with_nodes = lambda: [nodes[0]]
-        nodes[3].get_united_with_nodes = lambda: []
-        nodes[4].get_united_with_nodes = lambda: [nodes[5], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                                  nodes[14], nodes[15]]
-        nodes[5].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                                  nodes[14], nodes[15]]
-        nodes[6].get_united_with_nodes = lambda: [nodes[5], nodes[4], nodes[7], nodes[11], nodes[12], nodes[13],
-                                                  nodes[14], nodes[15]]
-        nodes[7].get_united_with_nodes = lambda: [nodes[5], nodes[6], nodes[4], nodes[11], nodes[12], nodes[13],
-                                                  nodes[14], nodes[15]]
-        nodes[8].get_united_with_nodes = lambda: [nodes[1], nodes[16], nodes[9], nodes[10]]
-        nodes[9].get_united_with_nodes = lambda: [nodes[1], nodes[16], nodes[8], nodes[10]]
-        nodes[10].get_united_with_nodes = lambda: [nodes[1], nodes[16], nodes[8], nodes[9]]
-        nodes[11].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[4], nodes[12], nodes[13],
-                                                   nodes[14], nodes[15]]
-        nodes[12].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[4], nodes[13],
-                                                   nodes[14], nodes[15]]
-        nodes[13].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[4],
-                                                   nodes[14], nodes[15]]
-        nodes[14].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                                   nodes[4], nodes[15]]
-        nodes[15].get_united_with_nodes = lambda: [nodes[4], nodes[6], nodes[7], nodes[11], nodes[12], nodes[13],
-                                                   nodes[14], nodes[4]]
-        nodes[16].get_united_with_nodes = lambda: [nodes[1], nodes[8], nodes[9], nodes[10]]
+        nodes[0].directly_connected_to = [nodes[2]]
+        nodes[1].directly_connected_to = [nodes[8], nodes[16], nodes[9], nodes[10]]
+        nodes[2].directly_connected_to = [nodes[0]]
+        nodes[3].directly_connected_to = []
+        nodes[4].directly_connected_to = [nodes[5], nodes[6], nodes[7], nodes[11],
+                                          nodes[12], nodes[13], nodes[14], nodes[15]]
+        nodes[5].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
+                                          nodes[12], nodes[13], nodes[14], nodes[15]]
+        nodes[6].directly_connected_to = [nodes[5], nodes[4], nodes[7], nodes[11],
+                                          nodes[12], nodes[13], nodes[14], nodes[15]]
+        nodes[7].directly_connected_to = [nodes[5], nodes[6], nodes[4], nodes[11],
+                                          nodes[12], nodes[13], nodes[14], nodes[15]]
+        nodes[8].directly_connected_to = [nodes[1], nodes[16], nodes[9], nodes[10]]
+        nodes[9].directly_connected_to = [nodes[1], nodes[16], nodes[8], nodes[10]]
+        nodes[10].directly_connected_to = [nodes[1], nodes[16], nodes[8], nodes[9]]
+        nodes[11].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[4],
+                                           nodes[12], nodes[13], nodes[14], nodes[15]]
+        nodes[12].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
+                                           nodes[4], nodes[13], nodes[14], nodes[15]]
+        nodes[13].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
+                                           nodes[12], nodes[4], nodes[14], nodes[15]]
+        nodes[14].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
+                                           nodes[12], nodes[13], nodes[4], nodes[15]]
+        nodes[15].directly_connected_to = [nodes[4], nodes[6], nodes[7], nodes[11],
+                                           nodes[12], nodes[13], nodes[14], nodes[4]]
+        nodes[16].directly_connected_to = [nodes[1], nodes[8], nodes[9], nodes[10]]
 
         edge1 = HyperEdge(100)
         edge1.append_source_nodes([nodes[3]])
@@ -403,10 +403,10 @@ class TestHypergraph(TestCase):
     # --------------------------------------
     def test_update_edges_with_single_source_node(self):
         self.hypergraph.add_hypergraph_source(self.node1)
-        self.node1.get_output_hyper_edges = lambda: [self.edge1]
-        self.node1.get_input_hyper_edges = lambda: []
-        self.node1.get_children_nodes = lambda: []
-        self.node1.get_united_with_nodes = lambda: []
+        self.node1.outputs = [self.edge1]
+        self.node1.inputs = []
+        self.node1.get_children_nodes = MagicMock(return_value=[])
+        self.node1.directly_connected_to = []
 
         self.hypergraph.update_edges()
 
@@ -415,10 +415,10 @@ class TestHypergraph(TestCase):
 
     def test_update_edges_with_multiple_source_nodes(self):
         self.hypergraph.add_hypergraph_sources([self.node1, self.node2])
-        self.node1.get_output_hyper_edges = lambda: [self.edge1]
-        self.node1.get_input_hyper_edges = lambda: []
-        self.node2.get_output_hyper_edges = lambda: [self.edge2]
-        self.node2.get_input_hyper_edges = lambda: []
+        self.node1.outputs = [self.edge1]
+        self.node1.inputs = []
+        self.node2.outputs = [self.edge2]
+        self.node2.inputs = []
 
         self.hypergraph.update_edges()
 
@@ -429,15 +429,15 @@ class TestHypergraph(TestCase):
 
     def test_update_edges_with_connected_nodes(self):
         self.hypergraph.add_hypergraph_source(self.node1)
-        self.node1.get_output_hyper_edges = lambda: [self.edge1]
-        self.node1.get_input_hyper_edges = lambda: []
-        self.node1.get_children_nodes = lambda: [self.node2]
-        self.node1.get_united_with_nodes = lambda: []
+        self.node1.outputs = [self.edge1]
+        self.node1.inputs = []
+        self.node1.get_children_nodes = MagicMock(return_value=[self.node2])
+        self.node1.directly_connected_to = []
 
-        self.node2.get_output_hyper_edges = lambda: [self.edge2]
-        self.node2.get_input_hyper_edges = lambda: [self.edge1]
-        self.node2.get_children_nodes = lambda: []
-        self.node2.get_united_with_nodes = lambda: []
+        self.node2.outputs = [self.edge2]
+        self.node2.inputs = [self.edge1]
+        self.node2.get_children_nodes = MagicMock(return_value=[])
+        self.node2.directly_connected_to = []
 
         self.hypergraph.update_edges()
 
@@ -448,15 +448,15 @@ class TestHypergraph(TestCase):
 
     def test_update_edges_with_united_nodes(self):
         self.hypergraph.add_hypergraph_source(self.node1)
-        self.node1.get_output_hyper_edges = lambda: [self.edge1]
-        self.node1.get_input_hyper_edges = lambda: []
-        self.node1.get_children_nodes = lambda: []
-        self.node1.get_united_with_nodes = lambda: [self.node2]
+        self.node1.outputs = [self.edge1]
+        self.node1.inputs = []
+        self.node1.get_children_nodes = MagicMock(return_value=[])
+        self.node1.directly_connected_to = [self.node2]
 
-        self.node2.get_output_hyper_edges = lambda: [self.edge2]
-        self.node2.get_input_hyper_edges = lambda: []
-        self.node2.get_children_nodes = lambda: []
-        self.node2.get_united_with_nodes = lambda: []
+        self.node2.outputs = [self.edge2]
+        self.node2.inputs = []
+        self.node2.get_children_nodes = MagicMock(return_value=[])
+        self.node2.directly_connected_to = []
 
         self.hypergraph.update_edges()
 
