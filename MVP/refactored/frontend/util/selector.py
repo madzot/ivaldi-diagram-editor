@@ -80,7 +80,8 @@ class Selector:
             # wire.delete_self("sub_diagram")
             wire.delete_self()
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
-            box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
+            # box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
+            box_.delete_box()
         for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):
             # spider.delete_spider("sub_diagram")
             spider.delete_spider()

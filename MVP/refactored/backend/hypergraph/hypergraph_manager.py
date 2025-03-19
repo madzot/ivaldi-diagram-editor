@@ -123,8 +123,10 @@ class HypergraphManager:
                 _hypergraph = hypergraph
                 deleted_hyper_edge = hypergraph.remove_hyper_edge(id) # remove hyper edge from hypergraph
                 break
+
+        if deleted_hyper_edge is None: return # TODO, investigate when it can be None
         # check if new hypergraph appears
-        source_nodes: list[Node] = _hypergraph.get_source_nodes() + deleted_hyper_edge.get_target_nodes()
+        source_nodes: list[Node] = _hypergraph.get_hypergraph_source() + deleted_hyper_edge.get_target_nodes()
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
         # TODO move duplicated code into another method?
         for source_node in source_nodes:
@@ -163,7 +165,8 @@ class HypergraphManager:
         logger.debug(message_start + f"Swapping hyper edge id from {prev_id} to {new_id}" + message_end)
 
         hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(prev_id)
-        hypergraph.swap_hyper_edge_id(prev_id, new_id)
+        if hypergraph is not None: # TODO investigate when it is none
+            hypergraph.swap_hyper_edge_id(prev_id, new_id)
 
     @staticmethod
     def create_new_node(id: int, canvas_id: int) -> Node:

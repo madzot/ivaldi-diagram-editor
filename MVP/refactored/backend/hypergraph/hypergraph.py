@@ -87,9 +87,10 @@ class Hypergraph:
         return self.edges.pop(edge_to_remove_id)
 
     def swap_hyper_edge_id(self, prev_id: int, new_id: int):
-        self.edges[prev_id].swap_id(new_id)
-        self.edges[new_id] = self.edges[prev_id]
-        self.edges.pop(prev_id)
+        if prev_id in self.edges: # TODO investigate why it could not be
+            self.edges[prev_id].swap_id(new_id)
+            self.edges[new_id] = self.edges[prev_id]
+            self.edges.pop(prev_id)
 
     def get_hyper_edge_by_id(self, hyper_edge_id: int) -> HyperEdge|None:
         return self.edges.get(hyper_edge_id)
