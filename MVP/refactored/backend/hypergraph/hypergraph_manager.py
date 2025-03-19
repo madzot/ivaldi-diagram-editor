@@ -66,6 +66,7 @@ class HypergraphManager:
                     hypergraph.remove_node(id)
                     break
         # check if new hyper graphs were created
+        if _hypergraph is None: return
         source_nodes_and_potentially_source_nodes: list[Node] = _hypergraph.get_hypergraph_source() + removed_node_outputs_and_directly_connected  # TODO
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
         for source_node in source_nodes_and_potentially_source_nodes:
@@ -122,6 +123,8 @@ class HypergraphManager:
                 hypergraph_to_handle = hypergraph
                 deleted_hyper_edge = hypergraph.remove_hyper_edge(id)  # remove hyper edge from hypergraph
                 break
+
+        if deleted_hyper_edge is None: return # TODO, investigate when it can be None
         # check if new hypergraph appears
         source_nodes: list[Node] = hypergraph_to_handle.get_hypergraph_source() + deleted_hyper_edge.get_target_nodes()
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
@@ -162,7 +165,8 @@ class HypergraphManager:
         logger.debug(message_start + f"Swapping hyper edge id from {prev_id} to {new_id}" + message_end)
 
         hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(prev_id)
-        hypergraph.swap_hyper_edge_id(prev_id, new_id)
+        if hypergraph is not None: # TODO investigate when it is none
+            hypergraph.swap_hyper_edge_id(prev_id, new_id)
 
     @staticmethod
     def create_new_node(id: int, canvas_id: int) -> Node:
@@ -203,7 +207,7 @@ class HypergraphManager:
             HypergraphManager.combine_hypergraphs([node_hypergraph, unite_with_hypergraph])
 
     @staticmethod
-    def connect_node_with_input(node: Node, hyper_edge_id: int):
+    def connect_node_with_input_hyper_edge(node: Node, hyper_edge_id: int):
         """
         After hypergraph creation is done, make connectivity of node, with node/hyper edge and
         theirs hyper graphs.
@@ -232,7 +236,7 @@ class HypergraphManager:
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
     @staticmethod
-    def connect_node_with_output(node: Node, hyper_edge_id: int):
+    def connect_node_with_output_hyper_edge(node: Node, hyper_edge_id: int):
         """
         After hypergraph creation is done, make connectivity of node, with node/hyper edge and
         theirs hyper graphs.

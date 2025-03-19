@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class HyperEdge:
 
-    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None):
+    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None, sub_diagram_canvas_id = None):
         if hyper_edge_id is None:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
@@ -19,6 +19,45 @@ class HyperEdge:
 
         self.source_nodes: dict[int, Node] = dict()  # key is connection index, it neede for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
+
+        self.sub_diagram_canvas_id = sub_diagram_canvas_id
+
+    def is_compound(self) -> bool:
+        return bool(self.sub_diagram_canvas_id)
+
+    def set_sub_diagram_canvas_id(self, canvas_id: int):
+        self.sub_diagram_canvas_id = canvas_id
+
+    def swap_id(self, new_id: int):
+        self.id = new_id
+
+    def remove_all_source_nodes(self):
+        self.source_nodes.clear()
+
+    def remove_all_target_nodes(self):
+        self.target_nodes.clear()
+
+    def remove_source_connection_by_index(self, conn_index: int):
+        """NB! It deletes connection and all connection with index more that current connection index,
+        their connection decreases.
+        """
+        if conn_index in self.source_nodes:
+            del self.source_nodes[conn_index]
+        for key in self.source_nodes.keys():
+            if key > conn_index:
+                self.source_nodes[key - 1] = self.source_nodes[key]
+                del self.source_nodes[key]
+
+    def remove_target_connection_by_index(self, conn_index: int):
+        """NB! It deletes connection and all connection with index more that current connection index,
+        their connection decreases.
+        """
+        if conn_index in self.source_nodes:
+            del self.target_nodes[conn_index]
+        for key in self.target_nodes.keys():
+            if key > conn_index:
+                self.target_nodes[key - 1] = self.target_nodes[key]
+                del self.target_nodes[key]
 
     def get_source_nodes(self) -> list[Node]:
         """

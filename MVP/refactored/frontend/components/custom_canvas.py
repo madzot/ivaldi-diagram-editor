@@ -1,23 +1,19 @@
-import os
 import tkinter as tk
 from threading import Timer
 from tkinter import filedialog
-from tkinter import messagebox as mb
 
-from PIL import Image
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
-from MVP.refactored.backend.hypergraph.box_to_hyper_edge_mapping import BoxToHyperEdgeMapping
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.diagram_callback import Receiver
+from MVP.refactored.backend.types.ActionType import ActionType
+from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
-from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.canvas_objects.spider import Spider
-from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.util.event import Event
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
@@ -26,7 +22,7 @@ from MVP.refactored.frontend.canvas_objects.wire import Wire
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, diagram_source_box, receiver, main_diagram,
+    def __init__(self, master, diagram_source_box, receiver: Receiver, main_diagram,
                  parent_diagram, add_boxes, id_=None, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -62,6 +58,9 @@ class CustomCanvas(tk.Canvas):
             self.id = id(self)
         else:
             self.id = id_
+
+        self.receiver.add_new_canvas(self.id)
+
 
         self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
@@ -839,15 +838,18 @@ class CustomCanvas(tk.Canvas):
         if len(self.outputs) != 0:
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
-                                           "left", [0, 0], self,
+                                           ConnectionSide.LEFT, [0, 0], self,
                                            r=5*self.total_scale, id_=id_)
 
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
-                                            connection_id=connection_output_new.id, canvas_id=self.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_output", generator_id=None,
-                                            connection_id=connection_output_new.id, canvas_id=self.id)
+        # if self.diagram_source_box and self.receiver.listener:
+        #     self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_RIGHT, generator_id=self.diagram_source_box.id,
+        #                                     connection_id=connection_output_new.id, connection_nr=connection_output_new.index,
+        #                                     canvas_id=self.id)
+        # elif self.diagram_source_box is None and self.receiver.listener
+        if self.receiver.listener:
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_OUTPUT, connection_nr=connection_output_new.index,
+                                            connection_id=connection_output_new.id,
+                                            connection_side=connection_output_new.side, canvas_id=self.id)
 
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
@@ -871,29 +873,24 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete_me()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_output", canvas_id=self.id)
-
-        node_to_remove = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(to_be_removed.id)
-        node_to_remove._remove_self()
-        BoxToHyperEdgeMapping.remove_pair(to_be_removed.id)
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_OUTPUT, canvas_id=self.id, connection_id=to_be_removed.id)
 
     def add_diagram_input(self, id_=None):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
+        new_input = Connection(self.diagram_source_box, input_index, ConnectionSide.RIGHT, [0, 0], self,
                                r=5*self.total_scale, id_=id_)
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
-                                            connection_id=new_input.id, canvas_id=self.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_input", generator_id=None,
-                                            connection_id=new_input.id, canvas_id=self.id)
+        # if self.diagram_source_box and self.receiver.listener:
+        #     self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_LEFT, generator_id=self.diagram_source_box.id,
+        #                                     connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
+        # elif self.diagram_source_box is None and self.receiver.listener:
+        if self.receiver.listener:
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_INPUT,
+                                            connection_id=new_input.id, connection_nr=new_input.index,
+                                            connection_side=new_input.side, canvas_id=self.id)
         self.inputs.append(new_input)
         self.update_inputs_outputs()
-
-        # new_hypergraph = Hypergraph(canvas_id=self.id, source={HyperEdge(hyper_edge_id=new_input.id)})
-        # HypergraphManager.add_hypergraph(new_hypergraph)
 
         return new_input
 
@@ -904,7 +901,7 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete_me()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_input", canvas_id=self.id)
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_INPUT, canvas_id=self.id, connection_id=to_be_removed.id)
 
     def remove_specific_diagram_input(self, con):
         if not self.inputs:
@@ -940,10 +937,6 @@ class CustomCanvas(tk.Canvas):
 
         con.delete_me()
         self.update_inputs_outputs()
-
-        node_to_remove = BoxToHyperEdgeMapping.get_hyper_edge_by_box_id(con.id)
-        node_to_remove._remove_self()
-        BoxToHyperEdgeMapping.remove_pair(con.id)
 
 
     def find_connection_to_remove(self, side):
