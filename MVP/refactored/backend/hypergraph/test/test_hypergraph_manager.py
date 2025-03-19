@@ -98,6 +98,8 @@ class TestHypergraphManager(TestCase):
         with patch.object(HypergraphManager, "_get_node_by_id", return_value=node_b):
             HypergraphManager.union_nodes(node_a, node_b.id)
 
+        self.assertIn(node_b, list(HypergraphManager.hypergraphs)[0].get_all_nodes())
+        self.assertIn(node_a, list(HypergraphManager.hypergraphs)[0].get_all_nodes())
         self.assertEqual(len(HypergraphManager.hypergraphs), 1)
 
     # TEST: Edge Connect (input/output) TODO
@@ -108,6 +110,7 @@ class TestHypergraphManager(TestCase):
 
         HypergraphManager.connect_node_with_input(node, hyper_edge_id=111)
         self.assertTrue(any(node in edge.target_nodes.values() for edge in graph.get_all_hyper_edges()))
+        self.assertIn(111, graph.edges)
 
     def test_connect_node_with_output_creates_new_edge_if_none_exists(self):
         node = HypergraphManager.create_new_node(2, 888)
@@ -115,6 +118,7 @@ class TestHypergraphManager(TestCase):
 
         HypergraphManager.connect_node_with_output(node, hyper_edge_id=222)
         self.assertTrue(any(node in edge.source_nodes.values() for edge in graph.get_all_hyper_edges()))
+        self.assertIn(222, graph.edges)
 
     # TEST: Node/Edge Removal – Requires internal graph state
     # ----------------------------------------------------------
