@@ -1,3 +1,5 @@
 groups = [[3, 4], [1, 2]]
 
-print([2, 1] in groups)
+box_nr = None
+print([1, 3, 4] + [groups])
+print([1, 3, 4, groups])
