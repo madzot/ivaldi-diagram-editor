@@ -205,7 +205,7 @@ class HypergraphManager:
             HypergraphManager.combine_hypergraphs([node_hypergraph, unite_with_hypergraph])
 
     @staticmethod
-    def connect_node_with_input(node: Node, hyper_edge_id: int):
+    def connect_node_with_input_hyper_edge(node: Node, hyper_edge_id: int):
         """
         After hypergraph creation is done, make connectivity of node, with node/hyper edge and
         theirs hyper graphs.
@@ -234,7 +234,7 @@ class HypergraphManager:
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
     @staticmethod
-    def connect_node_with_output(node: Node, hyper_edge_id: int):
+    def connect_node_with_output_hyper_edge(node: Node, hyper_edge_id: int):
         """
         After hypergraph creation is done, make connectivity of node, with node/hyper edge and
         theirs hyper graphs.

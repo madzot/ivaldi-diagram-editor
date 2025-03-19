@@ -109,9 +109,9 @@ class Receiver:
                     HypergraphManager.union_nodes(new_node, spider.id) # unite wire and spider to one node
                     if box:
                         if end_connection.side == ConnectionSide.LEFT:
-                            HypergraphManager.connect_node_with_output(new_node, box.id)
+                            HypergraphManager.connect_node_with_output_hyper_edge(new_node, box.id)
                         elif end_connection.side == ConnectionSide.RIGHT:
-                            HypergraphManager.connect_node_with_input(new_node, box.id)
+                            HypergraphManager.connect_node_with_input_hyper_edge(new_node, box.id)
                     else: # connection to spider
                         HypergraphManager.union_nodes(new_node, end_connection.id)
                     print(f"Added wire - {wire_id}")
@@ -130,9 +130,9 @@ class Receiver:
                     HypergraphManager.union_nodes(new_node, spider.id)  # unite wire and spider to one node
                     if box:
                         if start_connection.side == ConnectionSide.LEFT:
-                            HypergraphManager.connect_node_with_output(new_node, box.id)
+                            HypergraphManager.connect_node_with_output_hyper_edge(new_node, box.id)
                         elif start_connection.side == ConnectionSide.RIGHT:
-                            HypergraphManager.connect_node_with_input(new_node, box.id)
+                            HypergraphManager.connect_node_with_input_hyper_edge(new_node, box.id)
                     else:  # connection to spider
                         HypergraphManager.union_nodes(new_node, start_connection.id)
             else:  # if it connection not between spider and smt
@@ -147,9 +147,9 @@ class Receiver:
                     for connection in resource.connections:
                         if connection.has_box(): # connection with box(hyper edge)
                             if connection.side == ConnectionSide.LEFT:
-                                HypergraphManager.connect_node_with_output(new_node, connection.box_id)
+                                HypergraphManager.connect_node_with_output_hyper_edge(new_node, connection.box_id)
                             elif connection.side == ConnectionSide.RIGHT:
-                                HypergraphManager.connect_node_with_input(new_node, connection.box_id)
+                                HypergraphManager.connect_node_with_input_hyper_edge(new_node, connection.box_id)
                         else: # connection with diagram input/output
                             HypergraphManager.union_nodes(new_node, connection.id)
 

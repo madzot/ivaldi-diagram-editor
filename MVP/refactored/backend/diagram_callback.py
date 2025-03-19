@@ -7,6 +7,7 @@ from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.backend.diagram import Diagram
 from MVP.refactored.backend.generator import Generator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.hypergraph.node import Node
 from MVP.refactored.backend.resource import Resource
 from MVP.refactored.frontend.canvas_objects.spider import Spider
 
@@ -43,18 +44,29 @@ class Receiver:
 
         logger.info(f"receiver_callback invoked with action: {action}, kwargs: {kwargs}")
         if action == ActionType.WIRE_CREATE:
+            new_node = HypergraphManager.create_new_node(resource_id, canvas_id)
+
             new_resource = self.create_new_resource(resource_id, canvas_id)
-            self.add_connections_to_resource(new_resource, [start_connection, end_connection], canvas_id)
+            self.add_connections_to_resource(new_resource, [start_connection, end_connection], canvas_id,
+                                             node=new_node)
+
         elif action == ActionType.WIRE_DELETE:
             self.delete_resource(resource_id, canvas_id)
+
+            HypergraphManager.remove_node(resource_id)
         elif action == ActionType.SPIDER_CREATE:
+            new_node = HypergraphManager.create_new_node(resource_id, canvas_id)
+
             new_resource = self.create_new_resource(resource_id, canvas_id, spider=True)
             new_resource.spider = True
-            self.add_connections_to_resource(new_resource, [start_connection, end_connection], canvas_id)
+            self.add_connections_to_resource(new_resource, [start_connection, end_connection], canvas_id,
+                                             node=new_node)
         elif action == ActionType.SPIDER_PARENT_CREATE:
             pass
         elif action == ActionType.SPIDER_DELETE:
             self.delete_resource(resource_id, canvas_id, spider=True)
+
+            HypergraphManager.remove_node(resource_id)
         elif action == ActionType.BOX_ADD_INNER_LEFT:
             return
             box = self.get_generator_by_id(generator_id, canvas_id)
@@ -92,6 +104,8 @@ class Receiver:
             self.create_new_generator(generator_id, canvas_id)
         elif action == ActionType.BOX_DELETE:
             self.delete_generator(generator_id, canvas_id)
+
+            HypergraphManager.remove_hyper_edge(generator_id)
         elif action == ActionType.BOX_COMPOUND:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.set_type(GeneratorType.COMPOUND)
@@ -106,50 +120,24 @@ class Receiver:
         elif action == ActionType.BOX_SWAP_ID:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.set_id(new_id)
+
+            HypergraphManager.swap_hyper_edge_id(generator_id, new_id)
         elif action == ActionType.BOX_SWAP_CONNECTION_ID:
             pass # in original diagram callback that events is not in use. In project there no occurrences for this event
         elif action == ActionType.DIAGRAM_ADD_INPUT:
             self.diagrams[canvas_id].add_input(ConnectionInfo(connection_nr, connection_side, connection_id))
+
+            HypergraphManager.create_new_node(connection_id, canvas_id)
         elif action == ActionType.DIAGRAM_ADD_OUTPUT:
             self.diagrams[canvas_id].add_output(ConnectionInfo(connection_nr, connection_side, connection_id))
+
+            HypergraphManager.create_new_node(connection_id, canvas_id)
         elif action == ActionType.DIAGRAM_REMOVE_INPUT:
             self.diagrams[canvas_id].remove_input(connection_id)
+
+            HypergraphManager.remove_node(connection_id)
         elif action == ActionType.DIAGRAM_REMOVE_OUTPUT:
-            self.diagrams[canvas_id].remove_output(connection_id)
-        elif action == ActionType.SUB_DIAGRAM_CREATE:
-            generators = self.get_generators_by_ids(generator_ids, canvas_id)
-            resources = self.get_resources_by_ids(resource_ids, canvas_id)
-            spiders = self.get_spiders_by_ids(resource_ids, canvas_id)
-
-            diagram = self.diagrams[canvas_id]
-            new_diagram = self.add_new_canvas(new_canvas_id)
-
-            diagram.remove_boxes(generators)
-            diagram.remove_spiders(spiders)
-            diagram.remove_resources(resources)
-            diagram.add_sub_diagram(new_diagram)
-
-            # new_diagram.add_input(...)
-            # new_diagram.add_output(...)
-            new_diagram.add_boxes(generators)
-            new_diagram.add_spiders(spiders)
-            new_diagram.add_resources(resources)
-
-
-            spider_connections_to_save: set[ConnectionInfo] = set()
-            for wire in resources:
-                spider_connections_to_save = spider_connections_to_save.union(wire.get_spider_connections())
-                for connection in wire.get_left_connections() + wire.get_right_connections():
-                    if not connection.is_input_output_connection():
-                        related_object: Generator = connection.get_related_object() # it is not input/output, and this is not spider, because it is not in spider_connection. So it is generator(box)
-                        if related_object not in new_diagram.boxes:
-                            if connection.side == ConnectionSide.LEFT:
-                                pass # TODO connect to diagram output
-                            else:
-                                pass # TODO connect to diagram input
-            for spider in spiders:
-                spider.spider_connection = filter(lambda conn: conn in spider_connections_to_save, spider.get_spider_connections())
-
+            pass
 
         print("All")
 
@@ -176,7 +164,8 @@ class Receiver:
         else:
             self.diagrams[canvas_id].remove_resource_by_id(id)
 
-    def add_connections_to_resource(self, resource: Resource, connections: list[ConnectionInfo|None], canvas_id: int):
+    def add_connections_to_resource(self, resource: Resource, connections: list[ConnectionInfo|None], canvas_id: int,
+                                    node: Node|None=None):
         for connection in connections:
             if connection is None: continue
 
@@ -187,13 +176,18 @@ class Receiver:
                         # TODO it is sub diagram output, that connection from frontend have box = sub diagram box
                         output = self.get_output_by_id(connection.get_id(), canvas_id)
                         resource.add_left_connection(output)
+
+                        HypergraphManager.union_nodes(node, output.get_id())
                         continue
                     resource.add_left_connection(box.get_left_by_id(connection.get_id())) # We don`t simply add connection from loop (connection in connection),
                     # because we want that box(or input/output) connection and wire connection will be the same object,
                     # if we use from frontend connection they will differ.
+                    HypergraphManager.connect_node_with_output_hyper_edge(node, box.id)
                 else: # it is output
                     output = self.get_output_by_id(connection.get_id(), canvas_id)
                     resource.add_left_connection(output)
+
+                    HypergraphManager.union_nodes(node, output.get_id())
             elif connection.side == ConnectionSide.RIGHT:
                 if connection.has_box():
                     box = self.get_generator_by_id(connection.get_box_id(), canvas_id)
@@ -201,11 +195,17 @@ class Receiver:
                         # TODO it is sub diagram input, that connection from frontend have box = sub diagram box
                         input = self.get_input_by_id(connection.get_id(), canvas_id)
                         resource.add_right_connection(input)
+
+                        HypergraphManager.union_nodes(node, input.get_id())
                         continue
                     resource.add_right_connection(box.get_right_by_id(connection.get_id()))
+
+                    HypergraphManager.connect_node_with_input_hyper_edge(node, box.id)
                 else: # it is input
                     input = self.get_input_by_id(connection.get_id(), canvas_id)
                     resource.add_right_connection(input)
+
+                    HypergraphManager.union_nodes(node, input.get_id())
             elif connection.side == ConnectionSide.SPIDER:
                 spider = self.get_spider_by_id(connection.get_id(), canvas_id)
                 connection.index = len(spider.get_spider_connections()) # we use here that rule, that when we add wire to spider
@@ -213,6 +213,8 @@ class Receiver:
                 # it always appends to the last connection
                 spider.add_spider_connection(connection)
                 resource.add_spider_connection(connection)
+
+                HypergraphManager.union_nodes(node, spider.id)
 
     def create_new_generator(self, box_id: int, canvas_id: int) -> Generator:
         box = Generator(box_id)
