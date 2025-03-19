@@ -121,7 +121,7 @@ class HypergraphManager:
         for hypergraph in HypergraphManager.hypergraphs:
             if hypergraph.get_hyper_edge_by_id(id) is not None:
                 _hypergraph = hypergraph
-                deleted_hyper_edge = hypergraph.remove_hyper_edge(id) # remove hyper edge from hypergraph
+                deleted_hyper_edge = hypergraph.remove_hyper_edge(id)  # remove hyper edge from hypergraph
                 break
 
         if deleted_hyper_edge is None: return # TODO, investigate when it can be None
