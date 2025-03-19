@@ -15,10 +15,10 @@ class HyperEdge:
         if hyper_edge_id is None:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
-        # if box_function is null it can be input/output in diagram or user didn`t specified box function
+        # if box_function is null it can be input/output in diagram or user didn't specify box function
         self.box_function: BoxFunction|None = box_function
 
-        self.source_nodes: dict[int, Node] = dict() # key is connection index, it neede for keeping the right queue
+        self.source_nodes: dict[int, Node] = dict() # key is connection index, it is needed for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
 
     def swap_id(self, new_id: int):
@@ -131,8 +131,8 @@ class HyperEdge:
         """Return a dictionary representation of the hyper edge."""
         return {
             "id": self.id,
-            "source_nodes": [node.to_dict() for node in self.get_source_nodes()],
-            "target_nodes": [node.to_dict() for node in self.get_target_nodes()],
+            "sourceNodes": [node.id for node in self.get_source_nodes()],
+            "targetNodes": [node.id for node in self.get_target_nodes()],
         }
 
     def __str__(self) -> str:

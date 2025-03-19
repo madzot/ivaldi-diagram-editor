@@ -203,11 +203,11 @@ class Node:
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the node."""
-        return {
-            "id": self.id,
-            "inputs": [node_input.to_dict() for node_input in self.inputs],
-            "outputs": [node_output.to_dict() for node_output in self.outputs],
-        } # TODO: change this to directly connected nodes
+        # return {
+        #     "id": self.id,
+        #     "inputs": [node_input.to_dict() for node_input in self.inputs],
+        #     "outputs": [node_output.to_dict() for node_output in self.outputs],
+        # } # TODO: change this to directly connected nodes
 
     def __eq__(self, __value):
         if type(self) == type(__value):
