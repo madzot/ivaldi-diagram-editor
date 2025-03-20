@@ -14,10 +14,10 @@ class HyperEdge:
         if hyper_edge_id is None:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
-        # if box_function is null it can be input/output in diagram or user didn`t specified box function
+        # if box_function is null it can be input/output in diagram or user didn't specify box function
         self.box_function: BoxFunction | None = box_function
 
-        self.source_nodes: dict[int, Node] = dict()  # key is connection index, it neede for keeping the right queue
+        self.source_nodes: dict[int, Node] = dict()  # key is connection index, it is needed for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
 
         self.sub_diagram_canvas_id = sub_diagram_canvas_id
@@ -162,18 +162,18 @@ class HyperEdge:
         self.id = new_id
 
     def to_dict(self) -> dict:
-        """Return a dictionary representation of the node."""
+        """Return a dictionary representation of the hyper edge."""
         return {
             "id": self.id,
-            "inputs": self.inputs,
-            "outputs": self.outputs,
+            "sourceNodes": [node.id for node in self.get_source_nodes()],
+            "targetNodes": [node.id for node in self.get_target_nodes()],
         }
 
     def __str__(self) -> str:
         """Return a string representation of the node."""
         return (f"Hyper edge ID: {self.id}\n"
-                f"Inputs: {self.get_source_nodes()}\n"
-                f"Outputs: {self.get_target_nodes()}")
+                f"Inputs: {", ".join([str(node) for node in self.get_source_nodes()])}\n"
+                f"Outputs: {", ".join([str(node) for node in self.get_target_nodes()])}")
 
     def __eq__(self, other):
         if not isinstance(other, HyperEdge):

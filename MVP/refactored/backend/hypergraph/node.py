@@ -202,6 +202,10 @@ class Node:
                         queue.put(hyper_edge_node)
         return False
 
+    def __str__(self) -> str:
+        """Return a string representation of the node."""
+        return f"Node ID: {self.id}"
+
     def __eq__(self, other):
         if not isinstance(other, Node):
             return False
