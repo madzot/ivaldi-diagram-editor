@@ -138,8 +138,8 @@ class HyperEdge:
     def __str__(self) -> str:
         """Return a string representation of the node."""
         return (f"Hyper edge ID: {self.id}\n"
-                f"Inputs: {self.get_source_nodes()}\n"
-                f"Outputs: {self.get_target_nodes()}")
+                f"Inputs: {", ".join([str(node) for node in self.get_source_nodes()])}\n"
+                f"Outputs: {", ".join([str(node) for node in self.get_target_nodes()])}")
 
     def __eq__(self, other):
         if not isinstance(other, HyperEdge):

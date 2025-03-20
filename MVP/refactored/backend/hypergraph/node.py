@@ -209,6 +209,10 @@ class Node:
         #     "outputs": [node_output.to_dict() for node_output in self.outputs],
         # } # TODO: change this to directly connected nodes
 
+    def __str__(self) -> str:
+        """Return a string representation of the node."""
+        return f"Node ID: {self.id}"
+
     def __eq__(self, __value):
         if type(self) == type(__value):
             if self.id == __value.id:

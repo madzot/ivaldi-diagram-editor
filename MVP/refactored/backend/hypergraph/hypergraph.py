@@ -209,11 +209,11 @@ class Hypergraph(HyperEdge):
 
         hyper_edges = self.get_all_hyper_edges()
         result += f"Hyper edges({len(hyper_edges)}): " + ", ".join(
-            str(hyper_edge.id) for hyper_edge in hyper_edges) + "\n"
+            str(hyper_edge) for hyper_edge in hyper_edges) + "\n"
 
         vertices = self.get_all_nodes()
         result += f"Vertices({len(vertices)}): " + ", ".join(
-            f"{vertex.id}({len(vertex.get_united_with_nodes())})" for vertex in vertices) + "\n"
+            f"{str(vertex)}({len(vertex.get_united_with_nodes())})" for vertex in vertices) + "\n"
 
         result += "Connections:\n"
         visited = set()
