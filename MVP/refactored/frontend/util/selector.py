@@ -1,3 +1,4 @@
+from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.wire import Wire
@@ -5,7 +6,7 @@ import copy
 
 
 class Selector:
-    def __init__(self, main_diagram):
+    def __init__(self, main_diagram, receiver):
         self.canvas = main_diagram.custom_canvas
         self.selecting = False
         self.selected_items = []
@@ -17,6 +18,7 @@ class Selector:
         self.connection_mapping = {}
         self.copied_items = []
         self.copied_wire_list = []
+        self.receiver = receiver
 
     def start_selection(self, event):
         for item in self.selected_items:
@@ -75,21 +77,24 @@ class Selector:
         y = (coordinates[1] + coordinates[3]) / 2
         box = self.canvas.add_box((x, y), shape="rectangle")
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
-            wire.delete_self("sub_diagram")
+            # wire.delete_self("sub_diagram")
+            wire.delete_self()
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
-            box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
+            # box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
+            box_.delete_box()
         for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):
-            spider.delete_spider("sub_diagram")
+            # spider.delete_spider("sub_diagram")
+            spider.delete_spider()
             if self.canvas.receiver.listener:
                 self.canvas.receiver.receiver_callback(
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
-                )
+                ) # TODO WTF
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
-        self.canvas.receiver.listener = False
+        # self.canvas.receiver.listener = False # TODO WTF Why it is off for this part
         self.canvas.copier.copy_canvas_contents(
             sub_diagram, self.selected_wires, self.selected_boxes, self.selected_spiders, coordinates, box
-        )
+        ) # TODO add receiver callback into copier? I suppose that is solution
         box.lock_box()
         self.canvas.receiver.listener = prev_status
 
@@ -186,6 +191,7 @@ class Selector:
                             'original_end_index': copy.deepcopy(item.end_connection.index),
                             'original_end_side': copy.deepcopy(item.end_connection.side)
                         })
+
 
     def paste_copied_items(self, event_x=50, event_y=50):
         if len(self.copied_items) > 0:

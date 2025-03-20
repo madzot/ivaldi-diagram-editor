@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
@@ -11,15 +10,23 @@ if TYPE_CHECKING:
 
 class HyperEdge:
 
-    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None):
+    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None, sub_diagram_canvas_id = None):
         if hyper_edge_id is None:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
         # if box_function is null it can be input/output in diagram or user didn't specify box function
-        self.box_function: BoxFunction|None = box_function
+        self.box_function: BoxFunction | None = box_function
 
-        self.source_nodes: dict[int, Node] = dict() # key is connection index, it is needed for keeping the right queue
+        self.source_nodes: dict[int, Node] = dict()  # key is connection index, it is needed for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
+
+        self.sub_diagram_canvas_id = sub_diagram_canvas_id
+
+    def is_compound(self) -> bool:
+        return bool(self.sub_diagram_canvas_id)
+
+    def set_sub_diagram_canvas_id(self, canvas_id: int):
+        self.sub_diagram_canvas_id = canvas_id
 
     def swap_id(self, new_id: int):
         self.id = new_id
@@ -64,6 +71,21 @@ class HyperEdge:
         """
         return [item[1] for item in sorted(self.target_nodes.items(), key=lambda item: item[0])]
 
+    def get_source_node_connection_index(self, node: Node) -> int | None:
+        for conn_index, source_node in self.source_nodes.items():
+            if source_node == node:
+                return conn_index
+        return None
+
+    def get_target_node_connection_index(self, node: Node) -> int | None:
+        for conn_index, target_node in self.target_nodes.items():
+            if target_node == node:
+                return conn_index
+        return None
+
+    def get_box_function(self) -> BoxFunction:
+        return self.box_function
+
     def set_source_node(self, conn_index: int, node: Node):
         if conn_index in self.source_nodes:
             self.set_source_node(conn_index + 1, self.source_nodes[conn_index])
@@ -73,6 +95,9 @@ class HyperEdge:
         if conn_index in self.target_nodes:
             self.set_target_node(conn_index + 1, self.target_nodes[conn_index])
         self.target_nodes[conn_index] = node
+
+    def set_box_function(self, function: BoxFunction):
+        self.box_function = function
 
     def append_target_node(self, node: Node):
         self.target_nodes[len(self.target_nodes)] = node
@@ -84,17 +109,33 @@ class HyperEdge:
         for node in nodes:
             self.append_source_node(node)
 
-    def get_source_node_connection_index(self, node: Node) -> int|None:
-        for conn_index, source_node in self.source_nodes.items():
-            if source_node == node:
-                return conn_index
-        return None
+    def remove_all_source_nodes(self):
+        self.source_nodes.clear()
 
-    def get_target_node_connection_index(self, node: Node) -> int|None:
-        for conn_index, target_node in self.target_nodes.items():
-            if target_node == node:
-                return conn_index
-        return None
+    def remove_all_target_nodes(self):
+        self.target_nodes.clear()
+
+    def remove_source_connection_by_index(self, conn_index: int):
+        """NB! It deletes connection and all connection with index more that current connection index,
+        their connection decreases.
+        """
+        if conn_index in self.source_nodes:
+            del self.source_nodes[conn_index]
+        for key in list(self.source_nodes.keys()):
+            if key > conn_index:
+                self.source_nodes[key - 1] = self.source_nodes[key]
+                del self.source_nodes[key]
+
+    def remove_target_connection_by_index(self, conn_index: int):
+        """NB! It deletes connection and all connection with index more that current connection index,
+        their connection decreases.
+        """
+        if conn_index in self.source_nodes:
+            del self.target_nodes[conn_index]
+        for key in list(self.target_nodes.keys()):
+            if key > conn_index:
+                self.target_nodes[key - 1] = self.target_nodes[key]
+                del self.target_nodes[key]
 
     def remove_source_node_by_connection_index(self, conn_index: int):
         if conn_index in self.source_nodes:
@@ -117,15 +158,8 @@ class HyperEdge:
     def remove_self(self):
         pass
 
-    def set_box_function(self, function: BoxFunction):
-        self.box_function = function
-
-    def get_box_function(self) -> BoxFunction:
-        return self.box_function
-
-    def is_valid(self) -> bool:
-        return self._children_nodes or self._parent_nodes
-
+    def swap_id(self, new_id: int):
+        self.id = new_id
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the hyper edge."""
