@@ -223,12 +223,13 @@ class Hypergraph:
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the hypergraph."""
-        hypergraph_dict = super().to_dict()
-        hypergraph_dict["hyperEdges"] = [hyper_edge.to_dict() for hyper_edge in self.get_all_hyper_edges()]
-        hypergraph_dict["nodeGroups"] = self.get_node_groups()
-        hypergraph_dict["source"] = [source_node.id for source_node in self.get_hypergraph_source()]
+        return {
+            "id": self.id,
+            "hyperEdges": [hyper_edge.to_dict() for hyper_edge in self.get_all_hyper_edges()],
+            "nodeGroups": self.get_node_groups(),
+            "sourceNodes": [source_node.id for source_node in self.get_hypergraph_source()],
+        }
 
-        return hypergraph_dict
 
     def __str__(self) -> str:
         result = f"Hypergraph: {self.id}\n"

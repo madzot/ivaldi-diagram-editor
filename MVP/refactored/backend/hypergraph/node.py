@@ -202,14 +202,6 @@ class Node:
                         queue.put(hyper_edge_node)
         return False
 
-    def to_dict(self) -> dict:
-        """Return a dictionary representation of the node."""
-        # return {
-        #     "id": self.id,
-        #     "inputs": [node_input.to_dict() for node_input in self.inputs],
-        #     "outputs": [node_output.to_dict() for node_output in self.outputs],
-        # } # TODO: change this to directly connected nodes
-
     def __str__(self) -> str:
         """Return a string representation of the node."""
         return f"Node ID: {self.id}"
