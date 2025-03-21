@@ -1,6 +1,7 @@
 class Copier:
 
     def copy_canvas_contents(self, canvas, wires, boxes, spiders, selected_coordinates, box):
+        # in here logical coords
         self.copy_over_boxes(boxes, canvas)
         self.copy_over_spiders(spiders, canvas)
         self.copy_over_wires(wires, selected_coordinates, box, canvas)
@@ -8,13 +9,15 @@ class Copier:
     @staticmethod
     def copy_over_spiders(spiders, canvas):
         for spider in spiders:
-            new_spider = canvas.add_spider(spider.location, connection_type=spider.type)
+            new_spider = canvas.add_spider(spider.logical_location, connection_type=spider.type)
             new_spider.id = spider.id
 
     @staticmethod
     def copy_over_boxes(boxes, canvas):
         for old_box in boxes:
-            sub_diagram_box = canvas.add_box(loc=(old_box.x, old_box.y), size=old_box.size, shape=old_box.shape)
+            sub_diagram_box = canvas.add_box(loc=(old_box.logical_x, old_box.logical_y),
+                                             size=old_box.logical_size(),
+                                             shape=old_box.shape)
             sub_diagram_box.set_id(old_box.id)
             Copier.copy_box(old_box, sub_diagram_box)
             sub_diagram_box.sub_diagram = old_box.sub_diagram
@@ -25,10 +28,10 @@ class Copier:
 
     @staticmethod
     def add_diagram_io_based_on_spider(selected_coordinates, box, other_c):
-        if other_c.location[0] < selected_coordinates[0]:
+        if other_c.logical_location[0] < selected_coordinates[0]:
             box.sub_diagram.add_diagram_input_for_sub_d_wire()
             return True
-        if other_c.location[0] > selected_coordinates[2]:
+        if other_c.logical_location[0] > selected_coordinates[2]:
             box.sub_diagram.add_diagram_output_for_sub_d_wire()
             return False
 
@@ -44,7 +47,7 @@ class Copier:
                 half_in.append((wire.start_connection, wire))
             if status == "END_IN":
                 half_in.append((wire.end_connection, wire))
-        half_in = sorted(half_in, key=lambda x: x[0].location[1], reverse=False)
+        half_in = sorted(half_in, key=lambda x: x[0].logical_location[1], reverse=False)  #?
         return half_in, full_in
 
     def copy_over_wires(self, wires, selected_coordinates, box, canvas):
@@ -104,8 +107,8 @@ class Copier:
 
     @staticmethod
     def get_wire_select_status(wire, selected_coordinates):
-        start_coordinates = wire.start_connection.location
-        end_coordinates = wire.end_connection.location
+        start_coordinates = wire.start_connection.logical_location  # ?
+        end_coordinates = wire.end_connection.logical_location  # ?
         x1, y1 = start_coordinates
         x2, y2 = end_coordinates
         if selected_coordinates[0] <= x1 <= selected_coordinates[2] and selected_coordinates[1] <= y1 <= \

@@ -52,11 +52,12 @@ class Selector:
             self.selected_boxes = [box for box in boxes if self.is_within_selection(box.rect, selected_coordinates)]
 
             self.selected_spiders = [spider for spider in spiders if
-                                     self.is_within_selection_point(spider.location, selected_coordinates)]
+                                     self.is_within_selection_point(spider.visual_location, selected_coordinates)]
 
             self.selected_wires = [wire for wire in wires if
-                                   self.is_within_selection_point(wire.start_connection.location, selected_coordinates)
-                                   or self.is_within_selection_point(wire.end_connection.location,
+                                   self.is_within_selection_point(wire.start_connection.visual_location,
+                                                                  selected_coordinates)
+                                   or self.is_within_selection_point(wire.end_connection.visual_location,
                                                                      selected_coordinates)]
             self.selected_items = self.selected_boxes + self.selected_spiders + self.selected_wires
             for item in self.selected_items:
@@ -171,17 +172,19 @@ class Selector:
 
             for item in self.copied_items:
                 if item['component'] == "Box":
-                    loc = (event_x + (item['location'][0] - middle_point[0]) * multi,
-                           event_y + (item['location'][1] - middle_point[1]) * multi)
+                    x, y = self.canvas.convert_logical_visual(item['location'][0], item['location'][1])
+                    loc = (event_x + (x - middle_point[0]) * multi,
+                           event_y + (y - middle_point[1]) * multi)
 
                     new_box = self.paste_box(item, loc, self.copied_wire_list, wires, self.canvas, multi=multi,
-                                             replace=replace, return_box=True)
+                                             replace=replace, return_box=True, visual=True)
                     pasted_items.append(new_box)
 
                 if item['component'] == "Spider":
-                    new_spider = self.canvas.add_spider((event_x + (item['location'][0] - middle_point[0]) * multi,
-                                                         event_y + (item['location'][1] - middle_point[1]) * multi),
-                                                        connection_type=item['type'])
+                    x, y = self.canvas.convert_logical_visual(item['location'][0], item['location'][1])
+                    new_spider = self.canvas.add_spider((event_x + (x - middle_point[0]) * multi,
+                                                         event_y + (y - middle_point[1]) * multi),
+                                                        connection_type=item['type'], visual=True)
                     pasted_items.append(new_spider)
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
@@ -237,6 +240,9 @@ class Selector:
     def find_middle_point(self, event_x, event_y):
         most_left, most_right, most_up, most_down = self.find_corners_copied_items()
 
+        most_left, most_up = self.canvas.convert_logical_visual(most_left, most_up)
+        most_right, most_down = self.canvas.convert_logical_visual(most_right, most_down)
+
         middle_x = (most_left + most_right) / 2
         middle_y = (most_up + most_down) / 2
 
@@ -288,23 +294,23 @@ class Selector:
         most_down = 0
         for item in self.selected_items:
             if isinstance(item, Box):
-                if item.x < most_left:
-                    most_left = item.x
-                if item.y < most_up:
-                    most_up = item.y
-                if item.x + item.size[0] > most_right:
-                    most_right = item.x + item.size[0]
-                if item.y + item.size[1] > most_down:
-                    most_down = item.y + item.size[1]
+                if item.logical_x < most_left:
+                    most_left = item.logical_x
+                if item.logical_y < most_up:
+                    most_up = item.logical_y
+                if item.logical_x + item.logical_size()[0] > most_right:
+                    most_right = item.logical_x + item.logical_size()[0]
+                if item.logical_y + item.logical_size()[1] > most_down:
+                    most_down = item.logical_y + item.logical_size()[1]
             if isinstance(item, Spider):
-                if item.x - item.r < most_left:
-                    most_left = item.x - item.r
-                if item.y - item.r < most_up:
-                    most_up = item.y - item.r
-                if item.x + item.r > most_right:
-                    most_right = item.x + item.r
-                if item.y + item.r > most_down:
-                    most_down = item.y + item.r
+                if item.logical_x - item.r < most_left:
+                    most_left = item.logical_x - item.r
+                if item.logical_y - item.r < most_up:
+                    most_up = item.logical_y - item.r
+                if item.logical_x + item.r > most_right:
+                    most_right = item.logical_x + item.r
+                if item.logical_y + item.r > most_down:
+                    most_down = item.logical_y + item.r
         return [most_left, most_up, most_right, most_down]
 
     def select_wires_between_selected_items(self):
@@ -361,10 +367,12 @@ class Selector:
         # Sort wires based on connection height
         right_wires.sort(
             key=lambda w:
-            w.end_connection.location[1] if w.end_connection in connection_list else w.start_connection.location[1])
+            w.end_connection.logical_location[1] if w.end_connection in connection_list else
+            w.start_connection.logical_location[1])
         left_wires.sort(
             key=lambda w:
-            w.end_connection.location[1] if w.end_connection in connection_list else w.start_connection.location[1])
+            w.end_connection.logical_location[1] if w.end_connection in connection_list else
+            w.start_connection.logical_location[1])
         # Add connection to connect to lists
         for wire in left_wires:
             if wire.start_connection in connection_list:
@@ -406,12 +414,12 @@ class Selector:
             right_wires.append(wire)
         elif connection.side == "spider":
             if connection == wire.start_connection:
-                if connection.location[0] > wire.end_connection.location[0]:
+                if connection.logical_location[0] > wire.end_connection.logical_location[0]:
                     left_wires.append(wire)
                 else:
                     right_wires.append(wire)
             if connection == wire.end_connection:
-                if connection.location[0] > wire.start_connection.location[0]:
+                if connection.logical_location[0] > wire.start_connection.logical_location[0]:
                     left_wires.append(wire)
                 else:
                     right_wires.append(wire)
@@ -424,30 +432,30 @@ class Selector:
         most_right_distance = 0
         for item in items:
             if isinstance(item, Box):
-                if item.x + item.size[0] / 2 < most_left_distance:
-                    most_left_distance = item.x + item.size[0] / 2
-                if item.x + item.size[0] / 2 > most_right_distance:
-                    most_right_distance = item.x + item.size[0] / 2
+                if item.logical_x + item.logical_size()[0] / 2 < most_left_distance:
+                    most_left_distance = item.logical_x + item.logical_size()[0] / 2
+                if item.logical_x + item.logical_size()[0] / 2 > most_right_distance:
+                    most_right_distance = item.logical_x + item.logical_size()[0] / 2
             if isinstance(item, Spider):
-                if item.x < most_left_distance:
-                    most_left_distance = item.x
-                if item.x > most_right_distance:
-                    most_right_distance = item.x
+                if item.logical_x < most_left_distance:
+                    most_left_distance = item.logical_x
+                if item.logical_x > most_right_distance:
+                    most_right_distance = item.logical_x
 
         for item in items:
             if isinstance(item, Box):
-                if item.x + item.size[0] / 2 == most_left_distance:
+                if item.logical_x + item.logical_size()[0] / 2 == most_left_distance:
                     most_left.append(item)
-                if item.x + item.size[0] / 2 == most_right_distance:
+                if item.logical_x + item.logical_size()[0] / 2 == most_right_distance:
                     most_right.append(item)
             if isinstance(item, Spider):
-                if item.x == most_left_distance:
+                if item.logical_x == most_left_distance:
                     most_left.append(item)
-                if item.x == most_right_distance:
+                if item.logical_x == most_right_distance:
                     most_right.append(item)
 
-        most_left.sort(key=lambda obj: obj.y)
-        most_right.sort(key=lambda obj: obj.y)
+        most_left.sort(key=lambda obj: obj.logical_y)
+        most_right.sort(key=lambda obj: obj.logical_y)
 
         left_connections = []
         right_connections = []
@@ -522,14 +530,14 @@ class Selector:
                         elif wire.end_connection.side == "right":
                             is_left = True
                         else:
-                            is_left = connection.location[0] > wire.end_connection.location[0]
+                            is_left = connection.logical_location[0] > wire.end_connection.logical_location[0]
                     if wire.end_connection in connection_list:
                         if wire.start_connection.side == "left":
                             is_left = False
                         elif wire.start_connection.side == "right":
                             is_left = True
                         else:
-                            is_left = connection.location[0] > wire.start_connection.location[0]
+                            is_left = connection.logical_location[0] > wire.start_connection.logical_location[0]
                     if is_left is not None:
                         self.add_copied_wire(connection, is_left)
 
@@ -589,8 +597,8 @@ class Selector:
             'component': "Box",
             'id': copy.deepcopy(box.id),
             'label': copy.deepcopy(box.label_text),
-            'location': (box.x, box.y),
-            'size': copy.deepcopy(box.size),
+            'location': (box.logical_x, box.logical_y),
+            'size': copy.deepcopy(box.logical_size()),
             'shape': copy.deepcopy(box.shape),
             'connections': connections_copy,
             'sub-diagram': copy.deepcopy(box.sub_diagram.id) if box.sub_diagram else None
@@ -605,15 +613,16 @@ class Selector:
         spider_info = ({
             'component': "Spider",
             'id': copy.deepcopy(spider.id),
-            'location': (spider.x, spider.y),
+            'location': (spider.logical_x, spider.logical_y),
             'size': copy.deepcopy(spider.r),
             'type': copy.deepcopy(spider.type)
         })
         return spider_info
 
-    def paste_box(self, box, loc, wires, side_wires, canvas, multi=1, replace=False, return_box=False):
+    def paste_box(self, box, loc, wires, side_wires, canvas, multi=1, replace=False, return_box=False, visual=False):
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-        new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'])
+        new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'],
+                                 visual=visual)
         for c in box['connections']:
             if c['side'] == "right":
                 new_box.add_right_connection(connection_type=c['type'])

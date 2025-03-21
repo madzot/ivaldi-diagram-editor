@@ -82,10 +82,10 @@ class Wire:
         if self.end_connection:
             if self.line:
                 self.canvas.coords(self.line,
-                                   *curved_line(self.start_connection.location, self.end_connection.location))
+                                   *curved_line(self.start_connection.visual_location, self.end_connection.visual_location))
             else:
                 self.line = self.canvas.create_line(
-                    *curved_line(self.start_connection.location, self.end_connection.location),
+                    *curved_line(self.start_connection.visual_location, self.end_connection.visual_location),
                     fill=self.color, width=self.wire_width, dash=self.dash_style)
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
             self.update_wire_label()
@@ -97,24 +97,24 @@ class Wire:
             if self.start_label or self.end_label:
                 if self.start_label:
                     self.canvas.coords(self.start_label,
-                                       self.start_connection.location[0] + self.start_connection.r + size,
-                                       self.start_connection.location[1] - 10)
+                                       self.start_connection.visual_location[0] + self.start_connection.r + size,
+                                       self.start_connection.visual_location[1] - 10)
                     self.canvas.itemconfig(self.start_label, text=Wire.defined_wires[self.type.name])
                 if self.end_label:
                     self.canvas.coords(self.end_label,
-                                       self.end_connection.location[0] - self.end_connection.r - size,
-                                       self.end_connection.location[1] - 10)
+                                       self.end_connection.visual_location[0] - self.end_connection.r - size,
+                                       self.end_connection.visual_location[1] - 10)
                     self.canvas.itemconfig(self.end_label, text=Wire.defined_wires[self.type.name])
             else:
                 if not self.start_connection.is_spider():
-                    self.start_label = self.canvas.create_text(self.start_connection.location[0] + size,
-                                                               self.start_connection.location[1] - 10,
+                    self.start_label = self.canvas.create_text(self.start_connection.visual_location[0] + size,
+                                                               self.start_connection.visual_location[1] - 10,
                                                                text=Wire.defined_wires[self.type.name],
                                                                font="Courier 10")
                     self.canvas.wire_label_tags.append(self.start_label)
                 if not self.end_connection.is_spider():
-                    self.end_label = self.canvas.create_text(self.end_connection.location[0] - size,
-                                                             self.end_connection.location[1] - 10,
+                    self.end_label = self.canvas.create_text(self.end_connection.visual_location[0] - size,
+                                                             self.end_connection.visual_location[1] - 10,
                                                              text=Wire.defined_wires[self.type.name],
                                                              font="Courier 10")
                     self.canvas.wire_label_tags.append(self.end_label)

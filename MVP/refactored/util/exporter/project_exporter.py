@@ -48,8 +48,8 @@ class ProjectExporter(Exporter):
 
             spider_d = {
                 "id": spider.id,
-                "x": spider.x,
-                "y": spider.y,
+                "x": spider.logical_x,
+                "y": spider.logical_y,
                 "connections": connections_list,
                 "type": spider.type.name
             }
@@ -66,9 +66,9 @@ class ProjectExporter(Exporter):
         for box in canvas.boxes:
             d = {
                 "id": box.id,
-                "x": box.x,
-                "y": box.y,
-                "size": box.size,
+                "x": box.logical_x,
+                "y": box.logical_y,
+                "size": box.logical_size(),
                 "label": box.label_text,
                 "connections": self.get_connections(box.connections),
                 "sub_diagram": None,

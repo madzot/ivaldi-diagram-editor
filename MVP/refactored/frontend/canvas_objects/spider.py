@@ -6,13 +6,19 @@ from MVP.refactored.frontend.canvas_objects.types.connection_type import Connect
 
 class Spider(Connection):
     # Change
-    def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC):
+    def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC, visual=False):
         self.r = 10
-        super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type)
+        super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type, temp=visual)
         self.canvas = canvas
-        self.x = location[0]
-        self.y = location[1]
-        self.location = location
+        self.logical_x = location[0]
+        self.logical_y = location[1]
+        self.logical_location = location
+
+        self.visual_x = location[0]
+        self.visual_y = location[1]
+        self.visual_location = location
+
+        self.update_spider_coords(location[0], location[1], visual)
         if not id_:
             self.id = id(self)
         else:
@@ -85,11 +91,11 @@ class Spider(Connection):
                 return
         old_r = self.r
         self.r += 2.5 * multiplier
-        if self.find_collisions(self.x, self.y):
+        if self.find_collisions(self.visual_x, self.visual_y):  # Is there collision in no rect (doubt)
             self.r = old_r
             return
-        self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
-                           self.y + self.r)
+        self.canvas.coords(self.circle, self.visual_x - self.r, self.visual_y - self.r, self.visual_x + self.r,
+                           self.visual_y + self.r)
 
     # MOVING, CLICKING ETC.
     def on_press(self):
@@ -120,18 +126,26 @@ class Spider(Connection):
         if self.canvas.pulling_wire:
             return
 
-        go_to_y = event.y
-        go_to_x = self.x
-        move_legal = False
-        if not self.is_illegal_move(event.x):
+        if self.canvas.master.is_rotated:
             go_to_x = event.x
-            move_legal = True
+            go_to_y = self.visual_y
+            move_legal = False
+            if not self.is_illegal_move(event.y):
+                go_to_y = event.y
+                move_legal = True
+        else:
+            go_to_x = self.visual_x
+            go_to_y = event.y
+            move_legal = False
+            if not self.is_illegal_move(event.x):
+                go_to_x = event.x
+                move_legal = True
 
         # snapping into place
         found = False
         for box in self.canvas.boxes:
-            if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
-                go_to_x = box.x + box.size[0] / 2
+            if abs(box.visual_x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
+                go_to_x = box.visual_x + box.size[0] / 2
 
                 found = True
         for spider in self.canvas.spiders:
@@ -145,8 +159,8 @@ class Spider(Connection):
             if cancel:
                 continue
 
-            if abs(spider.location[0] - go_to_x) < self.r + spider.r and move_legal:
-                go_to_x = spider.location[0]
+            if abs(spider.visual_location[0] - go_to_x) < self.r + spider.r and move_legal:
+                go_to_x = spider.visual_location[0]
 
                 found = True
         if found:
@@ -170,12 +184,10 @@ class Spider(Connection):
 
         self.is_snapped = found
 
-        self.location = [go_to_x, go_to_y]
-        self.x = go_to_x
-        self.y = go_to_y
+        self.update_spider_coords(go_to_x, go_to_y, visual=True)
 
-        self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
-                           self.y + self.r)
+        self.canvas.coords(self.circle, self.visual_x - self.r, self.visual_y - self.r, self.visual_x + self.r,
+                           self.visual_y + self.r)
         [w.update() for w in self.wires]
 
     def switch_wire_start_and_end(self):
@@ -185,9 +197,9 @@ class Spider(Connection):
             switch = False
             wire = list(filter(lambda w: (w.end_connection == self or w.start_connection == self),
                                connection.wires))[0]
-            if wire.start_connection == self and wire.end_connection.x < self.x:
+            if wire.start_connection == self and wire.end_connection.logical_x < self.logical_x:
                 switch = True
-            if wire.end_connection == self and wire.start_connection.x > self.x:
+            if wire.end_connection == self and wire.start_connection.logical_x > self.logical_x:
                 switch = True
             if switch:
                 start = wire.end_connection
@@ -214,13 +226,13 @@ class Spider(Connection):
         for connection in list(filter(lambda x: (x is not None and x != self),
                                       [w.end_connection for w in self.wires] + [w.start_connection for w in
                                                                                 self.wires])):
-            if connection.side == "spider" and abs(new_x - connection.location[0]) < 2 * self.r:
+            if connection.side == "spider" and abs(new_x - connection.logical_location[0]) < 2 * self.r:  # ?
                 return True
             if connection.side == "left":
-                if new_x + self.r >= connection.location[0] - connection.width_between_boxes:
+                if new_x + self.r >= connection.logical_location[0] - connection.width_between_boxes:  # ?
                     return True
             if connection.side == "right":
-                if new_x - self.r <= connection.location[0] + connection.width_between_boxes:
+                if new_x - self.r <= connection.logical_location[0] + connection.width_between_boxes:  # ?
                     return True
         return False
 
@@ -228,3 +240,42 @@ class Spider(Connection):
         if wire and wire in self.wires:
             self.wires.remove(wire)
             self.has_wire = len(self.wires) > 0
+
+    def update_spider_coords(self, x, y, visual=False):
+        if not x:
+            if visual:
+                x = self.visual_x
+            else:
+                x = self.logical_x
+        if not y:
+            if visual:
+                y = self.visual_y
+            else:
+                y = self.logical_y
+        if self.canvas.master.is_rotated:
+            if visual:
+                self.logical_x = y
+                self.logical_y = x
+                self.logical_location = [y, x]
+
+                self.visual_x = x
+                self.visual_y = y
+                self.visual_location = [x, y]
+
+            else:
+                self.logical_x = x
+                self.logical_y = y
+                self.logical_location = [x, y]
+
+                self.visual_x = y
+                self.visual_y = x
+                self.visual_location = [y, x]
+
+        else:
+            self.visual_x = x
+            self.visual_y = y
+            self.logical_location = [x, y]
+
+            self.logical_x = x
+            self.logical_y = y
+            self.visual_location = [x, y]

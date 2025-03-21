@@ -199,10 +199,18 @@ class Importer:
         multi_x = 1
         multi_y = 1
 
-        if self.canvas.main_diagram.custom_canvas.winfo_width() < max_x:
-            max_x += min_x
-            multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_width() / max_x, 3)
-        if self.canvas.main_diagram.custom_canvas.winfo_height() < max_y:
-            max_y += 30
-            multi_y = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_y, 3)
+        if self.canvas.main_diagram.is_rotated:
+            if self.canvas.main_diagram.custom_canvas.winfo_height() < max_x:
+                max_x += min_x
+                multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_x, 3)
+            if self.canvas.main_diagram.custom_canvas.winfo_width() < max_y:
+                max_y += 30
+                multi_y = round(self.canvas.main_diagram.custom_canvas.winfo_width() / max_y, 3)
+        else:
+            if self.canvas.main_diagram.custom_canvas.winfo_width() < max_x:
+                max_x += min_x
+                multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_width() / max_x, 3)
+            if self.canvas.main_diagram.custom_canvas.winfo_height() < max_y:
+                max_y += 30
+                multi_y = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_y, 3)
         return multi_x, multi_y
