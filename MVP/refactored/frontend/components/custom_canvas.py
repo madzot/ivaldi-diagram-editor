@@ -23,8 +23,8 @@ from constants import *
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, diagram_source_box, receiver, main_diagram,
-                 parent_diagram, add_boxes, id_=None, search=False, **kwargs):
+    def __init__(self, master, receiver, main_diagram, add_boxes=False,
+                 id_=None, search=False, diagram_source_box=None, parent_diagram=None, **kwargs):
         super().__init__(master, **kwargs)
 
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
