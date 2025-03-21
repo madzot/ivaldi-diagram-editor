@@ -18,7 +18,6 @@ inside MainDiagram
 | main_diagram          | MainDiagram  | MainDiagram object used for accessing variables across the application.                                                                                                         |
 |                       |              |                                                                                                                                                                                 |
 | # **Optional params** |              |                                                                                                                                                                                 |
-| add_boxes             | boolean      | [TBC]                                                                                                                                                                           |
 | id_                   | int          | Custom ID for canvas.                                                                                                                                                           |
 | search                | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`                                   |
 | diagram_source_box    | Box          | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |

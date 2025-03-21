@@ -23,7 +23,7 @@ from constants import *
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, receiver, main_diagram, add_boxes=False,
+    def __init__(self, master, receiver, main_diagram,
                  id_=None, is_search=False, diagram_source_box=None, parent_diagram=None, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -89,7 +89,7 @@ class CustomCanvas(tk.Canvas):
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
 
-        if add_boxes and diagram_source_box:
+        if diagram_source_box:
             for connection in diagram_source_box.connections:
                 if connection.side == "left":
                     self.add_diagram_input()
