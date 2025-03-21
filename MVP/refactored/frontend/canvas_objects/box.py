@@ -191,13 +191,13 @@ class Box:
             for _ in range(int(inputs)):
                 self.add_left_connection()
 
-    def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True, switch=True):
+    def edit_sub_diagram(self, save_to_canvasses=True, switch=True):
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self.receiver, self.canvas.main_diagram,
-                                            add_boxes=add_boxes, id_=self.id, highlightthickness=0,
+                                            id_=self.id, highlightthickness=0,
                                             diagram_source_box=self, parent_diagram=self.canvas)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:

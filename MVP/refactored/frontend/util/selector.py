@@ -621,7 +621,7 @@ class Selector:
                 new_box.add_left_connection(connection_type=c['type'])
         new_box.set_label(box['label'])
         if box["sub-diagram"]:
-            sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
+            sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False)
             self.paste_canvas(sub_diagram, box["sub-diagram"])
             sub_diagram.set_name(box['label'])
             self.canvas.main_diagram.add_canvas(sub_diagram)

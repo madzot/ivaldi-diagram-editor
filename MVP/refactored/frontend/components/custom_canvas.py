@@ -89,12 +89,6 @@ class CustomCanvas(tk.Canvas):
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
 
-        if diagram_source_box:
-            for connection in diagram_source_box.connections:
-                if connection.side == "left":
-                    self.add_diagram_input()
-                if connection.side == "right":
-                    self.add_diagram_output()
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
