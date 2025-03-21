@@ -13,7 +13,7 @@ from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManag
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
-from MVP.refactored.backend.box_functions.box_function import BoxFunction, functions
+from MVP.refactored.backend.box_functions.box_function import BoxFunction, predefined_functions
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from constants import *
@@ -70,16 +70,6 @@ class Box:
 
         coords = self.canvas.coords(self.rect)
         self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-2:]
-
-    def set_box_function(self, function: BoxFunction):
-        self.box_function = function
-
-        hyper_edge: HyperEdge = HypergraphManager.get_hyper_edge_by_id(self.id)
-        if hyper_edge:
-            hyper_edge.set_box_function(self.box_function)
-
-    def get_box_function(self) -> BoxFunction:
-        return self.box_function
 
     def remove_wire(self, wire: Wire):
         # box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
@@ -153,8 +143,8 @@ class Box:
 
     def add_function(self, event):
         menu = tk.Menu(self.canvas, tearoff=0)
-        for name in functions:
-            menu.add_command(label=name, command=lambda x=name: self.set_function(x))
+        for name in predefined_functions:
+            menu.add_command(label=name, command=lambda function=name: self.set_predefined_function(function))
         menu.add_command(label="Add custom function", command=self.show_add_custom_function_menu)
         menu.post(event.x_root, event.y_root)
 
@@ -162,11 +152,20 @@ class Box:
         file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
                                       filetypes=(("Python script", "*.py"),))
         if file:
-            self.set_function(file.name, file.read())
+            box_function = BoxFunction(name=file.name, file_code=file.read())
+            self.set_box_function(box_function)
 
-    def set_function(self, name, code=None):
-        self.box_function = BoxFunction(name, code)
+    def set_predefined_function(self, name: str):
+        box_function = BoxFunction(name=name, is_predefined_function=True)
+        self.set_box_function(box_function)
 
+    def set_box_function(self, box_function: BoxFunction):
+        self.box_function = box_function
+        hyper_edge = HypergraphManager.get_hyper_edge_by_id(self.id)
+        hyper_edge.set_box_function(self.box_function)
+
+    def get_box_function(self) -> BoxFunction:
+        return self.box_function
 
     def count_inputs(self) -> int:
         count = 0

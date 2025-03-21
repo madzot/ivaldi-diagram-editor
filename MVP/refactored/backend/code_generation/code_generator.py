@@ -49,7 +49,7 @@ class CodeGenerator:
             if str(box.id) in canvasses:
                 code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses, main_diagram))
             else:
-                box_function = BoxFunction(box.label_text, code=main_diagram.label_content[box.label_text])
+                box_function = BoxFunction(name=box.label_text, file_code=main_diagram.label_content[box.label_text])
                 if box_function in code_parts:
                     code_parts[box_function].append(box.id)
                 else:

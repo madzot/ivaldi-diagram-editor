@@ -1,6 +1,7 @@
 import ast
 from typing import TextIO
 
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
 
@@ -57,8 +58,14 @@ class PythonImporter(Importer):
                         else:
                             num_outputs = 1
 
-                # Append details to the functions list
-                functions[func_name] = {"code": func_code, "num_inputs": num_inputs, "num_outputs": num_outputs}
+                namespace = {}
+                exec(func_code, namespace)
+                function = namespace[func_name]
+
+                box_function = BoxFunction(
+                    name=func_name, function=function, min_args=num_inputs, max_args=num_inputs   # TODO: add imports
+                )
+                functions[func_name] = box_function
 
         # Analyze the main method for function calls
         for node in tree.body:
@@ -89,13 +96,16 @@ class PythonImporter(Importer):
         box_right_connection_spiders = {}
 
         for function_call in main_logic:
+            function_name = function_call["function_name"]
             args = function_call["args"]
 
             for assigned_variable in function_call["assigned_variables"]:
-                possible_outputs[assigned_variable] = function_call["function_name"]
+                possible_outputs[assigned_variable] = function_name
 
             new_box = canvas.add_box(loc=(box_x, elements_y_position))
-            new_box.set_label(function_call["function_name"])
+
+            box_function = functions[function_name]
+            new_box.set_box_function(box_function)
 
             for arg in args:
                 left_connection = new_box.add_left_connection()

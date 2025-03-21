@@ -1,5 +1,6 @@
 import os
 from inspect import signature
+from typing import Callable
 
 
 def get_predefined_functions() -> dict:
@@ -15,41 +16,67 @@ def get_predefined_functions() -> dict:
     return predefined_functions
 
 
-functions = get_predefined_functions()
+predefined_functions = get_predefined_functions()
 
 
 class BoxFunction:
-    def __init__(self, name, code=None):
-        self.name = name
-        if name in functions:
-            self.code: str = functions[name]
-        elif code is not None:
-            self.code: str = code
-        else:
-            raise ValueError("Should be specified function code or name of predefined function")
-        local = {}
-        exec(self.code, {}, local)
-        self.function = local["invoke"]
-        self.meta = local["meta"]
 
-    def __call__(self, *args):
-        return self.function(*args)
+    def __init__(self,
+                 name=None,
+                 function=None,
+                 min_args=None,
+                 max_args=None,
+                 imports=None,
+                 file_code=None,
+                 is_predefined_function=False):
+        self.name: str = name
+
+        if is_predefined_function:
+            predefined_file_code = predefined_functions[self.name]
+            self._set_data_from_file_code(predefined_file_code)
+        elif file_code is not None:
+            self._set_data_from_file_code(file_code)
+        else:
+            self.function: Callable = function
+            self.min_args: int = min_args
+            self.max_args: int = max_args
+            self.imports: list = imports
+
+        self.code = None  # TODO: Remove this variable after code generation is refactored
+
+    def _set_data_from_file_code(self, file_code: str):
+        local = {}
+        exec(file_code, {}, local)
+        meta = local["meta"]
+
+        self.function = local["invoke"]
+        self.min_args = meta["min_args"]
+        self.max_args = meta["max_args"]
+        # TODO: set imports for predefined functions
 
     def count_inputs(self):
-        sig = signature(self.code)
+        # TODO: may not work, fix if needed
+        sig = signature(self.function)
         params = sig.parameters
         count = len(params)
         if params["self"]:
             count -= 1
         return count
 
+    def __call__(self, *args):
+        return self.function(*args)
+
     def __eq__(self, other):
         if isinstance(other, BoxFunction):
-            return self.code == other.code
+            return (self.name == other.name
+                    and self.function == other.function
+                    and self.min_args == other.min_args
+                    and self.max_args == other.max_args
+                    and self.imports == other.imports)
         return False
 
     def __hash__(self):
-        return hash(self.code)
+        return hash(self.function)
 
     def __str__(self):
-        return self.name
+        return f"BoxFunction: {self.name}"
