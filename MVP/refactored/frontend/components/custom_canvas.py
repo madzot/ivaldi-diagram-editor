@@ -15,7 +15,6 @@ from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.util.copier import Copier

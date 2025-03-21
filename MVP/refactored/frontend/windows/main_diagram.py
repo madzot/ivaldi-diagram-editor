@@ -362,6 +362,8 @@ class MainDiagram(tk.Tk):
             if box.sub_diagram:
                 self.tree.move(str(box.sub_diagram.id), str(canvas.id), "end")
 
+        canvas.rotation_button = RotationButton(canvas, canvas)
+
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
 
@@ -399,6 +401,7 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.configure(width=width)
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
+        self.custom_canvas.rotation_button.update()
         self.bind_buttons()
 
         self.titlebar.set_custom_canvas(self.custom_canvas)
