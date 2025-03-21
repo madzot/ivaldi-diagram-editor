@@ -5,7 +5,6 @@ from MVP.refactored.frontend.canvas_objects.types.connection_type import Connect
 
 
 class Spider(Connection):
-    # Change
     def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC, visual=False):
         self.r = 10
         super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type, temp=visual)
@@ -91,7 +90,7 @@ class Spider(Connection):
                 return
         old_r = self.r
         self.r += 2.5 * multiplier
-        if self.find_collisions(self.visual_x, self.visual_y):  # Is there collision in no rect (doubt)
+        if self.find_collisions(self.visual_x, self.visual_y):
             self.r = old_r
             return
         self.canvas.coords(self.circle, self.visual_x - self.r, self.visual_y - self.r, self.visual_x + self.r,
@@ -119,7 +118,6 @@ class Spider(Connection):
             self.canvas.selector.selected_items.append(self)
         self.canvas.selector.select_wires_between_selected_items()
 
-    # Change
     def on_drag(self, event):
         if event.state & 0x4:
             return
@@ -226,13 +224,13 @@ class Spider(Connection):
         for connection in list(filter(lambda x: (x is not None and x != self),
                                       [w.end_connection for w in self.wires] + [w.start_connection for w in
                                                                                 self.wires])):
-            if connection.side == "spider" and abs(new_x - connection.logical_location[0]) < 2 * self.r:  # ?
+            if connection.side == "spider" and abs(new_x - connection.logical_location[0]) < 2 * self.r:
                 return True
             if connection.side == "left":
-                if new_x + self.r >= connection.logical_location[0] - connection.width_between_boxes:  # ?
+                if new_x + self.r >= connection.logical_location[0] - connection.width_between_boxes:
                     return True
             if connection.side == "right":
-                if new_x - self.r <= connection.logical_location[0] + connection.width_between_boxes:  # ?
+                if new_x - self.r <= connection.logical_location[0] + connection.width_between_boxes:
                     return True
         return False
 

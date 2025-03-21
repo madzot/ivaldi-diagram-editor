@@ -678,24 +678,6 @@ class MainDiagram(tk.Tk):
                 plt.plot(values_line, keys_linspace, style, color=color, linewidth=2, zorder=1)
             else:
                 plt.plot(keys_linspace, values_line, style, color=color, linewidth=2, zorder=1)
-            """for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
-                x_y[x_coord / 100] = y_max - y_coord / 100
-
-            x_y = dict(sorted(x_y.items()))
-            for x_coord in x_y.keys():
-                x.append(x_coord)
-                y.append(x_y[x_coord])
-
-            x = np.array(x)
-            y = np.array(y)
-
-            x_linspace = np.linspace(x.min(), x.max(), 200)
-            spl = make_interp_spline(x, y, k=3)
-            y_line = spl(x_linspace)
-
-            color, style = self.get_wire_style(wire)
-
-            plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)"""
 
         for label_tag in canvas.wire_label_tags:
             coords = canvas.coords(label_tag)

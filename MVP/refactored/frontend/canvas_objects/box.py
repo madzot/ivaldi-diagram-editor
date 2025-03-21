@@ -273,7 +273,6 @@ class Box:
                 go_to_x = box.visual_x + box.size[0] / 2 - +self.size[0] / 2
 
                 found = True
-        # Change
         for spider in self.canvas.spiders:
 
             if abs(spider.visual_location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
@@ -437,7 +436,6 @@ class Box:
         self.start_x = event.x
         self.start_y = event.y
 
-    # Change this for rotate
     def move(self, new_x, new_y):
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
@@ -506,7 +504,6 @@ class Box:
         self.update_connections()
         self.update_wires()
 
-    # changes this
     def update_position(self):
         # TODO rotate rect
         if self.shape == "rectangle":
@@ -520,7 +517,6 @@ class Box:
         self.canvas.coords(self.resize_handle, self.visual_x + self.size[0] - 10, self.visual_y + self.size[1] - 10,
                            self.visual_x + self.size[0], self.visual_y + self.size[1])
 
-    # changes this
     def update_connections(self):
         for c in self.connections:
             conn_x, conn_y = self.get_connection_coordinates(c.side, c.index)
@@ -681,7 +677,6 @@ class Box:
             return 0
         return max([c.index if c.side == "right" else 0 for c in self.connections]) + 1
 
-    # Change this
     def create_rect(self):
         w, h = self.size
         if self.shape == "rectangle":

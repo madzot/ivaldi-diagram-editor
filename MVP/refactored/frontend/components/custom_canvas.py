@@ -243,12 +243,12 @@ class CustomCanvas(tk.Canvas):
                 return
 
         for connection in self.corners:
-            connection.location[0] = connection.location[0] + multiplier * self.pan_speed
+            connection.location[1] = connection.location[1] + multiplier * self.pan_speed
             self.coords(connection.circle,
                         connection.location[0] - connection.r, connection.location[1] - connection.r,
                         connection.location[0] + connection.r, connection.location[1] + connection.r)
         for connection in self.inputs + self.outputs:
-            connection.visual_location[0] = connection.visual_location[0] + multiplier * self.pan_speed
+            connection.visual_location[1] = connection.visual_location[1] + multiplier * self.pan_speed
             self.coords(connection.circle,
                         connection.visual_location[0] - connection.r, connection.visual_location[1] - connection.r,
                         connection.visual_location[0] + connection.r, connection.visual_location[1] + connection.r)
@@ -257,16 +257,17 @@ class CustomCanvas(tk.Canvas):
 
     def move_boxes_spiders(self, is_horizontal, multiplier):
         if is_horizontal:
-            attr = "x"
+            attr = "visual_x"
             self.pan_history_x += multiplier * self.pan_speed
         else:
-            attr = "y"
+            attr = "visual_y"
             self.pan_history_y += multiplier * self.pan_speed
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
             spider.move_to((spider.visual_x, spider.visual_y), visual=True)
         for box in self.boxes:
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
+            box.update_coords(box.visual_x, box.visual_y, visual=True)
             box.update_size(box.size[0], box.size[1], visual=True)
             box.move_label()
         for wire in self.wires:
@@ -278,7 +279,6 @@ class CustomCanvas(tk.Canvas):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
 
-    # Needs love
     def update_after_treeview(self, canvas_width, treeview_width, to_left):
         if to_left:
             old_canvas_width = canvas_width + treeview_width
@@ -374,7 +374,6 @@ class CustomCanvas(tk.Canvas):
             self.init_corners()
         self.configure(scrollregion=self.bbox('all'))
 
-    # change maybe
     def update_coordinates(self, denominator, event, scale):
         for corner in self.corners:
             next_location = [
