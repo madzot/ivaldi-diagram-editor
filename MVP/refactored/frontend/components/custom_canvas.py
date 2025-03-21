@@ -24,12 +24,12 @@ from constants import *
 
 class CustomCanvas(tk.Canvas):
     def __init__(self, master, receiver, main_diagram, add_boxes=False,
-                 id_=None, search=False, diagram_source_box=None, parent_diagram=None, **kwargs):
+                 id_=None, is_search=False, diagram_source_box=None, parent_diagram=None, **kwargs):
         super().__init__(master, **kwargs)
 
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
-        if not search:
+        if not is_search:
             self.configure(bg='white', width=screen_width_min, height=screen_height_min)
             self.selector = main_diagram.selector
         else:
@@ -39,7 +39,7 @@ class CustomCanvas(tk.Canvas):
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
         self.master = master
-        self.search = search
+        self.search = is_search
         self.boxes: list[Box] = []
         self.outputs: list[Connection] = []
         self.inputs: list[Connection] = []
@@ -49,8 +49,6 @@ class CustomCanvas(tk.Canvas):
         self.temp_wire = None
         self.temp_end_connection = None
         self.pulling_wire = False
-        self.previous_x = None
-        self.previous_y = None
         self.quick_pull = False
         self.receiver = receiver
         self.current_wire_start = None
@@ -68,7 +66,7 @@ class CustomCanvas(tk.Canvas):
         self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
-        self.selectBox = None
+        self.select_box = None
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind('<Motion>', self.start_pulling_wire)
         self.bind('<Double-Button-1>', self.pull_wire)
@@ -100,7 +98,7 @@ class CustomCanvas(tk.Canvas):
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
-        if not search:
+        if not is_search:
             self.tree_logo = (Image.open(ASSETS_DIR + "/file-tree-outline.png"))
             self.tree_logo = self.tree_logo.resize((20, 15))
             self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
@@ -140,8 +138,6 @@ class CustomCanvas(tk.Canvas):
         self.pan_history_x = 0
         self.pan_history_y = 0
         self.pan_speed = 20
-
-        self.resize_timer = None
 
         self.hover_item = None
         self.search_result_highlights = []
@@ -540,8 +536,6 @@ class CustomCanvas(tk.Canvas):
             if self.temp_wire is not None:
                 self.temp_wire.delete()
             if self.temp_end_connection.location != (self.canvasx(event.x), self.canvasy(event.y)):
-                self.previous_x = self.canvasx(event.x)
-                self.previous_y = self.canvasy(event.y)
                 self.temp_end_connection.delete()
                 self.temp_end_connection = Connection(None, 0, None,
                                                       (self.canvasx(event.x), self.canvasy(event.y)),

@@ -56,7 +56,7 @@ class SearchWindow(tk.Toplevel):
         self.canvas_frame.pack(padx=2, pady=9, fill=tk.BOTH, expand=True)
 
         self.search_canvas = CustomCanvas(self.canvas_frame, self.main_diagram.receiver,
-                                          self.main_diagram, search=True)
+                                          self.main_diagram, is_search=True)
         self.search_canvas.set_name("")
         self.search_canvas.pack(padx=1, pady=1, fill=tk.BOTH, expand=True)
 

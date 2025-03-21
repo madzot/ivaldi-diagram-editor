@@ -37,9 +37,8 @@ class Tests(TestCustomCanvas):
         self.assertIsNone(self.custom_canvas.current_wire_start)
         self.assertIsNone(self.custom_canvas.current_wire)
         self.assertFalse(self.custom_canvas.draw_wire_mode)
-        self.assertIsNone(self.custom_canvas.selectBox)
+        self.assertIsNone(self.custom_canvas.select_box)
         self.assertFalse(self.custom_canvas.selecting)
-        self.assertIsNone(self.custom_canvas.resize_timer)
 
     def test__init__default_box_shape(self):
         expected = "rectangle"
