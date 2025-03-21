@@ -50,7 +50,7 @@ class MainDiagram(tk.Tk):
         self.search_objects = {}
         self.wire_objects = {}
 
-        self.is_rotated = True
+        self.is_rotated = False
 
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
@@ -651,10 +651,34 @@ class MainDiagram(tk.Tk):
             ax.add_patch(con)
 
         for wire in canvas.wires:
-            x = []
-            y = []
+            keys = []
+            values = []
             x_y = {}
-            for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+
+            if self.is_rotated:
+                for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                    x_y[y_max - y_coord / 100] = x_coord / 100
+            else:
+                for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                    x_y[x_coord / 100] = y_max - y_coord / 100
+            x_y = dict(sorted(x_y.items()))
+            for key in x_y.keys():
+                keys.append(key)
+                values.append(x_y[key])
+
+            keys = np.array(keys)
+            values = np.array(values)
+
+            keys_linspace = np.linspace(keys.min(), keys.max(), 200)
+            spl = make_interp_spline(keys, values, k=3)
+            values_line = spl(keys_linspace)
+
+            color, style = self.get_wire_style(wire)
+            if self.is_rotated:
+                plt.plot(values_line, keys_linspace, style, color=color, linewidth=2, zorder=1)
+            else:
+                plt.plot(keys_linspace, values_line, style, color=color, linewidth=2, zorder=1)
+            """for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
                 x_y[x_coord / 100] = y_max - y_coord / 100
 
             x_y = dict(sorted(x_y.items()))
@@ -671,7 +695,7 @@ class MainDiagram(tk.Tk):
 
             color, style = self.get_wire_style(wire)
 
-            plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
+            plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)"""
 
         for label_tag in canvas.wire_label_tags:
             coords = canvas.coords(label_tag)
