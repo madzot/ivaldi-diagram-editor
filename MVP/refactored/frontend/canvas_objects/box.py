@@ -443,12 +443,10 @@ class Box:
         for connection in self.connections:
             if self.canvas.master.is_rotated:
                 if connection.has_wire and self.is_illegal_move(connection, new_y):
-                    print("update y")
                     is_bad = True
                     break
             else:
                 if connection.has_wire and self.is_illegal_move(connection, new_x):
-                    print("update x")
                     is_bad = True
                     break
         if is_bad:
@@ -456,12 +454,10 @@ class Box:
                 self.update_coords(new_x, None, True)
             else:
                 self.update_coords(None, new_y, True)
-            print("update one")
             self.update_position()
             self.update_connections()
             self.update_wires()
         else:
-            print("update both")
             self.update_coords(new_x, new_y, True)
             self.update_position()
             self.update_connections()
