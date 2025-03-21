@@ -15,6 +15,7 @@ from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.util.copier import Copier
@@ -109,6 +110,8 @@ class CustomCanvas(tk.Canvas):
                                      command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
             tree_button.place(x=28, y=20, anchor=tk.CENTER)
 
+        self.rotation_button = None
+
         self.search_result_button = SearchResultButton(self, self.main_diagram, self)
 
         self.box_shape = "rectangle"
@@ -168,6 +171,10 @@ class CustomCanvas(tk.Canvas):
         if self.main_diagram.is_search_active:
             self.search_result_button.place_forget()
             self.search_result_button.place(x=self.winfo_width() - 90, y=20, anchor=tk.CENTER, width=175, height=30)
+
+    def update_rotation_button(self):
+        if self.rotation_button:
+            self.rotation_button.update()
 
     def on_displaying_results_click(self):
         self.main_diagram.cancel_search_results()
@@ -272,7 +279,6 @@ class CustomCanvas(tk.Canvas):
         if to_left:
             old_canvas_width = canvas_width + treeview_width
         else:
-
             old_canvas_width = canvas_width - treeview_width
 
         for box in self.boxes:

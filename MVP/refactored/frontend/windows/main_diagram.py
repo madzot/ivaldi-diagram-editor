@@ -17,6 +17,7 @@ from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.components.toolbar import Titlebar
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
@@ -53,9 +54,11 @@ class MainDiagram(tk.Tk):
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.custom_canvas.update()
 
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
+        self.custom_canvas.rotation_button = RotationButton(self.custom_canvas, self.custom_canvas)
 
         self.titlebar.set_custom_canvas(self.custom_canvas)
 
@@ -596,6 +599,7 @@ class MainDiagram(tk.Tk):
                 canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=False)
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
+        self.custom_canvas.update_rotation_button()
 
     @staticmethod
     def pairwise(iterable):
