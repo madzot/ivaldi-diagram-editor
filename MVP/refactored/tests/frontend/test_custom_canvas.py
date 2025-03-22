@@ -56,17 +56,10 @@ class Tests(TestCustomCanvas):
         self.assertEqual(expected_delta, actual_delta)
         self.assertEqual(expected_prev_scale, actual_prev_scale)
 
-    def test__init__pan_values(self):
-        expected_history_x = 0
-        expected_history_y = 0
+    def test__init__pan_value(self):
         expected_speed = 20
 
-        actual_history_x = self.custom_canvas.pan_history_x
-        actual_history_y = self.custom_canvas.pan_history_y
         actual_speed = self.custom_canvas.pan_speed
-
-        self.assertEqual(expected_history_x, actual_history_x)
-        self.assertEqual(expected_history_y, actual_history_y)
         self.assertEqual(expected_speed, actual_speed)
 
     def test__init__corners_at_canvas_edges(self):

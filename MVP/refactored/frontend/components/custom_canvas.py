@@ -127,9 +127,6 @@ class CustomCanvas(tk.Canvas):
         self.init_corners()
 
         self.prev_scale = 1.0
-
-        self.pan_history_x = 0
-        self.pan_history_y = 0
         self.pan_speed = 20
 
         self.hover_item = None
@@ -237,10 +234,8 @@ class CustomCanvas(tk.Canvas):
     def move_boxes_spiders(self, is_horizontal, multiplier):
         if is_horizontal:
             attr = "x"
-            self.pan_history_x += multiplier * self.pan_speed
         else:
             attr = "y"
-            self.pan_history_y += multiplier * self.pan_speed
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
             spider.move_to((spider.x, spider.y))
@@ -308,8 +303,6 @@ class CustomCanvas(tk.Canvas):
             i_o_c.location = [i_o_c.location[0] - x_offset, i_o_c.location[1] - y_offset]
             self.coords(i_o_c.circle, i_o_c.location[0] - i_o_c.r, i_o_c.location[1] - i_o_c.r,
                         i_o_c.location[0] + i_o_c.r, i_o_c.location[1] + i_o_c.r)
-        self.pan_history_x = 0
-        self.pan_history_y = 0
 
     def reset_zoom(self):
         while self.total_scale - 1 > 0.01:
