@@ -41,51 +41,61 @@ class PythonImporter(Importer):
 
         functions = {}
         main_logic = []
+        imports = []
 
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-
                 func_name = node.name
                 func_code = ast.get_source_segment(source_code, node)
                 num_inputs = len(node.args.args)
 
                 # Analyze return statements to count outputs
                 num_outputs = 0
-                for child in ast.walk(node):
-                    if isinstance(child, ast.Return):
-                        if isinstance(child.value, (ast.Tuple, ast.List)):
-                            num_outputs = len(child.value.elts)
-                        else:
-                            num_outputs = 1
+                # for child in ast.walk(node):
+                #     if isinstance(child, ast.Return):
+                #         if isinstance(child.value, (ast.Tuple, ast.List)):
+                #             num_outputs = len(child.value.elts)
+                #         else:
+                #             num_outputs = 1
 
                 namespace = {}
                 exec(func_code, namespace)
                 function = namespace[func_name]
 
-                box_function = BoxFunction(
-                    name=func_name, function=function, min_args=num_inputs, max_args=num_inputs   # TODO: add imports
-                )
+                box_function = BoxFunction(name=func_name, function=function, min_args=num_inputs, max_args=num_inputs)
                 functions[func_name] = box_function
 
         # Analyze the main method for function calls
         for node in tree.body:
-            if isinstance(node, ast.If):
-                # Check for `if __name__ == "__main__"` structure
-                if (isinstance(node.test, ast.Compare)
-                        and isinstance(node.test.left, ast.Name)
-                        and node.test.left.id == "__name__"
-                        and isinstance(node.test.comparators[0], ast.Constant)
-                        and node.test.comparators[0].value == "__main__"):
-                    # Traverse the body of the main block
-                    self.extract_main_logic(node.body, main_logic)
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    imports.append(f"import {alias.name}")
 
-        print({"functions": functions, "main_logic": main_logic})
+            elif isinstance(node, ast.ImportFrom):
+                if node.module:
+                    module = node.module
+                else:
+                    module = "." * node.level
+
+                for alias in node.names:
+                    imports.append(f"from {module} import {alias.name}")
+
+            if (isinstance(node, ast.If)
+                and isinstance(node.test, ast.Compare)
+                and isinstance(node.test.left, ast.Name)
+                and node.test.left.id == "__name__"
+                and isinstance(node.test.comparators[0], ast.Constant)
+                and node.test.comparators[0].value == "__main__"):
+                self.extract_main_logic(node.body, main_logic)
+
+        first_function = next(iter(functions.values()))
+        first_function.imports = imports
+
         self.load_everything_to_canvas({"functions": functions, "main_logic": main_logic}, self.canvas)
-
 
     def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
         elements_y_position = 300
-        #TODO: refactor this to appropriate condition
+        # TODO: refactor this to appropriate condition
         functions = data["functions"]
         main_logic = data["main_logic"]
 
@@ -132,9 +142,7 @@ class PythonImporter(Importer):
 
                                 new_spider_added = True
 
-
                             connection_spider = box_right_connection_spiders[arg]
-
 
                             canvas.end_wire_to_connection(connection_spider, True)
 
