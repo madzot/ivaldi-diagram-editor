@@ -29,6 +29,8 @@ class BoxFunction:
                  imports=None,
                  file_code=None,
                  is_predefined_function=False):
+        if imports is None:
+            imports = []
         self.name: str = name
 
         if is_predefined_function:
@@ -79,4 +81,10 @@ class BoxFunction:
         return hash(self.function)
 
     def __str__(self):
-        return f"BoxFunction: {self.name}"
+        return f"BoxFunction: {self.name}\n" \
+               f"Min args: {self.min_args}\n" \
+               f"Max args: {self.max_args}\n" \
+               f"Imports: {self.imports}\n"
+
+    def __repr__(self):
+        return self.__str__()
