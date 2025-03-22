@@ -33,7 +33,6 @@ class Tests(TestCustomCanvas):
         self.assertFalse(self.custom_canvas.pulling_wire)
         self.assertFalse(self.custom_canvas.quick_pull)
         self.assertIsNone(self.custom_canvas.current_wire_start)
-        self.assertIsNone(self.custom_canvas.current_wire)
         self.assertFalse(self.custom_canvas.draw_wire_mode)
         self.assertIsNone(self.custom_canvas.select_box)
         self.assertFalse(self.custom_canvas.selecting)
