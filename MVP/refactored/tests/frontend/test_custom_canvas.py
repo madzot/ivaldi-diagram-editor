@@ -31,8 +31,6 @@ class Tests(TestCustomCanvas):
         self.assertIsNone(self.custom_canvas.temp_wire)
         self.assertIsNone(self.custom_canvas.temp_end_connection)
         self.assertFalse(self.custom_canvas.pulling_wire)
-        self.assertIsNone(self.custom_canvas.previous_x)
-        self.assertIsNone(self.custom_canvas.previous_y)
         self.assertFalse(self.custom_canvas.quick_pull)
         self.assertIsNone(self.custom_canvas.current_wire_start)
         self.assertIsNone(self.custom_canvas.current_wire)
