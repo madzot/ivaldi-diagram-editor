@@ -27,52 +27,52 @@ inside MainDiagram
 
 ### CustomCanvas variables
 
-| **Variable**             | **Type**               | **Descriptions**                                                                                |
-|--------------------------|------------------------|-------------------------------------------------------------------------------------------------|
-| selector                 | Selector               | The Selector object used for dealing with Selected objects.                                     |
-| parent_diagram           | CustomCanvas           | The parent diagram of the CustomCanvas.                                                         |
-| main_diagram             | MainDiagram            | The MainDiagram object.                                                                         |
-| master                   | Tk                     | The parent widget of this canvas.                                                               |
-| is_search                | boolean                | Specifies whether the canvas is created for the searching window.                               |
-| boxes                    | list                   | A list of Boxes. Contains every Box that exists on the Canvas at the moment.                    |
-| outputs                  | list                   | A list of Connections. Contains the outputs of the diagram (the Connections on the right side). |
-| inputs                   | list                   | A list of Connections. Contains the inputs of the diagram (the Connections on the left side).   |
-| spiders                  | list                   |                                                                                                 |
-| wires                    | list                   |                                                                                                 |
-| corners                  | list                   |                                                                                                 |
-| temp_wire                | Wire                   |                                                                                                 |
-| temp_end_connection      | Connection             |                                                                                                 |
-| pulling_wire             | boolean                |                                                                                                 |
-| quick_pull               | boolean                |                                                                                                 |
-| receiver                 | Receiver               |                                                                                                 |
-| current_wire_start       | Connection             |                                                                                                 |
-| current_wire             | Wire                   |                                                                                                 |
-| draw_wire_mode           | boolean                |                                                                                                 |
-| diagram_source_box       | Box                    |                                                                                                 |
-| name                     | int                    |                                                                                                 |
-| name_text                | string                 |                                                                                                 |
-| select_box               | int                    |                                                                                                 |
-| selecting                | boolean                |                                                                                                 |
-| copier                   | Copier                 |                                                                                                 |
-| hypergraph_exporter      | HypergraphExporter     |                                                                                                 |
-| context_menu             | tkinter.Menu           |                                                                                                 |
-| tree_logo                | PIL.ImageTk.PhotoImage |                                                                                                 |
-| search_result_button     | SearchResultButton     |                                                                                                 |
-| box_shape                | string                 |                                                                                                 |
-| copy_logo                | PIL.ImageTk.PhotoImage |                                                                                                 |
-| total_scale              | float                  |                                                                                                 |
-| delta                    | float                  |                                                                                                 |
-| prev_width_max           | int                    |                                                                                                 |
-| prev_height_max          | int                    |                                                                                                 |
-| prev_width_min           | int                    |                                                                                                 |
-| prev_height_min          | int                    |                                                                                                 |
-| prev_scale               | float                  |                                                                                                 |
-| pan_history_x            | int                    |                                                                                                 |
-| pan_history_y            | int                    |                                                                                                 |
-| pan_speed                | int                    |                                                                                                 |
-| hover_item               | Any                    |                                                                                                 |
-| search_result_highlights | list                   |                                                                                                 |
-| wire_label_tags          | list                   |                                                                                                 |
+| **Variable**             | **Type**               | **Descriptions**                                                                                                                                                    |
+|--------------------------|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| selector                 | Selector               | The Selector object used for dealing with Selected objects.                                                                                                         |
+| parent_diagram           | CustomCanvas           | The parent diagram of the CustomCanvas.                                                                                                                             |
+| main_diagram             | MainDiagram            | The MainDiagram object.                                                                                                                                             |
+| master                   | Tk                     | The parent widget of this canvas.                                                                                                                                   |
+| is_search                | boolean                | Specifies whether the canvas is created for the searching window.                                                                                                   |
+| boxes                    | list                   | A list of Boxes. Contains every Box objects that exists on the Canvas at the moment.                                                                                |
+| outputs                  | list                   | A list of Connections. Contains the outputs of the diagram (the Connections on the right side).                                                                     |
+| inputs                   | list                   | A list of Connections. Contains the inputs of the diagram (the Connections on the left side).                                                                       |
+| spiders                  | list                   | A list of Spiders. Contains all Spider objects present in the CustomCanvas.                                                                                         |
+| wires                    | list                   | A list of Wires. Contains all Wire objects present in the CustomCanvas.                                                                                             |
+| corners                  | list                   | A list of Corners. Contains all Corner objects that are on the CustomCanvas.                                                                                        |
+| temp_wire                | Wire                   | Temporary Wire variable. Used when pulling/creating wires, the temporary wire is the Wire that is seen during Wire pulling.                                         |
+| temp_end_connection      | Connection             | Temporary end connection Variable. During Wire pulling an end Connection is required to create a temporary Wire. This is the variable for the temporary Connection. |
+| pulling_wire             | boolean                | A boolean stating whether or not wire pulling is currently active.                                                                                                  |
+| quick_pull               | boolean                | A boolean stating whether quick pull (wire pulling from double clicking a Connection) is active.                                                                    |
+| receiver                 | Receiver               | The Receiver object that is used to send information to the backend.                                                                                                |
+| current_wire_start       | Connection             | Connection that is used to remember where the Wire creation was started from.                                                                                       |
+| current_wire             | Wire                   | Variable used                                                                                                                                                       |
+| draw_wire_mode           | boolean                |                                                                                                                                                                     |
+| diagram_source_box       | Box                    |                                                                                                                                                                     |
+| name                     | int                    |                                                                                                                                                                     |
+| name_text                | string                 |                                                                                                                                                                     |
+| select_box               | int                    |                                                                                                                                                                     |
+| selecting                | boolean                |                                                                                                                                                                     |
+| copier                   | Copier                 |                                                                                                                                                                     |
+| hypergraph_exporter      | HypergraphExporter     |                                                                                                                                                                     |
+| context_menu             | tkinter.Menu           |                                                                                                                                                                     |
+| tree_logo                | PIL.ImageTk.PhotoImage |                                                                                                                                                                     |
+| search_result_button     | SearchResultButton     |                                                                                                                                                                     |
+| box_shape                | string                 |                                                                                                                                                                     |
+| copy_logo                | PIL.ImageTk.PhotoImage |                                                                                                                                                                     |
+| total_scale              | float                  |                                                                                                                                                                     |
+| delta                    | float                  |                                                                                                                                                                     |
+| prev_width_max           | int                    |                                                                                                                                                                     |
+| prev_height_max          | int                    |                                                                                                                                                                     |
+| prev_width_min           | int                    |                                                                                                                                                                     |
+| prev_height_min          | int                    |                                                                                                                                                                     |
+| prev_scale               | float                  |                                                                                                                                                                     |
+| pan_history_x            | int                    |                                                                                                                                                                     |
+| pan_history_y            | int                    |                                                                                                                                                                     |
+| pan_speed                | int                    |                                                                                                                                                                     |
+| hover_item               | Any                    |                                                                                                                                                                     |
+| search_result_highlights | list                   |                                                                                                                                                                     |
+| wire_label_tags          | list                   |                                                                                                                                                                     |
 
 
 

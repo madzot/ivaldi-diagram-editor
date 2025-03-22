@@ -52,7 +52,6 @@ class CustomCanvas(tk.Canvas):
         self.quick_pull = False
         self.receiver = receiver
         self.current_wire_start = None
-        self.current_wire = None
         self.draw_wire_mode = False
         self.bind('<Button-1>', self.on_canvas_click)
         self.bind("<Configure>", self.on_canvas_resize)
@@ -579,19 +578,19 @@ class CustomCanvas(tk.Canvas):
 
             self.cancel_wire_pulling()
 
-            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1],
+            current_wire = Wire(self, start_end[0], self.receiver, start_end[1],
                                      wire_type=WireType[start_end[0].type.name])
-            self.wires.append(self.current_wire)
+            self.wires.append(current_wire)
 
             if self.current_wire_start.box is not None:
-                self.current_wire_start.box.add_wire(self.current_wire)
+                self.current_wire_start.box.add_wire(current_wire)
             if connection.box is not None:
-                connection.box.add_wire(self.current_wire)
+                connection.box.add_wire(current_wire)
 
-            self.current_wire_start.add_wire(self.current_wire)
-            connection.add_wire(self.current_wire)
+            self.current_wire_start.add_wire(current_wire)
+            connection.add_wire(current_wire)
 
-            self.current_wire.update()
+            current_wire.update()
             self.nullify_wire_start()
 
         HypergraphManager.modify_canvas_hypergraph(self)
@@ -614,7 +613,6 @@ class CustomCanvas(tk.Canvas):
         if self.current_wire_start:
             self.current_wire_start.change_color(color='black')
         self.current_wire_start = None
-        self.current_wire = None
 
     def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape=None):
         if shape is None:
