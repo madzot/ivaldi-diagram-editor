@@ -91,6 +91,10 @@ class PythonImporter(Importer):
         first_function = next(iter(functions.values()))
         first_function.imports = imports
 
+        if not main_logic:
+            raise ValueError("The Python code does not contain a main execution block!\n"
+                             "Selected file must include 'if __name__ == \"__main__\":'.")
+
         self.load_everything_to_canvas({"functions": functions, "main_logic": main_logic}, self.canvas)
 
     def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
