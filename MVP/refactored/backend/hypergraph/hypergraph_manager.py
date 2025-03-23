@@ -74,7 +74,7 @@ class HypergraphManager:
             group.append(source_node)
             group.extend(source_node.get_united_with_nodes())
             for next_source_node in source_nodes_and_potentially_source_nodes:
-                if  next_source_node.is_connected_to(group[-1]) and next_source_node not in group:
+                if next_source_node.is_connected_to(group[-1]) and next_source_node not in group:
                     # TODO add single node
                     group.append(next_source_node)
                     group.extend(next_source_node.get_united_with_nodes())
@@ -99,7 +99,7 @@ class HypergraphManager:
                 new_hypergraph.update_edges()
                 HypergraphManager.add_hypergraph(new_hypergraph)
         else:
-            _hypergraph.update_edges() # after deleting node some hyper edges will not have connections
+            _hypergraph.update_edges()  # after deleting node some hyper edges will not have connections
 
     @staticmethod
     def remove_hyper_edge(id: int):
@@ -116,17 +116,17 @@ class HypergraphManager:
         """
         logger.debug(message_start + f"Removing hyper edge with id {id_dict_node.get(id)}" + message_end)
 
-        _hypergraph: Hypergraph = None
+        hypergraph_to_handle: Hypergraph = None
         deleted_hyper_edge = None
         for hypergraph in HypergraphManager.hypergraphs:
             if hypergraph.get_hyper_edge_by_id(id) is not None:
-                _hypergraph = hypergraph
+                hypergraph_to_handle = hypergraph
                 deleted_hyper_edge = hypergraph.remove_hyper_edge(id)  # remove hyper edge from hypergraph
                 break
 
         if deleted_hyper_edge is None: return # TODO, investigate when it can be None
         # check if new hypergraph appears
-        source_nodes: list[Node] = _hypergraph.get_hypergraph_source() + deleted_hyper_edge.get_target_nodes()
+        source_nodes: list[Node] = hypergraph_to_handle.get_hypergraph_source() + deleted_hyper_edge.get_target_nodes()
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
         # TODO move duplicated code into another method?
         for source_node in source_nodes:
@@ -145,10 +145,10 @@ class HypergraphManager:
             source_nodes_groups) + message_end)
         # if after deleting node hype graph split to two or more hyper graphs we need to handle that
         if len(source_nodes_groups) > 1:  # If group count isn`t 1, so there occurred new hyper graphs
-            HypergraphManager.remove_hypergraph(_hypergraph)  # remove old hypergraph
+            HypergraphManager.remove_hypergraph(hypergraph_to_handle)  # remove old hypergraph
 
             for group in source_nodes_groups:
-                new_hypergraph = Hypergraph(canvas_id=_hypergraph.get_canvas_id())
+                new_hypergraph = Hypergraph(canvas_id=hypergraph_to_handle.get_canvas_id())
                 new_hypergraph.add_hypergraph_sources(group)
                 new_hypergraph.update_source_nodes_descendants()
                 new_hypergraph.update_edges()
@@ -179,7 +179,6 @@ class HypergraphManager:
         id_dict_node[id] = current_count_node
         current_count_node += 1
         logger.debug(message_start + f"Creating new node with id {id_dict_node.get(id)}" + message_end)
-
 
         new_hypergraph: Hypergraph = Hypergraph(canvas_id=canvas_id)
         new_node = Node(id)

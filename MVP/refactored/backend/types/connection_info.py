@@ -7,16 +7,18 @@ if TYPE_CHECKING:
     from MVP.refactored.backend.resource import Resource
     from MVP.refactored.backend.types.connection_side import ConnectionSide
 
+
 class ConnectionInfo:
-    def __init__(self, connection_index: int, connection_side: ConnectionSide, connection_id: int, related_generator_id: int=None,
-                 related_resource_id: int|None=None, related_object: Resource|Generator|None=None):
+    def __init__(self, connection_index: int, connection_side: ConnectionSide, connection_id: int,
+                 related_generator_id: int = None,
+                 related_resource_id: int | None = None, related_object: Resource | Generator | None = None):
         self.index = connection_index
         self.box_id = related_generator_id
         self.resource_id = related_resource_id
         self.side = connection_side
         self.id = connection_id
         # self.related_object = related_object
-        self.related_object: Resource|Generator|None = None
+        self.related_object: Resource | Generator | None = None
         self.set_related_object(related_object)
 
     def is_resource_connection(self) -> bool:
@@ -31,16 +33,16 @@ class ConnectionInfo:
     def get_id(self) -> int:
         return self.id
 
-    def has_box(self)-> bool:
+    def has_box(self) -> bool:
         return self.box_id is not None
 
-    def get_box_id(self)-> int:
+    def get_box_id(self) -> int:
         return self.box_id
 
-    def set_box_id(self, id: int|None):
+    def set_box_id(self, id: int | None):
         self.box_id = id
 
-    def set_related_object(self, related_object: Resource|Generator|None):
+    def set_related_object(self, related_object: Resource | Generator | None):
         self.related_object = related_object
         if related_object is None: return
         if isinstance(related_object, Generator):
@@ -48,17 +50,17 @@ class ConnectionInfo:
         else:
             self.resource_id = related_object.id
 
-    def get_related_object(self) -> Resource|Generator:
+    def get_related_object(self) -> Resource | Generator:
         return self.related_object
 
-    def to_list(self)-> list:
+    def to_list(self) -> list:
         return [self.index, self.box_id, self.side, self.id]
 
     def is_all_fields_exists(self) -> bool:
         return self.index is not None and self.box_id is not None and self.side is not None and self.id is not None
 
     @classmethod
-    def from_list(cls, data)-> Self:
+    def from_list(cls, data) -> Self:
         return ConnectionInfo(data[0], data[2], data[3], data[1])
 
     def __eq__(self, __value):
@@ -69,4 +71,3 @@ class ConnectionInfo:
 
     def __repr__(self):
         return str(self)
-
