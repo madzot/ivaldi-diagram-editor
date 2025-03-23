@@ -524,25 +524,32 @@ class MainDiagram(tk.Tk):
 
     def load_from_file(self):
         filetypes = (("JSON files", "*.json"), ("Python files", "*.py"), ("All files", "*.*"))
-        file_path = filedialog.askopenfilename(title="Select JSON / Python file", filetypes=filetypes)
+        while True:
+            file_path = filedialog.askopenfilename(title="Select JSON / Python file", filetypes=filetypes)
+            if not file_path:
+                return
 
-        if not file_path:
-            return
+            importers = {".json": self.json_importer, ".py": self.python_importer}
+            try:
+                with open(file_path, 'r') as json_file:
+                    file_name, file_extension = os.path.splitext(file_path)
+                    importer = importers.get(file_extension)
 
-        importers = {".json": self.json_importer, ".py": self.python_importer}
+                    if not importer:
+                        raise ValueError("Unsupported file format!")
 
-        try:
-            with open(file_path, 'r') as json_file:
+                    importer.start_import(json_file)
 
-                file_name, file_extension = os.path.splitext(file_path)
-                importer = importers.get(file_extension)
-                importer.start_import(json_file)
+                    messagebox.showinfo("Info", "Imported successfully")
+                    self.set_title(file_name)
+                    break
 
-                messagebox.showinfo("Info", "Imported successfully")
-                self.set_title(file_name)
+            except ValueError as error:
+                messagebox.showerror("Import failed", str(error))
 
-        except FileNotFoundError or IOError or json.JSONDecodeError:
-            messagebox.showerror("Error", "File import failed, loading new empty canvas.")
+            except (FileNotFoundError, IOError, json.JSONDecodeError):
+                messagebox.showerror("Error", "File import failed, loading new empty canvas.")
+                break
 
     def update_shape_dropdown_menu(self):
         shapes = ["rectangle", "triangle"]
