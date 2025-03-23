@@ -154,22 +154,15 @@ class TestHypergraphManager(TestCase):
 
         HypergraphManager.connect_node_with_output_hyper_edge(node_b, 12)
         HypergraphManager.connect_node_with_input_hyper_edge(node_c, 12)
-        a = HypergraphManager.hypergraphs
 
         HypergraphManager.remove_hyper_edge(12)
-        a = HypergraphManager.hypergraphs
-
-        print(len(HypergraphManager.hypergraphs))
 
         hypergraph_with_two_nodes = HypergraphManager.get_graph_by_node_id(node_a.id)
         hypergraph_with_one_node = HypergraphManager.get_graph_by_node_id(node_c.id)
 
-        print(len(hypergraph_with_one_node.get_all_nodes()))
-        print(len(hypergraph_with_two_nodes.get_all_nodes()))
-
         self.assertEqual(len(HypergraphManager.hypergraphs), 2)
-        # self.assertEqual([node_c], hypergraph_with_one_node.get_all_nodes())
-        # self.assertIn([node_a, node_b], hypergraph_with_two_nodes.get_all_nodes())
+        self.assertEqual([node_c], hypergraph_with_one_node.get_all_nodes())
+        self.assertIn([node_a, node_b], hypergraph_with_two_nodes.get_all_nodes())
 
     # TEST: Swap edge ID
     # ----------------------------------------------------------
