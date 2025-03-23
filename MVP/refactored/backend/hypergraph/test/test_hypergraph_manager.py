@@ -108,7 +108,7 @@ class TestHypergraphManager(TestCase):
         node = HypergraphManager.create_new_node(1, 999)
         graph = HypergraphManager.get_graph_by_node_id(node.id)
 
-        HypergraphManager.connect_node_with_input(node, hyper_edge_id=111)
+        HypergraphManager.connect_node_with_input_hyper_edge(node, hyper_edge_id=111)
         self.assertTrue(any(node in edge.target_nodes.values() for edge in graph.get_all_hyper_edges()))
         self.assertIn(111, graph.edges)
 
@@ -116,7 +116,7 @@ class TestHypergraphManager(TestCase):
         node = HypergraphManager.create_new_node(2, 888)
         graph = HypergraphManager.get_graph_by_node_id(node.id)
 
-        HypergraphManager.connect_node_with_output(node, hyper_edge_id=222)
+        HypergraphManager.connect_node_with_output_hyper_edge(node, hyper_edge_id=222)
         self.assertTrue(any(node in edge.source_nodes.values() for edge in graph.get_all_hyper_edges()))
         self.assertIn(222, graph.edges)
 
@@ -147,29 +147,30 @@ class TestHypergraphManager(TestCase):
 
     def test_remove_hyper_edge_splits_hypergraph_correctly(self):
         # Create hypergraph: A -- B -- EDGE -- C (A connected to B, B connected to EDGE, EDGE connected to C)
-        hypergraph = Hypergraph(canvas_id=123)
-        edge = HyperEdge(1)
-        node_a = Node(1)
-        node_b = Node(2)
-        node_c = Node(3)
+        node_a = HypergraphManager.create_new_node(1, 123)
+        node_b = HypergraphManager.create_new_node(2, 123)
+        HypergraphManager.union_nodes(node_a, 2)
+        node_c = HypergraphManager.create_new_node(3, 123)
 
-        node_a.union(node_b)
-        node_a.append_output(edge)
-        node_b.append_output(edge)
-        node_c.append_input(edge)
+        HypergraphManager.connect_node_with_output_hyper_edge(node_b, 12)
+        HypergraphManager.connect_node_with_input_hyper_edge(node_c, 12)
+        print(len(HypergraphManager.hypergraphs))
+        a = HypergraphManager.hypergraphs
 
-        edge.append_source_nodes([node_a, node_b])
-        edge.append_target_node(node_c)
+        HypergraphManager.remove_hyper_edge(12)
+        a = HypergraphManager.hypergraphs
 
-        hypergraph.add_nodes([node_a, node_b, node_c])
-        hypergraph.add_hypergraph_sources([node_a, node_b])
-        hypergraph.add_edge(edge)
+        print(len(HypergraphManager.hypergraphs))
 
-        HypergraphManager.add_hypergraph(hypergraph)
+        hypergraph_with_two_nodes = HypergraphManager.get_graph_by_node_id(node_a.id)
+        hypergraph_with_one_node = HypergraphManager.get_graph_by_node_id(node_c.id)
 
-        HypergraphManager.remove_hyper_edge(1)
+        print(len(hypergraph_with_one_node.get_all_nodes()))
+        print(len(hypergraph_with_two_nodes.get_all_nodes()))
 
         self.assertEqual(len(HypergraphManager.hypergraphs), 2)
+        # self.assertEqual([node_c], hypergraph_with_one_node.get_all_nodes())
+        # self.assertIn([node_a, node_b], hypergraph_with_two_nodes.get_all_nodes())
 
     # TEST: Swap edge ID
     # ----------------------------------------------------------
