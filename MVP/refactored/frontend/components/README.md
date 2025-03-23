@@ -159,13 +159,82 @@ inside MainDiagram
         Parameters:
             event (tkinter.Event): Event object passed on key press.
 
+    .update_coordinates(denominator, event, scale)
+        Moves all (corners, i/o, boxes, spiders) objects according to zooming.
 
+        Parameters:
+            denominator (float): delta or 1/delta used for calculating zoom distances.
+            event (tkinter.Event): Event object passed from key press.
+            scale (float): The amount of scale change from zoom.
 
+    .check_max_zoom(x, y, denominator)
+        Checks whether zooming out from the specified location is allowed.
+        Returns a tuple containing a boolean if the zoom is allowed, how much x needs to be offset to zoom out normally,
+        how much y needs to be offset to zoom out normally, and boolean stating if corners are at CustomCanvas corners.
 
+        Parameters:
+            x (int): x coordinate where zooming out is done.
+            y (int): y coordinate where zooming out is done.
+            denominator (float): delta or 1/delta used for calculating zoom distances.
 
+    .check_corner_start_locations()
+        Checks if all Corner objects are in CustomCanvas corners. Returns boolean.
 
+    .close_menu()
+        Closes CustomCanvas context menu.
 
+    .show_context_menu(event)
+        Creates and displaying context menu for CustomCanvas.
 
+        Parameters:
+            event (tkinter.Event): Event object passed from key press, holds location for menu.
+            
+    .is_mouse_on_object(event)
+        Returns boolean stating if the mouse if on an object.
+    
+        Parameters:
+            event (tkinter.Event): Event object passed from key press. Location that will be checked.
+
+    .__select_start__(event)
+        Start a selection box from event location.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+
+    .__select_motion__(event)
+        Updates selection area.
+        
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+
+    .__select_release__()
+        Ends the active selection.
+
+    .pull_wire(event)
+        Start quick pulling wire from event, if event is over a Connection.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+
+    .get_connection_from_location(event)
+        Returns Connection or None that is at event location.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from keybind.
+
+    .on_canvas_click(event, connection)
+        Handles click on canvas. Checks if click was on Connection, if so then activates connection click handling.
+        Otherwise finishes selection.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+            connection (Connection): (Optional) Connection that was clicked on. Will handle click on Connection directly.
+
+    .start_pulling_wire(event)
+        Starts creating a temporary Wire to the mouse location from a chosen start connection, during draw wire mode.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
 
 
 

@@ -72,7 +72,7 @@ class CustomCanvas(tk.Canvas):
         self.bind("<B1-Motion>", self.__select_motion__)
         self.bind("<ButtonRelease-1>", lambda event: self.__select_release__())
         self.bind("<Button-3>", self.handle_right_click)
-        self.bind("<Delete>", lambda event: self.delete_selected_items())
+        self.bind("<Delete>", lambda event: self.selector.delete_selected_items())
         self.bind("<MouseWheel>", self.zoom)
         self.bind("<Right>", self.pan_horizontal)
         self.bind("<Left>", self.pan_horizontal)
@@ -476,9 +476,6 @@ class CustomCanvas(tk.Canvas):
     def __select_release__(self):
         self.selector.finalize_selection(self.boxes, self.spiders, self.wires)
         self.selector.select_action()
-
-    def delete_selected_items(self):
-        self.selector.delete_selected_items()
 
     def pull_wire(self, event):
         if not self.quick_pull and not self.draw_wire_mode:
@@ -1012,7 +1009,7 @@ class CustomCanvas(tk.Canvas):
 
     def cut_selected_items(self):
         self.copy_selected_items()
-        self.delete_selected_items()
+        self.selector.delete_selected_items()
 
     def create_sub_diagram(self):
         if len(list(filter(lambda x: isinstance(x, Spider) or isinstance(x, Box), self.selector.selected_items))) > 1:
