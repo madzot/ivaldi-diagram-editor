@@ -154,7 +154,6 @@ class TestHypergraphManager(TestCase):
 
         HypergraphManager.connect_node_with_output_hyper_edge(node_b, 12)
         HypergraphManager.connect_node_with_input_hyper_edge(node_c, 12)
-        print(len(HypergraphManager.hypergraphs))
         a = HypergraphManager.hypergraphs
 
         HypergraphManager.remove_hyper_edge(12)
