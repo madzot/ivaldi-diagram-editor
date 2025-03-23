@@ -5,12 +5,13 @@ from tkinter import messagebox
 from tkinter import simpledialog
 
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from constants import *
 
 
 class Box:
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
+    def __init__(self, canvas, x, y, size=(60, 60), id_=None, shape="rectangle"):
         self.shape = shape
         self.canvas = canvas
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
@@ -41,7 +42,7 @@ class Box:
         self.locked = False
         self.bind_events()
         self.sub_diagram = None
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add", generator_id=self.id)
             if self.canvas.diagram_source_box:
@@ -310,6 +311,9 @@ class Box:
         for index in self.collision_ids:
             if index in collision:
                 collision.remove(index)
+        for wire_label in self.canvas.wire_label_tags:
+            if wire_label in collision:
+                collision.remove(wire_label)
         for wire in self.canvas.wires:
             tag = wire.line
             if tag in collision:
@@ -522,10 +526,11 @@ class Box:
         if wire not in self.wires:
             self.wires.append(wire)
 
-    def add_left_connection(self, id_=None):
+    def add_left_connection(self, id_=None, connection_type=ConnectionType.GENERIC):
         i = self.get_new_left_index()
         conn_x, conn_y = self.get_connection_coordinates("left", i)
-        connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_)
+        connection = Connection(self, i, "left", (conn_x, conn_y), self.canvas, id_=id_,
+                                connection_type=connection_type)
         self.left_connections += 1
         self.connections.append(connection)
         self.collision_ids.append(connection.circle)
@@ -539,10 +544,11 @@ class Box:
         self.resize_by_connections()
         return connection
 
-    def add_right_connection(self, id_=None):
+    def add_right_connection(self, id_=None, connection_type=ConnectionType.GENERIC):
         i = self.get_new_right_index()
         conn_x, conn_y = self.get_connection_coordinates("right", i)
-        connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_)
+        connection = Connection(self, i, "right", (conn_x, conn_y), self.canvas, id_=id_,
+                                connection_type=connection_type)
         self.right_connections += 1
         self.connections.append(connection)
         self.collision_ids.append(connection.circle)

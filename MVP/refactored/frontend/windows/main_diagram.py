@@ -15,6 +15,7 @@ from ttkbootstrap.constants import *
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Titlebar
 from MVP.refactored.frontend.util.selector import Selector
@@ -49,7 +50,7 @@ class MainDiagram(tk.Tk):
         self.search_objects = {}
         self.wire_objects = {}
 
-        self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
+        self.custom_canvas = CustomCanvas(self, None, self, self, False)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -632,19 +633,19 @@ class MainDiagram(tk.Tk):
             if show_connections:
                 for connection in box.connections:
                     circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
-                                            connection.r / 100, color="black")
+                                            connection.r / 100, color="black", zorder=2)
                     ax.add_patch(circle)
 
             plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
-                     horizontalalignment="center", verticalalignment="center")
+                     horizontalalignment="center", verticalalignment="center", zorder=2)
             ax.add_patch(polygon)
 
         for spider in canvas.spiders:
-            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black")
+            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100, color="black", zorder=2)
             ax.add_patch(circle)
 
         for i_o in canvas.inputs + canvas.outputs:
-            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black")
+            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100, color="black", zorder=2)
             ax.add_patch(con)
 
         for wire in canvas.wires:
@@ -666,10 +667,43 @@ class MainDiagram(tk.Tk):
             spl = make_interp_spline(x, y, k=3)
             y_line = spl(x_linspace)
 
-            plt.plot(x_linspace, y_line, color="black")
+            color, style = self.get_wire_style(wire)
+
+            plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
+
+        for label_tag in canvas.wire_label_tags:
+            coords = canvas.coords(label_tag)
+            plt.text(coords[0] / 100, y_max - coords[1] / 100, canvas.itemconfig(label_tag)['text'][-1],
+                     horizontalalignment='center', verticalalignment='center', zorder=2,
+                     family="cmtt10", fontsize=10)
 
         ax.set_xlim(0, x_max)
         ax.set_ylim(0, y_max)
         plt.axis('off')
 
         return fig, ax
+
+    @staticmethod
+    def get_wire_style(wire):
+        match wire.type:
+            case WireType.FIRST:
+                style = "black", ":"
+            case WireType.SECOND:
+                style = "black", "--"
+            case WireType.THIRD:
+                style = "black", "-."
+            case WireType.FOURTH:
+                style = "hotpink", ""
+            case WireType.FIFTH:
+                style = "slateblue", ""
+            case WireType.SIXTH:
+                style = "seagreen", ""
+            case WireType.SEVENTH:
+                style = "darkolivegreen", ""
+            case WireType.EIGHTH:
+                style = "goldenrod", ""
+            case WireType.NINTH:
+                style = "red", ""
+            case _:
+                style = "black", ""
+        return style

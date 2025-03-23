@@ -1,12 +1,13 @@
 import tkinter as tk
 
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 
 
 class Spider(Connection):
-    def __init__(self, box, index, side, location, canvas, receiver, id_=None):
+    def __init__(self, box, index, side, location, canvas, id_=None, connection_type=ConnectionType.GENERIC):
         self.r = 10
-        super().__init__(box, index, side, location, canvas, self.r)
+        super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
         self.x = location[0]
         self.y = location[1]
@@ -20,7 +21,7 @@ class Spider(Connection):
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.bind_events()
         self.wires = []
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.search:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
@@ -42,12 +43,16 @@ class Spider(Connection):
         self.canvas.tag_bind(self.circle, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.circle, "<Enter>", lambda _: self.canvas.on_hover(self))
         self.canvas.tag_bind(self.circle, "<Leave>", lambda _: self.canvas.on_leave_hover())
+        self.canvas.tag_bind(self.circle, '<Button-2>', lambda x: self.increment_type())
 
     def show_context_menu(self, event):
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
+        self.add_type_choice()
+
         self.context_menu.add_command(label="Delete Spider", command=self.delete_spider)
+        self.context_menu.add_separator()
         self.context_menu.add_command(label="Cancel")
 
         self.context_menu.tk_popup(event.x_root, event.y_root)
@@ -67,6 +72,7 @@ class Spider(Connection):
     def add_wire(self, wire):
         if wire not in self.wires:
             self.wires.append(wire)
+            self.has_wire = True
 
     def on_resize_scroll(self, event):
         if event.delta == 120:
@@ -193,6 +199,9 @@ class Spider(Connection):
         collision = list(collision)
         if self.collision_id in collision:
             collision.remove(self.collision_id)
+        for wire_label in self.canvas.wire_label_tags:
+            if wire_label in collision:
+                collision.remove(wire_label)
         for wire in self.canvas.wires:
             tag = wire.line
             if tag in collision:
@@ -216,3 +225,4 @@ class Spider(Connection):
     def remove_wire(self, wire=None):
         if wire and wire in self.wires:
             self.wires.remove(wire)
+            self.has_wire = len(self.wires) > 0
