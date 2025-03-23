@@ -226,7 +226,7 @@ class WireTest(TestApplication):
         self.assertTrue(update_wire_label_mock.called)
 
     @patch("tkinter.simpledialog.askstring", return_value="String")
-    def test__define_type__with_param_define_type(self, ask_string_mock):
+    def test__define_type__defines_type(self, ask_string_mock):
         self.custom_canvas.add_spider((100, 100))
         self.custom_canvas.add_spider((200, 200))
         self.custom_canvas.start_wire_from_connection(self.custom_canvas.spiders[0])
@@ -281,7 +281,7 @@ class WireTest(TestApplication):
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.itemconfig")
     @patch("tkinter.simpledialog.askstring", return_value="Int")
     @patch("tkinter.simpledialog.askstring", return_value="String")
-    def test__update_wire_label__existing_labels(self, ask_string_mock1, ask_string_mock2, itemconfig_mock):
+    def test__update_wire_label__updates_existing_labels(self, ask_string_mock1, ask_string_mock2, itemconfig_mock):
         self.custom_canvas.add_diagram_output()
         self.custom_canvas.add_diagram_input()
         self.custom_canvas.start_wire_from_connection(self.custom_canvas.inputs[0])
@@ -300,7 +300,7 @@ class WireTest(TestApplication):
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.create_text")
     @patch("tkinter.simpledialog.askstring", return_value="Int")
-    def test__update_wire_label_creates__new_labels(self, ask_string_mock, create_text_mock):
+    def test__update_wire_label_creates__adds_new_labels(self, ask_string_mock, create_text_mock):
         self.custom_canvas.add_diagram_output()
         self.custom_canvas.add_diagram_input()
         self.custom_canvas.start_wire_from_connection(self.custom_canvas.inputs[0])
@@ -314,7 +314,7 @@ class WireTest(TestApplication):
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.itemconfig")
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.create_text")
     @patch("tkinter.simpledialog.askstring", return_value="Int")
-    def test__update_wire_label__does_not_create_for_spiders(self, ask_string_mock, itemconfig_mock, create_text_mock):
+    def test__update_wire_label__does_not_create_label_for_spiders(self, ask_string_mock, itemconfig_mock, create_text_mock):
         self.custom_canvas.add_spider((100, 100))
         self.custom_canvas.add_spider((200, 200))
 
