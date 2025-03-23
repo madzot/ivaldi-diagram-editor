@@ -5,7 +5,7 @@ from MVP.refactored.frontend.canvas_objects.types.connection_type import Connect
 
 
 class Spider(Connection):
-    def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC):
+    def __init__(self, box, index, side, location, canvas, id_=None, connection_type=ConnectionType.GENERIC):
         self.r = 10
         super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
@@ -21,7 +21,7 @@ class Spider(Connection):
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.bind_events()
         self.wires = []
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.search:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
