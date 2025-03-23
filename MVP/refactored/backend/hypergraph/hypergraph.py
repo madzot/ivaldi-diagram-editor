@@ -199,22 +199,48 @@ class Hypergraph:
                 if connected_node not in visited_nodes:
                     queue.put(connected_node)  # add next level nodes to queue
 
+    def get_node_groups(self) -> list[list[int]]:
+        """
+        Return list of node groups.
+        Node group is a list of nodes, that are directly connected with each other.
+        """
+        node_groups: list[list[int]] = []
+        visited: set[int] = set()
+
+        for node in self.nodes.values():
+            if node.id not in visited:
+                node_group = [node.id]
+                visited.add(node.id)
+
+                united_nodes = node.get_united_with_nodes()
+                for united_node in united_nodes:
+                    visited.add(united_node.id)
+                    node_group.append(united_node.id)
+
+                node_groups.append(node_group)
+
+        return node_groups
+
     def to_dict(self) -> dict:
         """Return a dictionary representation of the hypergraph."""
-        hypergraph_dict = super().to_dict()
-        hypergraph_dict["nodes"] = [node.to_dict() for node in self.nodes]
-        return hypergraph_dict
+        return {
+            "id": self.id,
+            "hyperEdges": [hyper_edge.to_dict() for hyper_edge in self.get_all_hyper_edges()],
+            "nodeGroups": self.get_node_groups(),
+            "sourceNodes": [source_node.id for source_node in self.get_hypergraph_source()],
+        }
+
 
     def __str__(self) -> str:
         result = f"Hypergraph: {self.id}\n"
 
         hyper_edges = self.get_all_hyper_edges()
         result += f"Hyper edges({len(hyper_edges)}): " + ", ".join(
-            str(hyper_edge.id) for hyper_edge in hyper_edges) + "\n"
+            str(hyper_edge) for hyper_edge in hyper_edges) + "\n"
 
         vertices = self.get_all_nodes()
         result += f"Vertices({len(vertices)}): " + ", ".join(
-            f"{vertex.id}({len(vertex.get_united_with_nodes())})" for vertex in vertices) + "\n"
+            f"{str(vertex)}({len(vertex.get_united_with_nodes())})" for vertex in vertices) + "\n"
 
         result += "Connections:\n"
         visited = set()
