@@ -80,7 +80,7 @@ class SearchWindow(tk.Toplevel):
 
     def search(self):
         if self.main_diagram.is_search_active:
-            self.main_diagram.custom_canvas.on_displaying_results_click()
+            self.main_diagram.cancel_search_results()
         algorithm = SearchAlgorithm(self.search_canvas, self.main_diagram.custom_canvas, self)
         found = algorithm.contains_searchable()
         self.main_diagram.search_results = algorithm.results
@@ -91,5 +91,5 @@ class SearchWindow(tk.Toplevel):
         if found:
             self.main_diagram.highlight_search_result_by_index(0)
             for canvas in self.main_diagram.canvasses.values():
-                canvas.toggle_displaying_results_button()
+                canvas.toggle_search_results_button()
 

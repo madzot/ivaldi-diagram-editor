@@ -72,4 +72,106 @@ inside MainDiagram
 | wire_label_tags          | list                   | List of tags that represent the Wire labels on the CustomCanvas.                                                                                                    |
 
 
+### CustomCanvas functions
+
+    .on_hover(item)
+        Activated when some items are being hovered over. Updates the hover_item variable.
+
+        Parameters:
+            item (Any): A canvas_object widget to change hover_item to.
+
+    .on_leave_hover()
+        Changes hover_item to `None`. Activated when leaving hover over objects.
+
+    .scale_item(event)
+        Activates `.on_resize_scroll(event)` on the item that is being hovered over.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+
+    .toggle_search_results_button()
+        Toggles visibility of search result button based on active search status. Search result button is the button
+        used for moving between search results and cancelling search results.
+
+    .update_search_result_button()
+        Updates the search result button, moving it to the correct location.
+
+    .remove_search_highlights()
+        Removes search highlights from CustomCanvas. Toggles search results button.
+
+    .select_all()
+        Selects all the objects on the CustomCanvas.
+
+    .update_prev_winfo_size()
+        Updates previous height/width variables with current CustomCanvas size.
+
+    .pan_horizontal(event)
+        Moves objects on the CustomCanvas horizontally.
+        
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+
+    .pan_vertical(event)
+        Moves objects on the CustomCanvas vertically.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+
+    .move_boxes_spider(attr, multiplier)
+        Moves boxes and spiders on the CustomCanvas along the x or y axis. 
+
+        Parameters:
+            attr (string): `x` or `y`. Axis to move objects along.
+            multiplier (int): -1 or 1. Determines whether objects will be moved towards negative coordinates or positive coordinates.
+
+    .delete(*args)
+        Tkinter.Canvas delete function with added hypergraph changes.
+
+        *args: Tkinter.Canvas .delete(*args)
+
+    .update_after_treeview(canvas_width, treeview_width, to_left)
+        Updates item locations on the CustomCanvas to account for new space created or space taken away by the treeview.
+        
+        Parameters:
+            canvas_width (int): Current CustomCanvas width.
+            treeview_width (int): Treeview width if open.
+            to_left (bool): Determines if boxes should be moved to the left due to treeview being opened.
+
+    .handle_right_click(event)
+        Handles right click event on CustomCanvas. Possible actions are finishing selection, cancelling wire pulling,
+        showing context menu.
+
+        Parameters:
+            event (tkinter.Event): Event object passed on key press.
+
+    .set_name(name)
+        Set new name for CustomCanvas.
+
+        Parameters:
+            name (string): New name for CustomCanvas.
+
+    .reset_zoom()
+        Resets the scale of the CustomCanvas to be zoomed out all the way.
+
+    .zoom(event)
+        Zooming main function, actived on scrolling on CustomCanvas. Scales the canvas.
+
+        Parameters:
+            event (tkinter.Event): Event object passed on key press.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

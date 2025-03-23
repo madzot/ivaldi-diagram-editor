@@ -19,7 +19,7 @@ class SearchResultButton(tk.LabelFrame):
         self.close_icon = ImageTk.PhotoImage(self.close_icon)
 
         close_button = tk.Label(self.close_button_frame, image=self.close_icon, height=30, width=25)
-        close_button.bind("<Button-1>", lambda event: self.custom_canvas.on_displaying_results_click())
+        close_button.bind("<Button-1>", lambda event: self.main_diagram.cancel_search_results())
         close_button.pack()
 
         up_down_frame = tk.LabelFrame(self, height=30)

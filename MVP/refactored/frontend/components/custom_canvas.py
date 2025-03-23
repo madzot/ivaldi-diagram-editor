@@ -144,7 +144,7 @@ class CustomCanvas(tk.Canvas):
         if self.hover_item:
             self.hover_item.on_resize_scroll(event)
 
-    def toggle_displaying_results_button(self):
+    def toggle_search_results_button(self):
         if self.main_diagram.is_search_active:
             self.search_result_button.place(x=self.winfo_width() - 90, y=20, anchor=tk.CENTER, width=175, height=30)
         else:
@@ -155,14 +155,11 @@ class CustomCanvas(tk.Canvas):
             self.search_result_button.place_forget()
             self.search_result_button.place(x=self.winfo_width() - 90, y=20, anchor=tk.CENTER, width=175, height=30)
 
-    def on_displaying_results_click(self):
-        self.main_diagram.cancel_search_results()
-
     def remove_search_highlights(self):
         for item in self.search_result_highlights:
             item.deselect()
         self.search_result_highlights = []
-        self.toggle_displaying_results_button()
+        self.toggle_search_results_button()
 
     def select_all(self):
         if self.main_diagram.custom_canvas == self:
@@ -206,7 +203,7 @@ class CustomCanvas(tk.Canvas):
             self.coords(connection.circle,
                         connection.location[0] - connection.r, connection.location[1] - connection.r,
                         connection.location[0] + connection.r, connection.location[1] + connection.r)
-        self.move_boxes_spiders(True, multiplier)
+        self.move_boxes_spiders('x', multiplier)
         self.pan_speed = 20
 
     def pan_vertical(self, event):
@@ -228,14 +225,10 @@ class CustomCanvas(tk.Canvas):
             self.coords(connection.circle,
                         connection.location[0] - connection.r, connection.location[1] - connection.r,
                         connection.location[0] + connection.r, connection.location[1] + connection.r)
-        self.move_boxes_spiders(False, multiplier)
+        self.move_boxes_spiders('y', multiplier)
         self.pan_speed = 20
 
-    def move_boxes_spiders(self, is_horizontal, multiplier):
-        if is_horizontal:
-            attr = "x"
-        else:
-            attr = "y"
+    def move_boxes_spiders(self, attr, multiplier):
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
             spider.move_to((spider.x, spider.y))
