@@ -145,7 +145,6 @@ Spider is a subclass of Connection. Difference between Connection and Spider is 
 |-----------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------|
 | location              | list           | Location of the Spider in the form of a list. Example: [111, 222]                                                                         |
 | canvas                | CustomCanvas   | CustomCanvas that the Spider is located and displayed on.                                                                                 |
-| receiver              | Receiver       | Receiver used for sending events to the backend proportion of the application. The receiver is usually taken from the MainDiagram object. |
 |                       |                |                                                                                                                                           |
 | # **Optional params** |                |                                                                                                                                           |
 | id_                   | int            | ID.<br/> Default value is `None`.                                                                                                         |
@@ -227,7 +226,6 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
 |-----------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | canvas                | CustomCanvas | The CustomCanvas that the Wire will be created on.                                                                                                     |
 | start_connection      | Connection   | The starting Connection of the Wire. This represents the Connection on the left side of the wire.                                                      |
-| receiver              | Receiver     | Receiver object used to send information back to the backend.                                                                                          |
 | end_connection        | Connection   | The end Connection of the Wire. This represents the Connection on the right side of the wire.                                                          |
 |                       |              |                                                                                                                                                        |
 | # **Optional params** |              |                                                                                                                                                        |

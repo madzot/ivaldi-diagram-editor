@@ -24,14 +24,13 @@ class Box:
 
     The coordinates of a Box are the top left corner for it.
     """
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
+    def __init__(self, canvas, x, y, size=(60, 60), id_=None, shape="rectangle"):
         """
         Box constructor.
 
         :param canvas: CustomCanvas object that Box will be created on.
         :param x: X coordinate of the Box.
         :param y: Y coordinate of the Box.
-        :param receiver: Receiver object that
         :param size: (Optional) Tuple with width and height of box.
         :param id_: (Optional) ID of the box.
         :param shape: (Optional) Shape of the box.
@@ -65,7 +64,7 @@ class Box:
         self.locked = False
         self.bind_events()
         self.sub_diagram = None
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add", generator_id=self.id)
             if self.canvas.diagram_source_box:

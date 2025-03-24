@@ -39,14 +39,13 @@ class Wire:
 
     defined_wires = {}
 
-    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, is_temporary=False,
+    def __init__(self, canvas, start_connection, end_connection, id_=None, is_temporary=False,
                  wire_type=WireType.GENERIC):
         """
         Wire constructor.
 
         :param canvas: CustomCanvas object that Wire will be created on.
         :param start_connection: Connection object that will mark the start of the Wire.
-        :param receiver: Receiver object from MainDiagram mostly that is used to send information to backend.
         :param end_connection: Connection object that will mark the end of the Wire.
         :param id_: (Optional) Integer ID of the Wire.
         :param is_temporary: (Optional) Boolean value that determines whether the Wire is temporary. Default is False.
@@ -63,7 +62,7 @@ class Wire:
             self.id = id(self)
         else:
             self.id = id_
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         self.is_temporary = is_temporary
         if not is_temporary and not self.canvas.search:
             self.handle_wire_addition_callback()
