@@ -39,7 +39,7 @@ class Wire:
 
     defined_wires = {}
 
-    def __init__(self, canvas, start_connection, receiver, end_connection, id_=None, is_temporary=False,
+    def __init__(self, canvas, start_connection, end_connection, id_=None, is_temporary=False,
                  wire_type=WireType.GENERIC):
         """
         Wire constructor.
@@ -63,7 +63,7 @@ class Wire:
             self.id = id(self)
         else:
             self.id = id_
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         self.is_temporary = is_temporary
         if not is_temporary and not self.canvas.search:
             self.handle_wire_addition_callback()

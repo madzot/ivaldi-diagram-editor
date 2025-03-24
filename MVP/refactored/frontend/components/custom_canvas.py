@@ -23,7 +23,7 @@ from constants import *
 
 
 class CustomCanvas(tk.Canvas):
-    def __init__(self, master, diagram_source_box, receiver, main_diagram,
+    def __init__(self, master, diagram_source_box, main_diagram,
                  parent_diagram, add_boxes, id_=None, search=False, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -52,7 +52,7 @@ class CustomCanvas(tk.Canvas):
         self.previous_x = None
         self.previous_y = None
         self.quick_pull = False
-        self.receiver = receiver
+        self.receiver = main_diagram.receiver
         self.current_wire_start = None
         self.current_wire = None
         self.draw_wire_mode = False
@@ -546,7 +546,7 @@ class CustomCanvas(tk.Canvas):
                 self.temp_end_connection = Connection(None, 0, None,
                                                       (self.canvasx(event.x), self.canvasy(event.y)),
                                                       self, connection_type=self.current_wire_start.type)
-            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True,
+            self.temp_wire = Wire(self, self.current_wire_start, self.temp_end_connection, None, True,
                                   wire_type=WireType[self.current_wire_start.type.name])
             self.temp_end_connection.wire = self.temp_wire
 
@@ -591,7 +591,7 @@ class CustomCanvas(tk.Canvas):
 
             self.cancel_wire_pulling()
 
-            self.current_wire = Wire(self, start_end[0], self.receiver, start_end[1],
+            self.current_wire = Wire(self, start_end[0], start_end[1],
                                      wire_type=WireType[start_end[0].type.name])
             self.wires.append(self.current_wire)
 
@@ -631,7 +631,7 @@ class CustomCanvas(tk.Canvas):
     def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape=None):
         if shape is None:
             shape = self.box_shape
-        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape)
+        box = Box(self, *loc, size=size, id_=id_, shape=shape)
         self.boxes.append(box)
         return box
 
@@ -648,7 +648,7 @@ class CustomCanvas(tk.Canvas):
         return None
 
     def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC):
-        spider = Spider(loc, self, self.receiver, id_=id_, connection_type=connection_type)
+        spider = Spider(loc, self, id_=id_, connection_type=connection_type)
         self.spiders.append(spider)
         return spider
 

@@ -11,7 +11,7 @@ class Spider(Connection):
     Used separately from Boxes and diagram input/output. They are a freely moving canvas widget, displayed as a circle.
     Its size can vary. It allows multiple wires to be connected to it.
     """
-    def __init__(self, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC):
+    def __init__(self, location, canvas, id_=None, connection_type=ConnectionType.GENERIC):
         """
         Spider constructor.
 
@@ -41,7 +41,7 @@ class Spider(Connection):
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.bind_events()
         self.wires = []
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.search:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
