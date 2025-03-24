@@ -506,10 +506,16 @@ class Box:
             self.canvas.coords(self.rect, self.display_x, self.display_y, self.display_x + self.size[0],
                                self.display_y + self.size[1])
         if self.shape == "triangle":
-            self.canvas.coords(self.rect,
-                               self.display_x + self.size[0], self.display_y + self.size[1] / 2,
-                               self.display_x, self.display_y,
-                               self.display_x, self.display_y + self.size[1])
+            if self.canvas.master.is_rotated:
+                self.canvas.coords(self.rect,
+                                   self.display_x + self.size[0], self.display_y,
+                                   self.display_x, self.display_y,
+                                   self.display_x + self.size[0] / 2, self.display_y + self.size[1])
+            else:
+                self.canvas.coords(self.rect,
+                                   self.display_x + self.size[0], self.display_y + self.size[1] / 2,
+                                   self.display_x, self.display_y,
+                                   self.display_x, self.display_y + self.size[1])
         self.canvas.coords(self.resize_handle, self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
                            self.display_x + self.size[0], self.display_y + self.size[1])
 
@@ -679,8 +685,14 @@ class Box:
             return self.canvas.create_rectangle(self.display_x, self.display_y, self.display_x + w, self.display_y + h,
                                                 outline="black", fill="white")
         if self.shape == "triangle":
-            return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x, self.display_y,
-                                              self.display_x, self.display_y + h, outline="black", fill="white")
+            if self.canvas.master.is_rotated:
+                print("did it")
+                return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x, self.display_y,
+                                                  self.display_x + w / 2, self.display_y + h, outline="black", fill="white")
+            else:
+                return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x,
+                                                  self.display_y, self.display_x, self.display_y + h,
+                                                  outline="black", fill="white")
 
     def change_shape(self, shape):
         if shape == "rectangle":
