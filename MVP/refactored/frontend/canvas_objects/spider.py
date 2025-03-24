@@ -19,8 +19,6 @@ class Spider(Connection):
         :type location: tuple
         :param canvas: CustomCanvas object that Spider will be created on.
         :type canvas: CustomCanvas
-        :param receiver: Receiver object for backend callouts.
-        :type receiver: Receiver
         :param id_: Optional id parameter
         :type id_: int
         :param connection_type: ConnectionType that will define the style of the Connection.

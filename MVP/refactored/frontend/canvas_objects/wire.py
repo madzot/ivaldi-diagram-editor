@@ -46,7 +46,6 @@ class Wire:
 
         :param canvas: CustomCanvas object that Wire will be created on.
         :param start_connection: Connection object that will mark the start of the Wire.
-        :param receiver: Receiver object from MainDiagram mostly that is used to send information to backend.
         :param end_connection: Connection object that will mark the end of the Wire.
         :param id_: (Optional) Integer ID of the Wire.
         :param is_temporary: (Optional) Boolean value that determines whether the Wire is temporary. Default is False.
