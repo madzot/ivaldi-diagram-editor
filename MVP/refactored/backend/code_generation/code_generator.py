@@ -34,7 +34,7 @@ class CodeGenerator:
 
         file_content += "\n".join(function_list)
 
-        file_content += "\n" + cls.construct_main_function(canvas, renamed_functions)
+        file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0], renamed_functions)
 
         with open("diagram.py", "w") as file:
             file.write(autopep8.fix_code(file_content))
@@ -45,15 +45,24 @@ class CodeGenerator:
     def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> dict[
                             BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
-        for box in canvas.boxes:
-            if str(box.id) in canvasses:
-                code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses, main_diagram))
-            else:
-                box_function = BoxFunction(name=box.label_text, file_code=main_diagram.label_content[box.label_text])
-                if box_function in code_parts:
-                    code_parts[box_function].append(box.id)
-                else:
-                    code_parts[box_function] = [box.id]
+        hypergraphs = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
+        for hypergraph in hypergraphs:
+            hyper_edges = hypergraph.get_all_hyper_edges()
+            for hyper_edge in hyper_edges:
+                if hyper_edge.get_box_function() is not None:
+                    if hyper_edge.get_box_function() in code_parts:
+                        code_parts[hyper_edge.get_box_function()].append(hyper_edge.id)
+                    else:
+                        code_parts[hyper_edge.get_box_function()] = [hyper_edge.id]
+        # for box in canvas.boxes:
+        #     if str(box.id) in canvasses:
+        #         code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses, main_diagram))
+        #     else:
+        #         box_function = BoxFunction(name=box.label_text, file_code=main_diagram.label_content[box.label_text])
+        #         if box_function in code_parts:
+        #             code_parts[box_function].append(box.id)
+        #         else:
+        #             code_parts[box_function] = [box.id]
         return code_parts
 
     @classmethod
@@ -108,43 +117,82 @@ class CodeGenerator:
         return code_parts_without_meta
 
     @classmethod
-    def construct_main_function(cls, canvas: CustomCanvas, renamed_functions: dict[BoxFunction, str]) -> str:
+    def construct_main_function(cls, hypergraph: Hypergraph, renamed_functions: dict[BoxFunction, str]) -> str:
         main_function = ""
-        hypergraph: Hypergraph = HypergraphManager().get_graph_by_id(canvas.id)
-        input_nodes: set[Node] = set(hypergraph.get_node_by_input(input_id) for input_id in hypergraph.inputs)
-        input_nodes = sorted(input_nodes, key=lambda input_node: canvas.get_box_by_id(input_node.id).y)
-        main_function += cls.create_definition_of_main_function(input_nodes)
-        nodes_queue: Queue[Node] = Queue()
-        node_input_count_check: dict[int, int] = dict()
 
-        for node in input_nodes:
-            node_input_count_check[node.id] = 0
-            for node_input in node.inputs:
-                if hypergraph.get_node_by_output(node_input) is None:
-                    node_input_count_check[node.id] += 1
-            if node_input_count_check[node.id] == len(node.inputs):
-                nodes_queue.put(node)
+        function_definition = "def main("
+        node_and_hyper_edge_to_variable_name: dict[int, str] = dict()
+        hypergraph_source_nodes = hypergraph.get_hypergraph_source()
+        for node in hypergraph_source_nodes:
+            print(node.__hash__())
+        index = 0
+        for node in hypergraph_source_nodes: # TODO it can be wrong order
+            if node.new_hash() not in node_and_hyper_edge_to_variable_name:
+                node_and_hyper_edge_to_variable_name[node.new_hash()] = f"input_{index}"
+                function_definition += f"{node_and_hyper_edge_to_variable_name[node.new_hash()]} = None, "
+                index += 1
+        function_definition = function_definition[:-2] + "):"
 
-        while len(input_nodes) > 0:
-            input_nodes = cls.get_children_nodes(input_nodes,
-                                                 node_input_count_check)
-            input_nodes = sorted(input_nodes, key=lambda input_node: canvas.get_box_by_id(input_node.id).y)
-            for node in input_nodes:
-                nodes_queue.put(node)
+        nodes_with_inputs: list[Node] = list()
+        nodes_with_inputs.extend(hypergraph_source_nodes)
+        hyper_edge_input_count_check: dict[HyperEdge, int] = dict()
+        hyper_edge_queue: Queue[HyperEdge] = Queue()
+        to_check = hypergraph.get_all_hyper_edges()
+        while len(to_check) > 0:
+            to_check_new = list()
+            for hyper_edge in to_check:
+                hyper_edge_input_count_check[hyper_edge] = 0
+                for node in hyper_edge.get_source_nodes():
+                    if node in nodes_with_inputs:
+                        hyper_edge_input_count_check[hyper_edge] += 1
+                if hyper_edge_input_count_check[hyper_edge] == len(hyper_edge.get_source_nodes()):
+                    hyper_edge_queue.put(hyper_edge)
+                    for target_node in hyper_edge.get_target_nodes():
+                        if target_node not in nodes_with_inputs:
+                            nodes_with_inputs.append(target_node)
+                else:
+                    to_check_new.append(hyper_edge)
+            to_check = to_check_new
 
-        main_function_content, function_result_variables = cls.create_main_function_content(
-                                                                    canvas, nodes_queue, renamed_functions, hypergraph)
-        main_function_return = cls.create_main_function_return(function_result_variables, hypergraph)
+        main_function_content = ""
+        index = 0
+        while not hyper_edge_queue.empty():
+            hyper_edge = hyper_edge_queue.get()
+            variable = f"res_{index}"
+            variable_definition = f"{variable} = {renamed_functions[hyper_edge.get_box_function()]}("
+            for source_node in hyper_edge.get_source_nodes():
+                variable_definition += f"{node_and_hyper_edge_to_variable_name[source_node.new_hash()]}, "
+            variable_definition = variable_definition[:-2] + ")"
+            main_function_content += f"\n\t{variable_definition}"
+            if len(hyper_edge.get_target_nodes()) > 1:
+                target_node_index = 0
+                for target_node in hyper_edge.get_target_nodes():
+                    if target_node.new_hash() not in node_and_hyper_edge_to_variable_name:
+                        node_and_hyper_edge_to_variable_name[target_node.new_hash()] = f"{variable}[{target_node_index}]"
+                        target_node_index += 1
+            else:
+                node_and_hyper_edge_to_variable_name[hyper_edge.get_target_nodes()[0].new_hash()] = variable
+            index += 1
 
+        main_function_return = "\n\treturn "
+        added: set[int] = set()
+        for output in hypergraph.get_hypergraph_target(): # TODO it can be wrong order
+            if output.new_hash() in node_and_hyper_edge_to_variable_name and output.new_hash() not in added:
+                main_function_return += f"{node_and_hyper_edge_to_variable_name[output.new_hash()]}, "
+                added.add(output.new_hash())
+        main_function_return = main_function_return[:-2 if len(added) > 0 else -1]
+
+
+        main_function += function_definition
         main_function += main_function_content
         main_function += main_function_return
         return main_function
 
     @classmethod
-    def create_definition_of_main_function(cls, input_nodes: set[Node]) -> str:
+    def create_definition_of_main_function(cls, input_hyper_edges: set[HyperEdge]) -> str:
 
         definition = "def main("
-        variables_count = sum(map(lambda node: len(node.inputs), input_nodes))
+        variables_count = sum(map(lambda hyper_edge: len(hyper_edge.get_source_nodes()), input_hyper_edges))
         has_args = False
 
         for i in range(variables_count):

@@ -32,7 +32,7 @@ class JsonImporter(Importer):
 
     def load_boxes_to_canvas(self, d, canvas):
         for box in d["boxes"]:
-            new_box = canvas.add_box((box["x"], box["y"]), box["size"], self.get_id(box["id"]), shape=box["shape"])
+            new_box = canvas.add_box((box["x"], box["y"]), box["size"], self.get_id(box["id"]), shape=box.get("shape"))
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:

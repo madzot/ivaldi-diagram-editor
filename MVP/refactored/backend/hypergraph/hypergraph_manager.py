@@ -67,7 +67,7 @@ class HypergraphManager:
                     break
         # check if new hyper graphs were created
         if _hypergraph is None: return
-        source_nodes_and_potentially_source_nodes: list[Node] = _hypergraph.get_hypergraph_source() + removed_node_outputs_and_directly_connected  # TODO
+        source_nodes_and_potentially_source_nodes: list[Node] = _hypergraph.get_hypergraph_source() + removed_node_outputs_and_directly_connected
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
         for source_node in source_nodes_and_potentially_source_nodes:
             group: list[Node] = list()
@@ -207,11 +207,13 @@ class HypergraphManager:
             HypergraphManager.combine_hypergraphs([node_hypergraph, unite_with_hypergraph])
 
     @staticmethod
-    def connect_node_with_input_hyper_edge(node: Node, hyper_edge_id: int):
+    def connect_node_with_input_hyper_edge(node: Node, hyper_edge_id: int) -> HyperEdge:
         """
         After hypergraph creation is done, make connectivity of node, with node/hyper edge and
         theirs hyper graphs.
-        In this case to given node (first arg) input should be added node|hyper edge
+        In this case to given node (first arg) input should be added node|hyper edge.
+
+        :return: HyperEdge that was added to node
         """
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
         connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
@@ -235,12 +237,16 @@ class HypergraphManager:
             # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
+        return hyper_edge
+
     @staticmethod
-    def connect_node_with_output_hyper_edge(node: Node, hyper_edge_id: int):
+    def connect_node_with_output_hyper_edge(node: Node, hyper_edge_id: int) -> HyperEdge:
         """
         After hypergraph creation is done, make connectivity of node, with node/hyper edge and
         theirs hyper graphs.
-        In this case to given node (first arg) output should be added node|hyper edge
+        In this case to given node (first arg) output should be added node|hyper edge.
+
+        :return: HyperEdge that was added to node
         """
         node_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(node.id)
         connect_to_hypergraph: Hypergraph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
@@ -264,6 +270,8 @@ class HypergraphManager:
             # It is box that already have some connections => forms hypergraph
             HypergraphManager.combine_hypergraphs([node_hypergraph, connect_to_hypergraph])
 
+        return hyper_edge
+
     @staticmethod
     def combine_hypergraphs(hypergraphs: list[Hypergraph]):
         """Combine two or more hypergraphs.
@@ -283,16 +291,16 @@ class HypergraphManager:
         HypergraphManager.add_hypergraph(combined_hypergraph)
 
     @staticmethod
-    def get_hyper_edge_by_id(hyper_edge_id: int) -> HyperEdge|None:
+    def get_hyper_edge_by_id(hyper_edge_id: int) -> HyperEdge | None:
         graph = HypergraphManager.get_graph_by_hyper_edge_id(hyper_edge_id)
         if graph is not None:
             return graph.get_hyper_edge_by_id(hyper_edge_id)
         return None
 
     @staticmethod
-    def get_graph_by_node_id(node_id: int) -> Hypergraph|None:
+    def get_graph_by_node_id(node_id: int) -> Hypergraph | None:
         for hypergraph in HypergraphManager.hypergraphs:
-            if node_id in hypergraph.nodes:
+            if node_id in hypergraph.get_all_nodes_ids():
                 return hypergraph
         return None
 
@@ -313,12 +321,12 @@ class HypergraphManager:
         return None
 
     @staticmethod
-    def get_graphs_by_canvas_id(canvas_id: int) -> set[Hypergraph]:
+    def get_graphs_by_canvas_id(canvas_id: int) -> list[Hypergraph]:
         graphs: set[Hypergraph] = set()
         for graph in HypergraphManager.hypergraphs:
             if graph.get_canvas_id() == canvas_id:
                 graphs.add(graph)
-        return graphs
+        return list(graphs)
 
     @staticmethod
     def add_hypergraph(hypergraph: Hypergraph):

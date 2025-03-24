@@ -1,5 +1,6 @@
 import logging
 
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.GeneratorType import GeneratorType
 from MVP.refactored.backend.types.connection_info import ConnectionInfo
@@ -41,6 +42,7 @@ class Receiver:
         new_canvas_id = kwargs.get('new_canvas_id')
         resource_ids: list[int] = kwargs.get('resource_ids')
         generator_ids: list[int] = kwargs.get('generator_ids')
+        box_function: BoxFunction = kwargs.get('box_function')
 
         logger.info(f"receiver_callback invoked with action: {action}, kwargs: {kwargs}")
         if action == ActionType.WIRE_CREATE:
@@ -117,6 +119,13 @@ class Receiver:
         elif action == ActionType.BOX_ADD_OPERATOR:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.add_operand(operator)
+        elif action == ActionType.BOX_SET_FUNCTION:
+            # TODO maybe set box function to generator too?
+            box = self.get_generator_by_id(generator_id, canvas_id)
+            box.set_box_function(box_function)
+            hyper_edge = HypergraphManager.get_hyper_edge_by_id(generator_id)
+            if hyper_edge:
+                hyper_edge.set_box_function(box_function)
         elif action == ActionType.BOX_SWAP_ID:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.set_id(new_id)
@@ -182,7 +191,8 @@ class Receiver:
                     resource.add_left_connection(box.get_left_by_id(connection.get_id())) # We don`t simply add connection from loop (connection in connection),
                     # because we want that box(or input/output) connection and wire connection will be the same object,
                     # if we use from frontend connection they will differ.
-                    HypergraphManager.connect_node_with_output_hyper_edge(node, box.id)
+                    hyper_edge = HypergraphManager.connect_node_with_output_hyper_edge(node, box.id)
+                    hyper_edge.set_box_function(box.get_box_function())
                 else: # it is output
                     output = self.get_output_by_id(connection.get_id(), canvas_id)
                     resource.add_left_connection(output)
@@ -200,7 +210,8 @@ class Receiver:
                         continue
                     resource.add_right_connection(box.get_right_by_id(connection.get_id()))
 
-                    HypergraphManager.connect_node_with_input_hyper_edge(node, box.id)
+                    hyper_edge = HypergraphManager.connect_node_with_input_hyper_edge(node, box.id)
+                    hyper_edge.set_box_function(box.get_box_function())
                 else: # it is input
                     input = self.get_input_by_id(connection.get_id(), canvas_id)
                     resource.add_right_connection(input)
