@@ -329,7 +329,6 @@ The coordinates of a Box are the top left corner for it.
 | canvas                | CustomCanvas | The CustomCanvas object that the Box will be drawn on.                                                                          |
 | x                     | int          | X coordinate for the Box.                                                                                                       |
 | y                     | int          | Y coordinate for the Box.                                                                                                       |
-| receiver              | Receiver     | Receiver object used to send information to the backend.                                                                        |
 |                       |              |                                                                                                                                 |
 | # **Optional params** |              |                                                                                                                                 |
 | size                  | tuple        | A list containing the height and width of the box. Default value is (60, 60)                                                    |
