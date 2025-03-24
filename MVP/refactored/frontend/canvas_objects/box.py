@@ -501,7 +501,6 @@ class Box:
         self.update_wires()
 
     def update_position(self):
-        # TODO rotate rect
         if self.shape == "rectangle":
             self.canvas.coords(self.rect, self.display_x, self.display_y, self.display_x + self.size[0],
                                self.display_y + self.size[1])
