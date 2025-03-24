@@ -11,18 +11,18 @@ from constants import *
 
 
 class Box:
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle", visual=False):
+    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle", display=False):
         self.shape = shape
         self.canvas = canvas
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
-        self.logical_x = x
-        self.logical_y = y
-        self.visual_x = x
-        self.visual_y = y
-        self.update_coords(x, y, visual)
+        self.x = x
+        self.y = y
+        self.display_x = x
+        self.display_y = y
+        self.update_coords(x, y, display)
 
-        self.start_x = self.visual_x
-        self.start_y = self.visual_y
+        self.start_x = self.display_x
+        self.start_y = self.display_y
 
         self.size = size
         self.x_dif = 0
@@ -41,8 +41,8 @@ class Box:
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.rect = self.create_rect()
 
-        self.resize_handle = self.canvas.create_rectangle(self.visual_x + self.size[0] - 10, self.visual_y + self.size[1] - 10,
-                                                          self.visual_x + self.size[0], self.visual_y + self.size[1],
+        self.resize_handle = self.canvas.create_rectangle(self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
+                                                          self.display_x + self.size[0], self.display_y + self.size[1],
                                                           outline="black", fill="black")
         self.locked = False
         self.bind_events()
@@ -123,8 +123,8 @@ class Box:
         if not self.sub_diagram:
             return
         event = tk.Event()
-        event.x = self.visual_x + self.size[0] / 2
-        event.y = self.visual_y + self.size[1] / 2
+        event.x = self.display_x + self.size[0] / 2
+        event.y = self.display_y + self.size[1] / 2
         self.sub_diagram.select_all()
         self.canvas.selector.copy_selected_items(canvas=self.sub_diagram)
         self.on_press(event)
@@ -240,8 +240,8 @@ class Box:
         self.canvas.selector.selected_items.append(self)
         self.start_x = event.x
         self.start_y = event.y
-        self.x_dif = event.x - self.visual_x
-        self.y_dif = event.y - self.visual_y
+        self.x_dif = event.x - self.display_x
+        self.y_dif = event.y - self.display_y
 
     def on_control_press(self):
         if self in self.canvas.selector.selected_items:
@@ -269,14 +269,14 @@ class Box:
             if box == self:
                 continue
 
-            if abs(box.visual_x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
-                go_to_x = box.visual_x + box.size[0] / 2 - +self.size[0] / 2
+            if abs(box.display_x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
+                go_to_x = box.display_x + box.size[0] / 2 - +self.size[0] / 2
 
                 found = True
         for spider in self.canvas.spiders:
 
-            if abs(spider.visual_location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
-                go_to_x = spider.visual_x - +self.size[0] / 2
+            if abs(spider.display_location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
+                go_to_x = spider.display_x - +self.size[0] / 2
 
                 found = True
 
@@ -337,16 +337,16 @@ class Box:
                 return
         old_size = self.size
         self.size = (self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
-        if self.find_collisions(self.visual_x, self.visual_y):
+        if self.find_collisions(self.display_x, self.display_y):
             self.size = old_size
             return
-        self.update_size(self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier, visual=True)
+        self.update_size(self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier, display=True)
         self.move_label()
 
     def on_resize_drag(self, event):
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        resize_x = self.visual_x + self.size[0] - 10
-        resize_y = self.visual_y + self.size[1] - 10
+        resize_x = self.display_x + self.size[0] - 10
+        resize_y = self.display_y + self.size[1] - 10
         dx = event.x - self.start_x
         dy = event.y - self.start_y
 
@@ -378,7 +378,7 @@ class Box:
 
     def move_label(self):
         if self.label:
-            self.canvas.coords(self.label, self.visual_x + self.size[0] / 2, self.visual_y + self.size[1] / 2)
+            self.canvas.coords(self.label, self.display_x + self.size[0] / 2, self.display_y + self.size[1] / 2)
 
     def bind_event_label(self):
         self.canvas.tag_bind(self.label, '<B1-Motion>', self.on_drag)
@@ -421,7 +421,7 @@ class Box:
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
         if not self.label:
-            self.label = self.canvas.create_text((self.visual_x + self.size[0] / 2, self.visual_y + self.size[1] / 2),
+            self.label = self.canvas.create_text((self.display_x + self.size[0] / 2, self.display_y + self.size[1] / 2),
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
             self.collision_ids.append(self.label)
         else:
@@ -488,9 +488,9 @@ class Box:
         self.locked = False
 
     # UPDATES
-    def update_size(self, new_size_x, new_size_y, visual=False):
+    def update_size(self, new_size_x, new_size_y, display=False):
         if self.canvas.master.is_rotated:
-            if visual:
+            if display:
                 self.size = (new_size_x, new_size_y)
             else:
                 self.size = (new_size_y, new_size_x)
@@ -503,15 +503,15 @@ class Box:
     def update_position(self):
         # TODO rotate rect
         if self.shape == "rectangle":
-            self.canvas.coords(self.rect, self.visual_x, self.visual_y, self.visual_x + self.size[0],
-                               self.visual_y + self.size[1])
+            self.canvas.coords(self.rect, self.display_x, self.display_y, self.display_x + self.size[0],
+                               self.display_y + self.size[1])
         if self.shape == "triangle":
             self.canvas.coords(self.rect,
-                               self.visual_x + self.size[0], self.visual_y + self.size[1] / 2,
-                               self.visual_x, self.visual_y,
-                               self.visual_x, self.visual_y + self.size[1])
-        self.canvas.coords(self.resize_handle, self.visual_x + self.size[0] - 10, self.visual_y + self.size[1] - 10,
-                           self.visual_x + self.size[0], self.visual_y + self.size[1])
+                               self.display_x + self.size[0], self.display_y + self.size[1] / 2,
+                               self.display_x, self.display_y,
+                               self.display_x, self.display_y + self.size[1])
+        self.canvas.coords(self.resize_handle, self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
+                           self.display_x + self.size[0], self.display_y + self.size[1])
 
     def update_connections(self):
         for c in self.connections:
@@ -631,7 +631,7 @@ class Box:
                 other_connection = wire.end_connection
             else:
                 other_connection = wire.start_connection
-            other_x = other_connection.logical_location[0]
+            other_x = other_connection.location[0]
             if other_x + other_connection.width_between_boxes >= new_x:
                 return True
 
@@ -641,8 +641,8 @@ class Box:
             else:
                 other_connection = wire.start_connection
 
-            other_x = other_connection.logical_location[0]
-            if other_x - other_connection.width_between_boxes <= new_x + self.logical_size()[0]:
+            other_x = other_connection.location[0]
+            if other_x - other_connection.width_between_boxes <= new_x + self.get_logical_size()[0]:
                 return True
         return False
 
@@ -652,16 +652,16 @@ class Box:
         if side == "left":
             i = self.get_new_left_index()
             if self.canvas.master.is_rotated:
-                return self.logical_x, self.logical_y + (index + 1) * self.size[0] / (i + 1)
+                return self.x, self.y + (index + 1) * self.size[0] / (i + 1)
             else:
-                return self.logical_x, self.logical_y + (index + 1) * self.size[1] / (i + 1)
+                return self.x, self.y + (index + 1) * self.size[1] / (i + 1)
 
         elif side == "right":
             i = self.get_new_right_index()
             if self.canvas.master.is_rotated:
-                return self.logical_x + self.size[1], self.logical_y + (index + 1) * self.size[0] / (i + 1)
+                return self.x + self.size[1], self.y + (index + 1) * self.size[0] / (i + 1)
             else:
-                return self.logical_x + self.size[0], self.logical_y + (index + 1) * self.size[1] / (i + 1)
+                return self.x + self.size[0], self.y + (index + 1) * self.size[1] / (i + 1)
 
     def get_new_left_index(self):
         if not self.left_connections > 0:
@@ -676,17 +676,17 @@ class Box:
     def create_rect(self):
         w, h = self.size
         if self.shape == "rectangle":
-            return self.canvas.create_rectangle(self.visual_x, self.visual_y, self.visual_x + w, self.visual_y + h,
+            return self.canvas.create_rectangle(self.display_x, self.display_y, self.display_x + w, self.display_y + h,
                                                 outline="black", fill="white")
         if self.shape == "triangle":
-            return self.canvas.create_polygon(self.visual_x + w, self.visual_y + h / 2, self.visual_x, self.visual_y,
-                                              self.visual_x, self.visual_y + h, outline="black", fill="white")
+            return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x, self.display_y,
+                                              self.display_x, self.display_y + h, outline="black", fill="white")
 
     def change_shape(self, shape):
         if shape == "rectangle":
-            new_box = self.canvas.add_box((self.logical_x, self.logical_y), self.size, shape="rectangle")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")
         elif shape == "triangle":
-            new_box = self.canvas.add_box((self.logical_x, self.logical_y), self.size, shape="triangle")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="triangle")
         else:
             return
         self.canvas.copier.copy_box(self, new_box)
@@ -706,37 +706,37 @@ class Box:
             outputs_amount = 0
         return inputs_amount, outputs_amount
 
-    def update_coords(self, x, y, visual=False):
+    def update_coords(self, x, y, display=False):
         if not x:
-            if visual:
-                x = self.visual_x
+            if display:
+                x = self.display_x
             else:
-                x = self.logical_x
+                x = self.x
         if not y:
-            if visual:
-                y = self.visual_y
+            if display:
+                y = self.display_y
             else:
-                y = self.logical_y
+                y = self.y
 
         if self.canvas.master.is_rotated:
-            if visual:
-                self.logical_x = y
-                self.logical_y = x
-                self.visual_x = x
-                self.visual_y = y
+            if display:
+                self.x = y
+                self.y = x
+                self.display_x = x
+                self.display_y = y
             else:
-                self.logical_x = x
-                self.logical_y = y
-                self.visual_x = y
-                self.visual_y = x
+                self.x = x
+                self.y = y
+                self.display_x = y
+                self.display_y = x
 
         else:
-            self.visual_x = x
-            self.visual_y = y
-            self.logical_x = x
-            self.logical_y = y
+            self.display_x = x
+            self.display_y = y
+            self.x = x
+            self.y = y
 
-    def logical_size(self):
+    def get_logical_size(self):
         if self.canvas.master.is_rotated:
             return [self.size[1], self.size[0]]
         return self.size

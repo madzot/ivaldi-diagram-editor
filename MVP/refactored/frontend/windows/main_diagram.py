@@ -625,29 +625,29 @@ class MainDiagram(tk.Tk):
 
         for box in canvas.boxes:
             if box.shape == "triangle":
-                polygon = patches.Polygon(((box.visual_x / 100, y_max - box.visual_y / 100 - box.size[1] / 100),
-                                           (box.visual_x / 100, y_max - box.visual_y / 100),
-                                           (box.visual_x / 100 + box.size[0] / 100, y_max - box.visual_y / 100 - box.size[1] / 200)),
+                polygon = patches.Polygon(((box.display_x / 100, y_max - box.display_y / 100 - box.size[1] / 100),
+                                           (box.display_x / 100, y_max - box.display_y / 100),
+                                           (box.display_x / 100 + box.size[0] / 100, y_max - box.display_y / 100 - box.size[1] / 200)),
                                           edgecolor="black", facecolor="none")
             else:
-                polygon = patches.Rectangle((box.visual_x / 100, y_max - box.visual_y / 100 - box.size[1] / 100), box.size[0] / 100,
+                polygon = patches.Rectangle((box.display_x / 100, y_max - box.display_y / 100 - box.size[1] / 100), box.size[0] / 100,
                                             box.size[1] / 100, label="_nolegend_", edgecolor="black", facecolor="none")
             if show_connections:
                 for connection in box.connections:
-                    circle = patches.Circle((connection.visual_location[0] / 100, y_max - connection.visual_location[1] / 100),
+                    circle = patches.Circle((connection.display_location[0] / 100, y_max - connection.display_location[1] / 100),
                                             connection.r / 100, color="black", zorder=2)
                     ax.add_patch(circle)
 
-            plt.text(box.visual_x / 100 + box.size[0] / 2 / 100, y_max - box.visual_y / 100 - box.size[1] / 2 / 100, box.label_text,
+            plt.text(box.display_x / 100 + box.size[0] / 2 / 100, y_max - box.display_y / 100 - box.size[1] / 2 / 100, box.label_text,
                      horizontalalignment="center", verticalalignment="center", zorder=2)
             ax.add_patch(polygon)
 
         for spider in canvas.spiders:
-            circle = patches.Circle((spider.visual_x / 100, y_max - spider.visual_y / 100), spider.r / 100, color="black", zorder=2)
+            circle = patches.Circle((spider.display_x / 100, y_max - spider.display_y / 100), spider.r / 100, color="black", zorder=2)
             ax.add_patch(circle)
 
         for i_o in canvas.inputs + canvas.outputs:
-            con = patches.Circle((i_o.visual_location[0] / 100, y_max - i_o.visual_location[1] / 100), i_o.r / 100, color="black", zorder=2)
+            con = patches.Circle((i_o.display_location[0] / 100, y_max - i_o.display_location[1] / 100), i_o.r / 100, color="black", zorder=2)
             ax.add_patch(con)
 
         for wire in canvas.wires:

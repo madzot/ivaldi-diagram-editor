@@ -221,10 +221,10 @@ class CustomCanvas(tk.Canvas):
                         connection.location[0] - connection.r, connection.location[1] - connection.r,
                         connection.location[0] + connection.r, connection.location[1] + connection.r)
         for connection in self.inputs + self.outputs:
-            connection.visual_location[0] = connection.visual_location[0] + multiplier * self.pan_speed
+            connection.display_location[0] = connection.display_location[0] + multiplier * self.pan_speed
             self.coords(connection.circle,
-                        connection.visual_location[0] - connection.r, connection.visual_location[1] - connection.r,
-                        connection.visual_location[0] + connection.r, connection.visual_location[1] + connection.r)
+                        connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
+                        connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
         self.move_boxes_spiders(True, multiplier)
         self.pan_speed = 20
 
@@ -248,27 +248,27 @@ class CustomCanvas(tk.Canvas):
                         connection.location[0] - connection.r, connection.location[1] - connection.r,
                         connection.location[0] + connection.r, connection.location[1] + connection.r)
         for connection in self.inputs + self.outputs:
-            connection.visual_location[1] = connection.visual_location[1] + multiplier * self.pan_speed
+            connection.display_location[1] = connection.display_location[1] + multiplier * self.pan_speed
             self.coords(connection.circle,
-                        connection.visual_location[0] - connection.r, connection.visual_location[1] - connection.r,
-                        connection.visual_location[0] + connection.r, connection.visual_location[1] + connection.r)
+                        connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
+                        connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
         self.move_boxes_spiders(False, multiplier)
         self.pan_speed = 20
 
     def move_boxes_spiders(self, is_horizontal, multiplier):
         if is_horizontal:
-            attr = "visual_x"
+            attr = "display_x"
             self.pan_history_x += multiplier * self.pan_speed
         else:
-            attr = "visual_y"
+            attr = "display_y"
             self.pan_history_y += multiplier * self.pan_speed
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
-            spider.move_to((spider.visual_x, spider.visual_y), visual=True)
+            spider.move_to((spider.display_x, spider.display_y), display=True)
         for box in self.boxes:
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
-            box.update_coords(box.visual_x, box.visual_y, visual=True)
-            box.update_size(box.size[0], box.size[1], visual=True)
+            box.update_coords(box.display_x, box.display_y, display=True)
+            box.update_size(box.size[0], box.size[1], display=True)
             box.move_label()
         for wire in self.wires:
             wire.update()
@@ -286,15 +286,15 @@ class CustomCanvas(tk.Canvas):
             old_canvas_width = canvas_width - treeview_width
 
         for box in self.boxes:
-            relative_pos = ((box.visual_x + box.visual_x + box.size[0]) / 2) / old_canvas_width * canvas_width
-            box.update_coords(relative_pos - box.size[0] / 2, None, visual=True)
-            box.update_size(box.size[0], box.size[1], visual=True)
+            relative_pos = ((box.display_x + box.display_x + box.size[0]) / 2) / old_canvas_width * canvas_width
+            box.update_coords(relative_pos - box.size[0] / 2, None, display=True)
+            box.update_size(box.size[0], box.size[1], display=True)
             box.move_label()
 
         for spider in self.spiders:
-            relative_pos = (spider.visual_x / old_canvas_width) * canvas_width
-            spider.update_spider_coords(relative_pos, spider.visual_y, visual=True)
-            spider.move_to((spider.visual_x, spider.visual_y), visual=True)
+            relative_pos = (spider.display_x / old_canvas_width) * canvas_width
+            spider.update_spider_coords(relative_pos, spider.display_y, display=True)
+            spider.move_to((spider.display_x, spider.display_y), display=True)
 
         for wire in self.wires:
             wire.update()
@@ -386,8 +386,8 @@ class CustomCanvas(tk.Canvas):
 
         for i_o in self.inputs + self.outputs:
             i_o_location = [
-                self.calculate_zoom_dif(event.x, i_o.visual_location[0], denominator),
-                self.calculate_zoom_dif(event.y, i_o.visual_location[1], denominator)
+                self.calculate_zoom_dif(event.x, i_o.display_location[0], denominator),
+                self.calculate_zoom_dif(event.y, i_o.display_location[1], denominator)
             ]
             i_o.r *= scale
             i_o.location = i_o_location
@@ -396,19 +396,19 @@ class CustomCanvas(tk.Canvas):
             self.itemconfig(i_o.circle, width=i_o.r * 2 / 10)
 
         for box in self.boxes:
-            x = self.calculate_zoom_dif(event.x, box.visual_x, denominator)
-            y = self.calculate_zoom_dif(event.y, box.visual_y, denominator)
-            box.update_coords(x, y, visual=True)
-            box.update_size(box.size[0] * scale, box.size[1] * scale, visual=True)
+            x = self.calculate_zoom_dif(event.x, box.display_x, denominator)
+            y = self.calculate_zoom_dif(event.y, box.display_y, denominator)
+            box.update_coords(x, y, display=True)
+            box.update_size(box.size[0] * scale, box.size[1] * scale, display=True)
             box.move_label()
 
         for spider in self.spiders:
-            x = self.calculate_zoom_dif(event.x, spider.visual_x, denominator)
-            y = self.calculate_zoom_dif(event.y, spider.visual_y, denominator)
-            spider.update_spider_coords(x, y, visual=True)
+            x = self.calculate_zoom_dif(event.x, spider.display_x, denominator)
+            y = self.calculate_zoom_dif(event.y, spider.display_y, denominator)
+            spider.update_spider_coords(x, y, display=True)
             spider.r *= scale
-            self.coords(spider.circle, spider.visual_x - spider.r, spider.visual_y - spider.r, spider.visual_x + spider.r,
-                        spider.visual_y + spider.r)
+            self.coords(spider.circle, spider.display_x - spider.r, spider.display_y - spider.r, spider.display_x + spider.r,
+                        spider.display_y + spider.r)
             self.itemconfig(spider.circle, width=round(min(spider.r / 5, 5)))
 
         for wire in self.wires:
@@ -470,7 +470,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu = tk.Menu(self, tearoff=0)
 
             self.context_menu.add_command(label="Add undefined box",
-                                          command=lambda loc=(event.x, event.y): self.add_box(loc, visual=True))
+                                          command=lambda loc=(event.x, event.y): self.add_box(loc, display=True))
 
             if len(self.main_diagram.quick_create_boxes) > 0:
                 sub_menu = tk.Menu(self.context_menu, tearoff=0)
@@ -481,7 +481,7 @@ class CustomCanvas(tk.Canvas):
                                          self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
-                                          command=lambda loc=(event.x, event.y): self.add_spider(loc, visual=True))
+                                          command=lambda loc=(event.x, event.y): self.add_spider(loc, display=True))
 
             self.context_menu.add_command(label="Cancel")
             self.context_menu.tk_popup(event.x_root, event.y_root)
@@ -551,7 +551,7 @@ class CustomCanvas(tk.Canvas):
         if self.draw_wire_mode and self.pulling_wire:
             if self.temp_wire is not None:
                 self.temp_wire.delete_self()
-            if self.temp_end_connection.visual_location != (self.canvasx(event.x), self.canvasy(event.y)):
+            if self.temp_end_connection.display_location != (self.canvasx(event.x), self.canvasy(event.y)):
                 self.previous_x = self.canvasx(event.x)
                 self.previous_y = self.canvasy(event.y)
                 self.temp_end_connection.delete()
@@ -591,7 +591,7 @@ class CustomCanvas(tk.Canvas):
                 and self.is_wire_between_connections_legal(self.current_wire_start, connection)
                 or bypass_legality_check):
             start_end: list[Connection] = sorted([self.current_wire_start, connection],
-                                                 key=lambda x: x.logical_location[0])
+                                                 key=lambda x: x.location[0])
 
             if start_end[0].type == ConnectionType.GENERIC:
                 start_end[0].change_type(start_end[1].type.value)
@@ -640,10 +640,10 @@ class CustomCanvas(tk.Canvas):
         self.current_wire_start = None
         self.current_wire = None
 
-    def add_box(self, loc=(100, 200), size=(50, 100), id_=None, shape=None, visual=False):
+    def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape=None, display=False):
         if shape is None:
             shape = self.box_shape
-        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape, visual=visual)
+        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape, display=display)
         self.boxes.append(box)
         return box
 
@@ -659,14 +659,14 @@ class CustomCanvas(tk.Canvas):
             return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
         return None
 
-    def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC, visual=False):
+    def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC, display=False):
         spider = Spider(None, 0, "spider", loc, self, self.receiver, id_=id_,
-                        connection_type=connection_type, visual=visual)
+                        connection_type=connection_type, display=display)
         self.spiders.append(spider)
         return spider
 
     def add_spider_with_wires(self, start, end, x, y):
-        spider = self.add_spider((x, y), visual=True)
+        spider = self.add_spider((x, y), display=True)
         self.start_wire_from_connection(start)
         self.end_wire_to_connection(spider)
 
@@ -848,7 +848,7 @@ class CustomCanvas(tk.Canvas):
 
         if start.is_spider() and end.is_spider():
 
-            if abs(start.logical_location[0] - end.logical_location[0]) < 2 * start.r:
+            if abs(start.location[0] - end.location[0]) < 2 * start.r:
                 return False
 
             for w in start.wires:
@@ -858,20 +858,20 @@ class CustomCanvas(tk.Canvas):
         if start == end:
             return False
         if (start.is_spider() and (
-                end.side == "right" and end.logical_location[0] > start.logical_location[0] or
-                end.side == "left" and end.logical_location[0] < start.logical_location[0]) or
+                end.side == "right" and end.location[0] > start.location[0] or
+                end.side == "left" and end.location[0] < start.location[0]) or
                 end.is_spider() and (
-                        start.side == "right" and start.logical_location[0] > end.logical_location[0]
-                        or start.side == "left" and start.logical_location[0] < end.logical_location[0])):
+                        start.side == "right" and start.location[0] > end.location[0]
+                        or start.side == "left" and start.location[0] < end.location[0])):
             return False
 
         if start.side == end.side == "spider":
             return True
 
         return not (start.side == end.side or start.side == "left" and
-                    start.logical_location[0] - start.width_between_boxes <= end.logical_location[0] or
+                    start.location[0] - start.width_between_boxes <= end.location[0] or
                     start.side == "right" and
-                    start.logical_location[0] + start.width_between_boxes >= end.logical_location[0])
+                    start.location[0] + start.width_between_boxes >= end.location[0])
 
     def random(self):
         if not self.draw_wire_mode:
@@ -1014,11 +1014,11 @@ class CustomCanvas(tk.Canvas):
     @staticmethod
     def get_upper_lower_edges(component):
         if isinstance(component, Box):
-            upper_y = component.visual_y
-            lower_y = component.visual_y + component.size[1]
+            upper_y = component.display_y
+            lower_y = component.display_y + component.size[1]
         else:
-            upper_y = component.visual_y - component.r
-            lower_y = component.visual_y + component.r
+            upper_y = component.display_y - component.r
+            lower_y = component.display_y + component.r
         return upper_y, lower_y
 
     # Is this used?
@@ -1080,42 +1080,42 @@ class CustomCanvas(tk.Canvas):
         if len(left) != 0 or len(right) != 0:
             for connection in left:
                 if connection.side == "spider":
-                    if x > connection.logical_location[0] + connection.r > area_x1:
-                        area_x1 = connection.logical_location[0] + connection.r
+                    if x > connection.location[0] + connection.r > area_x1:
+                        area_x1 = connection.location[0] + connection.r
                 else:
-                    if connection.logical_location[0] > area_x1:
-                        area_x1 = connection.logical_location[0]
+                    if connection.location[0] > area_x1:
+                        area_x1 = connection.location[0]
             for connection in right:
                 if connection.side == "spider":
-                    if x < connection.logical_location[0] - connection.r < area_x2:
-                        area_x2 = connection.logical_location[0] - connection.r
+                    if x < connection.location[0] - connection.r < area_x2:
+                        area_x2 = connection.location[0] - connection.r
                 else:
-                    if connection.logical_location[0] < area_x2:
-                        area_x2 = connection.logical_location[0]
+                    if connection.location[0] < area_x2:
+                        area_x2 = connection.location[0]
         for item in self.boxes + self.spiders:
             if item not in self.selector.selected_items:
                 if isinstance(item, Box):
-                    if not (item.logical_y + item.logical_size()[1] < area_y1 or item.logical_y > area_y2):
-                        if x > item.logical_x + item.logical_size()[0] > area_x1:
-                            area_x1 = item.logical_x + item.logical_size()[0]
-                        if x < item.logical_x < area_x2:
-                            area_x2 = item.logical_x
-                    if not (item.logical_x > area_x2 or item.logical_x + item.logical_size()[0] < area_x1):
-                        if y > item.logical_y + item.logical_size()[1] > area_y1:
-                            area_y1 = item.logical_y + item.logical_size()[1]
-                        if y < item.logical_y < area_y2:
-                            area_y2 = item.logical_y
+                    if not (item.y + item.get_logical_size()[1] < area_y1 or item.y > area_y2):
+                        if x > item.x + item.get_logical_size()[0] > area_x1:
+                            area_x1 = item.x + item.get_logical_size()[0]
+                        if x < item.x < area_x2:
+                            area_x2 = item.x
+                    if not (item.x > area_x2 or item.x + item.get_logical_size()[0] < area_x1):
+                        if y > item.y + item.get_logical_size()[1] > area_y1:
+                            area_y1 = item.y + item.get_logical_size()[1]
+                        if y < item.y < area_y2:
+                            area_y2 = item.y
                 if isinstance(item, Spider):
-                    if not (item.logical_y + item.r < area_y1 or item.logical_y - item.r > area_y2):
-                        if x > item.logical_x + item.r > area_x1:
-                            area_x1 = item.logical_x + item.r
-                        if x < item.logical_x - item.r < area_x2:
-                            area_x2 = item.logical_x - item.r
-                    if not (item.logical_x - item.r > area_x2 or item.logical_x + item.r < area_x1):
-                        if y > item.logical_y + item.r > area_y1:
-                            area_y1 = item.logical_y + item.r
-                        if y < item.logical_y - item.r < area_y2:
-                            area_y2 = item.logical_y - item.r
+                    if not (item.y + item.r < area_y1 or item.y - item.r > area_y2):
+                        if x > item.x + item.r > area_x1:
+                            area_x1 = item.x + item.r
+                        if x < item.x - item.r < area_x2:
+                            area_x2 = item.x - item.r
+                    if not (item.x - item.r > area_x2 or item.x + item.r < area_x1):
+                        if y > item.y + item.r > area_y1:
+                            area_y1 = item.y + item.r
+                        if y < item.y - item.r < area_y2:
+                            area_y2 = item.y - item.r
         if area_x1 != x - x_length / 2:
             area_x1 = area_x1 + 10
         if area_x2 != x + x_length / 2:
@@ -1127,7 +1127,7 @@ class CustomCanvas(tk.Canvas):
         else:
             return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
 
-    def convert_logical_visual(self, x, y):
+    def convert_logical_display(self, x, y):
         if self.main_diagram.is_rotated:
             return [y, x]
         else:

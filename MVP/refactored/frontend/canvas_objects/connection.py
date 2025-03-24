@@ -12,9 +12,9 @@ class Connection:
         self.box = box  # None if connection is diagram input/output/spider
         self.index = index
         self.side = side  # 'spider' if connection is a spider
-        self.logical_location = location
-        self.visual_location = location
-        self.update_connection_coords(location, visual=temp)
+        self.location = location
+        self.display_location = location
+        self.update_connection_coords(location, display=temp)
         self.type = connection_type
         self.wire = None
         self.has_wire = False
@@ -27,8 +27,8 @@ class Connection:
         self.node = None
 
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.circle = self.canvas.create_oval(self.visual_location[0] - self.r, self.visual_location[1] - self.r,
-                                              self.visual_location[0] + self.r, self.visual_location[1] + self.r,
+        self.circle = self.canvas.create_oval(self.display_location[0] - self.r, self.display_location[1] - self.r,
+                                              self.display_location[0] + self.r, self.display_location[1] + self.r,
                                               fill="black", outline=ConnectionType.COLORS.value[self.type.value],
                                               width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
@@ -156,10 +156,10 @@ class Connection:
         """
         self.canvas.itemconfig(self.circle, fill=color)
 
-    def move_to(self, location, visual=False):
-        self.update_connection_coords(location, visual)
-        self.canvas.coords(self.circle, self.visual_location[0] - self.r, self.visual_location[1] - self.r, self.visual_location[0] + self.r,
-                           self.visual_location[1] + self.r)
+    def move_to(self, location, display=False):
+        self.update_connection_coords(location, display)
+        self.canvas.coords(self.circle, self.display_location[0] - self.r, self.display_location[1] - self.r, self.display_location[0] + self.r,
+                           self.display_location[1] + self.r)
 
     def lessen_index_by_one(self):
         self.index -= 1
@@ -203,15 +203,15 @@ class Connection:
     def deselect(self):
         self.canvas.itemconfig(self.circle, fill="black")
 
-    def update_connection_coords(self, location, visual=False):
+    def update_connection_coords(self, location, display=False):
         if self.canvas.master.is_rotated:
-            if visual:
-                self.visual_location = location
-                self.logical_location = [location[1], location[0]]
+            if display:
+                self.display_location = location
+                self.location = [location[1], location[0]]
             else:
-                self.visual_location = [location[1], location[0]]
-                self.logical_location = location
+                self.display_location = [location[1], location[0]]
+                self.location = location
 
         else:
-            self.visual_location = location
-            self.logical_location = location
+            self.display_location = location
+            self.location = location
