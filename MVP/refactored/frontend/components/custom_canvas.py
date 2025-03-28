@@ -26,7 +26,7 @@ class CustomCanvas(tk.Canvas):
     """
     `CustomCanvas` is a wrapper for `tkinter.Canvas` that all `canvas_objects` are drawn on.
     """
-    def __init__(self, master, receiver, main_diagram,
+    def __init__(self, master, main_diagram,
                  id_=None, is_search=False, diagram_source_box=None, parent_diagram=None, **kwargs):
         """
         CustomCanvas constructor.
