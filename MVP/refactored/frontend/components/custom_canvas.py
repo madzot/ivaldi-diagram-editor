@@ -69,7 +69,7 @@ class CustomCanvas(tk.Canvas):
         self.temp_end_connection = None
         self.pulling_wire = False
         self.quick_pull = False
-        self.receiver = receiver
+        self.receiver = main_diagram.receiver
         self.current_wire_start = None
         self.draw_wire_mode = False
         self.bind('<Button-1>', self.on_canvas_click)
@@ -738,7 +738,7 @@ class CustomCanvas(tk.Canvas):
                 self.temp_end_connection = Connection(None, 0, None,
                                                       (self.canvasx(event.x), self.canvasy(event.y)),
                                                       self, connection_type=self.current_wire_start.type)
-            self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True,
+            self.temp_wire = Wire(self, self.current_wire_start, self.temp_end_connection, None, True,
                                   wire_type=WireType[self.current_wire_start.type.name])
             self.temp_end_connection.wire = self.temp_wire
 
@@ -819,7 +819,7 @@ class CustomCanvas(tk.Canvas):
 
             self.cancel_wire_pulling()
 
-            current_wire = Wire(self, start_end[0], self.receiver, start_end[1],
+            current_wire = Wire(self, start_end[0], start_end[1],
                                 wire_type=WireType[start_end[0].type.name])
             self.wires.append(current_wire)
 
@@ -887,7 +887,7 @@ class CustomCanvas(tk.Canvas):
         """
         if shape is None:
             shape = self.box_shape
-        box = Box(self, *loc, self.receiver, size=size, id_=id_, shape=shape)
+        box = Box(self, *loc, size=size, id_=id_, shape=shape)
         self.boxes.append(box)
         return box
 
@@ -929,7 +929,7 @@ class CustomCanvas(tk.Canvas):
         :type connection_type: ConnectionType
         :return:
         """
-        spider = Spider(loc, self, self.receiver, id_=id_, connection_type=connection_type)
+        spider = Spider(loc, self, id_=id_, connection_type=connection_type)
         self.spiders.append(spider)
         return spider
 

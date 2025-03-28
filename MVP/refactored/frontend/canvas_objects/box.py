@@ -11,7 +11,7 @@ from constants import *
 
 
 class Box:
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
+    def __init__(self, canvas, x, y, size=(60, 60), id_=None, shape="rectangle"):
         self.shape = shape
         self.canvas = canvas
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
@@ -42,7 +42,7 @@ class Box:
         self.locked = False
         self.bind_events()
         self.sub_diagram = None
-        self.receiver = receiver
+        self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("box_add", generator_id=self.id)
             if self.canvas.diagram_source_box:
