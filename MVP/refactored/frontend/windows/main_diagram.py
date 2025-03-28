@@ -579,7 +579,7 @@ class MainDiagram(tk.Tk):
 
         for shape in shapes:
             self.shape_dropdown_menu.add_command(label=shape,
-                                                 command=lambda s=shape: self.custom_canvas.change_box_shape(s))
+                                                 command=lambda s=shape: self.custom_canvas.set_box_shape(s))
 
     def toggle_treeview(self):
         if not self.is_tree_visible:

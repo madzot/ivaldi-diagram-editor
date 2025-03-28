@@ -19,7 +19,7 @@ inside MainDiagram
 |                       |              |                                                                                                                                                                                 |
 | # **Optional params** |              |                                                                                                                                                                                 |
 | id_                   | int          | Custom ID for canvas.                                                                                                                                                           |
-| search                | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`                                   |
+| search                | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
 | diagram_source_box    | Box          | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |
 | parent_diagram        | CustomCanvas | The parent diagram of this CustomCanvas. `None` if root diagram. Used only when CustomCanvas is a sub-diagram.                                                                  |
 | **kwargs              |              | Kwargs for `tkinter.Canvas`                                                                                                                                                     |
@@ -118,7 +118,7 @@ inside MainDiagram
             event (tkinter.Event): Event object passed from key press.
 
     .move_boxes_spider(attr, multiplier)
-        Moves boxes and spiders on the CustomCanvas along the x or y axis. 
+        Moves boxes and spiders on the CustomCanvas along the x or y-axis. 
 
         Parameters:
             attr (string): `x` or `y`. Axis to move objects along.
@@ -211,7 +211,7 @@ inside MainDiagram
         Ends the active selection.
 
     .pull_wire(event)
-        Start quick pulling wire from event, if event is over a Connection.
+        Start quick pulling wire from event, if event is overlapping with a Connection.
 
         Parameters:
             event (tkinter.Event): Event object passed from key press.
@@ -236,11 +236,210 @@ inside MainDiagram
         Parameters:
             event (tkinter.Event): Event object passed from key press.
 
+    .handle_connection_click(c, event)
+        Handles click on Connection object, redirects to other functions based on application state.
+        
+        Parameters:
+            c (Connection): Connection object that was clicked.
+            event (tkinter.Event): Event object sent from key press.
+
+    .start_wire_from_connection(connection, event)
+        Sets current_wire_start variable to given Connection object. If event is given, draws a temporary Connection on
+        event location.
+
+        Parameters:
+            connection (Connection): Connection object that wire is started from.
+            event (tkinter.Event): (Optional) Event object passed from key press.
+
+    .end_wire_to_connection(connection, bypass_legality_check)
+        Deletes temporary Wire and Connection to create a non-temporary Wire from current_wire_start to given connection
+        in params. If given connection is same as current_wire_start then wire pulling is cancelled and no Wire is created.
+        Before creating a non-temporary Wire legality checking is done, if this does not pass a Wire is not created.
+
+        Parameters:
+            connection (Connection): End Connection of where Wire would be created.
+            bypass_legality_check (boolean): (Optional) Boolean to bypass legality checking on Wire creation.
+
+    .cancel_wire_pulling(event)
+        Cancels creating a Wire and resets all variables used for it.
+
+        Parameters:
+            event (tkinter.Event): (Optional) Event object passed from key press.
+
+    .nullify_wire_start()
+        Changes current_wire_start color back to 'black' and resets the variable to None.
+
+    .add_box(loc, size, id_, shape)
+        Creates a Box object. Location, size, id and shape of the Box can be specified with additional params.
+        Returns the created Box tag.
+
+        Parameters:
+            loc (tuple): (Optional) Location that the Box will be created at. Default is (100, 100)
+            size (tuple): (Optional) Size of the Box that will be created. Default is (60, 60)
+            id_ (int): (Optional) Custom set ID for the Box that will be created.
+            shape (string): (Optional) Specify shape of the Box that will be created. Default is the canvas selected shape.
+
+    .get_box_by_id(box_id)
+        Returns Box object with given id. Returns None if no Box with given id found.
+
+        Parameters:
+            box_id (int): ID of Box that is searched for.
+
+    .get_box_function(box_id)
+        Returns the BoxFunction object of a Box with given id.
+
+        Parameters:
+            box_id (int): ID of Box that BoxFunction will be returned for.
+
+    .add_spider(loc, id, connection_type)
+        Creates a Spider object. Location, id and connection_type can be specified with additional parameters.
+        Returns the created Spider tag.
+
+        Parameters:
+            loc (tuple): (Optional) Location that the Spider will be created on. Default is (100, 100).
+            id_ (int): (Optional) ID that will be added to the created Spider.
+            connection_type (ConnectionType): (Optional) Defines the type of the Spider that will be created. Default value is ConnectionType.GENERIC.
+
+    .add_spider_with_wires(start, end, x, y)
+        Creates a Spider at (x, y) location and connects the newly created Spider to start and end Connections given in params.
+
+        Parameters:
+            start (Connection): Connection that created Spider will have a Wire connected to.
+            end (Connection): Connection that created Spider will have a Wire connected to.
+            x (int): X coordinate that Spider is created on.
+            y (int): Y coordinate that Spider is created on.
+
+    .save_as_png()
+        Resets the zoom of the CustomCanvas and asks the user where they would like to save the png file. Afterwards
+        creates png in MainDiagram.
+
+    .open_tikz_generator()
+        Resets the zoom of the CustomCanvas and opens a small window that will have the generated TikZ code.
+
+    .toggle_draw_wire_mode()
+        Toggles draw wire mode on CustomCanvas.
+
+    .on_canvas_resize(_)
+        Updates the locations on Corner objects and diagram inputs and outputs along with previous winfo sizes and canvas
+        label location. This is activated when the application is configured.
+
+        Parameters:
+            _ (tkinter.Event): Event object that is passed from application configuration.
+
+    .debounce(wait_time)
+        Decorator that will debounce a function so that it is called after wait_time seconds.
+        If it is called multiple times, will wait for the last call to be debounced and run only this one.
+        
+        Parameters:
+            wait_time (int): Seconds that debouncer will wait for before activating a function.
+
+    .init_corners()
+        Sets Corner objects to CustomCanvas corners and updates diagram inputs/outputs.
+
+    .update_corners()
+        Updates Corner objects to be at correct locations when application configuration is done when not being zoomed out.
+
+    .update_inputs_outputs()
+        Updates the locations of diagram inputs and outputs.
+
+    .delete_everything()
+        Deletes everything on the CustomCanvas.
+
+    .is_wire_between_connections_legal(start, end)
+        Checks if a wire that is created between start and end Connections is legal.
+
+        Parameters: 
+            start (Connection): Would be start Connection of the Wire. 
+            end (Connection): Would be end Connection fo the Wire.
+
+    .random()
+        Creates Wires between Connections at random.
+
+    .add_diagram_output(id_, connection_type)
+        Adds an output to the diagram. ID and type of Connection can be specified with additional parameters.
+        Returns created Connection tag.
+
+        Parameters:
+            id_ (int): ID that will be added to the created output Connection.
+            connection_type (ConnectionType): Type that the output Connection will be. Default is ConnectionType.GENERIC.
+
+    .add_diagram_input_for_sub_d_wire(id_)
+        If the CustomCanvas is a sub-diagram then this will add a left Connection to the source box of the diagram as
+        well as to the diagram itself. Returns a tuple of source box Connection tag and diagram Connection tag.
+        
+        Parameters:
+            id_ (int): (Optional) ID that will be given to the input created on the diagram.
+
+    .add_diagram_output_for_sub_d_wire(id_)
+        If the CustomCanvas is a sub-diagram then this will add a right Connection to the source box of the diagram as
+        well as to the diagram itself. Returns a tuple of source box Connection tag and diagram Connection tag.
+
+        Parameters:
+            id_ (int): (Optional) ID that will be given to the output created on the diagram.
+
+    .remove_diagram_output()
+        Removes an output Connection from diagram outputs.
+
+    .add_diagram_input(id_, connection_type)
+        Adds an input to the diagram. ID and type of Connection can be specified with additional parameters.
+        Returns created Connection tag.
+
+        Parameters:
+            id_ (int): ID that will be added to the created input Connection.
+            connection_type (ConnectionType): Type that the input Connection will be. Default is ConnectionType.GENERIC.
+
+    .remove_diagram_input()
+        Removes an input Connection from diagram inputs.
+
+    .remove_specific_diagram_input(con)
+        Remove a specified Connection from diagram inputs.
+        
+        Parameters:
+            con (Connection): Diagram input Connection that will be removed.
 
 
+    .remove_specific_diagram_output(con)
+        Remove a specified Connection from diagram outputs.
 
+        Parameters:
+            con (Connection): Diagram output Connection that will be removed.
 
+    .export_hypergraph()
+        Resets zoom and exports hypergraph.
 
+    .calculate_zoom_dif(zoom_coord, object_coord, denominator)
+        Returns the amount that an object is moved when zooming. Result is rounded to 4 places.
 
+        Parameters:
+            zoom_coord (int): Location where zooming is done. This is a singular coordinate, not both x and y.
+            object_coord (int): Location of the object during zooming. This is a singular coordinate, not both x and y.
+            denominator (float): Used for calculating how much object will move.
 
+    .set_box_shape(shape)
+        Changes box_shape variable to shape parameter.
+    
+        Parameters:
+            shape (string): New default shape for Boxes.
 
+    .paste_copied_items(event)
+        Pastes copied items at event location. Will replace previously selected items if they exist.
+    
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
+
+    .cut_selected_items()
+        Copies selected items and then deletes them.
+
+    .create_sub_diagram()
+        Creates a sub-diagram with selected items.
+
+    .find_paste_multipliers()
+        Find multipliers for pasting with replace. This is used to make the pasted part smaller so it would fit in the 
+        replaced parts location.
+        Returns multiplier and x, y coordinate where paste would be placed.
+
+        Parameters:
+            x (int): x coordinate of the middle of the replacing area.
+            y (int): y coordinate of the middle of the replacing area.
+            x_length (int): width of the copied area.
+            y_length (int): height of the copied area.
