@@ -5,6 +5,7 @@ from unittest.mock import patch
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
@@ -240,8 +241,9 @@ class WireTest(TestApplication):
 
         self.assertTrue(coords_mock.called)
 
+    @patch("MVP.refactored.frontend.canvas_objects.wire.Wire.update_wire_label")
     @patch("tkinter.simpledialog.askstring", return_value="String")
-    def test__define_type__defines_type(self, ask_string_mock):
+    def test__define_type__defines_type(self, ask_string_mock, update_wire_label_mock):
         connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
         connection_end = Spider(None, 1011, 'spider', (222, 444), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
@@ -249,6 +251,8 @@ class WireTest(TestApplication):
         wire.define_type()
 
         self.assertEqual(Wire.defined_wires[wire.type.name], "String")
+        self.assertEqual(ConnectionType.LABEL_NAMES.value[ConnectionType[wire.type.name].value], "String")
+        self.assertEqual(update_wire_label_mock.call_count, 1)
 
     @patch("MVP.refactored.frontend.canvas_objects.wire.Wire.delete_labels")
     @patch("tkinter.simpledialog.askstring", side_effect=["Int", ""])
@@ -285,7 +289,7 @@ class WireTest(TestApplication):
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.delete")
     @patch("tkinter.simpledialog.askstring", return_value="Int")
-    def test__delete_label__deletes_end_label(self, ask_string_mock, delete_mock):
+    def test__delete_labels__deletes_end_label(self, ask_string_mock, delete_mock):
         connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
         connection_end = Connection(None, 1011, "left", (222, 333), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
@@ -303,7 +307,7 @@ class WireTest(TestApplication):
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.delete")
     @patch("tkinter.simpledialog.askstring", return_value="Int")
-    def test__delete_label__deletes_start_label(self, ask_string_mock, delete_mock):
+    def test__delete_labels__deletes_start_label(self, ask_string_mock, delete_mock):
         connection_start = Connection(None, 1011, "right", (222, 333), self.custom_canvas)
         connection_end = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
@@ -322,47 +326,42 @@ class WireTest(TestApplication):
 
     @patch("MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback")
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.coords")
-    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.itemconfig")
-    @patch("tkinter.simpledialog.askstring", side_effect=["Int", "String"])
-    def test__update_wire_label__updates_existing_labels(self, ask_string_mock, itemconfig_mock, coords_mock,
+    @patch("tkinter.simpledialog.askstring", return_value="Int")
+    def test__update_wire_label__updates_existing_labels(self, ask_string_mock, coords_mock,
                                                          handle_wire_addition_callback_mock):
         connection_start = Connection(None, 1010, "right", (111, 222), self.custom_canvas)
         connection_end = Connection(None, 1011, "left", (333, 444), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
         self.custom_canvas.wires.append(wire)
 
-        itemconfig_mock.call_count = 0
-
         wire.define_type()
 
-        self.assertEqual(len(self.custom_canvas.wire_label_tags), 2)
+        self.assertEqual(Wire.defined_wires[wire.type.name], "Int")
 
         coords_mock.call_count = 0
+        Wire.defined_wires[wire.type.name] = "String"
+        wire.update_wire_label()
 
-        wire.define_type()
-
-        self.assertEqual(self.custom_canvas.itemcget(self.custom_canvas.wire_label_tags[1], "text"), "Int")
+        self.assertEqual(Wire.defined_wires[wire.type.name], "String")
         self.assertEqual(coords_mock.call_count, 2)
 
     @patch("MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback")
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.create_text")
-    @patch("tkinter.simpledialog.askstring", return_value="Int")
-    def test__update_wire_label_creates__adds_new_labels(self, ask_string_mock, create_text_mock,
-                                                         handle_wire_addition_callback_mock):
+    def test__update_wire_label__adds_new_labels(self, create_text_mock, handle_wire_addition_callback_mock):
         connection_start = Connection(None, 1010, "right", (111, 222), self.custom_canvas)
         connection_end = Connection(None, 1011, "left", (333, 444), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
         self.custom_canvas.wires.append(wire)
 
-        wire.define_type()
+        Wire.defined_wires[wire.type.name] = "String"
+        wire.update_wire_label()
 
         self.assertEqual(len(self.custom_canvas.wire_label_tags), 2)
         self.assertEqual(create_text_mock.call_count, 2)
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.itemconfig")
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.create_text")
-    @patch("tkinter.simpledialog.askstring", return_value="Int")
-    def test__update_wire_label__does_not_create_label_for_spiders(self, ask_string_mock, itemconfig_mock,
+    def test__update_wire_label__does_not_create_label_for_spiders(self, itemconfig_mock,
                                                                    create_text_mock):
         connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
         connection_end = Spider(None, 1011, 'spider', (222, 444), self.custom_canvas)
@@ -372,6 +371,7 @@ class WireTest(TestApplication):
         itemconfig_mock.call_count = 0
         create_text_mock.call_count = 0
 
+        Wire.defined_wires[wire.type.name] = "String"
         wire.update_wire_label()
 
         self.assertEqual(itemconfig_mock.call_count, 0)
@@ -379,8 +379,7 @@ class WireTest(TestApplication):
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.itemconfig")
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.create_text")
-    @patch("tkinter.simpledialog.askstring", return_value="Int")
-    def test__update_wire_label__does_not_create_label_if_temp(self, ask_string_mock, itemconfig_mock,
+    def test__update_wire_label__does_not_create_label_if_temp(self, itemconfig_mock,
                                                                create_text_mock):
         connection_start = Connection(None, 1010, "right", (111, 222), self.custom_canvas)
         connection_end = Connection(None, 1011, "left", (333, 444), self.custom_canvas)
@@ -390,6 +389,7 @@ class WireTest(TestApplication):
         itemconfig_mock.call_count = 0
         create_text_mock.call_count = 0
 
+        Wire.defined_wires[wire.type.name] = "String"
         wire.update_wire_label()
 
         self.assertEqual(itemconfig_mock.call_count, 0)
