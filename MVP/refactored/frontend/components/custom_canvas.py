@@ -17,6 +17,7 @@ from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
+from MVP.refactored.frontend.windows.tikz_window import TikzWindow
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
 from constants import *
@@ -112,10 +113,6 @@ class CustomCanvas(tk.Canvas):
         self.search_result_button = SearchResultButton(self, self.main_diagram, self)
 
         self.box_shape = "rectangle"
-
-        self.copy_logo = (Image.open(ASSETS_DIR + "/content-copy.png"))
-        self.copy_logo = self.copy_logo.resize((20, 20))
-        self.copy_logo = ImageTk.PhotoImage(self.copy_logo)
 
         self.total_scale = 1.0
         self.delta = 0.75
@@ -672,29 +669,7 @@ class CustomCanvas(tk.Canvas):
 
     def open_tikz_generator(self):
         self.reset_zoom()
-        tikz_window = tk.Toplevel(self)
-        tikz_window.title("TikZ Generator")
-
-        tk.Label(tikz_window,
-                 text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.",
-                 justify="left").pack()
-
-        pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
-        pgfplotsset_text.insert(tk.END,
-                                "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
-        pgfplotsset_text.config(state=tk.DISABLED)
-        pgfplotsset_text.pack()
-
-        tikz_text = tk.Text(tikz_window)
-        tikz_text.insert(tk.END, self.main_diagram.generate_tikz(self))
-        tikz_text.config(state="disabled")
-        tikz_text.pack(pady=10, fill=tk.BOTH, expand=True)
-        tikz_text.update()
-
-        tikz_copy_button = ttk.Button(tikz_text, image=self.copy_logo,
-                                      command=lambda: self.main_diagram.copy_to_clipboard(tikz_text),
-                                      bootstyle=LIGHT)
-        tikz_copy_button.place(x=tikz_text.winfo_width() - 30, y=20, anchor=tk.CENTER)
+        TikzWindow(self.main_diagram)
 
     def toggle_draw_wire_mode(self):
         self.draw_wire_mode = not self.draw_wire_mode
