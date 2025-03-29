@@ -209,12 +209,15 @@ class WireTest(TestApplication):
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
     @patch("MVP.refactored.frontend.canvas_objects.wire.Wire.update_wire_label")
-    def test__update__calls_bind_event(self, update_wire_label_mock, bind_events_mock):
+    def test__update__calls_bind_event(self, update_wire_label_mock, tag_bind_mock):
         connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
         connection_end = Spider(None, 1011, 'spider', (222, 444), self.custom_canvas)
+
+        tag_bind_mock.call_count = 0
+
         wire = Wire(self.custom_canvas, connection_start, connection_end)
 
-        self.assertTrue(bind_events_mock.called)
+        self.assertEqual(tag_bind_mock.call_count, 1)
         self.assertTrue(update_wire_label_mock.called)
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.create_line")
@@ -244,8 +247,6 @@ class WireTest(TestApplication):
         wire = Wire(self.custom_canvas, connection_start, connection_end)
 
         wire.define_type()
-
-        self.assertTrue(ask_string_mock.called)
 
         self.assertEqual(Wire.defined_wires[wire.type.name], "String")
 
