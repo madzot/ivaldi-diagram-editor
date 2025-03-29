@@ -50,7 +50,7 @@ class MainDiagram(tk.Tk):
         self.search_objects = {}
         self.wire_objects = {}
 
-        self.custom_canvas = CustomCanvas(self, None, self, self, False)
+        self.custom_canvas = CustomCanvas(self, None, self, False)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 

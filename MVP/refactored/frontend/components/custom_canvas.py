@@ -24,7 +24,7 @@ from constants import *
 
 class CustomCanvas(tk.Canvas):
     def __init__(self, master, diagram_source_box, main_diagram,
-                 parent_diagram, add_boxes, id_=None, search=False, **kwargs):
+                 add_boxes, id_=None, search=False, **kwargs):
         super().__init__(master, **kwargs)
 
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
@@ -36,7 +36,7 @@ class CustomCanvas(tk.Canvas):
             self.selector = Selector(main_diagram, canvas=self)
         self.update()
 
-        self.parent_diagram = parent_diagram
+        self.parent_diagram = diagram_source_box.canvas if diagram_source_box else None
         self.main_diagram = main_diagram
         self.master = master
         self.search = search
