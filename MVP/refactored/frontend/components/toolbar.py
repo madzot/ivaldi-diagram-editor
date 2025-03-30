@@ -9,27 +9,27 @@ from constants import *
 
 
 class Titlebar(ttk.Frame):
-    def __init__(self, main_diagram, custom_canvas):
+    def __init__(self, main_diagram):
         super().__init__(main_diagram)
         self.main_diagram = main_diagram
-        self.custom_canvas = custom_canvas
         self.config(bootstyle=ttk.LIGHT)
 
         # File button
         self.file_button = tk.Menubutton(self, text="File",
                                          width=5, indicatoron=False)
-        self.file_menu = ttk.Menu(self.file_button, tearoff=False)
+        self.file_menu = tk.Menu(self.file_button, tearoff=False)
         self.file_button.config(menu=self.file_menu)
 
         # File -> Save as
         self.save_submenu = tk.Menu(self.file_menu, tearoff=False)
-        self.save_submenu.add_command(label="png file", command=lambda: self.custom_canvas.save_as_png())
+        self.save_submenu.add_command(label="png file", command=lambda: self.main_diagram.custom_canvas.save_as_png())
         self.save_submenu.add_command(label="project", command=lambda: self.main_diagram.save_to_file())
-        self.save_submenu.add_command(label="hypergraph", command=lambda: self.custom_canvas.export_hypergraph())
+        self.save_submenu.add_command(label="hypergraph",
+                                      command=lambda: self.main_diagram.custom_canvas.export_hypergraph())
 
         # File -> Generate
         self.generate_submenu = tk.Menu(self.file_menu, tearoff=False)
-        self.generate_submenu.add_command(label="TikZ", command=lambda: self.custom_canvas.open_tikz_generator())
+        self.generate_submenu.add_command(label="TikZ", command=lambda: self.main_diagram.custom_canvas.open_tikz_generator())
         self.generate_submenu.add_command(label="code", command=lambda: self.main_diagram.generate_code())
 
         # File menu buttons
@@ -58,7 +58,7 @@ class Titlebar(ttk.Frame):
 
         # View menu buttons
         self.view_menu.add_command(label="Visualize hypergraph",
-                                   command=lambda: self.main_diagram.visualize_as_graph(self.custom_canvas))
+                                   command=lambda: self.main_diagram.visualize_as_graph(self.main_diagram.custom_canvas))
 
         self.view_button.pack(side=ttk.LEFT)
 
@@ -75,7 +75,7 @@ class Titlebar(ttk.Frame):
         HelpWindow(self.main_diagram)
 
     def import_sub_diagram(self):
-        box = self.custom_canvas.add_box(loc=(200, 100))
+        box = self.main_diagram.custom_canvas.add_box(loc=(200, 100))
         sub_diagram = box.edit_sub_diagram(switch=False)
 
         main_canvas = self.main_diagram.importer.canvas
@@ -88,9 +88,6 @@ class Titlebar(ttk.Frame):
         self.main_diagram.importer.canvas = main_canvas
         if not is_importing:
             box.delete_box()
-
-    def set_custom_canvas(self, custom_canvas):
-        self.custom_canvas = custom_canvas
 
     def ask_deletion_confirmation(self):
         dialog = messagebox.askyesnocancel(title="Warning",

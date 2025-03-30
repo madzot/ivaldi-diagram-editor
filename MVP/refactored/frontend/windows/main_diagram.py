@@ -34,7 +34,7 @@ class MainDiagram(tk.Tk):
         self.title("Dynamic String Diagram Canvas")
         self.receiver = receiver
 
-        self.titlebar = Titlebar(self, None)
+        self.titlebar = Titlebar(self)
         self.titlebar.pack(side='top', fill='both')
 
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
@@ -56,8 +56,6 @@ class MainDiagram(tk.Tk):
 
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
-
-        self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
         self.bind("<Control-f>", lambda event: self.open_search_window())
@@ -397,8 +395,6 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
         self.bind_buttons()
-
-        self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.tree.selection_remove(self.tree.selection())
 
