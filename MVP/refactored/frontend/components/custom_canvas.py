@@ -20,7 +20,7 @@ from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.tikz_window import TikzWindow
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-from constants import *
+import constants as const
 
 
 class CustomCanvas(tk.Canvas):
@@ -31,7 +31,7 @@ class CustomCanvas(tk.Canvas):
         screen_width_min = round(main_diagram.winfo_screenwidth() / 1.5)
         screen_height_min = round(main_diagram.winfo_screenheight() / 1.5)
         if not search:
-            self.configure(bg='white', width=screen_width_min, height=screen_height_min)
+            self.configure(bg=const.WHITE, width=screen_width_min, height=screen_height_min)
             self.selector = main_diagram.selector
         else:
             self.selector = Selector(main_diagram, canvas=self)
@@ -66,7 +66,7 @@ class CustomCanvas(tk.Canvas):
         else:
             self.id = id_
 
-        self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
+        self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill=const.BLACK, font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
         self.selectBox = None
@@ -94,15 +94,15 @@ class CustomCanvas(tk.Canvas):
 
         if add_boxes and diagram_source_box:
             for connection in diagram_source_box.connections:
-                if connection.side == "left":
+                if connection.side == const.LEFT:
                     self.add_diagram_input()
-                if connection.side == "right":
+                if connection.side == const.RIGHT:
                     self.add_diagram_output()
         self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
         if not search:
-            self.tree_logo = (Image.open(ASSETS_DIR + "/file-tree-outline.png"))
+            self.tree_logo = (Image.open(const.ASSETS_DIR + "/file-tree-outline.png"))
             self.tree_logo = self.tree_logo.resize((20, 15))
             self.tree_logo = ImageTk.PhotoImage(self.tree_logo)
 
@@ -112,7 +112,7 @@ class CustomCanvas(tk.Canvas):
 
         self.search_result_button = SearchResultButton(self, self.main_diagram, self)
 
-        self.box_shape = "rectangle"
+        self.box_shape = const.RECTANGLE
 
         self.total_scale = 1.0
         self.delta = 0.75
@@ -557,10 +557,10 @@ class CustomCanvas(tk.Canvas):
             self.end_wire_to_connection(c)
 
     def start_wire_from_connection(self, connection, event=None):
-        if connection.side == "spider" or not connection.has_wire:
+        if connection.side == const.SPIDER or not connection.has_wire:
             self.current_wire_start = connection
 
-            connection.change_color(color='green')
+            connection.select()
 
             if event is not None:
                 x, y = self.canvasx(event.x), self.canvasy(event.y)
@@ -621,7 +621,7 @@ class CustomCanvas(tk.Canvas):
 
     def nullify_wire_start(self):
         if self.current_wire_start:
-            self.current_wire_start.change_color(color='black')
+            self.current_wire_start.deselect()
         self.current_wire_start = None
         self.current_wire = None
 
@@ -645,7 +645,7 @@ class CustomCanvas(tk.Canvas):
         return None
 
     def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC):
-        spider = Spider(None, 0, "spider", loc, self, id_=id_,
+        spider = Spider(None, 0, const.SPIDER, loc, self, id_=id_,
                         connection_type=connection_type)
         self.spiders.append(spider)
         return spider
@@ -800,7 +800,6 @@ class CustomCanvas(tk.Canvas):
                 if end.type == ConnectionType.GENERIC and end.has_wire:
                     return False
 
-
         if start.is_spider() and end.is_spider():
 
             if abs(start.location[0] - end.location[0]) < 2 * start.r:
@@ -813,18 +812,18 @@ class CustomCanvas(tk.Canvas):
         if start == end:
             return False
         if (start.is_spider() and (
-                end.side == "right" and end.location[0] > start.location[0] or
-                end.side == "left" and end.location[0] < start.location[0]) or
+                end.side == const.RIGHT and end.location[0] > start.location[0] or
+                end.side == const.LEFT and end.location[0] < start.location[0]) or
                 end.is_spider() and (
-                        start.side == "right" and start.location[0] > end.location[0]
-                        or start.side == "left" and start.location[0] < end.location[0])):
+                        start.side == const.RIGHT and start.location[0] > end.location[0]
+                        or start.side == const.LEFT and start.location[0] < end.location[0])):
             return False
 
-        if start.side == end.side == "spider":
+        if start.side == end.side == const.SPIDER:
             return True
 
-        return not (start.side == end.side or start.side == "left" and start.location[0] - start.width_between_boxes <=
-                    end.location[0] or start.side == "right" and start.location[0] + start.width_between_boxes >=
+        return not (start.side == end.side or start.side == const.LEFT and start.location[0] - start.width_between_boxes <=
+                    end.location[0] or start.side == const.RIGHT and start.location[0] + start.width_between_boxes >=
                     end.location[0])
 
     def random(self):
@@ -853,7 +852,7 @@ class CustomCanvas(tk.Canvas):
         if len(self.outputs) != 0:
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
-                                           "left", [0, 0], self,
+                                           const.LEFT, [0, 0], self,
                                            r=5 * self.total_scale, id_=id_, connection_type=connection_type)
 
         if self.diagram_source_box and self.receiver.listener:
@@ -890,7 +889,7 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, "right", [0, 0], self,
+        new_input = Connection(self.diagram_source_box, input_index, const.RIGHT, [0, 0], self,
                                r=5 * self.total_scale, id_=id_, connection_type=connection_type)
         if self.diagram_source_box and self.receiver.listener:
             self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
@@ -917,7 +916,7 @@ class CustomCanvas(tk.Canvas):
         if self.diagram_source_box:
             index_ = con.index
             for c in self.diagram_source_box.connections:
-                if c.side == "left" and index_ == c.index:
+                if c.side == const.LEFT and index_ == c.index:
                     self.diagram_source_box.remove_connection(c)
 
         for c in self.inputs:
@@ -934,7 +933,7 @@ class CustomCanvas(tk.Canvas):
         if self.diagram_source_box:
             index_ = con.index
             for c in self.diagram_source_box.connections:
-                if c.side == "right" and index_ == c.index:
+                if c.side == const.RIGHT and index_ == c.index:
                     self.diagram_source_box.remove_connection(c)
 
         for c in self.outputs:
@@ -1031,14 +1030,14 @@ class CustomCanvas(tk.Canvas):
         left, right = self.selector.find_side_connections()
         if len(left) != 0 or len(right) != 0:
             for connection in left:
-                if connection.side == "spider":
+                if connection.side == const.SPIDER:
                     if x > connection.location[0] + connection.r > area_x1:
                         area_x1 = connection.location[0] + connection.r
                 else:
                     if connection.location[0] > area_x1:
                         area_x1 = connection.location[0]
             for connection in right:
-                if connection.side == "spider":
+                if connection.side == const.SPIDER:
                     if x < connection.location[0] - connection.r < area_x2:
                         area_x2 = connection.location[0] - connection.r
                 else:
