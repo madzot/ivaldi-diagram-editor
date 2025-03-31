@@ -67,15 +67,18 @@ Toolbar
 ### Toolbar functions.
 
     .open_help_window()
-
+        Creates HelpWindow object. Displaying it in a new window.
     
     .import_sub_diagram()
-
+        Imports a new diagram as a sub-diagram of the currently opened diagram.
     
-    .ask_deletion_confirmation()
+    .confirm_deletion()
+        Opens a dialog for the user asking for confirmation about unsaved progress deletion.
 
-
-    .handle_new_graph()
-
-
+    .handle_new_graph(import_)
+        Handles creating new diagram. Will delete everything except root canvas if root canvas has any objects.
+        If specified with parameter then it will also load a new diagram to the new blank canvas.
+        
+        Parameters:
+            import_ (bool): (Optional) Specifies whether a new diagram should be imported after deleting the old diagram. Default is False.
 

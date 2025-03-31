@@ -17,7 +17,7 @@ from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-from MVP.refactored.frontend.components.toolbar import Titlebar
+from MVP.refactored.frontend.components.toolbar import Toolbar
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.frontend.windows.manage_methods import ManageMethods
@@ -34,8 +34,8 @@ class MainDiagram(tk.Tk):
         self.title("Dynamic String Diagram Canvas")
         self.receiver = receiver
 
-        self.titlebar = Titlebar(self)
-        self.titlebar.pack(side='top', fill='both')
+        self.toolbar = Toolbar(self)
+        self.toolbar.pack(side='top', fill='both')
 
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
