@@ -58,7 +58,7 @@ class CustomCanvas(tk.Canvas):
         self.parent_diagram = parent_diagram
         self.main_diagram = main_diagram
         self.master = master
-        self.search = is_search
+        self.is_search = is_search
         self.boxes: list[Box] = []
         self.outputs: list[Connection] = []
         self.inputs: list[Connection] = []

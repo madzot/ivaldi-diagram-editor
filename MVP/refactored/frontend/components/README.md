@@ -19,7 +19,7 @@ inside MainDiagram
 |                       |              |                                                                                                                                                                                 |
 | # **Optional params** |              |                                                                                                                                                                                 |
 | id_                   | int          | Custom ID for canvas.                                                                                                                                                           |
-| search                | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
+| is_search             | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
 | diagram_source_box    | Box          | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |
 | parent_diagram        | CustomCanvas | The parent diagram of this CustomCanvas. `None` if root diagram. Used only when CustomCanvas is a sub-diagram.                                                                  |
 | **kwargs              |              | Kwargs for `tkinter.Canvas`                                                                                                                                                     |
@@ -190,7 +190,7 @@ inside MainDiagram
             event (tkinter.Event): Event object passed from key press, holds location for menu.
             
     .is_mouse_on_object(event)
-        Returns boolean stating if the mouse if on an object.
+        Returns boolean stating if the mouse is on an object.
     
         Parameters:
             event (tkinter.Event): Event object passed from key press. Location that will be checked.
