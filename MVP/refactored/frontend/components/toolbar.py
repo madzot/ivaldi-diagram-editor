@@ -5,13 +5,17 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 
 from MVP.refactored.frontend.windows.help_window import HelpWindow
+# from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from constants import *
 
 
 class Titlebar(ttk.Frame):
     def __init__(self, main_diagram, custom_canvas):
-        super().__init__(main_diagram)
+        super().__init__(None)
         self.main_diagram = main_diagram
+        print(f"MAIN 1: {main_diagram}")
+        print(f"MAIN 1: {main_diagram.__class__}")
+        print(f"MAIN 1: {main_diagram}")
         self.custom_canvas = custom_canvas
         self.config(bootstyle=ttk.LIGHT)
 
@@ -71,6 +75,11 @@ class Titlebar(ttk.Frame):
 
         help_button.bind("<Button-1>", lambda event: self.open_help_window())
 
+        # Current canvas name
+        self.canvas_name_text = tk.StringVar()
+        self.canvas_name_label = tk.Label(self, textvariable=self.canvas_name_text)
+        self.canvas_name_label.place()
+
     def open_help_window(self):
         HelpWindow(self.main_diagram)
 
@@ -88,6 +97,16 @@ class Titlebar(ttk.Frame):
         self.main_diagram.importer.canvas = main_canvas
         if not is_importing:
             box.delete_box()
+
+    def set_canvas_name(self, new_name):
+        self.canvas_name_text.set(new_name)
+        self.update_canvas_label()
+
+    def update_canvas_label(self):
+        self.canvas_name_label.place_forget()
+        # print(f"main: {self.main_diagram}")
+        # width = self.main_diagram.custom_canvas.winfo_width()
+        self.canvas_name_label.place(x=400/2, anchor=tk.CENTER)
 
     def set_custom_canvas(self, custom_canvas):
         self.custom_canvas = custom_canvas

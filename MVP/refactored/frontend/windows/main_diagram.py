@@ -54,6 +54,11 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        print(self.custom_canvas.name_text)
+        print(self.custom_canvas.name)
+
+        self.titlebar.set_canvas_name(self.custom_canvas.name_text)
+
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
 
@@ -399,6 +404,7 @@ class MainDiagram(tk.Tk):
         self.bind_buttons()
 
         self.titlebar.set_custom_canvas(self.custom_canvas)
+        self.titlebar.set_canvas_name(self.custom_canvas.name_text)
 
         self.tree.selection_remove(self.tree.selection())
 

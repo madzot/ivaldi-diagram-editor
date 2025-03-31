@@ -301,6 +301,7 @@ class CustomCanvas(tk.Canvas):
         w = self.winfo_width()
         self.coords(self.name, w / 2, 12)
         self.itemconfig(self.name, text=name)
+        self.main_diagram.titlebar.set_canvas_name(name)
         self.name_text = name
 
     def offset_items(self, x_offset, y_offset):
