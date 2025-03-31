@@ -40,7 +40,7 @@ class Spider(Connection):
         self.bind_events()
         self.wires = []
         self.receiver = canvas.main_diagram.receiver
-        if self.receiver.listener and not self.canvas.search:
+        if self.receiver.listener and not self.canvas.is_search:
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id,
                                                 generator_id=self.canvas.diagram_source_box.id)
@@ -101,7 +101,7 @@ class Spider(Connection):
         [wire.delete(self) for wire in self.wires.copy()]
         self.canvas.spiders.remove(self)
         super().delete()
-        if self.receiver.listener and not self.canvas.search:
+        if self.receiver.listener and not self.canvas.is_search:
             if action != "sub_diagram":
                 self.receiver.receiver_callback('delete_spider', wire_id=self.id, connection_id=self.id)
 
