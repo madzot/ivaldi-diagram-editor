@@ -109,7 +109,7 @@ class CustomCanvas(tk.Canvas):
                                      command=lambda: self.main_diagram.toggle_treeview(), bootstyle=(PRIMARY, OUTLINE))
             tree_button.place(x=28, y=20, anchor=tk.CENTER)
 
-        self.search_result_button = SearchResultButton(self, self.main_diagram, self)
+        self.search_result_button = SearchResultButton(self, self.main_diagram)
 
         self.box_shape = "rectangle"
 

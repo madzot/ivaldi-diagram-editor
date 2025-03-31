@@ -121,7 +121,7 @@ Below is a description of all available variables in the Connection class. It wi
                           If dealing with a Connection, this parameter will have no function.
 
     .select()
-        Turns the color of the connection circle green.
+        Turns the color of the connection circle to the select color.
 
     .search_highlight_secondary()
         Used as a secondary highlight when conducting searches. Function turns the object orange and adds it to a list of search highlighted items in CustomCanvas.
@@ -252,7 +252,7 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
             action (string): A string that contains the action that will be sent to the backend
 
     .select()
-        Turns the color of the line to green. Used for displaying a selected line.
+        Turns the color of the line to the select color. Used for displaying a selected line.
 
     .search_highlight_secondary()
         Used as a secondary highlight when conducting searches. Function turns the object orange and adds it to a list of search highlighted items in CustomCanvas.
@@ -305,4 +305,294 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
 
         Parameters:
             connection (Connection): the end Connection of the Wire.
+
+---
+
+## Box
+
+A box is a rectangle on the CustomCanvas. A box can have Connections on its left and right side. 
+
+Boxes represent a function, the function itself can be defined by the user. 
+
+Boxes are also used to contain sub-diagrams. The sub-diagram is accessible from the treeview on canvases on the left side of the application.
+
+Boxes can contain code. The functions are findable in the "Manage methods" window. Applying code to boxes can be done
+by renaming them to match an existing function or by adding code to them yourself through the code editor.
+Code can only be added to a box with an existing label.
+
+The coordinates of a Box are the top left corner for it.
+
+### Box parameters
+
+| **Parameter**         | **Type**     | **Description**                                                                                                                 |
+|-----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------|
+| canvas                | CustomCanvas | The CustomCanvas object that the Box will be drawn on.                                                                          |
+| x                     | int          | X coordinate for the Box.                                                                                                       |
+| y                     | int          | Y coordinate for the Box.                                                                                                       |
+|                       |              |                                                                                                                                 |
+| # **Optional params** |              |                                                                                                                                 |
+| size                  | tuple        | A list containing the height and width of the box. Default value is (60, 60)                                                    |
+| id_                   | int          | Box ID. If no value is given then Box will receive a random ID.                                                                 |
+| shape                 | string       | String describing the shape of the Box. Default value is "rectangle".<br/> Usable values for this are: `rectangle`,  `triangle` |
+
+
+### Box variables
+
+| **Variable**      | **Type**     | **Description**                                                                                                                                                                                         |
+|-------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| shape             | string       | Describes shape of Box, as described in Box parameters.                                                                                                                                                 |
+| canvas            | CustomCanvas | The CustomCanvas object that the Box is drawn on.                                                                                                                                                       |
+| x                 | int          | X coordinate of the top left corner of the Box.                                                                                                                                                         |
+| y                 | int          | Y coordinate of the top left corner of the Box.                                                                                                                                                         |
+| start_x           | int          | Used as the x position where to start moving the Box from when dragging.                                                                                                                                |
+| start_y           | int          | Used as the y position where to start moving the Box from when dragging.                                                                                                                                |
+| size              | tuple        | Contains the height and width in a tuple.                                                                                                                                                               |
+| x_dif             | int          | Used in dragging to determine the x distance of the mouse from the top left corner.                                                                                                                     |
+| y_dif             | int          | Used in dragging to determine the y distance of the mouse from the top left corner.                                                                                                                     |
+| connections       | list         | List of Connections attached to the Box.                                                                                                                                                                |
+| left_connections  | int          | Number of connections on the left side.                                                                                                                                                                 |
+| right_connections | int          | Number of Connections on the right side.                                                                                                                                                                |
+| label             | int          | CustomCanvas tag that represents the Box label.                                                                                                                                                         |
+| label_text        | string       | Text that is in the label of the Box.                                                                                                                                                                   |
+| wires             | list         | List of Wires attached to the Box's Connections.                                                                                                                                                        |
+| id                | int          | ID of the Box.                                                                                                                                                                                          |
+| context_menu      | tkinter.Menu | Context menu used for Box.                                                                                                                                                                              |
+| rect              | int          | CustomCanvas tag that represents the Box rectangle or other shape in the canvas.                                                                                                                        |
+| resize_handle     | int          | CustomCanvas tag that represents the resizing handle in the Box.                                                                                                                                        |
+| locked            | boolean      | Determines if the Box is locked or not. While locked some feature's are hidden.                                                                                                                         |
+| sub_diagram       | CustomCanvas | CustomCanvas object that is the sub-diagram of the Box. It is None if the Box is not a sub-diagram Box.                                                                                                 |
+| receiver          | Receiver     | Receiver object used to send information to the backend.                                                                                                                                                |
+| is_snapped        | boolean      | Shows if the Box is currently snapped to a column or not.                                                                                                                                               |
+| collision_ids     | list         | List of integers that hold all tags that are attached to the Box. Connections, labels, box rext and resize handle.<br/> This is used to remove collision with self when checking for colliding objects. |
+
+### Box functions
+
+    .set_id(id_)
+        Set Box ID.
+
+        Parameters:
+            id_ (int): ID that the Box will be given.
+
+    .bind_events()
+        Binds events to Box rectangle and Box resizing handle.
+
+    .show_context_menu(event)
+        Create and display the Box context menu.
+
+        Parameters:
+            event (tkinter.Event): Event object that cointains information.
+
+    .unfold()
+        Unfolds the sub-diagram contained in the box. If the Box does not contain a sub-diagram this will not do
+        anything.
+
+    .open_editor()
+        Opens a CodeEditor for the selected Box. Will display either existing code attached to the Box or will generate 
+        a template for the user to enter code.
+
+    .save_box_to_menu()
+        Will save the selected Box to config files, allowing it to be selected and created from menus.
+
+    .handle_double_click()
+        Handles double click event on Box. If the Box has a sub-diagram it will open the sub-diagram.
+
+    .set_inputs_outputs()
+        Opens dialogs that will ask for input/output amounts on a Box. Afterwards the amount of inputs/outputs is
+        changed depending on what was written in the dialogs.
+
+    .edit_sub_diagram(save_to_canvasses, add_boxes, switch)
+        Will create a sub-diagram in the Box. If a sub-diagram already exists it will open it. Returns sub-diagram
+        CustomCanvas object.
+
+        Parameters:
+            save_to_canvasses (boolean): (Optional) If true will save the sub-diagram to existing canvases, accessible
+                                                    from the left side treeview. Default value is True.
+            add_boxes (boolean): (Optional) If true will add boxes to the created sub-diagram. This is used for
+                                            CustomCanvas add_boxes value. Default value is True.
+            switch (boolean): (Optional) If true will switch to the sub-diagram after creation. Default value is True.
+
+    .close_menu()
+        Closes context menu.
+
+    .on_press()
+        Handles pressing event on Box. Clears selection, selects box. Sets start_(x/y) and (x/y)_dif variables
+        for movement.
+
+    .on_control_press()
+        Handles ctrl + button-1 on Box. Will select or unselect current Box depending on previous selection status.
+        Will not clear previous selection.
+
+    .on_drag(event)
+        Handles dragging/moving the Box.
+
+        Parameters:
+            event (tkinter.Event): Event object that holds locations for moving the Box.
+
+    .update_self_collision_ids()
+        Updates the collision_ids variable by adding connection tags and label tags into the list.
+
+    .find_collisions(go_to_x, go_to_y)
+        Returns a list of tags that (go_to_x, go_to_y) is colliding with. Uses the size of the Box for checking.
+    
+        Parameters:
+            go_to_x (int): x coordinate where to check for collisions.
+            go_to_y (int): y coordinate where to check for collisions.
+
+    .on_resize_scroll(event)
+        Handles ctrl + scroll  on the Box. Will change the size of the Box.
+
+        Parameters:
+            event (tkinter.Event): Event object that determines whether the Box will be made smaller or larger, based on
+                                   delta value.
+
+    .on_resize_drag(event)
+        Changes the size of the Box based on mouse movement. This is used when pressing and dragging the resize handle.
+
+        Parameters:
+            event (tkinter.Event): Event object holding the location of the mouse that the size is changed from.
+
+    .resize_by_connections()
+        Resizes the Box to allow all Connections to have space between them.
+
+    .move_label()
+        Moves label to the center of the Box.
+
+    .bind_event_label()
+        Bind events to the Box label, this is needed because otherwise clicking on the label would disable Box events.
+
+    .edit_label(new_label)
+        Asks the user to input a new label, unless a new label is given to the function. Will change the label text.
+
+        Parameters:
+            new_label (string): (Optional) If this is given then the application will not ask the user for input and
+                                           will change the label to the given string.
+
+    .change_label()
+        Creates or updates a label or label text.
+
+    .set_label(new_label)
+        Changes label text to given string.
+
+        Parameters:
+            new_label (string): Text that the new label will be set to.
+
+    .on_resize_press(event)
+        Sets start_(x/y) variables to allow for dragging.
+
+        Parameters:
+            event (tkinter.Event): Event object used for start_(x/y) locations.
+
+    .move(new_x, new_y)
+        Moves the Box and all objects attached to it to a new location.
+
+        Parameters:
+            new_x (int): x coordinate of where to move the Box.
+            new_y (int): y coordinate of thwere to move the Box.
+
+    .select()
+        Changes the Box outline along with the color of its Connections to the select color.
+
+    .search_highlight_secondary()
+        Applies the secondary search highlight style to the Box. Changes outline color and Connections colors. Will
+        add the Box to CustomCanvas list containing search highlighted objects.
+
+    .search_highlight_primary()
+        Applies the primary search highlight style to the Box. Changes outline color and Connections colors. Will 
+        add the Box to CustomCanvas list containing search highlighted objects.
+
+    .deselect()
+        Turns the outline of the Box and its Connections to black.
+
+    .lock_box()
+        Changes locked value of the Box to True.
+
+    .unlock_box()
+        Changes locked value of the Box to False.
+
+    .update_size(new_size_x, new_size_y)
+        Changes size of the Box. Width to new_size_x and height to new_size_y.
+
+        Parameters:
+            new_size_x (int): New width of the Box.
+            new_size_y (int): New height of the Box.
+
+    .update_position()
+        Updates the position of the Box on the CustomCanvas.
+
+    .update_connections()
+        Updates Connection locations that are attached to the Box.
+
+    .update_wires()
+        Updates Wires that are attached to the Box.
+
+    .update_io()
+        Updates Box inputs and outputs based on the Box code.
+
+    .add_wire(wire)
+        Adds Wire to Box.
         
+        Parameters:
+            wire (Wire): Wire that will be added to the Box.
+
+    .add_left_connection(id_, connection_type)
+        Adds a Connection to the left side of the Box. The type of the Connection can be specified.
+
+        Parameters:
+            id_ (int): ID that will be added to the Connection.
+            connection_type (ConnectionType): The type that will be added to the Connection.
+
+    .add_right_connection()
+        Adds a Connection to the right side of the Box. The type of the Connection can be specified.
+
+        Parameters:
+            id_ (int): ID that will be added to the Connection.
+            connection_type (ConnectionType): The type that will be added to the Connection.
+
+    .remove_connection(circle)
+        Removes a certain Connection from the Box.
+
+        Parameters:
+            circle (Connection): The Connection that will be removed from the Box.
+
+    .delete_box(keep_sub_diagram, action)
+        Deletes the Box.
+
+        Parameters:
+            keep_sub_diagram (boolean): Determines whether to delete the sub-diagram if it exists in the Box.
+            action (string): Determines if the action of deleting the box is done for sub-diagram creation.
+    
+    .is_illegal_move(connection, new_x)
+        Returns boolean stating whether or not movement to the new_x location is legal based on a given Connection.
+            
+        Parameters:
+            connection (Connection): The Connection that move legality to new_x will be checked for.
+            new_x (int): X coordinate where to check legality from.
+
+    .get_connection_coordinates(side, index)
+        Returns a set of coordinates for a Connection of index at left or right side.
+
+        Parameters:
+            side (string): String specifying what side the Connection coordinates will be located on.
+            index (int): Index of Connection to get coordinates for 
+
+    .get_new_left_index()
+        Returns new left side Connection index.
+
+    .get_new_right_index()
+        Returns new right side Connection index.
+
+    .create_shape()
+        Creates the Box shape on CustomCanvas. Returns the tag associated with the shape.
+
+    .change_shape(shape)
+        Changes the shape of the Box. This is done by Creating a new Box and copying the existing Boxs attributes into
+        the new Box and then deleting the old Box.
+
+        Parameters:
+            shape (string): String that will define the shape of the Box.
+
+    .get_input_output_amount_off_code(code)
+        Returns the amount of inputs and outputs based on code.
+
+        Parameters:
+            code (string): Code that will be searched for inputs and outputs.

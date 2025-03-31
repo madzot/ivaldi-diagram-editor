@@ -46,8 +46,6 @@ class BoxTests(TestMainDiagram):
         self.assertFalse(box.label_text)
         self.assertListEqual([], box.wires)
 
-        self.assertIsNone(box.node)
-
         self.assertTrue(isinstance(box.context_menu, tkinter.Menu))
 
         self.assertFalse(False, box.locked)
@@ -224,8 +222,8 @@ class BoxTests(TestMainDiagram):
         self.assertEqual(2, box.right_connections)
 
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_event_label")
-    @patch("MVP.refactored.frontend.canvas_objects.box.Box.change_label")
-    def test__edit_label__with_param_changes_label(self, change_label_mock, bind_mock):
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_label")
+    def test__edit_label__with_param_changes_label(self, update_label_mock, bind_mock):
         box = Box(self.custom_canvas, 100, 100)
         bind_mock.call_count = 0  # resetting tag_bind amount from box creation
 
@@ -233,7 +231,7 @@ class BoxTests(TestMainDiagram):
         box.edit_label(expected_label)
 
         self.assertEqual(expected_label, box.label_text)
-        self.assertTrue(change_label_mock.called)
+        self.assertTrue(update_label_mock.called)
         self.assertTrue(bind_mock.called)
 
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_event_label")
