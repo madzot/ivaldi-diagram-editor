@@ -6,10 +6,26 @@ from constants import *
 
 
 class SearchResultButton(tk.LabelFrame):
-    def __init__(self, master, main_diagram, custom_canvas, **kwargs):
+    """
+    SearchResultButton class.
+
+    SearchResultButton is a button that is shown after a search has been conducted on the CustomCanvas.
+    The buttons purpose is to display information about the search and allow moving between results.
+    It shows the number of results as well as the currently primarily highlighted parts index.
+    It has 2 buttons that allow moving between results.
+    It has a button to turn off search results. It will turn off search highlights and toggle off the button.
+
+    """
+    def __init__(self, master, main_diagram, **kwargs):
+        """
+        SearchResultButton constructor.
+
+        :param master: Tk that SearchResultButton will be displayed on.
+        :param main_diagram:  MainDiagram object.
+        :param kwargs: Keyword arguments for LabelFrame.
+        """
         super().__init__(master, **kwargs)
         self.main_diagram = main_diagram
-        self.custom_canvas = custom_canvas
 
         self.close_button_frame = tk.LabelFrame(self, height=30, width=25)
         self.close_button_frame.pack(side=tk.RIGHT)
