@@ -32,8 +32,8 @@ class Selector:
         self.selecting = True
         self.origin_x = event.x
         self.origin_y = event.y
-        self.canvas.selectBox = self.canvas.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1,
-                                                             self.origin_y + 1)
+        self.canvas.select_box = self.canvas.create_rectangle(self.origin_x, self.origin_y, self.origin_x + 1,
+                                                              self.origin_y + 1)
         self.selected_items.clear()
         self.selected_boxes.clear()
         self.selected_spiders.clear()
@@ -43,11 +43,11 @@ class Selector:
         if self.selecting:
             x_new = event.x
             y_new = event.y
-            self.canvas.coords(self.canvas.selectBox, self.origin_x, self.origin_y, x_new, y_new)
+            self.canvas.coords(self.canvas.select_box, self.origin_x, self.origin_y, x_new, y_new)
 
     def finalize_selection(self, boxes, spiders, wires):
         if self.selecting:
-            selected_coordinates = self.canvas.coords(self.canvas.selectBox)
+            selected_coordinates = self.canvas.coords(self.canvas.select_box)
 
             self.selected_boxes = [box for box in boxes if self.is_within_selection(box.rect, selected_coordinates)]
 
@@ -64,7 +64,7 @@ class Selector:
 
     def select_action(self):
         if self.selecting:
-            self.canvas.delete(self.canvas.selectBox)
+            self.canvas.delete(self.canvas.select_box)
             self.selecting = False
 
     def finish_selection(self):
@@ -81,7 +81,7 @@ class Selector:
                     item.search_highlight_secondary()
         self.selected_items.clear()
 
-        self.canvas.delete(self.canvas.selectBox)
+        self.canvas.delete(self.canvas.select_box)
         self.selecting = False
 
     def create_sub_diagram(self):
@@ -621,7 +621,7 @@ class Selector:
                 new_box.add_left_connection(connection_type=c['type'])
         new_box.set_label(box['label'])
         if box["sub-diagram"]:
-            sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
+            sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False)
             self.paste_canvas(sub_diagram, box["sub-diagram"])
             sub_diagram.set_name(box['label'])
             self.canvas.main_diagram.add_canvas(sub_diagram)

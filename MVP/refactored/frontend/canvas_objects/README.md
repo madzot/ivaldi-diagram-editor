@@ -400,15 +400,13 @@ The coordinates of a Box are the top left corner for it.
         Opens dialogs that will ask for input/output amounts on a Box. Afterwards the amount of inputs/outputs is
         changed depending on what was written in the dialogs.
 
-    .edit_sub_diagram(save_to_canvasses, add_boxes, switch)
+    .edit_sub_diagram(save_to_canvasses, switch)
         Will create a sub-diagram in the Box. If a sub-diagram already exists it will open it. Returns sub-diagram
         CustomCanvas object.
 
         Parameters:
             save_to_canvasses (boolean): (Optional) If true will save the sub-diagram to existing canvases, accessible
                                                     from the left side treeview. Default value is True.
-            add_boxes (boolean): (Optional) If true will add boxes to the created sub-diagram. This is used for
-                                            CustomCanvas add_boxes value. Default value is True.
             switch (boolean): (Optional) If true will switch to the sub-diagram after creation. Default value is True.
 
     .close_menu()
