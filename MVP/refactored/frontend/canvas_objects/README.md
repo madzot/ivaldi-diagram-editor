@@ -121,7 +121,7 @@ Below is a description of all available variables in the Connection class. It wi
                           If dealing with a Connection, this parameter will have no function.
 
     .select()
-        Turns the color of the connection circle green.
+        Turns the color of the connection circle to the select color.
 
     .search_highlight_secondary()
         Used as a secondary highlight when conducting searches. Function turns the object orange and adds it to a list of search highlighted items in CustomCanvas.
@@ -252,7 +252,7 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
             action (string): A string that contains the action that will be sent to the backend
 
     .select()
-        Turns the color of the line to green. Used for displaying a selected line.
+        Turns the color of the line to the select color. Used for displaying a selected line.
 
     .search_highlight_secondary()
         Used as a secondary highlight when conducting searches. Function turns the object orange and adds it to a list of search highlighted items in CustomCanvas.
@@ -490,7 +490,7 @@ The coordinates of a Box are the top left corner for it.
             new_y (int): y coordinate of thwere to move the Box.
 
     .select()
-        Changes the Box outline along with the color of it's Connections to green.
+        Changes the Box outline along with the color of its Connections to the select color.
 
     .search_highlight_secondary()
         Applies the secondary search highlight style to the Box. Changes outline color and Connections colors. Will
