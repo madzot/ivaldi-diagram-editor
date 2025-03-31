@@ -2,9 +2,10 @@ import tkinter
 import unittest
 from unittest.mock import patch
 
+import constants as const
 from MVP.refactored.backend.diagram_callback import Receiver
-from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 
 
 class TestMainDiagram(unittest.TestCase):
@@ -132,15 +133,15 @@ class BoxTests(TestMainDiagram):
         box.unlock_box()
         self.assertFalse(box.locked)
 
-    def test__select__turns_rect_outline_green(self):
+    def test__select__turns_rect_outline_select_color(self):
         box = Box(self.custom_canvas, 100, 100)
 
-        expected_start_color = "black"
+        expected_start_color = const.BLACK
         actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
         self.assertEqual(expected_start_color, actual_start_color)
 
         box.select()
-        expected_selected_color = "green"
+        expected_selected_color = const.SELECT_COLOR
         actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
         self.assertEqual(expected_selected_color, actual_selected_color)
 
@@ -148,12 +149,12 @@ class BoxTests(TestMainDiagram):
         box = Box(self.custom_canvas, 100, 100)
 
         box.select()
-        expected_selected_color = "green"
+        expected_selected_color = const.SELECT_COLOR
         actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
         self.assertEqual(expected_selected_color, actual_selected_color)
 
         box.deselect()
-        expected_start_color = "black"
+        expected_start_color = const.BLACK
         actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
         self.assertEqual(expected_start_color, actual_start_color)
 

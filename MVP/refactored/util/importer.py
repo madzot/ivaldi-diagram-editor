@@ -8,7 +8,7 @@ from tkinter import messagebox
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-from constants import *
+import constants as const
 
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
@@ -62,7 +62,7 @@ class Importer:
         for box in d["boxes"]:
             new_box = canvas.add_box((box["x"] * multi_x, box["y"] * multi_y), (box["size"][0] * multi_x,
                                                                                 box["size"][1] * multi_y),
-                                     self.get_id(box["id"]), shape=box.get("shape", "rectangle"))
+                                     self.get_id(box["id"]), shape=box.get("shape", const.RECTANGLE))
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
@@ -133,7 +133,7 @@ class Importer:
 
     def load_boxes_to_menu(self):
         try:
-            with open(BOXES_CONF, 'r') as json_file:
+            with open(const.BOXES_CONF, 'r') as json_file:
                 data = json.load(json_file)
                 return data
         except FileNotFoundError or IOError or json.JSONDecodeError:
@@ -149,12 +149,12 @@ class Importer:
         return random_string
 
     def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
-        with open(BOXES_CONF, 'r') as json_file:
+        with open(const.BOXES_CONF, 'r') as json_file:
             self.seed = self.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box(loc, shape=box.get("shape", "rectangle"))
+            new_box = canvas.add_box(loc, shape=box.get("shape", const.RECTANGLE))
             if box["label"]:
                 new_box.set_label(box["label"])
             for i in range(box["left_c"]):
