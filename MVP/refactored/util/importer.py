@@ -72,7 +72,7 @@ class Importer:
                     new_box.add_right_connection(self.get_id(c["id"]), connection_type=ConnectionType[c.get('type', "GENERIC")])
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False)
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:
                     name = box["label"]
@@ -163,7 +163,7 @@ class Importer:
                 new_box.add_right_connection(connection_type=ConnectionType[box["right_c_types"][i]])
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False)
 
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:

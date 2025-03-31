@@ -50,7 +50,7 @@ class MainDiagram(tk.Tk):
         self.search_objects = {}
         self.wire_objects = {}
 
-        self.custom_canvas = CustomCanvas(self, None, self, self, False)
+        self.custom_canvas = CustomCanvas(self, self)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -345,7 +345,10 @@ class MainDiagram(tk.Tk):
     def add_canvas(self, canvas):
         # Add some items to the tree
         try:
-            self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
+            parent_id = 1
+            if canvas.parent_diagram is not None:
+                parent_id = canvas.parent_diagram.id
+            self.tree.insert(str(parent_id), "end", str(canvas.id), text=canvas.name_text)
         except tk.TclError as e:
             if "already exists" in str(e):
                 self.import_counter += 1
@@ -576,7 +579,7 @@ class MainDiagram(tk.Tk):
 
         for shape in shapes:
             self.shape_dropdown_menu.add_command(label=shape,
-                                                 command=lambda s=shape: self.custom_canvas.change_box_shape(s))
+                                                 command=lambda s=shape: self.custom_canvas.set_box_shape(s))
 
     def toggle_treeview(self):
         if not self.is_tree_visible:

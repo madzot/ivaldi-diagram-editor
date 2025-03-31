@@ -64,7 +64,7 @@ class Wire:
             self.id = id_
         self.receiver = canvas.main_diagram.receiver
         self.is_temporary = is_temporary
-        if not is_temporary and not self.canvas.search:
+        if not is_temporary and not self.canvas.is_search:
             self.handle_wire_addition_callback()
         self.type = wire_type
         self.color = wire_type.value[0]
@@ -94,7 +94,7 @@ class Wire:
                 self.end_connection.box.wires.remove(self)
             if self in self.canvas.wires:
                 self.canvas.wires.remove(self)
-        if not self.is_temporary and not self.canvas.search:
+        if not self.is_temporary and not self.canvas.is_search:
             self.handle_wire_deletion_callback(action)
 
     def select(self):
@@ -301,7 +301,7 @@ class Wire:
 
         :return: None
         """
-        if not self.receiver.listener or self.canvas.search:
+        if not self.receiver.listener or self.canvas.is_search:
             return
 
         start_conn_data, end_conn_data = self.connection_data_optimizer()
