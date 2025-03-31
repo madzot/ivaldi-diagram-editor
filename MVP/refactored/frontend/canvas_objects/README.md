@@ -310,7 +310,7 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
 
 ## Box
 
-A box is a rectangle on the CustomCanvas. A box can have Connections on it's left and right side. 
+A box is a rectangle on the CustomCanvas. A box can have Connections on its left and right side. 
 
 Boxes represent a function, the function itself can be defined by the user. 
 
@@ -523,7 +523,7 @@ The coordinates of a Box are the top left corner for it.
         Updates Connection locations that are attached to the Box.
 
     .update_wires()
-        Updates Wire that are attached to the Box.
+        Updates Wires that are attached to the Box.
 
     .update_io()
         Updates Box inputs and outputs based on the Box code.
