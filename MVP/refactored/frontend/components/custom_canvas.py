@@ -313,7 +313,6 @@ class CustomCanvas(tk.Canvas):
         self.itemconfig(self.name, text=name)
         self.name_text = name
 
-    # Why is this here
     def offset_items(self, x_offset, y_offset):
         for box in self.boxes:
             box.x -= x_offset

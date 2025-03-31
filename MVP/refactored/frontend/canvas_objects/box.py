@@ -500,6 +500,7 @@ class Box:
         self.update_connections()
         self.update_wires()
 
+    # changes this
     def update_position(self):
         if self.shape == "rectangle":
             self.canvas.coords(self.rect, self.display_x, self.display_y, self.display_x + self.size[0],
@@ -518,6 +519,7 @@ class Box:
         self.canvas.coords(self.resize_handle, self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
                            self.display_x + self.size[0], self.display_y + self.size[1])
 
+    # changes this
     def update_connections(self):
         for c in self.connections:
             conn_x, conn_y = self.get_connection_coordinates(c.side, c.index)
@@ -685,9 +687,9 @@ class Box:
                                                 outline="black", fill="white")
         if self.shape == "triangle":
             if self.canvas.master.is_rotated:
-                print("did it")
                 return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x, self.display_y,
-                                                  self.display_x + w / 2, self.display_y + h, outline="black", fill="white")
+                                                  self.display_x + w / 2, self.display_y + h, outline="black",
+                                                  fill="white")
             else:
                 return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x,
                                                   self.display_y, self.display_x, self.display_y + h,
