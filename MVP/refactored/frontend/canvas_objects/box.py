@@ -17,6 +17,8 @@ class Box:
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
+        self.rel_x = x / self.canvas.winfo_width()
+        self.rel_y = y / self.canvas.winfo_height()
         self.start_x = x
         self.start_y = y
         self.size = size
@@ -196,7 +198,7 @@ class Box:
         if self.receiver.listener and not self.canvas.search:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
-            self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
+            self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.canvas.main_diagram,
                                             self.canvas, add_boxes, self.id, highlightthickness=0)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
@@ -443,6 +445,9 @@ class Box:
             self.update_position()
             self.update_connections()
             self.update_wires()
+        self.rel_x = self.x / self.canvas.winfo_width()
+        self.rel_y = self.y / self.canvas.winfo_height()
+        print(f"rel: {self.rel_x}, rel: {self.rel_y}")
 
     def select(self):
         self.canvas.itemconfig(self.rect, outline="green")

@@ -12,6 +12,8 @@ class Spider(Connection):
         self.x = location[0]
         self.y = location[1]
         self.location = location
+        self.rel_x = self.x / self.canvas.winfo_width()
+        self.rel_y = self.y / self.canvas.winfo_height()
         if not id_:
             self.id = id(self)
         else:
@@ -172,6 +174,8 @@ class Spider(Connection):
         self.x = go_to_x
         self.y = go_to_y
 
+        self.rel_x = self.x / self.canvas.winfo_width()
+        self.rel_y = self.y / self.canvas.winfo_height()
         self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
                            self.y + self.r)
         [w.update() for w in self.wires]

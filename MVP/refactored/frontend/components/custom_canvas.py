@@ -710,6 +710,7 @@ class CustomCanvas(tk.Canvas):
 
     # RESIZE/UPDATE
     def on_canvas_resize(self, _):
+        print(_)
         # update label loc
         w = self.canvasx(self.winfo_width())
         self.coords(self.name, w / 2, self.canvasy(10))
@@ -721,6 +722,18 @@ class CustomCanvas(tk.Canvas):
 
         self.update_inputs_outputs()
         self.update_prev_winfo_size()
+
+        for spider in self.spiders + self.boxes:
+            event = tk.Event()
+            event.state = False
+            event.x = self.winfo_width() * spider.rel_x
+            event.y = self.winfo_height() * spider.rel_y
+            if isinstance(spider, Box):
+                spider.x_dif = 0
+                spider.y_dif = 0
+                # spider.start_x = spider.x
+                # spider.start_y = spider.y
+            spider.on_drag(event)
 
     @staticmethod
     def debounce(wait_time):
