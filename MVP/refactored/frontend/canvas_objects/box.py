@@ -447,7 +447,6 @@ class Box:
             self.update_wires()
         self.rel_x = self.x / self.canvas.winfo_width()
         self.rel_y = self.y / self.canvas.winfo_height()
-        print(f"rel: {self.rel_x}, rel: {self.rel_y}")
 
     def select(self):
         self.canvas.itemconfig(self.rect, outline="green")
