@@ -1,5 +1,6 @@
 import tkinter as tk
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
+import constants as const
 
 
 class Connection:
@@ -49,7 +50,7 @@ class Connection:
 
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.circle = self.canvas.create_oval(location[0] - self.r, location[1] - self.r, location[0] + self.r,
-                                              location[1] + self.r, fill="black",
+                                              location[1] + self.r, fill=const.BLACK,
                                               outline=ConnectionType.COLORS.value[self.type.value],
                                               width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
@@ -122,10 +123,10 @@ class Connection:
                 connections = self.box.sub_diagram.outputs + self.box.sub_diagram.inputs
 
             matching_side = ""
-            if self.side == "right":
-                matching_side = "left"
-            elif self.side == "left":
-                matching_side = "right"
+            if self.side == const.RIGHT:
+                matching_side = const.LEFT
+            elif self.side == const.LEFT:
+                matching_side = const.RIGHT
             for io in connections:
                 if io.side == matching_side and io.index == self.index:
                     if io.has_wire:
@@ -215,12 +216,12 @@ class Connection:
         :return: None
         """
         if self.box:
-            if self.box.sub_diagram and self.side == "left":
+            if self.box.sub_diagram and self.side == const.LEFT:
                 for i in self.box.sub_diagram.inputs:
                     if i.index == self.index:
                         self.box.sub_diagram.remove_specific_diagram_input(i)
                         return
-            if self.box.sub_diagram and self.side == "right":
+            if self.box.sub_diagram and self.side == const.RIGHT:
                 for i in self.box.sub_diagram.outputs:
                     if i.index == self.index:
                         self.box.sub_diagram.remove_specific_diagram_output(i)
@@ -236,7 +237,7 @@ class Connection:
             self.canvas.remove_specific_diagram_output(self)
             return
 
-    def change_color(self, color='black'):
+    def change_color(self, color=const.BLACK):
         """
         Change the color of the connection. Without a parameter it will turn the Connection to black.
 
@@ -332,7 +333,7 @@ class Connection:
 
         :return: None
         """
-        self.change_color(color="green")
+        self.change_color(color=const.SELECT_COLOR)
 
     def search_highlight_secondary(self):
         """
@@ -343,7 +344,7 @@ class Connection:
 
         :return: None
         """
-        self.change_color(color="orange")
+        self.change_color(color=const.SECONDARY_SEARCH_COLOR)
         self.canvas.search_result_highlights.append(self)
 
     def search_highlight_primary(self):
@@ -355,7 +356,7 @@ class Connection:
 
         :return: None
         """
-        self.change_color(color="cyan")
+        self.change_color(color=const.PRIMARY_SEARCH_COLOR)
         self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
@@ -366,4 +367,4 @@ class Connection:
 
         :return: None
         """
-        self.change_color(color="black")
+        self.change_color(color=const.BLACK)

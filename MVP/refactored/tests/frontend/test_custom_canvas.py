@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
+import constants as const
 
 
 class TestCustomCanvas(unittest.TestCase):
@@ -38,7 +39,7 @@ class Tests(TestCustomCanvas):
         self.assertFalse(self.custom_canvas.selecting)
 
     def test__init__default_box_shape(self):
-        expected = "rectangle"
+        expected = const.RECTANGLE
         actual = self.custom_canvas.box_shape
         self.assertEqual(expected, actual)
 

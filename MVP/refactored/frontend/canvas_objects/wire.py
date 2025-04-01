@@ -3,6 +3,7 @@ from tkinter import simpledialog
 
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
+import constants as const
 
 
 def curved_line(start, end, det=15):
@@ -103,7 +104,7 @@ class Wire:
 
         :return: None
         """
-        self.canvas.itemconfig(self.line, fill="green")
+        self.canvas.itemconfig(self.line, fill=const.SELECT_COLOR)
 
     def search_highlight_secondary(self):
         """
@@ -114,7 +115,7 @@ class Wire:
 
         :return: None
         """
-        self.canvas.itemconfig(self.line, fill="orange")
+        self.canvas.itemconfig(self.line, fill=const.SECONDARY_SEARCH_COLOR)
         self.canvas.search_result_highlights.append(self)
 
     def search_highlight_primary(self):
@@ -126,7 +127,7 @@ class Wire:
 
         :return: None
         """
-        self.canvas.itemconfig(self.line, fill="cyan")
+        self.canvas.itemconfig(self.line, fill=const.PRIMARY_SEARCH_COLOR)
         self.canvas.search_result_highlights.append(self)
 
     def deselect(self):
@@ -306,12 +307,12 @@ class Wire:
 
         start_conn_data, end_conn_data = self.connection_data_optimizer()
 
-        if self.start_connection.side == 'spider':
+        if self.start_connection.side == const.SPIDER:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=start_conn_data[:3],
                                             connection_id=self.start_connection.id,
                                             end_connection=end_conn_data)
-        elif self.end_connection.side == 'spider':
+        elif self.end_connection.side == const.SPIDER:
             self.receiver.receiver_callback("wire_add", wire_id=self.id,
                                             start_connection=start_conn_data,
                                             connection_id=self.end_connection.id,
@@ -334,14 +335,14 @@ class Wire:
             return
         if action != "sub_diagram":
             start_conn_data, end_conn_data = self.connection_data_optimizer()
-            if self.start_connection.side == 'spider':
+            if self.start_connection.side == const.SPIDER:
                 if self.end_connection.box is None:
                     self.receiver.receiver_callback("wire_delete", wire_id=self.start_connection.id,
                                                     end_connection=end_conn_data)
                 else:
                     self.receiver.receiver_callback("wire_delete", wire_id=self.start_connection.id,
                                                     end_connection=end_conn_data)
-            elif self.end_connection.side == 'spider':
+            elif self.end_connection.side == const.SPIDER:
                 if self.start_connection.box is None:
                     self.receiver.receiver_callback("wire_delete", wire_id=self.end_connection.id,
                                                     start_connection=start_conn_data)

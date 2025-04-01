@@ -2,6 +2,7 @@ import copy
 
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+import constants as const
 
 
 class Selector:
@@ -90,7 +91,7 @@ class Selector:
             return
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
-        box = self.canvas.add_box(loc=(x, y), shape="rectangle")
+        box = self.canvas.add_box(loc=(x, y), shape=const.RECTANGLE)
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
@@ -400,11 +401,11 @@ class Selector:
 
     @staticmethod
     def categorize_wire(wire, connection, left_wires, right_wires):
-        if connection.side == "left":
+        if connection.side == const.LEFT:
             left_wires.append(wire)
-        elif connection.side == "right":
+        elif connection.side == const.RIGHT:
             right_wires.append(wire)
-        elif connection.side == "spider":
+        elif connection.side == const.SPIDER:
             if connection == wire.start_connection:
                 if connection.location[0] > wire.end_connection.location[0]:
                     left_wires.append(wire)
@@ -455,14 +456,14 @@ class Selector:
         for item in most_left:
             if isinstance(item, Box):
                 for connection in item.connections:
-                    if connection.side == "left" and connection.has_wire is False:
+                    if connection.side == const.LEFT and connection.has_wire is False:
                         left_connections.append(connection)
             if isinstance(item, Spider):
                 left_connections.append(item)
         for item in most_right:
             if isinstance(item, Box):
                 for connection in item.connections:
-                    if connection.side == "right" and connection.has_wire is False:
+                    if connection.side == const.RIGHT and connection.has_wire is False:
                         right_connections.append(connection)
             if isinstance(item, Spider):
                 right_connections.append(item)
@@ -472,7 +473,7 @@ class Selector:
     def connect_extra_wires(self, copied_connections, connections, connected_amount):
         multiple_connections = []
         for connection in copied_connections:
-            if connection.side == "spider":
+            if connection.side == const.SPIDER:
                 multiple_connections.append(connection)
         if len(copied_connections) >= len(connections) - connected_amount:
             for i in range(len(connections) - connected_amount):
@@ -510,23 +511,23 @@ class Selector:
             elif wire.start_connection not in connection_list and wire.end_connection in connection_list:
                 connection = wire.end_connection
             if connection:
-                if connection.side == "left":
+                if connection.side == const.LEFT:
                     self.add_copied_wire(connection, True)
-                elif connection.side == "right":
+                elif connection.side == const.RIGHT:
                     self.add_copied_wire(connection, False)
-                elif connection.side == "spider":
+                elif connection.side == const.SPIDER:
                     is_left = None
                     if wire.start_connection in connection_list:
-                        if wire.end_connection.side == "left":
+                        if wire.end_connection.side == const.LEFT:
                             is_left = False
-                        elif wire.end_connection.side == "right":
+                        elif wire.end_connection.side == const.RIGHT:
                             is_left = True
                         else:
                             is_left = connection.location[0] > wire.end_connection.location[0]
                     if wire.end_connection in connection_list:
-                        if wire.start_connection.side == "left":
+                        if wire.start_connection.side == const.LEFT:
                             is_left = False
-                        elif wire.start_connection.side == "right":
+                        elif wire.start_connection.side == const.RIGHT:
                             is_left = True
                         else:
                             is_left = connection.location[0] > wire.start_connection.location[0]

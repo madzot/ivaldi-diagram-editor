@@ -2,13 +2,14 @@ import tkinter
 import unittest
 from unittest.mock import patch
 
+import constants as const
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
+from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
-from MVP.refactored.frontend.canvas_objects.spider import Spider
 
 
 class TestMainDiagram(unittest.TestCase):
