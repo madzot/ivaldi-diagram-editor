@@ -14,7 +14,6 @@ class HyperEdge:
         if hyper_edge_id is None:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
-        # if box_function is null it can be input/output in diagram or user didn't specify box function
         self.box_function: BoxFunction | None = box_function
 
         self.source_nodes: dict[int, Node] = dict()  # key is connection index, it is needed for keeping the right queue

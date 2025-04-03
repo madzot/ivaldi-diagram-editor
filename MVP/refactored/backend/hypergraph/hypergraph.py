@@ -35,6 +35,9 @@ class Hypergraph:
     def get_all_nodes(self) -> list[Node]:
         return list(self.nodes.values())
 
+    def get_all_nodes_ids(self) -> list[int]:
+        return list(self.nodes.keys())
+
     def get_all_hyper_edges(self) -> list[HyperEdge]:
         return list(self.edges.values())
 
@@ -44,16 +47,30 @@ class Hypergraph:
     def get_hypergraph_source(self) -> list[Node]:
         return list(self.hypergraph_source.values())
 
+    def get_hypergraph_source_ids(self) -> list[int]:
+        return list(self.hypergraph_source.keys())
+
+    def get_hypergraph_target(self) -> list[Node]:
+        queue = Queue()
+        target_nodes: dict[int, Node] = dict()
+        for node in self.get_hypergraph_source():
+            queue.put(node)
+
+        while not queue.empty():
+            node = queue.get()
+            output_hyper_edges: list[HyperEdge] = node.get_output_hyper_edges()
+            if len(output_hyper_edges) == 0:
+                target_nodes[node.id] = node
+                for united_with in node.get_united_with_nodes():
+                    target_nodes[united_with.id] = united_with
+
+            for output_hyper_edge in output_hyper_edges:
+                for target_node in output_hyper_edge.get_target_nodes():
+                    queue.put(target_node)
+        return list(target_nodes.values())
+
     def get_canvas_id(self) -> int:
         return self.canvas_id
-
-    def get_node_by_input(self, input_id: int) -> HyperEdge | None:
-        # TODO rewrite, input now is wire id => Node id, and Node is hyperedge
-        return None
-
-    def get_node_by_output(self, output_id: int) -> HyperEdge | None:
-        # TODO rewrite, output now is wire id => Node id, and Node is hyperedge
-        return None
 
     def set_hypergraph_sources(self, nodes: list[Node]):
         self.hypergraph_source.clear()
@@ -84,11 +101,11 @@ class Hypergraph:
         for edge in edges:
             self.add_edge(edge)
 
-    def get_all_nodes(self) -> list[Node]:
-        return list(self.nodes.values())
-
-    def get_hypergraph_source(self) -> list[Node]:
-        return list(self.hypergraph_source.values())
+    # def get_all_nodes(self) -> list[Node]:
+    #     return list(self.nodes.values())
+    #
+    # def get_hypergraph_source(self) -> list[Node]:
+    #     return list(self.hypergraph_source.values())
 
     def remove_node(self, node_to_remove_id: int):
         removed_node = self.nodes.pop(node_to_remove_id)
@@ -116,11 +133,8 @@ class Hypergraph:
             self.edges[new_id] = self.edges[prev_id]
             self.edges.pop(prev_id)
 
-    def get_hyper_edge_by_id(self, hyper_edge_id: int) -> HyperEdge|None:
-        return self.edges.get(hyper_edge_id)
-
     def contains_node(self, node: Node) -> bool:
-        return node in self.nodes.values()
+        return node.id in self.get_all_nodes_ids()
 
     def add_hypergraph_source(self, node: Node):
         self.hypergraph_source[node.id] = node
@@ -133,26 +147,23 @@ class Hypergraph:
         for node in nodes:
             self.add_hypergraph_source(node)
 
-    def remove_node(self, node_to_remove_id: int):
-        removed_node = self.nodes.pop(node_to_remove_id, None)
-        if removed_node is None:
-            return
-
-    def get_canvas_id(self) -> int:
-        return self.canvas_id
-
-    def remove_hyper_edge(self, edge_to_remove_id: int) -> HyperEdge:
-        self.edges[edge_to_remove_id].remove_self()  # TODO do nothing?
-        return self.edges.pop(edge_to_remove_id)
-
-    def swap_hyper_edge_id(self, prev_id: int, new_id: int):
-        if prev_id != new_id:
-            self.edges[prev_id].swap_id(new_id)
-            self.edges[new_id] = self.edges[prev_id]
-            self.edges.pop(prev_id)
-
-    def contains_node(self, node: Node) -> bool:
-        return node in self.nodes.values()
+    # def remove_node(self, node_to_remove_id: int):
+    #     removed_node = self.nodes.pop(node_to_remove_id, None)
+    #     if removed_node is None:
+    #         return
+    #
+    # def get_canvas_id(self) -> int:
+    #     return self.canvas_id
+    #
+    # def remove_hyper_edge(self, edge_to_remove_id: int) -> HyperEdge:
+    #     self.edges[edge_to_remove_id].remove_self()  # TODO do nothing?
+    #     return self.edges.pop(edge_to_remove_id)
+    #
+    # def swap_hyper_edge_id(self, prev_id: int, new_id: int):
+    #     if prev_id != new_id:
+    #         self.edges[prev_id].swap_id(new_id)
+    #         self.edges[new_id] = self.edges[prev_id]
+    #         self.edges.pop(prev_id)
 
     def update_source_nodes_descendants(self):
         """
@@ -161,7 +172,7 @@ class Hypergraph:
         """
         self.nodes.clear()
         queue: Queue[Node] = Queue()
-        visited: set[Node] = set()
+        visited: set[int] = set()
         for source_node in self.get_hypergraph_source():
             queue.put(source_node)
             for connected_node in source_node.get_children_nodes() + source_node.get_united_with_nodes():
@@ -170,9 +181,9 @@ class Hypergraph:
         while not queue.empty():
             child_node = queue.get()
             self.nodes[child_node.id] = child_node
-            visited.add(child_node)
+            visited.add(child_node.id)
             for connected_node in child_node.get_children_nodes() + child_node.get_united_with_nodes():
-                if connected_node not in visited:
+                if connected_node.id not in visited:
                     queue.put(connected_node)
 
     def update_edges(self):
@@ -182,7 +193,7 @@ class Hypergraph:
         """
         self.edges.clear()
         queue: Queue[Node] = Queue()
-        visited_nodes: set[Node] = set()
+        visited_nodes: set[int] = set()
         for source_node in self.get_hypergraph_source():
             hyper_edges: list[HyperEdge] = source_node.get_output_hyper_edges() + source_node.get_input_hyper_edges()
             for hyper_edge in hyper_edges:
@@ -192,11 +203,11 @@ class Hypergraph:
 
         while not queue.empty():
             node = queue.get()  # current level node
-            visited_nodes.add(node)
+            visited_nodes.add(node.id)
             for hyper_edge in node.get_output_hyper_edges() + node.get_input_hyper_edges():
                 self.edges[hyper_edge.id] = hyper_edge  # update hyper edges
             for connected_node in node.get_children_nodes() + node.get_united_with_nodes():
-                if connected_node not in visited_nodes:
+                if connected_node.id not in visited_nodes:
                     queue.put(connected_node)  # add next level nodes to queue
 
     def get_node_groups(self) -> list[list[int]]:
