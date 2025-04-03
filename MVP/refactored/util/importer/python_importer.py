@@ -117,6 +117,7 @@ class PythonImporter(Importer):
                 possible_outputs[assigned_variable] = function_name
 
             new_box = canvas.add_box(loc=(box_x, elements_y_position))
+            new_box.set_label(function_call["function_name"])
 
             box_function = functions[function_name]
             new_box.set_box_function(box_function)

@@ -130,3 +130,6 @@ class Connection:
 
     def __hash__(self):
         return hash(self.id)
+
+    def __repr__(self):
+        return f"Connection(id={self.id}, box={self.box}, index={self.index}, side={self.side}, location={self.location})"
