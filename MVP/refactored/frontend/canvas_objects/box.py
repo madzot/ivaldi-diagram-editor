@@ -161,8 +161,8 @@ class Box:
 
     def set_box_function(self, box_function: BoxFunction):
         self.box_function = box_function
-        hyper_edge = HypergraphManager.get_hyper_edge_by_id(self.id)
-        hyper_edge.set_box_function(self.box_function)
+        self.receiver.receiver_callback(ActionType.BOX_SET_FUNCTION, generator_id=self.id, canvas_id=self.canvas.id,
+                                        box_function=box_function)
 
     def get_box_function(self) -> BoxFunction:
         return self.box_function

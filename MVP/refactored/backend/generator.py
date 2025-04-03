@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.types.GeneratorType import GeneratorType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 
@@ -21,6 +23,7 @@ class Generator:
         self.parent = None
         self.spiders = []
         self.operand = None
+        self.box_function: BoxFunction | None = None
 
     def get_left_by_id(self, id: int):
         for left in self.left:
@@ -63,6 +66,12 @@ class Generator:
 
     def remove_operand(self):
         self.operand = None
+
+    def set_box_function(self, box_function: BoxFunction):
+        self.box_function = box_function
+
+    def get_box_function(self) -> BoxFunction | None:
+        return self.box_function
 
     def set_id(self, new_id: int):
         self.id = new_id

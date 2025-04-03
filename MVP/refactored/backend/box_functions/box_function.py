@@ -31,20 +31,22 @@ class BoxFunction:
                  is_predefined_function=False):
         if imports is None:
             imports = []
+            self.imports = imports
         self.name: str = name
 
         if is_predefined_function:
             predefined_file_code = predefined_functions[self.name]
             self._set_data_from_file_code(predefined_file_code)
+            self.code = predefined_file_code # TODO: Remove this variable after code generation is refactored
         elif file_code is not None:
             self._set_data_from_file_code(file_code)
+            self.code = file_code # TODO: Remove this variable after code generation is refactored
         else:
             self.function: Callable = function
             self.min_args: int = min_args
             self.max_args: int = max_args
             self.imports: list = imports
 
-        self.code = None  # TODO: Remove this variable after code generation is refactored
 
     def _set_data_from_file_code(self, file_code: str):
         local = {}
@@ -68,17 +70,25 @@ class BoxFunction:
     def __call__(self, *args):
         return self.function(*args)
 
+    # def __eq__(self, other):
+    #     if isinstance(other, BoxFunction):
+    #         return (self.name == other.name
+    #                 and self.function == other.function
+    #                 and self.min_args == other.min_args
+    #                 and self.max_args == other.max_args
+    #                 and self.imports == other.imports)
+    #     return False
+
     def __eq__(self, other):
         if isinstance(other, BoxFunction):
-            return (self.name == other.name
-                    and self.function == other.function
-                    and self.min_args == other.min_args
-                    and self.max_args == other.max_args
-                    and self.imports == other.imports)
+            return self.code == other.code
         return False
 
     def __hash__(self):
-        return hash(self.function)
+        return hash(self.code)
+
+    # def __hash__(self):
+    #     return hash(self.function)
 
     def __str__(self):
         return f"BoxFunction: {self.name}\n" \
