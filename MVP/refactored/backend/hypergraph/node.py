@@ -122,17 +122,18 @@ class Node:
         return list(outputs)
 
     def get_united_with_nodes(self) -> list[Node]:
-        united_with_nodes: list[Node] = list()
-        visited: list = list()
+        # TODO: replace back sets with lists and fix infinite recursion
+        united_with_nodes: set[Node] = set()
+        visited: set = set()
         queue: Queue[Node] = Queue()
-        visited.append(self)
+        visited.add(self)
         for directly_connected_to_node in self.directly_connected_to:
             queue.put(directly_connected_to_node)
         while not queue.empty():
             node: Node = queue.get()
             if not any(node.id == visited_node.id for visited_node in visited):
-                united_with_nodes.append(node)
-                visited.append(node)
+                united_with_nodes.add(node)
+                visited.add(node)
             for directly_connected_to_node in node.directly_connected_to:
                 if directly_connected_to_node not in visited:
                     queue.put(directly_connected_to_node)
