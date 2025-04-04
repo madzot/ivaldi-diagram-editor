@@ -105,11 +105,11 @@ class MainDiagram(tk.Tk):
         self.quick_create_boxes = []
 
         # Create Menubutton and Menu for dropdown
-        self.dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box to Add", width=16,
-                                              bootstyle=(PRIMARY, OUTLINE))
-        self.dropdown_menu = ttk.Menu(self.dropdown_button, tearoff=0)
-        self.dropdown_button.config(menu=self.dropdown_menu)
-        self.dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.add_box_dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box to Add", width=16,
+                                                      bootstyle=(PRIMARY, OUTLINE))
+        self.add_box_dropdown_menu = ttk.Menu(self.add_box_dropdown_button, tearoff=0)
+        self.add_box_dropdown_button.config(menu=self.add_box_dropdown_menu)
+        self.add_box_dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
         self.update_dropdown_menu()
 
         self.manage_boxes = ttk.Button(self.control_frame, text="Manage Boxes",
@@ -128,9 +128,9 @@ class MainDiagram(tk.Tk):
         self.manage_methods_button.pack(side=tk.TOP, padx=5, pady=5)
 
         # Add Spider
-        self.spider_box = ttk.Button(self.control_frame, text="Add Spider",
-                                     command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
-        self.spider_box.pack(side=tk.TOP, padx=5, pady=5)
+        self.spider_button = ttk.Button(self.control_frame, text="Add Spider",
+                                        command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
+        self.spider_button.pack(side=tk.TOP, padx=5, pady=5)
 
         self.rename = ttk.Button(self.control_frame, text="Rename Diagram",
                                  command=self.rename, width=20, bootstyle=(PRIMARY, OUTLINE))
@@ -320,7 +320,7 @@ class MainDiagram(tk.Tk):
     def bind_buttons(self):
         self.undefined_box_button.configure(command=self.custom_canvas.add_box)
         self.manage_boxes.configure(command=self.manage_boxes_method)
-        self.spider_box.configure(command=self.custom_canvas.add_spider)
+        self.spider_button.configure(command=self.custom_canvas.add_spider)
 
         self.draw_wire_button.configure(command=self.custom_canvas.toggle_draw_wire_mode)
 
@@ -527,14 +527,14 @@ class MainDiagram(tk.Tk):
         # Clear existing menu items
 
         # add undefined box button as well to make width greater
-        self.dropdown_menu.delete(0, tk.END)
-        self.dropdown_menu.add_command(label="Add Undefined Box",
-                                       command=self.custom_canvas.add_box)
-        self.dropdown_menu.add_separator()
+        self.add_box_dropdown_menu.delete(0, tk.END)
+        self.add_box_dropdown_menu.add_command(label="Add Undefined Box",
+                                               command=self.custom_canvas.add_box)
+        self.add_box_dropdown_menu.add_separator()
 
         # Add options to the dropdown menu
         for i, name in enumerate(self.boxes):
-            self.dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
+            self.add_box_dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
 
     def remove_option(self, option):
         self.project_exporter.del_box_menu_option(option)

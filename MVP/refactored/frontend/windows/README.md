@@ -64,8 +64,8 @@ The editor itself is imported from `chlorophyll` package.
 
 ## HelpWindow
 
-HelpWindow is the window that shows the user keybind that are usable in the application.
-It is opened when pressing on the help icon on the right side of the Toolbar, it is represented by a circle with a
+`HelpWindow` is the window that shows the user keybind that are usable in the application.
+It is opened when pressing on the help icon on the right side of the `Toolbar`, it is represented by a circle with a
 question mark in the middle.
 
 
@@ -105,3 +105,62 @@ question mark in the middle.
 
     .update_page_label()
         Updates page_label. Updates page numbers displayed on the pagination frame.
+
+---
+
+## MainDiagram
+
+`MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
+you see when using the application.
+
+### MainDiagram params
+
+| **Param**             | **Type** | **Description**                                          | 
+|-----------------------|----------|----------------------------------------------------------|
+| receiver              | Receiver | Receiver object used to send information to the backend. |
+|                       |          |                                                          |
+| # **Optional params** |          |                                                          |
+| load                  | bool     | Boolean to load items in to the MainDiagram on creation. |
+
+
+### MainDiagram variable
+
+| **Variable**            | **Type**                | **Description**                                                                                                                                          |
+|-------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| receiver                | Receiver                | Receiver object used for sending information to the backend.                                                                                             |
+| toolbar                 | Toolbar                 | Component for MainDiagram.                                                                                                                               |
+| is_search_active        | bool                    | Boolean that is True when search results are active.                                                                                                     |
+| selector                | Selector                | Selector object used for selecting items on the CustomCanvas.                                                                                            |
+| search_results          | list                    | List containing the results of a search.                                                                                                                 |
+| active_search_index     | int                     | Integer that holds the index of which search result is currently primarily highlighted.                                                                  |
+| search_objects          | dict                    | A dictionary that holds the search result and a list of its objects.                                                                                     |
+| wire_objects            | dict                    | A dictionary that holds the search result and a list of Wires that are highlighted with the result.                                                      |
+| custom_canvas           | CustomCanvas            | The currently displayed CustomCanvas.                                                                                                                    |
+| search_window           | SearchWindow            | SearchWindow object.                                                                                                                                     |
+| is_tree_visible         | bool                    | Boolean showing if tree_view is visible or hidden.                                                                                                       |
+| canvasses               | dict                    | A dictionary holding the ID and CustomCanvas object of all CustomCanvases in the MainDiagram.                                                            |
+| tree_root_id            | str                     | Root canvas ID used for tree_view.                                                                                                                       |
+| control_frame           | ttkbootstrap.Frame      | Frame on the right of the application that holds buttons for diagram editing.                                                                            |
+| project_exporter        | ProjectExporter         | ProjectExporter object used for exporting diagrams.                                                                                                      |
+| importer                | Importer                | Importer object used for importing diagrams.                                                                                                             |
+| undefined_box_button    | ttkbootstrap.Button     | Button to add an undefined Box onto the CustomCanvas.                                                                                                    |
+| shape_dropdown_button   | ttkbootstrap.Menubutton | A dropdown button that allows the user to select the shape of newly created Boxes.                                                                       |
+| shape_dropdown_menu     | ttkbootstrap.Menu       | The menu that the shape_dropdown_button will show.                                                                                                       |
+| boxes                   | dict                    | Preset Boxes taken from the boxes_conf.json file.                                                                                                        |
+| quick_create_boxes      | list                    | Preset Boxes that can be created from the context menu on CustomCanvas.                                                                                  |
+| add_box_dropdown_button | ttkbootstrap.Menubutton | Button to open the dropdown menu for preset Box adding.                                                                                                  |
+| add_box_dropdown_menu   | ttkbootstrap.Menu       | Menu that is shown after pressing on the add_box_dropdown_button.                                                                                        |
+| manage_boxes            | ttkbootstrap.Button     | Button that opens a window to manage Box presets.                                                                                                        |
+| quick_create_booleans   | list                    | List containing tkinter.BooleanVar that is used for remembering what preset Boxes are added to quick create when displaying quick creation manage window. |
+| manage_quick_create     | ttkbootstrap.Button     | Button to open the quick creation management window.                                                                                                     |
+| manage_methods_button   | ttkbootstrap.Button     | Button to open method management window.                                                                                                                 |
+| spider_box              | ttkbootstrap.Button     | Button to add a Spider to the CustomCanvas.                                                                                                              |
+| rename                  | ttkbootstrap.Button     | Button to rename the currently opened CustomCanvas.                                                                                                      |
+| random                  | ttkbootstrap.Button     | Button to create Wires at random on current CustomCanvas.                                                                                                |
+| alg_not                 | ttkbootstrap.Button     | Button to generate algebraic notation for the current diagram.                                                                                           |
+| draw_wire_button        | ttkbootstrap.Button     | Button to activate draw wire mode on the CustomCanvas.                                                                                                   |
+| save_buttons            | dict                    | Dictionary holding the label and function of input/output adding and removal buttons.                                                                    |
+| json_file_hash          | str                     | Hash of boxes_conf file to check for updates.                                                                                                            |
+| label_content           | dict                    | Dictionary that holds function labels and their content.                                                                                                 |
+| manage_methods          | ManageMethods           | ManageMethods window.                                                                                                                                    |
+| import_counter          | int                     | Import counter used to change IDs of objects when same diagram has been imported multiple times as sub-diagrams.                                         |
