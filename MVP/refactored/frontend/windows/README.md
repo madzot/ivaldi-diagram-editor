@@ -60,4 +60,48 @@ The editor itself is imported from `chlorophyll` package.
     .update_boxes()
         Updates i/o of Boxes on the canvas and adds new code to label_content variable.
 
+---
 
+## HelpWindow
+
+HelpWindow is the window that shows the user keybind that are usable in the application.
+It is opened when pressing on the help icon on the right side of the Toolbar, it is represented by a circle with a
+question mark in the middle.
+
+
+### HelpWindow params
+
+| **Param**             | **Type** | **Description**                           |
+|-----------------------|----------|-------------------------------------------|
+|                       |          |                                           |
+| # **Optional params** |          |                                           |
+| master                | Tk       | Used for attaching window to application. |
+
+### HelpWindow variables
+
+| **Variable**           | **Type**           | **Description**                                                |
+|------------------------|--------------------|----------------------------------------------------------------|
+| keybind_frame          | tkinter.Frame      | Frame object that all key-binds and descriptions are added to. |
+| key_binds_descriptions | list               | List that holds tuples of keybind and its description.         |
+| items_per_page         | int                | Defines how many key-binds are shown per page.                 |
+| current_page           | int                | Current page number.                                           |
+| pagination_frame       | tkinter.Frame      | Frame that pagination buttons are added to.                    |
+| backward_logo          | ImageTk.PhotoImage | Icon used to show backwards movement between pages.            |
+| backward               | tkinter.Button     | Button that goes backwards in pagination.                      |
+| forward_logo           | ImageTk.PhotoImage | Icon used to show forward movement between pages.              |
+| forward                | tkinter.Button     | Button that moves page forward.                                |
+| page_label             | tkinter.Label      | Label that shows current page number in the pagination frame.  |
+
+### HelpWindow functions
+
+    .display_key_binds()
+        Adds items from key_binds_descriptions to the keybind_frame.
+
+    .next_page()
+        Goes to the next set of keybinds.
+
+    .previous_page()
+        Goes to the previous set of keybinds.
+
+    .update_page_label()
+        Updates page_label. Updates page numbers displayed on the pagination frame.
