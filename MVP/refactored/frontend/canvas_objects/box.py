@@ -198,7 +198,7 @@ class Box:
             self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.canvas.main_diagram,
-                                            self.canvas, add_boxes, self.id, highlightthickness=0)
+                                            add_boxes, self.id, highlightthickness=0)
             self.canvas.itemconfig(self.rect, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text
