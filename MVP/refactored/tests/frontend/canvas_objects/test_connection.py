@@ -112,7 +112,7 @@ class ConnectionTests(TestApplication):
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.update')
     def test__change_type__updates_tied_con_if_found(self, update_mock):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, self.custom_canvas, False)
+        sub_diagram = CustomCanvas(self.app, box, self.app, False)
         connection = Connection(box, 0, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -134,7 +134,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__returns_self_if_input_and_output_differ(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, self.custom_canvas, False)
+        sub_diagram = CustomCanvas(self.app, box, self.app, False)
         connection = Connection(box, 0, const.LEFT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -146,7 +146,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_none_if_inner_connection_has_wire(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, self.custom_canvas, False)
+        sub_diagram = CustomCanvas(self.app, box, self.app, False)
         connection = Connection(box, 0, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -159,7 +159,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_io_if_outer_connection_has_no_wire(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, self.custom_canvas, False)
+        sub_diagram = CustomCanvas(self.app, box, self.app, False)
         connection = Connection(box, 0, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -171,7 +171,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_self_if_index_differ(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, self.custom_canvas, False)
+        sub_diagram = CustomCanvas(self.app, box, self.app, False)
         connection = Connection(box, 2, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -184,7 +184,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_io_with_correct_index(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, self.custom_canvas, False)
+        sub_diagram = CustomCanvas(self.app, box, self.app, False)
         connection = Connection(box, 1, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
