@@ -5,7 +5,7 @@ from MVP.refactored.frontend.canvas_objects.types.connection_type import Connect
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 
 
-def curved_line(start, end, det=15):
+def curved_line(start, end, det=15, rotated=False):
     sx = start[0]
     sy = start[1]
     dx = end[0] - sx
@@ -14,8 +14,12 @@ def curved_line(start, end, det=15):
     coordinates = [0] * (det * 2 + 2)
     for i in range(det + 1):
         t = i / det
-        coordinates[i * 2] = sx + dx * t
-        coordinates[i * 2 + 1] = sy + dy * (3 * t ** 2 - 2 * t ** 3)
+        if rotated:
+            coordinates[i * 2] = sy + dy * (3 * t ** 2 - 2 * t ** 3)
+            coordinates[i * 2 + 1] = sx + dx * t
+        else:
+            coordinates[i * 2] = sx + dx * t
+            coordinates[i * 2 + 1] = sy + dy * (3 * t ** 2 - 2 * t ** 3)
     return coordinates
 
 
@@ -82,10 +86,13 @@ class Wire:
         if self.end_connection:
             if self.line:
                 self.canvas.coords(self.line,
-                                   *curved_line(self.start_connection.display_location, self.end_connection.display_location))
+                                   *curved_line(self.start_connection.location,
+                                                self.end_connection.location,
+                                                rotated=self.canvas.main_diagram.is_rotated))
             else:
                 self.line = self.canvas.create_line(
-                    *curved_line(self.start_connection.display_location, self.end_connection.display_location),
+                    *curved_line(self.start_connection.location, self.end_connection.location,
+                                 rotated=self.canvas.main_diagram.is_rotated),
                     fill=self.color, width=self.wire_width, dash=self.dash_style)
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
             self.update_wire_label()
