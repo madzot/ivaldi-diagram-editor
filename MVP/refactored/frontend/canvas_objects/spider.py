@@ -5,19 +5,18 @@ from MVP.refactored.frontend.canvas_objects.types.connection_type import Connect
 
 
 class Spider(Connection):
-    def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC, display=False):
+    def __init__(self, box, index, side, location, canvas, receiver, id_=None, connection_type=ConnectionType.GENERIC):
         self.r = 10
-        super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type, temp=display)
+        super().__init__(box, index, side, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
         self.x = location[0]
         self.y = location[1]
         self.location = location
 
-        self.display_x = location[0]
-        self.display_y = location[1]
-        self.display_location = location
+        self.display_location = self.canvas.convert_logical_display(location[0], location[1])
+        self.display_x = self.display_location[0]
+        self.display_y = self.display_location[1]
 
-        self.update_spider_coords(location[0], location[1], display)
         if not id_:
             self.id = id(self)
         else:
@@ -181,8 +180,8 @@ class Spider(Connection):
         self.switch_wire_start_and_end()
 
         self.is_snapped = found
-
-        self.update_spider_coords(go_to_x, go_to_y, display=True)
+        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
+        self.update_spider_coords(go_to_x, go_to_y)
 
         self.canvas.coords(self.circle, self.display_x - self.r, self.display_y - self.r, self.display_x + self.r,
                            self.display_y + self.r)
@@ -239,35 +238,19 @@ class Spider(Connection):
             self.wires.remove(wire)
             self.has_wire = len(self.wires) > 0
 
-    def update_spider_coords(self, x, y, display=False):
+    def update_spider_coords(self, x, y):
         if not x:
-            if display:
-                x = self.display_x
-            else:
-                x = self.x
+            x = self.x
         if not y:
-            if display:
-                y = self.display_y
-            else:
-                y = self.y
+            y = self.y
         if self.canvas.master.is_rotated:
-            if display:
-                self.x = y
-                self.y = x
-                self.location = [y, x]
+            self.x = x
+            self.y = y
+            self.location = [x, y]
 
-                self.display_x = x
-                self.display_y = y
-                self.display_location = [x, y]
-
-            else:
-                self.x = x
-                self.y = y
-                self.location = [x, y]
-
-                self.display_x = y
-                self.display_y = x
-                self.display_location = [y, x]
+            self.display_x = y
+            self.display_y = x
+            self.display_location = [y, x]
 
         else:
             self.display_x = x

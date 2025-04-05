@@ -6,7 +6,7 @@ class Connection:
 
     active_types = 1
 
-    def __init__(self, box, index, side, location, canvas, r=5, id_=None, connection_type=ConnectionType.GENERIC, temp=False):
+    def __init__(self, box, index, side, location, canvas, r=5, id_=None, connection_type=ConnectionType.GENERIC):
         self.canvas = canvas
         self.id = id(self)
         self.box = box  # None if connection is diagram input/output/spider
@@ -14,7 +14,7 @@ class Connection:
         self.side = side  # 'spider' if connection is a spider
         self.location = location
         self.display_location = location
-        self.update_connection_coords(location, display=temp)
+        self.update_connection_coords(location)
         self.type = connection_type
         self.wire = None
         self.has_wire = False
@@ -156,10 +156,10 @@ class Connection:
         """
         self.canvas.itemconfig(self.circle, fill=color)
 
-    def move_to(self, location, display=False):
-        self.update_connection_coords(location, display)
-        self.canvas.coords(self.circle, self.display_location[0] - self.r, self.display_location[1] - self.r, self.display_location[0] + self.r,
-                           self.display_location[1] + self.r)
+    def move_to(self, location):
+        self.update_connection_coords(location)
+        self.canvas.coords(self.circle, self.display_location[0] - self.r, self.display_location[1] - self.r,
+                           self.display_location[0] + self.r, self.display_location[1] + self.r)
 
     def lessen_index_by_one(self):
         self.index -= 1
@@ -203,14 +203,10 @@ class Connection:
     def deselect(self):
         self.canvas.itemconfig(self.circle, fill="black")
 
-    def update_connection_coords(self, location, display=False):
+    def update_connection_coords(self, location):
         if self.canvas.master.is_rotated:
-            if display:
-                self.display_location = location
-                self.location = [location[1], location[0]]
-            else:
-                self.display_location = [location[1], location[0]]
-                self.location = location
+            self.display_location = [location[1], location[0]]
+            self.location = location
 
         else:
             self.display_location = location

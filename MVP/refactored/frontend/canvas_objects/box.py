@@ -11,15 +11,13 @@ from constants import *
 
 
 class Box:
-    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle", display=False):
+    def __init__(self, canvas, x, y, receiver, size=(60, 60), id_=None, shape="rectangle"):
         self.shape = shape
         self.canvas = canvas
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
-        self.display_x = x
-        self.display_y = y
-        self.update_coords(x, y, display)
+        self.display_x, self.display_y = self.canvas.convert_logical_display(x, y)
 
         self.start_x = self.display_x
         self.start_y = self.display_y
@@ -41,9 +39,9 @@ class Box:
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.rect = self.create_rect()
 
-        self.resize_handle = self.canvas.create_rectangle(self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
-                                                          self.display_x + self.size[0], self.display_y + self.size[1],
-                                                          outline="black", fill="black")
+        self.resize_handle = self.canvas.create_rectangle(self.display_x + self.size[0] - 10, self.display_y +
+                                                          self.size[1] - 10, self.display_x + self.size[0],
+                                                          self.display_y + self.size[1],  outline="black", fill="black")
         self.locked = False
         self.bind_events()
         self.sub_diagram = None
@@ -336,11 +334,11 @@ class Box:
             if 20 > min(self.size):
                 return
         old_size = self.size
-        self.size = (self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
+        self.size = self.canvas.convert_logical_display(self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
         if self.find_collisions(self.display_x, self.display_y):
             self.size = old_size
             return
-        self.update_size(self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier, display=True)
+        self.update_size(self.size[0], self.size[1])
         self.move_label()
 
     def on_resize_drag(self, event):
@@ -360,7 +358,8 @@ class Box:
         self.start_y = event.y
         new_size_x = max(20, self.size[0] + dx)
         new_size_y = max(20, self.size[1] + dy)
-        self.update_size(new_size_x, new_size_y, True)
+        new_size_x, new_size_y = self.canvas.convert_logical_display(new_size_x, new_size_y)
+        self.update_size(new_size_x, new_size_y)
         self.move_label()
 
     def resize_by_connections(self):
@@ -439,26 +438,19 @@ class Box:
     def move(self, new_x, new_y):
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
+        new_x, new_y = self.canvas.convert_logical_display(new_x, new_y)
         is_bad = False
         for connection in self.connections:
-            if self.canvas.master.is_rotated:
-                if connection.has_wire and self.is_illegal_move(connection, new_y):
-                    is_bad = True
-                    break
-            else:
-                if connection.has_wire and self.is_illegal_move(connection, new_x):
-                    is_bad = True
-                    break
+            if connection.has_wire and self.is_illegal_move(connection, new_x):
+                is_bad = True
+                break
         if is_bad:
-            if self.canvas.master.is_rotated:
-                self.update_coords(new_x, None, True)
-            else:
-                self.update_coords(None, new_y, True)
+            self.update_coords(None, new_y)
             self.update_position()
             self.update_connections()
             self.update_wires()
         else:
-            self.update_coords(new_x, new_y, True)
+            self.update_coords(new_x, new_y)
             self.update_position()
             self.update_connections()
             self.update_wires()
@@ -488,14 +480,8 @@ class Box:
         self.locked = False
 
     # UPDATES
-    def update_size(self, new_size_x, new_size_y, display=False):
-        if self.canvas.master.is_rotated:
-            if display:
-                self.size = (new_size_x, new_size_y)
-            else:
-                self.size = (new_size_y, new_size_x)
-        else:
-            self.size = (new_size_x, new_size_y)
+    def update_size(self, new_size_x, new_size_y):
+        self.size = self.get_logical_size((new_size_x, new_size_y))
         self.update_position()
         self.update_connections()
         self.update_wires()
@@ -719,29 +705,17 @@ class Box:
             outputs_amount = 0
         return inputs_amount, outputs_amount
 
-    def update_coords(self, x, y, display=False):
+    def update_coords(self, x, y):
         if not x:
-            if display:
-                x = self.display_x
-            else:
-                x = self.x
+            x = self.x
         if not y:
-            if display:
-                y = self.display_y
-            else:
-                y = self.y
+            y = self.y
 
         if self.canvas.master.is_rotated:
-            if display:
-                self.x = y
-                self.y = x
-                self.display_x = x
-                self.display_y = y
-            else:
-                self.x = x
-                self.y = y
-                self.display_x = y
-                self.display_y = x
+            self.x = x
+            self.y = y
+            self.display_x = y
+            self.display_y = x
 
         else:
             self.display_x = x
@@ -749,7 +723,9 @@ class Box:
             self.x = x
             self.y = y
 
-    def get_logical_size(self):
+    def get_logical_size(self, size=None):
+        if size is None:
+            size = self.size
         if self.canvas.master.is_rotated:
-            return [self.size[1], self.size[0]]
-        return self.size
+            return [size[1], size[0]]
+        return size

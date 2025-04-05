@@ -165,26 +165,22 @@ class Selector:
 
     def paste_copied_items(self, event_x=50, event_y=50, replace=False, multi=1):
         if len(self.copied_items) > 0:
-
+            event_x, event_y = self.canvas.convert_logical_display(event_x, event_y)
             middle_point = self.find_middle_point(event_x, event_y)
             wires = self.copied_left_wires + self.copied_right_wires
             pasted_items = []
 
             for item in self.copied_items:
+                x, y = item['location']
+                loc = (event_x + (x - middle_point[0]) * multi,
+                       event_y + (y - middle_point[1]) * multi)
                 if item['component'] == "Box":
-                    x, y = self.canvas.convert_logical_display(item['location'][0], item['location'][1])
-                    loc = (event_x + (x - middle_point[0]) * multi,
-                           event_y + (y - middle_point[1]) * multi)
-
                     new_box = self.paste_box(item, loc, self.copied_wire_list, wires, self.canvas, multi=multi,
-                                             replace=replace, return_box=True, display=True)
+                                             replace=replace, return_box=True)
                     pasted_items.append(new_box)
 
                 if item['component'] == "Spider":
-                    x, y = self.canvas.convert_logical_display(item['location'][0], item['location'][1])
-                    new_spider = self.canvas.add_spider((event_x + (x - middle_point[0]) * multi,
-                                                         event_y + (y - middle_point[1]) * multi),
-                                                        connection_type=item['type'], display=True)
+                    new_spider = self.canvas.add_spider(loc, connection_type=item['type'])
                     pasted_items.append(new_spider)
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
@@ -240,14 +236,13 @@ class Selector:
     def find_middle_point(self, event_x, event_y):
         most_left, most_right, most_up, most_down = self.find_corners_copied_items()
 
-        most_left, most_up = self.canvas.convert_logical_display(most_left, most_up)
-        most_right, most_down = self.canvas.convert_logical_display(most_right, most_down)
-
         middle_x = (most_left + most_right) / 2
         middle_y = (most_up + most_down) / 2
 
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
+
+        canvas_width, canvas_height = self.canvas.convert_logical_display(canvas_width, canvas_height)
 
         if most_left - (middle_x - event_x) < self.canvas.canvasx(0):
             middle_x = event_x + most_left - self.canvas.canvasx(0)
@@ -266,6 +261,7 @@ class Selector:
         most_right = 0
         most_up = self.canvas.winfo_height()
         most_down = 0
+        most_left, most_up = self.canvas.convert_logical_display(most_left, most_up)
         for item in self.copied_items:
             if item['component'] == "Box":
                 if item['location'][0] < most_left:
@@ -292,6 +288,7 @@ class Selector:
         most_right = 0
         most_up = self.canvas.winfo_height()
         most_down = 0
+        most_left, most_up = self.canvas.convert_logical_display(most_left, most_up)
         for item in self.selected_items:
             if isinstance(item, Box):
                 if item.x < most_left:
@@ -619,10 +616,9 @@ class Selector:
         })
         return spider_info
 
-    def paste_box(self, box, loc, wires, side_wires, canvas, multi=1, replace=False, return_box=False, display=False):
+    def paste_box(self, box, loc, wires, side_wires, canvas, multi=1, replace=False, return_box=False):
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-        new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'],
-                                 display=display)
+        new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'])
         for c in box['connections']:
             if c['side'] == "right":
                 new_box.add_right_connection(connection_type=c['type'])
