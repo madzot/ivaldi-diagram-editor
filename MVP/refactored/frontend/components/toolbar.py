@@ -8,35 +8,44 @@ from MVP.refactored.frontend.windows.help_window import HelpWindow
 from constants import *
 
 
-class Titlebar(ttk.Frame):
-    def __init__(self, main_diagram, custom_canvas):
+class Toolbar(ttk.Frame):
+    """
+    Toolbar is the file menu bar of our application. It holds different save, generation, importing functions along
+    with settings.
+    """
+    def __init__(self, main_diagram):
+        """
+        Toolbar constructor.
+
+        :param main_diagram: MainDiagram object used to access functions.
+        """
         super().__init__(main_diagram)
         self.main_diagram = main_diagram
-        self.custom_canvas = custom_canvas
         self.config(bootstyle=ttk.LIGHT)
 
         # File button
         self.file_button = tk.Menubutton(self, text="File",
                                          width=5, indicatoron=False)
-        self.file_menu = ttk.Menu(self.file_button, tearoff=False)
+        self.file_menu = tk.Menu(self.file_button, tearoff=False)
         self.file_button.config(menu=self.file_menu)
 
         # File -> Save as
         self.save_submenu = tk.Menu(self.file_menu, tearoff=False)
-        self.save_submenu.add_command(label="png file", command=lambda: self.custom_canvas.save_as_png())
+        self.save_submenu.add_command(label="png file", command=lambda: self.main_diagram.custom_canvas.save_as_png())
         self.save_submenu.add_command(label="project", command=lambda: self.main_diagram.save_to_file())
-        self.save_submenu.add_command(label="hypergraph", command=lambda: self.custom_canvas.export_hypergraph())
+        self.save_submenu.add_command(label="hypergraph",
+                                      command=lambda: self.main_diagram.custom_canvas.export_hypergraph())
 
         # File -> Generate
         self.generate_submenu = tk.Menu(self.file_menu, tearoff=False)
-        self.generate_submenu.add_command(label="TikZ", command=lambda: self.custom_canvas.open_tikz_generator())
+        self.generate_submenu.add_command(label="TikZ", command=lambda: self.main_diagram.custom_canvas.open_tikz_generator())
         self.generate_submenu.add_command(label="code", command=lambda: self.main_diagram.generate_code())
 
         # File menu buttons
         self.file_menu.add_cascade(menu=self.save_submenu, label="Save as")
         self.file_menu.add_cascade(menu=self.generate_submenu, label="Generate")
         self.file_menu.add_command(label="New", command=self.handle_new_graph)
-        self.file_menu.add_command(label="Import new diagram", command=lambda: self.handle_new_graph(empty=False))
+        self.file_menu.add_command(label="Import new diagram", command=lambda: self.handle_new_graph(import_=True))
         self.file_menu.add_command(label="Import as sub-diagram", command=self.import_sub_diagram)
         self.file_button.pack(side=ttk.LEFT)
 
@@ -58,7 +67,7 @@ class Titlebar(ttk.Frame):
 
         # View menu buttons
         self.view_menu.add_command(label="Visualize hypergraph",
-                                   command=lambda: self.main_diagram.visualize_as_graph(self.custom_canvas))
+                                   command=lambda: self.main_diagram.visualize_as_graph(self.main_diagram.custom_canvas))
 
         self.view_button.pack(side=ttk.LEFT)
 
@@ -72,10 +81,24 @@ class Titlebar(ttk.Frame):
         help_button.bind("<Button-1>", lambda event: self.open_help_window())
 
     def open_help_window(self):
+        """
+        Create and display the help window.
+
+        Creates a HelpWindow object.
+
+        :return: None
+        """
         HelpWindow(self.main_diagram)
 
     def import_sub_diagram(self):
-        box = self.custom_canvas.add_box(loc=(200, 100))
+        """
+        Import a diagram as a sub-diagram.
+
+        Imports a saved diagram as a sub-diagram to the currently open diagram.
+
+        :return: None
+        """
+        box = self.main_diagram.custom_canvas.add_box(loc=(200, 100))
         sub_diagram = box.edit_sub_diagram(switch=False)
 
         main_canvas = self.main_diagram.importer.canvas
@@ -89,29 +112,45 @@ class Titlebar(ttk.Frame):
         if not is_importing:
             box.delete_box()
 
-    def set_custom_canvas(self, custom_canvas):
-        self.custom_canvas = custom_canvas
+    def confirm_deletion(self):
+        """
+        Ask user for deletion confirmation.
 
-    def ask_deletion_confirmation(self):
+        Asks user whether they wish to save progress.
+        If the user wishes to save then a save function is called in MainDiagram.
+
+        :return: Dialog result, tk.NO |tk.YES |tk.NONE
+        """
         dialog = messagebox.askyesnocancel(title="Warning",
                                            message="All unsaved progress will be deleted. Do you wish to save?")
-        if dialog == tk.NO:
-            return tk.NO
-        elif dialog == tk.YES:
-            self.main_diagram.save_to_file()
-            return tk.YES
-        else:
-            return tk.NONE
+        match dialog:
+            case tk.NO:
+                return tk.NO
+            case tk.YES:
+                self.main_diagram.save_to_file()
+                return tk.YES
+            case _:
+                return tk.NONE
 
-    def handle_new_graph(self, empty=True):
+    def handle_new_graph(self, import_=False):
+        """
+        Handle creating a new graph.
+
+        Will delete the current diagram, and if specified with a function parameter, will also import a new diagram.
+
+        :param import_: (Optional) Boolean that specifies whether a new diagram should be importer after deletion of
+        previous diagram.
+        :type import_: bool
+        :return: None
+        """
         root_canvas = list(self.main_diagram.canvasses.items())[0][1]
         if root_canvas.boxes or root_canvas.spiders or root_canvas.wires or root_canvas.outputs or root_canvas.inputs:
-            dialog_result = self.ask_deletion_confirmation()
+            dialog_result = self.confirm_deletion()
             if dialog_result == tk.NONE:
                 return
             self.main_diagram.switch_canvas(root_canvas)
             root_canvas.delete_everything()
-        if not empty:
+        if import_:
             self.main_diagram.load_from_file()
 
 
