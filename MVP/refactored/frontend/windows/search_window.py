@@ -55,8 +55,8 @@ class SearchWindow(tk.Toplevel):
         self.canvas_frame = tkk.Frame(self, bootstyle=tkk.PRIMARY)
         self.canvas_frame.pack(padx=2, pady=9, fill=tk.BOTH, expand=True)
 
-        self.search_canvas = CustomCanvas(self.canvas_frame, None, self.main_diagram.receiver,
-                                          self.main_diagram, self.main_diagram, False, search=True)
+        self.search_canvas = CustomCanvas(self.canvas_frame, None,
+                                          self.main_diagram, False, search=True)
         self.search_canvas.set_name("")
         self.search_canvas.pack(padx=1, pady=1, fill=tk.BOTH, expand=True)
 
@@ -65,18 +65,6 @@ class SearchWindow(tk.Toplevel):
 
         self.search_button = tkk.Button(self.result_frame, text="Search", command=self.search)
         self.search_button.pack(side=tk.RIGHT)
-        self.bind('d', self.debug)
-
-    def debug(self, event=None):
-        print(self.winfo_width())
-        print(self.winfo_height())
-        print(self.winfo_screenwidth())
-        print(self.winfo_screenheight())
-        print(self.winfo_geometry())
-        print()
-        print(self.winfo_width() / self.winfo_screenwidth())
-        print(self.winfo_height() / self.winfo_screenheight())
-        print("---")
 
     def search(self):
         if self.main_diagram.is_search_active:

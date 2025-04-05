@@ -1,4 +1,5 @@
 import json
+import os
 import tkinter as tk
 from tkinter import messagebox
 
@@ -6,7 +7,7 @@ import pygments.lexers
 from chlorophyll import CodeView
 
 from MVP.refactored.util.exporter.code_exporter import CodeExporter
-from constants import *
+import constants as const
 
 
 class CodeEditor:
@@ -55,7 +56,7 @@ class CodeEditor:
             input_count = 0
             output_count = 0
             for i in self.box.connections:
-                if i.side == "left":
+                if i.side == const.LEFT:
                     param_list.append(f"x{input_count}")
                     input_count += 1
                 else:
@@ -111,8 +112,8 @@ class CodeEditor:
         self.save_handler(destroy=False)
 
     def save_to_file(self):
-        if os.stat(FUNCTIONS_CONF).st_size != 0:
-            with open(FUNCTIONS_CONF, "r+") as file:
+        if os.stat(const.FUNCTIONS_CONF).st_size != 0:
+            with open(const.FUNCTIONS_CONF, "r+") as file:
                 existing_json = json.load(file)
                 existing_json[self.label] = self.code_view.get('1.0', tk.END).strip()
                 json_object = json.dumps(existing_json, indent=4)
@@ -120,7 +121,7 @@ class CodeEditor:
                 file.truncate(0)
                 file.write(json_object)
         else:
-            with open(FUNCTIONS_CONF, "w") as file:
+            with open(const.FUNCTIONS_CONF, "w") as file:
                 json_object = json.dumps(
                     {f"{self.label}": self.code_view.get('1.0', tk.END).strip()},
                     indent=4

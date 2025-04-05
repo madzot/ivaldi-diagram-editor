@@ -2,6 +2,7 @@ import tkinter as tk
 
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
+import constants as const
 
 
 class Spider(Connection):
@@ -216,12 +217,12 @@ class Spider(Connection):
         for connection in list(filter(lambda x: (x is not None and x != self),
                                       [w.end_connection for w in self.wires] + [w.start_connection for w in
                                                                                 self.wires])):
-            if connection.side == "spider" and abs(new_x - connection.location[0]) < 2 * self.r:
+            if connection.side == const.SPIDER and abs(new_x - connection.location[0]) < 2 * self.r:
                 return True
-            if connection.side == "left":
+            if connection.side == const.LEFT:
                 if new_x + self.r >= connection.location[0] - connection.width_between_boxes:
                     return True
-            if connection.side == "right":
+            if connection.side == const.RIGHT:
                 if new_x - self.r <= connection.location[0] + connection.width_between_boxes:
                     return True
         return False

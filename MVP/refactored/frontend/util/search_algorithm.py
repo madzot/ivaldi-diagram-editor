@@ -3,6 +3,7 @@ import tkinter.messagebox
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+import constants as const
 
 
 class SearchAlgorithm:
@@ -269,11 +270,11 @@ class SearchAlgorithm:
             right_wires = []
             if isinstance(curr_item, Box):
                 for connection in curr_item.connections:
-                    if connection.side == "left":
+                    if connection.side == const.LEFT:
                         index = SearchAlgorithm.get_item_index_from_connection(canvas_objects, connection,
                                                                                "start_connection")
                         left_wires.append(index)
-                    elif connection.side == "right":
+                    elif connection.side == const.RIGHT:
                         index = SearchAlgorithm.get_item_index_from_connection(canvas_objects, connection,
                                                                                "end_connection")
                         right_wires.append(index)
