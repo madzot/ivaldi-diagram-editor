@@ -77,14 +77,14 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.set_name("root")
         self.tree_root_id = str(self.custom_canvas.id)
         # Bind the treeview to the click event
-        self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
+        self.tree.bind("<ButtonRelease-1>", lambda event: self.on_tree_select())
         self.tree.update()
 
         self.toggle_treeview()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
-        self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
+        self.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
         self.importer = Importer(self.custom_canvas)
         # Add undefined box
@@ -494,7 +494,7 @@ class MainDiagram(tk.Tk):
 
     def update_canvas_name(self, canvas):
         """
-        Change canvas name in treeview.
+        Update canvas name in treeview.
 
         :param canvas: CustomCanvas that will have its name updated.
         :type canvas: CustomCanvas
@@ -563,13 +563,12 @@ class MainDiagram(tk.Tk):
         self.tree.delete(str(canvas.id))
         del self.canvasses[str(canvas.id)]
 
-    def on_tree_select(self, _):
+    def on_tree_select(self):
         """
         Handle tree select.
 
         Will take the currently selected item in treeview and switch to that canvas.
 
-        :param _: tkinter.Event that is ignored.
         :return: None
         """
         # Get the selected item
@@ -794,7 +793,7 @@ class MainDiagram(tk.Tk):
         """
         self.title(filename.replace(".json", ""))
 
-    def do_i_exit(self):
+    def confirm_exit(self):
         """
         Ask confirmation for exiting the application.
 
