@@ -377,30 +377,66 @@ you see when using the application.
         Parameters:
             wire (Wire): Wire that style is gotten for.
 
+---
 
+## ManageMethods
 
+`ManageMethods` is a window that allows overview and management of functions in the application. These are functions 
+that can be added to Boxes.
 
+The window displays a table containing the label of the function and the function content.
+These can be added, removed or edited from this window.
 
+### ManageMethods params
 
+| **Param**    | **Type**    | **Description**                                           |
+|--------------|-------------|-----------------------------------------------------------|
+| main_diagram | MainDiagram | MainDiagram object for accessing variables and functions. |
+| *args        |             | Tkinter.Toplevel arguments.                               |
+| **kwargs     |             | Tkinter.Toplevel keyword arguments.                       |
 
+### ManageMethods variables
 
+| **Variable**      | **Type**              | **Description**                                                |
+|-------------------|-----------------------|----------------------------------------------------------------|
+| table             | ttkbootstrap.Treeview | Treeview object used for the table that contains functions.    |
+| button_frame      | ttkbootstrap.Frame    | Frame object that contains the buttons on the window.          |
+| cancel_button     | ttkbootstrap.Button   | Button to close the window.                                    |
+| add_new_button    | ttkbootstrap.Button   | Button to add new function.                                    |
+| edit_button       | ttkbootstrap.Button   | Button to edit the code of the selected function.              |
+| edit_label_button | ttkbootstrap.Button   | Button to edit the label of the selected function.             |
+| delete_button     | ttkbootstrap.Button   | Button to delete the selected function.                        |
+| buttons_hidden    | bool                  | Boolean that states whether some buttons are currently hidden. |
 
+### ManageMethods functions
 
+    .check_selection()
+        Check if something has been selected on the table, if nothing is selected then it will hide buttons to edit
+        selected function.
 
+    .new_function_handler()
+        Asks the user if they want to create a function theirself or import a function.
 
+    .add_new_function()
+        Asks the user for a label and opens a CodeEditor for the user to enter a new function.
 
+    .add_methods()
+        Clears the table and adds methods to it from MainDiagram.label_content.
 
+    .delete_method()
+        Deletes a function.
 
+    .open_code_editor()
+        Opens a CodeEditor for the selected function.
 
+    .open_label_editor()
+        Opens a simple string dialog to edit the label of the selected function.
 
+    .write_to_json(content)
+        Writes a dictionary object into the functions_conf file.
 
-
-
-
-
-
-
-
+        Parameters:
+            content (dict): Dictionary that will be written to the functions_conf file.
 
 
 
