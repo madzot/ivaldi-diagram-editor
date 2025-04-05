@@ -207,7 +207,7 @@ class Box:
                     self.set_label(name)
                 self.sub_diagram.set_name(name)
                 self.canvas.main_diagram.add_canvas(self.sub_diagram)
-                self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
+                self.canvas.main_diagram.update_canvas_name(self.sub_diagram)
                 if switch:
                     self.canvas.main_diagram.switch_canvas(self.sub_diagram)
 
@@ -402,7 +402,7 @@ class Box:
         if self.label_text:
             if self.sub_diagram:
                 self.sub_diagram.set_name(self.label_text)
-                self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
+                self.canvas.main_diagram.update_canvas_name(self.sub_diagram)
 
         self.bind_event_label()
 
