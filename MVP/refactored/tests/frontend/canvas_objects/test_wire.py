@@ -160,6 +160,20 @@ class WireTest(TestApplication):
         self.assertEqual(4, add_command_mock.call_count)
         self.assertEqual(1, post_mock.call_count)
 
+    @patch("tkinter.Menu.post")
+    def test__show_context_menu__no_callouts_if_is_temporary(self, post_mock):
+        connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
+        connection_end = Spider(None, 1011, 'spider', (222, 444), self.custom_canvas)
+        wire = Wire(self.custom_canvas, connection_start, connection_end)
+        wire.is_temporary = True
+
+        event = tkinter.Event()
+        event.x_root, event.y_root = 150, 300
+
+        wire.show_context_menu(event)
+
+        self.assertEqual(0, post_mock.call_count)
+
     @patch("tkinter.Menu.destroy")
     def test__close_context_menu__closes(self, destroy_mock):
         connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
@@ -208,26 +222,38 @@ class WireTest(TestApplication):
         self.assertEqual(150, spider.x)
         self.assertEqual(300, spider.y)
 
+    @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_lower")
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.tag_bind")
     @patch("MVP.refactored.frontend.canvas_objects.wire.Wire.update_wire_label")
-    def test__update__calls_bind_event(self, update_wire_label_mock, tag_bind_mock):
+    def test__update__calls_methods(self, update_wire_label_mock, tag_bind_mock, tag_lower_mock):
         connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
         connection_end = Spider(None, 1011, 'spider', (222, 444), self.custom_canvas)
 
-        tag_bind_mock.call_count = 0
-
         wire = Wire(self.custom_canvas, connection_start, connection_end)
+        wire.line = None
+
+        tag_bind_mock.call_count = 0
+        tag_lower_mock.call_count = 0
+        update_wire_label_mock.call_count = 0
+
+        wire.update()
 
         self.assertEqual(tag_bind_mock.call_count, 1)
-        self.assertTrue(update_wire_label_mock.called)
+        self.assertEqual(tag_lower_mock.call_count, 1)
+        self.assertEqual(update_wire_label_mock.call_count, 1)
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.create_line")
     def test__update__calls_create_line(self, create_line_mock):
         connection_start = Spider(None, 1010, 'spider', (111, 222), self.custom_canvas)
         connection_end = Spider(None, 1011, 'spider', (222, 444), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
+        wire.line = None
 
-        self.assertTrue(create_line_mock.called)
+        create_line_mock.call_count = 0
+
+        wire.update()
+
+        self.assertEqual(create_line_mock.call_count, 1)
 
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.coords")
     def test__update__calls_coords_if_line(self, coords_mock):
