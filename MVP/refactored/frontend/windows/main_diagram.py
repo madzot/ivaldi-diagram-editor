@@ -348,13 +348,13 @@ class MainDiagram(tk.Tk):
             if canvas.parent_diagram is not None:
                 parent_id = canvas.parent_diagram.id
             self.tree.insert(str(parent_id), "end", str(canvas.id), text=canvas.name_text)
-        except tk.TclError as e:
+        except (tk.TclError, AttributeError) as e:
             if "already exists" in str(e):
                 self.import_counter += 1
                 canvas.id += self.import_counter
             try:
                 self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
-            except tk.TclError:
+            except (tk.TclError, AttributeError):
                 self.tree.insert(str(self.custom_canvas.id), "end", str(canvas.id), text=canvas.name_text)
         self.canvasses[str(canvas.id)] = canvas
         for box in canvas.boxes:
