@@ -263,21 +263,21 @@ class Box:
 
         # snapping into place
         found = False
+        size = self.get_logical_size()
+        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         for box in self.canvas.boxes:
             if box == self:
                 continue
-
-            if abs(box.display_x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
-                go_to_x = box.display_x + box.size[0] / 2 - +self.size[0] / 2
+            box_size = box.get_logical_size()
+            if abs(box.x + box_size[0] / 2 - (go_to_x + size[0] / 2)) < box_size[0] / 2 + size[0] / 2:
+                go_to_x = box.x + box_size[0] / 2 - + size[0] / 2
 
                 found = True
         for spider in self.canvas.spiders:
-
-            if abs(spider.display_location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
-                go_to_x = spider.display_x - +self.size[0] / 2
+            if abs(spider.location[0] - (go_to_x + size[0] / 2)) < size[0] / 2 + spider.r:
+                go_to_x = spider.x - +size[0] / 2
 
                 found = True
-
         if found:
             collision = self.find_collisions(go_to_x, go_to_y)
 
@@ -299,6 +299,7 @@ class Box:
 
         self.is_snapped = found
 
+        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         self.move(go_to_x, go_to_y)
         self.move_label()
 
@@ -310,6 +311,7 @@ class Box:
             self.collision_ids.append(connection.circle)
 
     def find_collisions(self, go_to_x, go_to_y):
+        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         self.get_self_collision_ids()
         collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
         collision = list(collision)

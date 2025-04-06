@@ -125,13 +125,13 @@ class Spider(Connection):
 
         if self.canvas.master.is_rotated:
             go_to_x = event.x
-            go_to_y = self.display_y
+            go_to_y = self.x
             move_legal = False
             if not self.is_illegal_move(event.y):
                 go_to_y = event.y
                 move_legal = True
         else:
-            go_to_x = self.display_x
+            go_to_x = self.x
             go_to_y = event.y
             move_legal = False
             if not self.is_illegal_move(event.x):
@@ -140,9 +140,12 @@ class Spider(Connection):
 
         # snapping into place
         found = False
+        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         for box in self.canvas.boxes:
-            if abs(box.display_x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
-                go_to_x = box.display_x + box.size[0] / 2
+            box_size = box.get_logical_size()
+
+            if abs(box.x + box_size[0] / 2 - go_to_x) < box_size[0] / 2 + self.r and move_legal:
+                go_to_x = box.x + box_size[0] / 2
 
                 found = True
         for spider in self.canvas.spiders:
@@ -155,9 +158,8 @@ class Spider(Connection):
                     cancel = True
             if cancel:
                 continue
-
-            if abs(spider.display_location[0] - go_to_x) < self.r + spider.r and move_legal:
-                go_to_x = spider.display_location[0]
+            if abs(spider.location[0] - go_to_x) < self.r + spider.r and move_legal:
+                go_to_x = spider.location[0]
 
                 found = True
         if found:
@@ -180,7 +182,6 @@ class Spider(Connection):
         self.switch_wire_start_and_end()
 
         self.is_snapped = found
-        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         self.update_spider_coords(go_to_x, go_to_y)
 
         self.canvas.coords(self.circle, self.display_x - self.r, self.display_y - self.r, self.display_x + self.r,
@@ -205,6 +206,7 @@ class Spider(Connection):
                 wire.end_connection = end
 
     def find_collisions(self, go_to_x, go_to_y):
+        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
                                                  go_to_y + self.r)
         collision = list(collision)
