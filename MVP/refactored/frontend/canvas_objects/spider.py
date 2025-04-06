@@ -13,8 +13,8 @@ class Spider(Connection):
         self.x = location[0]
         self.y = location[1]
         self.location = location
-        self.rel_x = self.x / self.canvas.winfo_width()
-        self.rel_y = self.y / self.canvas.winfo_height()
+        self.rel_x = self.x / self.canvas.main_diagram.custom_canvas.winfo_width()
+        self.rel_y = self.y / self.canvas.main_diagram.custom_canvas.winfo_height()
         if not id_:
             self.id = id(self)
         else:

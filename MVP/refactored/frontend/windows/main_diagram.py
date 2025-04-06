@@ -171,6 +171,9 @@ class MainDiagram(tk.Tk):
         self.manage_methods = None
         self.import_counter = 0
 
+        self.update()
+        self.minsize(self.winfo_width(), self.winfo_height())
+
     @staticmethod
     def calculate_boxes_json_file_hash():
         with open(const.BOXES_CONF, "r") as file:
@@ -587,14 +590,14 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() - self.tree.winfo_width())
             self.tree.update()
             for canvas in self.canvasses.values():
-                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=True)
+                canvas.__on_configure_move__()
         else:
             self.is_tree_visible = False
             self.custom_canvas.configure(width=self.custom_canvas.winfo_width() + self.tree.winfo_width())
             self.tree.pack_forget()
             self.tree.update()
             for canvas in self.canvasses.values():
-                canvas.update_after_treeview(self.custom_canvas.winfo_width(), self.tree.winfo_width(), to_left=False)
+                canvas.__on_configure_move__()
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
 

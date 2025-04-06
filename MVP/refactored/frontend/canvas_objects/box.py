@@ -18,8 +18,8 @@ class Box:
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
-        self.rel_x = x / self.canvas.winfo_width()
-        self.rel_y = y / self.canvas.winfo_height()
+        self.rel_x = x / self.canvas.main_diagram.custom_canvas.winfo_width()
+        self.rel_y = y / self.canvas.main_diagram.custom_canvas.winfo_height()
         self.start_x = x
         self.start_y = y
         self.size = size
