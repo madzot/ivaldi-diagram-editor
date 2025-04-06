@@ -271,7 +271,7 @@ class Spider(Connection):
 
     def align_wire_ends(self):
         """
-        Method used to check if the Spider has moved to another side of a different Spider and chance variables
+        Method used to check if the Spider has moved to the other side of a connected Spider and change variables
         accordingly.
 
         If the Spider has moved to the other side of a different Spider, then wire start and end connections

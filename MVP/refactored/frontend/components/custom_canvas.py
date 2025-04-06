@@ -210,7 +210,7 @@ class CustomCanvas(tk.Canvas):
 
         Removes highlights from highlighted search objects and toggles search results button.
 
-        :return:
+        :return: None
         """
         for item in self.search_result_highlights:
             item.deselect()
@@ -353,7 +353,7 @@ class CustomCanvas(tk.Canvas):
         :type treeview_width: int
         :param to_left: Boolean determining whether boxes should be moved to the left.
         :type to_left: bool
-        :return:
+        :return: None
         """
         if to_left:
             old_canvas_width = canvas_width + treeview_width
@@ -472,7 +472,7 @@ class CustomCanvas(tk.Canvas):
         :type event: tkinter.Event
         :param scale: stating how much was scaled.
         :type scale: float
-        :return:
+        :return: None
         """
         for corner in self.corners:
             next_location = [
@@ -878,7 +878,6 @@ class CustomCanvas(tk.Canvas):
 
         :param loc: tuple of location that box will be created at.
         :param size: tuple of box size.
-        :type size: tuple
         :param id_: custom ID for the Box that's created.
         :type id_: int
         :param shape: Define the shape of the Box.
@@ -927,7 +926,7 @@ class CustomCanvas(tk.Canvas):
         :param id_: (Optional) id of the spider.
         :param connection_type: (Optional) Type of Connection.
         :type connection_type: ConnectionType
-        :return:
+        :return: Spider tag
         """
         spider = Spider(loc, self, id_=id_, connection_type=connection_type)
         self.spiders.append(spider)
@@ -1256,7 +1255,7 @@ class CustomCanvas(tk.Canvas):
 
     def add_diagram_input_for_sub_d_wire(self, id_=None):
         """
-        Add input if CustomCanvas is sub-diagram
+        Add input if CustomCanvas is sub-diagram.
 
         If the CustomCanvas is a sub-diagram then this will add a left Connection to the source box of the diagram as
         well as to the diagram itself. Returns a tuple of source box Connection tag and diagram Connection tag.
@@ -1270,7 +1269,7 @@ class CustomCanvas(tk.Canvas):
 
     def add_diagram_output_for_sub_d_wire(self, id_=None):
         """
-        Add output if CustomCanvas is sub-diagram
+        Add output if CustomCanvas is sub-diagram.
 
         If the CustomCanvas is a sub-diagram then this will add a right Connection to the source box of the diagram as
         well as to the diagram itself. Returns a tuple of source box Connection tag and diagram Connection tag.
@@ -1477,7 +1476,8 @@ class CustomCanvas(tk.Canvas):
         :type x_length: float
         :param y_length: height of the copied area.
         :type y_length: float
-        :return:
+        :return: Tuple that contains the smaller multiplier of the X and Y scaling factors
+         and the center coordinates of the area
         """
         area_x1 = x - x_length / 2
         area_x2 = x + x_length / 2

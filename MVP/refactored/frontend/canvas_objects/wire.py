@@ -120,7 +120,7 @@ class Wire:
 
     def search_highlight_primary(self):
         """
-        Apply the secondary highlight to the Wire.
+        Apply the primary highlight to the Wire.
 
         Turns the color of Wire to the primary highlight color and adds the Wire to CustomCanvas search highlighted
         objects list.
@@ -134,7 +134,7 @@ class Wire:
         """
         Deselect Wire.
 
-        Adds the Wire to it's end and start Connections. Turns color back to original color.
+        Adds the Wire to its end and start Connections. Turns color back to original color.
 
         :return: None
         """
@@ -148,7 +148,7 @@ class Wire:
         Update Wire.
 
         If no line exists then a line will be created on the CustomCanvas along with labels if needed. If a line already
-        exists then it's location and labels are updated. Wire lines are moved to the lowest layer of CustomCanvas.
+        exists then its location and labels are updated. Wire lines are moved to the lowest layer of CustomCanvas.
 
         :return: None
         """

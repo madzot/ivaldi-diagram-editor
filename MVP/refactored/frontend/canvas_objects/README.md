@@ -100,7 +100,7 @@ Below is a description of all available variables in the Connection class. It wi
             color (str): (Optional) String of color name/hex code. Default value is black.
 
     .move_to(location)
-        Updates the canvas location of the Connection and updates the location variable
+        Updates the canvas location of the Connection and updates the location variable.
 
         Parameters:
             location (tuple): Tuple of x, y coordinates that Connection will move to.
@@ -235,15 +235,26 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
 | # **Optional params** |              |                                                                                                                                                        |
 | id_                   | int          | An ID for the Wire. Default value is None.                                                                                                             |
 | is_temporary          | boolean      | A boolean that tells whether the Wire created is a temporary Wire used for Wire pulling. If this is True it will disable backend for the created Wire. |
+| wire_type             | WireType     | The type of the Wire that is created. Defines the style of the Wire. Default value is WireType.GENERIC.                                                |
 
 ### Wire variables
 
 | **Variable**           | **Type**     | **Description**                                                             |
 |------------------------|--------------|-----------------------------------------------------------------------------|
+| canvas                 | CustomCanvas | CustomCanvas that the Wire is created on.                                   |
 | context_menu           | tkinter.Menu | The Menu that is used for creating a context menu on the Wire.              |
+| start_connection       | Connection   | The start Connection of the Wire.                                           |
+| end_connection         | Connection   | The end Connection of the Wire.                                             |
 | line                   | int          | A tag that represents the line created on the CustomCanvas.                 |
 | wire_width             | int          | An integer that controls the width of the line created on the CustomCanvas. |
 | id                     | int          | An ID that represents the Wire.                                             |
+| receiver               | Receiver     | Receiver object used to send information to the backend.                    |
+| is_temporary           | bool         | Boolean stating if the Wire is created for Wire drawing purposes.           |
+| type                   | WireType     | Type of Wire.                                                               |
+| color                  | str          | Color of the Wire.                                                          |
+| dash_style             | str          | Dash style of the Wire.                                                     |
+| end_label              | int          | Tag representing the label at the end of the Wire.                          |
+| start_label            | int          | Tag representing the label at the end of the Wire.                          |
 |                        |              |                                                                             |
 | # **Static variables** |              |                                                                             |
 | define_wires           | dict         | Holds the types that have had names defined. Key is WireType, value is str. |
@@ -421,9 +432,12 @@ The coordinates of a Box are the top left corner for it.
     .close_menu()
         Closes context menu.
 
-    .on_press()
+    .on_press(event)
         Handles pressing event on Box. Clears selection, selects box. Sets start_(x/y) and (x/y)_dif variables
         for movement.
+
+        Parameters:
+            event (tkinter.Event): Event object passed from key press.
 
     .on_control_press()
         Handles ctrl + button-1 on Box. Will select or unselect current Box depending on previous selection status.

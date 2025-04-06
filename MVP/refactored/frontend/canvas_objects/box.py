@@ -684,7 +684,7 @@ class Box:
         """
         Deselect the Box.
 
-        Turns the outline of the Box to black along with it's Connections.
+        Turns the outline of the Box to black along with its Connections.
 
         :return: None
         """

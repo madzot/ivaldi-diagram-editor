@@ -8,7 +8,7 @@ class Connection:
     Connection.
 
     A CustomCanvas widget that allows a Wire to be connected to it. This object is represented as a circle on
-    CustomCanvas. It is used as diagram inputs and outputs as well as Box input and outputs.
+    CustomCanvas. It is used as diagram inputs and outputs, as well as Box inputs and outputs.
     """
 
     active_types = 1
@@ -322,7 +322,7 @@ class Connection:
 
         :param wire: Optional parameter that specifies what wire will be removed from the Connection
         :type wire: Wire
-        :return:
+        :return: None
         """
         if self.wire:
             self.wire = None
