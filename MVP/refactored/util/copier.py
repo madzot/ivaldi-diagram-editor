@@ -19,7 +19,7 @@ class Copier:
             Copier.copy_box(old_box, sub_diagram_box)
             sub_diagram_box.sub_diagram = old_box.sub_diagram
             if sub_diagram_box.sub_diagram:
-                canvas.itemconfig(sub_diagram_box.rect, fill="#dfecf2")
+                canvas.itemconfig(sub_diagram_box.shape, fill="#dfecf2")
 
             sub_diagram_box.locked = old_box.locked
 

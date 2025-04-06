@@ -57,7 +57,7 @@ class Box:
         else:
             self.id = id_
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.rect = self.create_shape()
+        self.shape = self.create_shape()
 
         self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                                                           self.x + self.size[0], self.y + self.size[1],
@@ -74,7 +74,7 @@ class Box:
 
         self.is_snapped = False
 
-        self.collision_ids = [self.rect, self.resize_handle]
+        self.collision_ids = [self.shape, self.resize_handle]
 
     def set_id(self, id_):
         """
@@ -96,17 +96,17 @@ class Box:
 
         :return: None
         """
-        self.canvas.tag_bind(self.rect, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
-        self.canvas.tag_bind(self.rect, '<ButtonPress-1>', self.on_press)
-        self.canvas.tag_bind(self.rect, '<B1-Motion>', self.on_drag)
-        self.canvas.tag_bind(self.rect, '<ButtonPress-3>', self.show_context_menu)
+        self.canvas.tag_bind(self.shape, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
+        self.canvas.tag_bind(self.shape, '<ButtonPress-1>', self.on_press)
+        self.canvas.tag_bind(self.shape, '<B1-Motion>', self.on_drag)
+        self.canvas.tag_bind(self.shape, '<ButtonPress-3>', self.show_context_menu)
         self.canvas.tag_bind(self.resize_handle, '<ButtonPress-1>', self.on_resize_press)
         self.canvas.tag_bind(self.resize_handle, '<B1-Motion>', self.on_resize_drag)
         self.canvas.tag_bind(self.resize_handle, '<Enter>', lambda _: self.canvas.on_hover(self))
         self.canvas.tag_bind(self.resize_handle, '<Leave>', lambda _: self.canvas.on_leave_hover())
-        self.canvas.tag_bind(self.rect, '<Double-Button-1>', lambda _: self.handle_double_click())
-        self.canvas.tag_bind(self.rect, '<Enter>', lambda _: self.canvas.on_hover(self))
-        self.canvas.tag_bind(self.rect, '<Leave>', lambda _: self.canvas.on_leave_hover())
+        self.canvas.tag_bind(self.shape, '<Double-Button-1>', lambda _: self.handle_double_click())
+        self.canvas.tag_bind(self.shape, '<Enter>', lambda _: self.canvas.on_hover(self))
+        self.canvas.tag_bind(self.shape, '<Leave>', lambda _: self.canvas.on_leave_hover())
 
     def show_context_menu(self, event):
         """
@@ -284,7 +284,7 @@ class Box:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self.canvas.main_diagram,
                                             id_=self.id, highlightthickness=0,
                                             diagram_source_box=self)
-            self.canvas.itemconfig(self.rect, fill="#dfecf2")
+            self.canvas.itemconfig(self.shape, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text
                 if not name:
@@ -418,7 +418,7 @@ class Box:
 
         :return: None
         """
-        self.collision_ids = [self.rect, self.resize_handle]
+        self.collision_ids = [self.shape, self.resize_handle]
         if self.label:
             self.collision_ids.append(self.label)
         for connection in self.connections:
@@ -651,7 +651,7 @@ class Box:
 
         :return: None
         """
-        self.canvas.itemconfig(self.rect, outline=const.SELECT_COLOR)
+        self.canvas.itemconfig(self.shape, outline=const.SELECT_COLOR)
         [c.select() for c in self.connections]
 
     def search_highlight_secondary(self):
@@ -663,7 +663,7 @@ class Box:
 
         :return: None
         """
-        self.canvas.itemconfig(self.rect, outline=const.SECONDARY_SEARCH_COLOR)
+        self.canvas.itemconfig(self.shape, outline=const.SECONDARY_SEARCH_COLOR)
         [c.search_highlight_secondary() for c in self.connections]
         self.canvas.search_result_highlights.append(self)
 
@@ -676,7 +676,7 @@ class Box:
 
         :return: None
         """
-        self.canvas.itemconfig(self.rect, outline=const.PRIMARY_SEARCH_COLOR)
+        self.canvas.itemconfig(self.shape, outline=const.PRIMARY_SEARCH_COLOR)
         [c.search_highlight_primary() for c in self.connections]
         self.canvas.search_result_highlights.append(self)
 
@@ -688,7 +688,7 @@ class Box:
 
         :return: None
         """
-        self.canvas.itemconfig(self.rect, outline=const.BLACK)
+        self.canvas.itemconfig(self.shape, outline=const.BLACK)
         [c.deselect() for c in self.connections]
 
     def lock_box(self):
@@ -734,9 +734,9 @@ class Box:
         :return: None
         """
         if self.shape == const.RECTANGLE:
-            self.canvas.coords(self.rect, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
+            self.canvas.coords(self.shape, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
         if self.shape == const.TRIANGLE:
-            self.canvas.coords(self.rect,
+            self.canvas.coords(self.shape,
                                self.x + self.size[0], self.y + self.size[1] / 2,
                                self.x, self.y,
                                self.x, self.y + self.size[1])
@@ -900,7 +900,7 @@ class Box:
         for c in self.connections:
             c.delete()
 
-        self.canvas.delete(self.rect)
+        self.canvas.delete(self.shape)
         self.canvas.delete(self.resize_handle)
 
         if self in self.canvas.boxes:

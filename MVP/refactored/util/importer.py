@@ -80,7 +80,7 @@ class Importer:
                     name = str(sub_diagram.id)
                 sub_diagram.set_name(name)
                 canvas.main_diagram.add_canvas(sub_diagram)
-                canvas.itemconfig(new_box.rect, fill="#dfecf2")
+                canvas.itemconfig(new_box.shape, fill="#dfecf2")
 
             new_box.lock_box()
 
@@ -172,7 +172,7 @@ class Importer:
                     name = str(sub_diagram.id)
                 sub_diagram.set_name(name)
                 canvas.main_diagram.add_canvas(sub_diagram)
-                canvas.itemconfig(new_box.rect, fill="#dfecf2")
+                canvas.itemconfig(new_box.shape, fill="#dfecf2")
             new_box.lock_box()
             self.random_id = False
             self.id_randomize = {}

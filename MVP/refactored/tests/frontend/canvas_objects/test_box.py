@@ -135,12 +135,12 @@ class BoxTests(TestMainDiagram):
         box = Box(self.custom_canvas, 100, 100)
 
         expected_start_color = const.BLACK
-        actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        actual_start_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_start_color, actual_start_color)
 
         box.select()
         expected_selected_color = const.SELECT_COLOR
-        actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        actual_selected_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_selected_color, actual_selected_color)
 
     def test__deselect__turns_rect_outline_black(self):
@@ -148,12 +148,12 @@ class BoxTests(TestMainDiagram):
 
         box.select()
         expected_selected_color = const.SELECT_COLOR
-        actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        actual_selected_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_selected_color, actual_selected_color)
 
         box.deselect()
         expected_start_color = const.BLACK
-        actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        actual_start_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_start_color, actual_start_color)
 
     def test__move__updates_x_y(self):

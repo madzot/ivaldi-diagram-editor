@@ -24,28 +24,31 @@ Connections have multiple different types that are differentiated by a different
 |                       |                | 
 | # **Optional params** |                |                                                                                                                                                                                                                                                                                                                     |
 | r                     | int            | Radius of the Connection.<br/> Default value is `5`.                                                                                                                                                                                                                                                                |
-| id_                   | int            | ID.<br/> Default value is `None`.                                                                                                                                                                                                                                                                                   |
+| id_                   | int            | ID.                                                                                                                                                                                                                                                                                                                 |
 | connection_type       | ConnectionType | ConnectionType that will define the outline style of the Connection. Default value is ConnectionType.GENERIC.                                                                                                                                                                                                       |
 
 ### Connection variables
 
 Below is a description of all available variables in the Connection class. It will not include variables of Connection parameters.
 
-| **Variable**        | **Type**       | **Description**                                                                                                                                                       |
-|---------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| canvas              | CustomCanvas   | CustomCanvas object the Connection is created on.                                                                                                                     |
-| box                 | Box            | Box object that Connection is attached to. This will be `None` if the Connection is root diagram input/output or a Spider.                                            |
-| index               | int            | Connection index.                                                                                                                                                     |
-| side                | str            | String that describes what side the Connection is on. `left` and `right` for Box sides, but flipped for diagram input/output. `Spider` if the Connection is a Spider. |
-| location            | list           | List containing x, y coordinates of the Connection.                                                                                                                   |
-| type                | ConnectionType | ConnectionType that defines the style of the Connection.                                                                                                              |
-| wire                | Wire           | Wire object that is connected to the Connection. `None` if no wire.                                                                                                   |
-| has_wire            | boolean        | Boolean that is True if a wire is connected to the Connection. Otherwise False.                                                                                       |
-| r                   | int            | Radius of the circle.                                                                                                                                                 |
-| id                  | int            | Connection ID.                                                                                                                                                        |
-| context_menu        | tkinter.Menu   | Used to create a context menu for Connections.                                                                                                                        |
-| circle              | int            | CustomCanvas tagOrId for the circle that represents a Connection.                                                                                                     |
-| width_between_boxes | int            | Integer that is used to describe how close to the x axis another connected Connection can come before being unable to move closer.                                    |
+| **Variable**           | **Type**       | **Description**                                                                                                                                                       |
+|------------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| canvas                 | CustomCanvas   | CustomCanvas object the Connection is created on.                                                                                                                     |
+| box                    | Box            | Box object that Connection is attached to. This will be `None` if the Connection is root diagram input/output or a Spider.                                            |
+| index                  | int            | Connection index.                                                                                                                                                     |
+| side                   | str            | String that describes what side the Connection is on. `left` and `right` for Box sides, but flipped for diagram input/output. `Spider` if the Connection is a Spider. |
+| location               | list           | List containing x, y coordinates of the Connection.                                                                                                                   |
+| type                   | ConnectionType | ConnectionType that defines the style of the Connection.                                                                                                              |
+| wire                   | Wire           | Wire object that is connected to the Connection. `None` if no wire.                                                                                                   |
+| has_wire               | boolean        | Boolean that is True if a wire is connected to the Connection. Otherwise False.                                                                                       |
+| r                      | int            | Radius of the circle.                                                                                                                                                 |
+| id                     | int            | Connection ID.                                                                                                                                                        |
+| context_menu           | tkinter.Menu   | Used to create a context menu for Connections.                                                                                                                        |
+| circle                 | int            | CustomCanvas tagOrId for the circle that represents a Connection.                                                                                                     |
+| width_between_boxes    | int            | Integer that is used to describe how close to the x axis another connected Connection can come before being unable to move closer.                                    |
+|                        |                |                                                                                                                                                                       |
+| # **Static variables** |                |                                                                                                                                                                       |
+| active_types           | int            | States how many different types are currently active in the diagram.                                                                                                  |
 
 
 ### Connection functions
@@ -89,11 +92,12 @@ Below is a description of all available variables in the Connection class. It wi
     .delete_from_parent()
         Activated from choosing 'Delete Connection' in the context menu. Deletes the selected Connection from Canvas.
 
-    .color_black()
-        Changes Connection color to black.
+    .change_color(color)
+        Change the color of the Connection circle.
+        Accepts hex code and tkinter built in colors.
 
-    .color_green()
-        Changes Connection color to green.
+        Parameters:
+            color (str): (Optional) String of color name/hex code. Default value is black.
 
     .move_to(location)
         Updates the canvas location of the Connection and updates the location variable
@@ -234,16 +238,17 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
 
 ### Wire variables
 
-| **Variable** | **Type**     | **Description**                                                             |
-|--------------|--------------|-----------------------------------------------------------------------------|
-| context_menu | tkinter.Menu | The Menu that is used for creating a context menu on the Wire.              |
-| line         | int          | A tag that represents the line created on the CustomCanvas.                 |
-| wire_width   | int          | An integer that controls the width of the line created on the CustomCanvas. |
-| id           | int          | An ID that represents the Wire.                                             |
+| **Variable**           | **Type**     | **Description**                                                             |
+|------------------------|--------------|-----------------------------------------------------------------------------|
+| context_menu           | tkinter.Menu | The Menu that is used for creating a context menu on the Wire.              |
+| line                   | int          | A tag that represents the line created on the CustomCanvas.                 |
+| wire_width             | int          | An integer that controls the width of the line created on the CustomCanvas. |
+| id                     | int          | An ID that represents the Wire.                                             |
+|                        |              |                                                                             |
+| # **Static variables** |              |                                                                             |
+| define_wires           | dict         | Holds the types that have had names defined. Key is WireType, value is str. |
 
 ### Wire functions
-
-    Wire.
 
     .delete(action)
         Deletes Wire and removes itself from it's Connections and deletes the line in CustomCanvas.
@@ -265,6 +270,10 @@ The Wire type can not be manually changed, it is defined by the type of Connecti
         
     .update()
         Creates or moves the Wire line as well as labels at wire ends if type name is defined.
+
+    .update_wire_label()
+        Update Wire labels.
+        Creates and moves labels at Wire ends.
 
     .show_context_menu(event)
         Creates and displays a context menu for the Wire. 
@@ -324,16 +333,16 @@ The coordinates of a Box are the top left corner for it.
 
 ### Box parameters
 
-| **Parameter**         | **Type**     | **Description**                                                                                                                 |
-|-----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------|
-| canvas                | CustomCanvas | The CustomCanvas object that the Box will be drawn on.                                                                          |
-| x                     | int          | X coordinate for the Box.                                                                                                       |
-| y                     | int          | Y coordinate for the Box.                                                                                                       |
-|                       |              |                                                                                                                                 |
-| # **Optional params** |              |                                                                                                                                 |
-| size                  | tuple        | A list containing the height and width of the box. Default value is (60, 60)                                                    |
-| id_                   | int          | Box ID. If no value is given then Box will receive a random ID.                                                                 |
-| shape                 | string       | String describing the shape of the Box. Default value is "rectangle".<br/> Usable values for this are: `rectangle`,  `triangle` |
+| **Parameter**         | **Type**     | **Description**                                                                                                                    |
+|-----------------------|--------------|------------------------------------------------------------------------------------------------------------------------------------|
+| canvas                | CustomCanvas | The CustomCanvas object that the Box will be drawn on.                                                                             |
+| x                     | int          | X coordinate for the Box.                                                                                                          |
+| y                     | int          | Y coordinate for the Box.                                                                                                          |
+|                       |              |                                                                                                                                    |
+| # **Optional params** |              |                                                                                                                                    |
+| size                  | tuple        | A list containing the height and width of the box. Default value is (60, 60)                                                       |
+| id_                   | int          | Box ID. If no value is given then Box will receive a random ID.                                                                    |
+| shape                 | string       | String describing the shape of the Box. Default value is constants.RECTANGLE.<br/> Usable values for this are: RECTANGLE, TRIANGLE |
 
 
 ### Box variables
@@ -465,7 +474,7 @@ The coordinates of a Box are the top left corner for it.
             new_label (string): (Optional) If this is given then the application will not ask the user for input and
                                            will change the label to the given string.
 
-    .change_label()
+    .update_label()
         Creates or updates a label or label text.
 
     .set_label(new_label)
@@ -539,7 +548,7 @@ The coordinates of a Box are the top left corner for it.
             id_ (int): ID that will be added to the Connection.
             connection_type (ConnectionType): The type that will be added to the Connection.
 
-    .add_right_connection()
+    .add_right_connection(id_ connection_type)
         Adds a Connection to the right side of the Box. The type of the Connection can be specified.
 
         Parameters:

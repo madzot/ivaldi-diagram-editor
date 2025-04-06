@@ -26,7 +26,7 @@ class Spider(Connection):
         :type connection_type: ConnectionType
         """
         self.r = 10
-        super().__init__(None, 0, "spider", location, canvas, self.r, connection_type=connection_type)
+        super().__init__(None, 0, const.SPIDER, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
         self.x = location[0]
         self.y = location[1]

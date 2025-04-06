@@ -1338,7 +1338,7 @@ class CustomCanvas(tk.Canvas):
 
     def remove_specific_diagram_input(self, con):
         """
-         Remove a specified Connection from diagram inputs.
+        Remove a specified Connection from diagram inputs.
 
         :param con: Connection that will be removed.
         :return: None

@@ -21,7 +21,6 @@ inside MainDiagram
 | id_                   | int          | Custom ID for canvas.                                                                                                                                                           |
 | is_search             | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
 | diagram_source_box    | Box          | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |
-| parent_diagram        | CustomCanvas | The parent diagram of this CustomCanvas. `None` if root diagram. Used only when CustomCanvas is a sub-diagram.                                                                  |
 | **kwargs              |              | Kwargs for `tkinter.Canvas`                                                                                                                                                     |
 
 
@@ -396,7 +395,6 @@ inside MainDiagram
         
         Parameters:
             con (Connection): Diagram input Connection that will be removed.
-
 
     .remove_specific_diagram_output(con)
         Remove a specified Connection from diagram outputs.

@@ -50,7 +50,7 @@ class Selector:
         if self.selecting:
             selected_coordinates = self.canvas.coords(self.canvas.select_box)
 
-            self.selected_boxes = [box for box in boxes if self.is_within_selection(box.rect, selected_coordinates)]
+            self.selected_boxes = [box for box in boxes if self.is_within_selection(box.shape, selected_coordinates)]
 
             self.selected_spiders = [spider for spider in spiders if
                                      self.is_within_selection_point(spider.location, selected_coordinates)]

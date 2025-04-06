@@ -239,8 +239,9 @@ class Connection:
 
     def change_color(self, color=const.BLACK):
         """
-        Change the color of the connection. Without a parameter it will turn the Connection to black.
+        Change the color of the connection.
 
+        Without a parameter it will turn the Connection to black.
         The function allows usage of all Tkinter built in colors as well as hex code.
         It will change the 'fill' color of the item.
 
