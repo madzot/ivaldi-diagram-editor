@@ -40,7 +40,6 @@ class ConnectionTests(TestApplication):
         self.assertIsNone(connection.wire)
         self.assertFalse(connection.has_wire)
         self.assertEqual(5, connection.r)
-        self.assertIsNone(connection.node)
         self.assertEqual(1, connection.width_between_boxes)
         self.assertEqual(ConnectionType.GENERIC, connection.type)
         self.assertTrue(bind_events_mock.called)
@@ -112,7 +111,7 @@ class ConnectionTests(TestApplication):
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.update')
     def test__change_type__updates_tied_con_if_found(self, update_mock):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, False)
+        sub_diagram = CustomCanvas(self.app, self.app, diagram_source_box=box)
         connection = Connection(box, 0, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -134,7 +133,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__returns_self_if_input_and_output_differ(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, False)
+        sub_diagram = CustomCanvas(self.app, self.app, diagram_source_box=box)
         connection = Connection(box, 0, const.LEFT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -146,7 +145,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_none_if_inner_connection_has_wire(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, False)
+        sub_diagram = CustomCanvas(self.app, self.app, diagram_source_box=box)
         connection = Connection(box, 0, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -159,7 +158,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_io_if_outer_connection_has_no_wire(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, False)
+        sub_diagram = CustomCanvas(self.app, self.app, diagram_source_box=box)
         connection = Connection(box, 0, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -171,7 +170,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_self_if_index_differ(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, False)
+        sub_diagram = CustomCanvas(self.app, self.app, diagram_source_box=box)
         connection = Connection(box, 2, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -184,7 +183,7 @@ class ConnectionTests(TestApplication):
 
     def test__get_tied_connection__return_io_with_correct_index(self):
         box = Box(self.custom_canvas, 10, 10)
-        sub_diagram = CustomCanvas(self.app, box, self.app, False)
+        sub_diagram = CustomCanvas(self.app, self.app, diagram_source_box=box)
         connection = Connection(box, 1, const.RIGHT, (111, 222), self.custom_canvas)
 
         box.sub_diagram = sub_diagram
@@ -203,7 +202,7 @@ class ConnectionTests(TestApplication):
     def test__show_context_menu__shows_if_no_box(self, tk_popup_mock, add_command_mock,
                                                  close_menu_mock, add_type_choice_mock):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
-        connection.wire = Wire(self.custom_canvas, connection, connection, temporary=False)
+        connection.wire = Wire(self.custom_canvas, connection, connection, is_temporary=False)
         event = tkinter.Event()
         event.x_root, event.y_root = 10, 10
         connection.show_context_menu(event)
@@ -456,22 +455,22 @@ class ConnectionTests(TestApplication):
 
         self.assertEqual(1, delete_mock.call_count)
 
-    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.delete_self')
+    @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.delete')
     @patch('MVP.refactored.frontend.components.custom_canvas.CustomCanvas.delete')
-    def test__delete__has_wire_calls_delete_twice(self, delete_mock, delete_self_mock):
+    def test__delete__has_wire_calls_delete_twice(self, delete_mock, delete_wire_mock):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, None, temporary=True)
+        wire = Wire(self.custom_canvas, connection, None, is_temporary=True)
         connection.wire = wire
         connection.has_wire = True
         connection.delete()
 
         self.assertEqual(2, delete_mock.call_count)
-        self.assertEqual(1, delete_self_mock.call_count)
+        self.assertEqual(1, delete_wire_mock.call_count)
 
     def test__add_wire__adds_wire(self):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
         connection2 = Connection(None, 1011, const.RIGHT, (222, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, connection2, temporary=True)
+        wire = Wire(self.custom_canvas, connection, connection2, is_temporary=True)
         self.assertIsNone(connection.wire)
         self.assertFalse(connection.has_wire)
 
@@ -482,8 +481,8 @@ class ConnectionTests(TestApplication):
     def test__add_wire__does_not_change_wire_if_connection_has_wire(self):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
         connection2 = Connection(None, 1011, const.RIGHT, (222, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, connection2, temporary=True)
-        wire2 = Wire(self.custom_canvas, connection2, connection, temporary=True)
+        wire = Wire(self.custom_canvas, connection, connection2, is_temporary=True)
+        wire2 = Wire(self.custom_canvas, connection2, connection, is_temporary=True)
 
         connection.add_wire(wire)
 
@@ -499,7 +498,7 @@ class ConnectionTests(TestApplication):
     def test__remove_wire__removes_wire(self):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
         connection2 = Connection(None, 1011, const.RIGHT, (222, 222), self.custom_canvas)
-        wire = Wire(self.custom_canvas, connection, connection2, temporary=True)
+        wire = Wire(self.custom_canvas, connection, connection2, is_temporary=True)
 
         connection.add_wire(wire)
         self.assertEqual(wire, connection.wire)
