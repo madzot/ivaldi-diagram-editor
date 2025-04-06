@@ -18,21 +18,13 @@ class Connection:
         Connection constructor.
 
         :param box: Box that the connection is attached to.
-        :type box: Box
         :param index: Index of the Connection, shows index of Connection in the same place
-        :type index: int
         :param side: String that states what side the Connection is created on.
-        :type side: str
         :param location: Tuple of coordinates that the Connection will be created at.
-        :type location: tuple
         :param canvas: CustomCanvas that the Connection is created on.
-        :type canvas: CustomCanvas
         :param r: (Optional) Radius of the circle that represents the Connection.
-        :type r: int
         :param id_: (Optional) ID of Connection
-        :type id_: int
         :param connection_type: (Optional) Type of Connection.
-        :type connection_type: ConnectionType
         """
         self.canvas = canvas
         self.box = box  # None if connection is diagram input/output/spider
@@ -93,7 +85,6 @@ class Connection:
         Change type of the Connection to selected type and update style.
 
         :param type_id: Integer value of the ConnectionType to change to.
-        :type type_id: int
         :return: None
         """
         tied_con = self.get_tied_connection()
@@ -140,7 +131,6 @@ class Connection:
         Create and display a context menu for the selected Connection.
 
         :param event: Event sent from keybind. Location used for context menu to be created at.
-        :type event: tkinter.Event
         :return: None
         """
         if not self.wire or not self.wire.is_temporary:
@@ -246,7 +236,6 @@ class Connection:
         It will change the 'fill' color of the item.
 
         :param color: string of color name.
-        :type color: str
         """
         self.canvas.itemconfig(self.circle, fill=color)
 
@@ -257,7 +246,6 @@ class Connection:
         Takes a coordinate location and moves it to the given location on the canvas.
 
         :param location: tuple of coordinates. (x, y)
-        :type location: tuple
         :return: None
         """
         self.canvas.coords(self.circle, location[0] - self.r, location[1] - self.r, location[0] + self.r,
@@ -298,7 +286,6 @@ class Connection:
         A Wire will be attached to the Connection, accessible through the wire class variable.
 
         :param wire: Wire that will be added to the Connection.
-        :type wire: Wire
         :return: None
         """
         if not self.has_wire and self.wire is None:
@@ -321,7 +308,6 @@ class Connection:
         only in the Spider version of this function.
 
         :param wire: Optional parameter that specifies what wire will be removed from the Connection
-        :type wire: Wire
         :return: None
         """
         if self.wire:

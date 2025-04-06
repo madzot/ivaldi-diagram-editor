@@ -140,7 +140,6 @@ class Toolbar(ttk.Frame):
 
         :param import_: (Optional) Boolean that specifies whether a new diagram should be importer after deletion of
         previous diagram.
-        :type import_: bool
         :return: None
         """
         root_canvas = list(self.main_diagram.canvasses.items())[0][1]

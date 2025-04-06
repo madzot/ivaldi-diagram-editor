@@ -35,14 +35,10 @@ class CustomCanvas(tk.Canvas):
         :param master: Tk object that CustomCanvas will be displayed in.
         :param main_diagram: MainDiagram object.
         :param id_: (Optional) Unique ID for CustomCanvas.
-        :type id_: int
         :param is_search: (Optional) Boolean for stating if CustomCanvas is used for searching.
-        :type is_search: bool
         :param diagram_source_box: (Optional) Box object that CustomCanvas belongs to. Existing if CustomCanvas is a
         sub-diagram.
-        :type diagram_source_box: Box
         :param parent_diagram: (Optional) Parent diagram. CustomCanvas object.
-        :type parent_diagram: CustomCanvas
         :param kwargs: Other keyword arguments that are used for tkinter.Canvas.
         """
         super().__init__(master, **kwargs)
@@ -172,7 +168,6 @@ class CustomCanvas(tk.Canvas):
         Activates `.on_resize_scroll(event)` on the item that is being hovered over.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if self.hover_item:
@@ -253,7 +248,6 @@ class CustomCanvas(tk.Canvas):
         Based on Event object will move objects horizontally left or right.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if event.keysym == "Right":
@@ -285,7 +279,6 @@ class CustomCanvas(tk.Canvas):
         Based on Event object will move objects vertically up or down.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if event.keysym == "Down":
@@ -314,9 +307,7 @@ class CustomCanvas(tk.Canvas):
         Move boxes and spiders on the CustomCanvas along the x or y-axis.
 
         :param attr: attribute to move items on.
-        :type attr: str
         :param multiplier: move towards positive or negative coordinates.
-        :type multiplier: int
         :return: None
         """
         for spider in self.spiders:
@@ -345,11 +336,8 @@ class CustomCanvas(tk.Canvas):
         Update item locations on the CustomCanvas to account for new space created or taken away by the treeview.
 
         :param canvas_width: current canvas width.
-        :type canvas_width: int
         :param treeview_width: Treeview width if open.
-        :type treeview_width: int
         :param to_left: Boolean determining whether boxes should be moved to the left.
-        :type to_left: bool
         :return: None
         """
         if to_left:
@@ -379,7 +367,6 @@ class CustomCanvas(tk.Canvas):
         Possible actions are finishing selection, cancelling wire pulling and showing context menu.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if self.selector.selecting:
@@ -396,7 +383,6 @@ class CustomCanvas(tk.Canvas):
         Will change the label and name of the CustomCanvas.
 
         :param name: new name
-        :type name: str
         :return: None
         """
         w = self.winfo_width()
@@ -425,7 +411,6 @@ class CustomCanvas(tk.Canvas):
         Activated on scrolling on CustomCanvas. Cannot zoom out from starting point.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if event.state & 0x4:
@@ -464,11 +449,8 @@ class CustomCanvas(tk.Canvas):
         Update/move all objects to new location after zooming.
 
         :param denominator: Denominator used for calculating object movement.
-        :type denominator: float
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :param scale: stating how much was scaled.
-        :type scale: float
         :return: None
         """
         for corner in self.corners:
@@ -517,11 +499,8 @@ class CustomCanvas(tk.Canvas):
         Check whether zooming is allowed.
 
         :param x: x coordinate of where zooming out is done.
-        :type x: int
         :param y: y coordinate of where zooming in is done.
-        :type y: int
         :param denominator: denominator used for calculating object movement.
-        :type denominator: float
         :return: Tuple of 4 variables. If movement is allowed, needed x and y offset, and if corners are in visual
         corners.
         """
@@ -587,7 +566,6 @@ class CustomCanvas(tk.Canvas):
         Menu will be created at event location.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
@@ -617,7 +595,6 @@ class CustomCanvas(tk.Canvas):
         Return boolean of if event location is overlapping with a canvas object.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: Boolean
         """
         return bool(self.find_overlapping(event.x, event.y - 1, event.x, event.y + 1))
@@ -628,7 +605,6 @@ class CustomCanvas(tk.Canvas):
         Start a selection box from event location.
 
         :param event: tkinter.Event.
-        :type event: tkinter.Event
         :return: None
         """
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
@@ -651,7 +627,6 @@ class CustomCanvas(tk.Canvas):
         Update selection area.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
@@ -671,7 +646,6 @@ class CustomCanvas(tk.Canvas):
         Start quick pulling wire from event, if event is overlapping with a Connection.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if not self.quick_pull and not self.draw_wire_mode:
@@ -688,7 +662,6 @@ class CustomCanvas(tk.Canvas):
         Return Connection or None that is at event location.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: Connection or None
         """
         if self.draw_wire_mode or self.quick_pull:
@@ -707,9 +680,7 @@ class CustomCanvas(tk.Canvas):
         Handle click on canvas.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :param connection: (Optional) Connection that is clicked on.
-        :type connection: Connection
         :return: None
         """
         if self.selector.selecting:
@@ -724,7 +695,6 @@ class CustomCanvas(tk.Canvas):
         Start creating a temporary Wire to the mouse location from a chosen start Connection, during draw wire mode.
 
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if self.draw_wire_mode and self.pulling_wire:
@@ -746,9 +716,7 @@ class CustomCanvas(tk.Canvas):
         Redirects to other functions based on application state.
 
         :param c: Connection that was clicked on.
-        :type c: Connection
         :param event: tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if c.has_wire and not c.is_spider() or not self.draw_wire_mode:
@@ -767,9 +735,7 @@ class CustomCanvas(tk.Canvas):
         event location.
 
         :param connection: Connection object that wire is started from.
-        :type connection: Connection
         :param event: (Optional) tkinter.Event
-        :type event: tkinter.Event
         :return: None
         """
         if connection.side == const.SPIDER or not connection.has_wire:
@@ -792,9 +758,7 @@ class CustomCanvas(tk.Canvas):
         Before creating a non-temporary Wire legality checking is done, if this does not pass a Wire is not created.
 
         :param connection: Connection that is the End of a new Wire.
-        :type connection: Connection
         :param bypass_legality_check: boolean stating if legality of Wire creation should be checked.
-        :type bypass_legality_check: bool
         :return: None
         """
         if connection == self.current_wire_start:
@@ -876,9 +840,7 @@ class CustomCanvas(tk.Canvas):
         :param loc: tuple of location that box will be created at.
         :param size: tuple of box size.
         :param id_: custom ID for the Box that's created.
-        :type id_: int
         :param shape: Define the shape of the Box.
-        :type shape: str
         :return: Box tag.
         """
         if shape is None:
@@ -904,7 +866,6 @@ class CustomCanvas(tk.Canvas):
         Get BoxFunction object based on specified Box code.
 
         :param box_id: ID of the Box that BoxFunction is created for.
-        :type box_id: int
         :return: BoxFunction or None
         """
         box = self.get_box_by_id(box_id)
@@ -922,7 +883,6 @@ class CustomCanvas(tk.Canvas):
         :param loc: (Optional) location of the spider.
         :param id_: (Optional) id of the spider.
         :param connection_type: (Optional) Type of Connection.
-        :type connection_type: ConnectionType
         :return: Spider tag
         """
         spider = Spider(loc, self, id_=id_, connection_type=connection_type)
@@ -1387,7 +1347,6 @@ class CustomCanvas(tk.Canvas):
         Set box_shape variable.
 
         :param shape: Shape that default Box creation will be set to
-        :type shape: str
         :return: None
         """
         self.box_shape = shape
@@ -1444,13 +1403,9 @@ class CustomCanvas(tk.Canvas):
         in.
 
         :param x: x coordinate of the middle of the replacing area.
-        :type x: float
         :param y: y coordinate of the middle of the replacing area.
-        :type y: float
         :param x_length: width of the copied area.
-        :type x_length: float
         :param y_length: height of the copied area.
-        :type y_length: float
         :return: Tuple that contains the smaller multiplier of the X and Y scaling factors
          and the center coordinates of the area
         """

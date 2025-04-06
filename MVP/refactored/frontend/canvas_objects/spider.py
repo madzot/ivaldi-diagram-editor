@@ -17,13 +17,9 @@ class Spider(Connection):
         Spider constructor.
 
         :param location: Tuple of coordinates for creation. Ex: (10, 20)
-        :type location: tuple
         :param canvas: CustomCanvas object that Spider will be created on.
-        :type canvas: CustomCanvas
         :param id_: Optional id parameter
-        :type id_: int
         :param connection_type: ConnectionType that will define the style of the Connection.
-        :type connection_type: ConnectionType
         """
         self.r = 10
         super().__init__(None, 0, const.SPIDER, location, canvas, self.r, connection_type=connection_type)
@@ -77,7 +73,6 @@ class Spider(Connection):
         Create and display a context menu for the selected Spider.
 
         :param event: Event sent from keybind. Location used for context menu to be created at.
-        :type event: tkinter.Event
         :return: None
         """
         self.close_menu()
@@ -96,7 +91,6 @@ class Spider(Connection):
         Delete Spider.
 
         :param action: Specify if action is done for creating a sub-diagram.
-        :type action: str
         :return: None
         """
         [wire.delete(self) for wire in self.wires.copy()]
@@ -122,7 +116,6 @@ class Spider(Connection):
         This method adds a wire to the wires list if it's not already added.
 
         :param wire: Wire that will be added to wires.
-        :type wire: Wire
         :return: None
         """
         if wire not in self.wires:
@@ -138,7 +131,6 @@ class Spider(Connection):
         Changes the size of the Spider according to event.
 
         :param event: Event object sent from key bind.
-        :type event: tkinter.Event
         :return: None
         """
         if event.delta == 120:
@@ -203,7 +195,6 @@ class Spider(Connection):
         and would not allow movement through them.
 
         :param event: Event object sent from key bind.
-        :type event: tkinter.Event
         :return: None
         """
         if event.state & 0x4:
@@ -304,9 +295,7 @@ class Spider(Connection):
         of canvas tags that are in the location. Wires are excluded from this.
 
         :param go_to_x: x coordinate for the center of the search.
-        :type go_to_x: int
         :param go_to_y: y coordinate for the center of the search.
-        :type go_to_y: int
         :return: List of ints.
         """
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
@@ -332,7 +321,6 @@ class Spider(Connection):
         but illegal when trying to go into the same x-axis as the connected Spider.
 
         :param new_x: x coordinate that Spider is trying to move to.
-        :type new_x: int
         :return: boolean
         """
         for connection in list(filter(lambda x: (x is not None and x != self),
@@ -355,7 +343,6 @@ class Spider(Connection):
         If possible remove the given wire from the Spider.
 
         :param wire: Wire to be removed.
-        :type wire: Wire
         :return: None
         """
         if wire and wire in self.wires:
