@@ -646,17 +646,11 @@ class Box:
         # TODO change to input/output
         if side == "left":
             i = self.get_new_left_index()
-            if self.canvas.master.is_rotated:
-                return self.x, self.y + (index + 1) * self.size[0] / (i + 1)
-            else:
-                return self.x, self.y + (index + 1) * self.size[1] / (i + 1)
+            return self.x, self.y + (index + 1) * self.get_logical_size()[1] / (i + 1)
 
         elif side == "right":
             i = self.get_new_right_index()
-            if self.canvas.master.is_rotated:
-                return self.x + self.size[1], self.y + (index + 1) * self.size[0] / (i + 1)
-            else:
-                return self.x + self.size[0], self.y + (index + 1) * self.size[1] / (i + 1)
+            return self.x + self.get_logical_size()[0], self.y + (index + 1) *  self.get_logical_size()[1] / (i + 1)
 
     def get_new_left_index(self):
         if not self.left_connections > 0:

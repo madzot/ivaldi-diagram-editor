@@ -1140,10 +1140,10 @@ class CustomCanvas(tk.Canvas):
             area_x2 = area_x2 - 10
         x_multiplier = round((area_x2 - area_x1) / x_length, 3)
         y_multiplier = round((area_y2 - area_y1) / y_length, 3)
-        if self.main_diagram.is_rotated:
-            return min(x_multiplier, y_multiplier), (area_y1 + area_y2) / 2, (area_x1 + area_x2) / 2
-        else:
-            return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
+        area_x1, area_y1 = self.convert_logical_display(area_x1, area_y1)
+        area_x2, area_y2 = self.convert_logical_display(area_x2, area_y2)
+
+        return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
 
     def convert_logical_display(self, x, y):
         if self.main_diagram.is_rotated:
