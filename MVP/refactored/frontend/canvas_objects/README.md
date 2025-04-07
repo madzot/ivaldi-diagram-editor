@@ -166,6 +166,8 @@ Along with these variables Spider has Connection variables as well. Although all
 | x            | int          | Quick variable to get the x coordinate of the Spider. It is the first number of location.                                                                                            |
 | y            | int          | Quick variable to get the y coordinate of the Spider. It is the second number of location.                                                                                           |
 | location     | list         | List of x, y coordinates.                                                                                                                                                            |
+| rel_x        | float        | A float describing the x position relative to the canvas width.                                                                                                                      |
+| rel_y        | float        | A float describing the y position relative to the canvas height.                                                                                                                     |
 | id           | int          | Spider ID.                                                                                                                                                                           |
 | connections  | list         | List of containing Connections, it is used in algebraic notation creation. During diagram editing it will not contain connections                                                    |
 | context_menu | tkinter.Menu | Variable that holds the context menu of the Spider.                                                                                                                                  |
@@ -188,11 +190,12 @@ Along with these variables Spider has Connection variables as well. Although all
     .on_control_press()
         Handles ctrl + Button-1 press event bind. Toggles selection on the Spider, while not clearing previous selection.
         
-    .on_drag(event)
+    .on_drag(event, from_configuration)
         Handles dragging the Spider. Checks snapping into columns and other collision related actions. Moves and updates Spider location.
 
         Parameters:
             event (tkinter.Event): Event object that is sent on key presses.
+            from_configuration (bool): (Optional) Boolean stating if the on_drag call is coming due to canvas configuration.
 
     .align_wire_ends()
         Checks if the ends of a connected wire need to be switched. Due to start connection always being on the left and end being on the right,
@@ -206,11 +209,12 @@ Along with these variables Spider has Connection variables as well. Although all
             go_to_x (int): x coordinate that is at the center of the desired collision checking location.
             go_to_y (int): y coordinate that is at the center of the desired collision checking location.
         
-    .is_illegal_move(new_x)
+    .is_illegal_move(new_x, bypass)
         Checks if movement to new_x is legal. Returns boolean.
         
         Parameters:
             new_x (int): x coordinate that Spider would be moved to/what location legality is checked for.
+            bypass (bool): (Optional) Boolean stating if legality checking should be bypassed.
 ```
 
 ---
@@ -364,6 +368,8 @@ The coordinates of a Box are the top left corner for it.
 | canvas            | CustomCanvas | The CustomCanvas object that the Box is drawn on.                                                                                                                                                       |
 | x                 | int          | X coordinate of the top left corner of the Box.                                                                                                                                                         |
 | y                 | int          | Y coordinate of the top left corner of the Box.                                                                                                                                                         |
+| rel_x             | float        | A float describing the x position relative to the canvas width.                                                                                                                                         |
+| rel_y             | float        | A float describing the y position relative to the canvas height.                                                                                                                                        |
 | start_x           | int          | Used as the x position where to start moving the Box from when dragging.                                                                                                                                |
 | start_y           | int          | Used as the y position where to start moving the Box from when dragging.                                                                                                                                |
 | size              | tuple        | Contains the height and width in a tuple.                                                                                                                                                               |
@@ -443,11 +449,12 @@ The coordinates of a Box are the top left corner for it.
         Handles ctrl + button-1 on Box. Will select or unselect current Box depending on previous selection status.
         Will not clear previous selection.
 
-    .on_drag(event)
+    .on_drag(event, from_configuration)
         Handles dragging/moving the Box.
 
         Parameters:
             event (tkinter.Event): Event object that holds locations for moving the Box.
+            from_configuration (bool): (Optional) Boolean stating if the call to on_drag is coming due to canvas configuration.
 
     .update_self_collision_ids()
         Updates the collision_ids variable by adding connection tags and label tags into the list.
@@ -503,12 +510,13 @@ The coordinates of a Box are the top left corner for it.
         Parameters:
             event (tkinter.Event): Event object used for start_(x/y) locations.
 
-    .move(new_x, new_y)
+    .move(new_x, new_y, bypass_legality)
         Moves the Box and all objects attached to it to a new location.
 
         Parameters:
             new_x (int): x coordinate of where to move the Box.
             new_y (int): y coordinate of thwere to move the Box.
+            bypass_legality (bool): (Optional) Boolean stating if legality checking should be bypassed.
 
     .select()
         Changes the Box outline along with the color of its Connections to the select color.
@@ -582,12 +590,13 @@ The coordinates of a Box are the top left corner for it.
             keep_sub_diagram (boolean): Determines whether to delete the sub-diagram if it exists in the Box.
             action (string): Determines if the action of deleting the box is done for sub-diagram creation.
     
-    .is_illegal_move(connection, new_x)
+    .is_illegal_move(connection, new_x, bypass)
         Returns boolean stating whether or not movement to the new_x location is legal based on a given Connection.
             
         Parameters:
             connection (Connection): The Connection that move legality to new_x will be checked for.
             new_x (int): X coordinate where to check legality from.
+            bypass (bool): (Optional) Boolean stating whether or not to bypass the legality check.
 
     .get_connection_coordinates(side, index)
         Returns a set of coordinates for a Connection of index at left or right side.

@@ -128,14 +128,6 @@ inside MainDiagram
 
         *args: Tkinter.Canvas .delete(*args)
 
-    .update_after_treeview(canvas_width, treeview_width, to_left)
-        Updates item locations on the CustomCanvas to account for new space created or space taken away by the treeview.
-        
-        Parameters:
-            canvas_width (int): Current CustomCanvas width.
-            treeview_width (int): Treeview width if open.
-            to_left (bool): Determines if boxes should be moved to the left due to treeview being opened.
-
     .handle_right_click(event)
         Handles right click event on CustomCanvas. Possible actions are finishing selection, cancelling wire pulling,
         showing context menu.
@@ -324,6 +316,12 @@ inside MainDiagram
 
         Parameters:
             _ (tkinter.Event): Event object that is passed from application configuration.
+
+    .__on_configure_move__()
+        Moves Spiders and Boxes to their relative current positions.
+        
+        This function is used when the canvas is configured, it will keep items in their relative positions, movement is
+        done with bypassing legality.
 
     .debounce(wait_time)
         Decorator that will debounce a function so that it is called after wait_time seconds.
