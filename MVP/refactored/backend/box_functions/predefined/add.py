@@ -6,6 +6,7 @@ def invoke(*numbers: list) -> int:
         raise ValueError("Numbers amount should be at least 2")
     return sum(numbers)
 
+
 if __name__ == "__main__":
     print("hui")
 

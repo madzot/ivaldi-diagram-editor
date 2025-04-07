@@ -1,9 +1,8 @@
 import inspect
 import os
 from inspect import signature
-from types import ModuleType
-# from modulefinder import Module
 from typing import Callable
+from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 
 
 def get_predefined_functions() -> dict:
@@ -38,7 +37,7 @@ class BoxFunction:
         self.name: str = name
         self.helper_functions: list[Callable] = []
         self.main_function: Callable = None
-
+        self.is_predefined_function = is_predefined_function
         if is_predefined_function:
             predefined_file_code = predefined_functions[self.name]
             self._set_data_from_file_code(predefined_file_code)
@@ -52,25 +51,22 @@ class BoxFunction:
             self.max_args: int = max_args
             self.imports: list = imports
 
-
     def _set_data_from_file_code(self, file_code: str):
-        local = {}
-        global_objects = {}
-        exec(file_code, global_objects, local)
-        meta = local["meta"]
+        if self.is_predefined_function:
+            self.main_function = CodeInspector.get_main_function(file_code, "invoke")
+            self.helper_functions = CodeInspector.get_help_methods(file_code, "invoke")
+        else:
+            self.main_function = CodeInspector.get_main_function(file_code, self.name)  # TODO self.name?
+            self.helper_functions = CodeInspector.get_help_methods(file_code, self.name)  # TODO self.name?
+        self.imports = CodeInspector.get_imports(file_code)
+        self.min_args = ...
+        self.max_args = ...
 
-        # self.main_function = local[self.name]
-        self.main_function = local["invoke"]
-        self.min_args = meta["min_args"]
-        self.max_args = meta["max_args"]
-        my_list = inspect.getmembers(self.main_function)
+        # meta = local["meta"]
+        # self.min_args = meta["min_args"]
+        # self.max_args = meta["max_args"]
+        # my_list = inspect.getmembers(self.main_function)
 
-        for item in local.items():
-            if isinstance(item[1], Callable):
-                self.helper_functions.append(item[1])
-            elif isinstance(item[1], ModuleType):
-                self.imports.append(item[1])
-            print(item[1])
         # TODO: set imports for predefined functions
 
     def count_inputs(self):

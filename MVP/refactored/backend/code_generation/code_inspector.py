@@ -1,4 +1,5 @@
 import ast
+from typing import Optional
 
 import astor  # Requires pip install astor
 
@@ -72,19 +73,10 @@ class CodeInspector(ast.NodeTransformer):
         self.visit(tree)
         return astor.to_source(tree)
 
-    def get_main_function(self, code_str: str):
-        tree = ast.parse(code_str)
-        self._attach_parents(tree)
-        self.visit(tree)
-        main_body = None
-
-        for node in tree.body:
-            if isinstance(node, ast.If):
-                print("----")
-                print(node)
-
-
-
+    def _attach_parents(self, node, parent=None):
+        node.parent = parent
+        for child in ast.iter_child_nodes(node):
+            self._attach_parents(child, node)
 
     def find_globals(self, code_str):
         tree = ast.parse(code_str)
@@ -108,7 +100,54 @@ class CodeInspector(ast.NodeTransformer):
         self.global_statements.clear()
         self.function_names.clear()
 
-    def _attach_parents(self, node, parent=None):
-        node.parent = parent
-        for child in ast.iter_child_nodes(node):
-            self._attach_parents(child, node)
+    @classmethod
+    def get_main_function(cls, code_str: str, main_method_name: str) -> Optional[str]:
+        """
+        Extracts the source code for a function matching `main_method_name` from the given code string.
+        """
+        tree = ast.parse(code_str)
+        main_method = None
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef) and node.name == main_method_name:
+                main_method = node
+                break
+
+        if main_method is None:
+            return None
+
+        return astor.to_source(main_method)
+
+    @classmethod
+    def get_help_methods(cls, code_str: str, main_method_name: str) -> Optional[list[str]]:
+        """
+        Extracts all method definitions from the given code string, excluding the main method.
+        """
+        tree = ast.parse(code_str)
+        methods = []
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef) and node.name != main_method_name:
+                methods.append(node)
+
+        if not methods:
+            return None
+
+        return [astor.to_source(method) for method in methods]
+
+    @classmethod
+    def get_imports(cls, code_str) -> Optional[list[str]]:
+        """
+        Parse the provided Python code string and extract import statements.
+        """
+        tree = ast.parse(code_str)
+        imports = []
+
+        for node in tree.body:
+            if isinstance(node, ast.Import):
+                imports.append(node)
+            elif isinstance(node, ast.ImportFrom):
+                imports.append(node)
+
+        if not imports:
+            return None
+
+        return [astor.to_source(ast_import) for ast_import in imports]
