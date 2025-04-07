@@ -18,7 +18,7 @@ from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-from MVP.refactored.frontend.components.toolbar import Titlebar
+from MVP.refactored.frontend.components.toolbar import Toolbar
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.frontend.windows.manage_methods import ManageMethods
@@ -35,8 +35,8 @@ class MainDiagram(tk.Tk):
         self.title("Dynamic String Diagram Canvas")
         self.receiver = receiver
 
-        self.titlebar = Titlebar(self, None)
-        self.titlebar.pack(side='top', fill='both')
+        self.toolbar = Toolbar(self)
+        self.toolbar.pack(side='top', fill='both')
 
         screen_width_min = round(self.winfo_screenwidth() / 1.5)
         screen_height_min = round(self.winfo_screenheight() / 1.5)
@@ -51,14 +51,12 @@ class MainDiagram(tk.Tk):
         self.search_objects = {}
         self.wire_objects = {}
 
-        self.custom_canvas = CustomCanvas(self, None, self, False)
+        self.custom_canvas = CustomCanvas(self, self)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
-
-        self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
         self.bind("<Control-f>", lambda event: self.open_search_window())
@@ -349,7 +347,10 @@ class MainDiagram(tk.Tk):
     def add_canvas(self, canvas):
         # Add some items to the tree
         try:
-            self.tree.insert(str(canvas.parent_diagram.id), "end", str(canvas.id), text=canvas.name_text)
+            parent_id = 1
+            if canvas.parent_diagram is not None:
+                parent_id = canvas.parent_diagram.id
+            self.tree.insert(str(parent_id), "end", str(canvas.id), text=canvas.name_text)
         except (tk.TclError, AttributeError) as e:
             if "already exists" in str(e):
                 self.import_counter += 1
@@ -401,8 +402,6 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
         self.bind_buttons()
-
-        self.titlebar.set_custom_canvas(self.custom_canvas)
 
         self.tree.selection_remove(self.tree.selection())
 
@@ -580,7 +579,7 @@ class MainDiagram(tk.Tk):
 
         for shape in shapes:
             self.shape_dropdown_menu.add_command(label=shape,
-                                                 command=lambda s=shape: self.custom_canvas.change_box_shape(s))
+                                                 command=lambda s=shape: self.custom_canvas.set_box_shape(s))
 
     def toggle_treeview(self):
         if not self.is_tree_visible:
