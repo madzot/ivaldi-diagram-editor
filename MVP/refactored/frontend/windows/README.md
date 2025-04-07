@@ -438,47 +438,37 @@ These can be added, removed or edited from this window.
         Parameters:
             content (dict): Dictionary that will be written to the functions_conf file.
 
+--- 
 
+## SearchWindow
 
+`SearchWindow` is the window that holds settings and a canvas to conduct searches in the diagram.
 
+### SearchWindow params
 
+| **Param**    | **Type**    | **Description**                                       |
+|--------------|-------------|-------------------------------------------------------|
+| main_diagram | MainDiagram | MainDiagram object to use for variables and functions |
 
+### SearchWindow variables
 
+| **Variable**             | **Type**                 | **Description**                          |
+|--------------------------|--------------------------|------------------------------------------|
+| options_frame            | tkinter.Frame            | Frame to hold option buttons             |
+| settings_label           | tkinter.Label            | Settings frame label                     |
+| search_all_canvases      | tkinter.IntVar           | Search all canvases setting value        |
+| search_all_option_button | ttkbootstrap.Checkbutton | Search all canvases setting checkbutton  |
+| match_label              | tkinter.IntVar           | Match label setting value                |
+| match_labels_button      | ttkbootstrap.Checkbutton | Match label setting checkbutton          |
+| canvas_label_frame       | tkinter.Frame            | Frame that holds canvas label            |
+| canvas_label             | tkinter.Label            | Label for canvas                         |
+| canvas_frame             | ttkbootstrap.Frame       | Frame to hold CustomCanvas for searching |
+| search_canvas            | CustomCanvas             | CustomCanvas for searching               |
+| result_frame             | tkinter.Frame            | Frame to hold searching buttons          |
+| search_button            | ttkbootstrap.Button      | Button to conduct search.                |
 
+### SearchWindow functions
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    .search()
+        Takes settings and forwards them to SearchAlgorithm to find results.
+        Turns on SearchResultButton.
