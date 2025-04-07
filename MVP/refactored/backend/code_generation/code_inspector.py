@@ -3,12 +3,13 @@ import ast
 import astor  # Requires pip install astor
 
 
-class Renamer(ast.NodeTransformer):
+class CodeInspector(ast.NodeTransformer):
     def __init__(self, target_name: str = None, new_name: str = None):
         self.target_name = target_name
         self.new_name = new_name
         self.current_function_globals = set()
         self.current_function_params = set()
+        self.main_function_body = None
         self.global_vars = set()
         self.global_statements = set()
         self.function_names = set()
@@ -70,6 +71,20 @@ class Renamer(ast.NodeTransformer):
         tree = ast.parse(code_str)
         self.visit(tree)
         return astor.to_source(tree)
+
+    def get_main_function(self, code_str: str):
+        tree = ast.parse(code_str)
+        self._attach_parents(tree)
+        self.visit(tree)
+        main_body = None
+
+        for node in tree.body:
+            if isinstance(node, ast.If):
+                print("----")
+                print(node)
+
+
+
 
     def find_globals(self, code_str):
         tree = ast.parse(code_str)

@@ -1,5 +1,8 @@
+import inspect
 import os
 from inspect import signature
+from types import ModuleType
+# from modulefinder import Module
 from typing import Callable
 
 
@@ -33,6 +36,8 @@ class BoxFunction:
             imports = []
             self.imports = imports
         self.name: str = name
+        self.helper_functions: list[Callable] = []
+        self.main_function: Callable = None
 
         if is_predefined_function:
             predefined_file_code = predefined_functions[self.name]
@@ -42,7 +47,7 @@ class BoxFunction:
             self._set_data_from_file_code(file_code)
             self.code = file_code # TODO: Remove this variable after code generation is refactored
         else:
-            self.function: Callable = function
+            self.main_function: Callable = function
             self.min_args: int = min_args
             self.max_args: int = max_args
             self.imports: list = imports
@@ -50,17 +55,27 @@ class BoxFunction:
 
     def _set_data_from_file_code(self, file_code: str):
         local = {}
-        exec(file_code, {}, local)
+        global_objects = {}
+        exec(file_code, global_objects, local)
         meta = local["meta"]
 
-        self.function = local["invoke"]
+        # self.main_function = local[self.name]
+        self.main_function = local["invoke"]
         self.min_args = meta["min_args"]
         self.max_args = meta["max_args"]
+        my_list = inspect.getmembers(self.main_function)
+
+        for item in local.items():
+            if isinstance(item[1], Callable):
+                self.helper_functions.append(item[1])
+            elif isinstance(item[1], ModuleType):
+                self.imports.append(item[1])
+            print(item[1])
         # TODO: set imports for predefined functions
 
     def count_inputs(self):
         # TODO: may not work, fix if needed
-        sig = signature(self.function)
+        sig = signature(self.main_function)
         params = sig.parameters
         count = len(params)
         if params["self"]:
@@ -68,7 +83,7 @@ class BoxFunction:
         return count
 
     def __call__(self, *args):
-        return self.function(*args)
+        return self.main_function(*args)
 
     # def __eq__(self, other):
     #     if isinstance(other, BoxFunction):

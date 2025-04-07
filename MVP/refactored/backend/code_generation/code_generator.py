@@ -4,7 +4,7 @@ from queue import Queue
 import autopep8
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.code_generation.renamer import Renamer
+from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
@@ -22,7 +22,7 @@ class CodeGenerator:
         box_functions: dict[BoxFunction, set[str]] = {}
 
         for box_function in code_parts.keys():
-            renamer = Renamer()
+            renamer = CodeInspector()
             variables = set()
             variables.update(renamer.find_globals(box_function.code))
             variables.update(renamer.find_function_names(box_function.code))
@@ -80,7 +80,7 @@ class CodeGenerator:
         renamed_code_parts: list[str] = list()
         renamed_functions: dict[BoxFunction, str] = dict()
         for i, (box_function, names) in enumerate(names.items()):
-            renamer = Renamer()
+            renamer = CodeInspector()
             code_part = box_function.code
             for name in names:
                 if name == "meta":
