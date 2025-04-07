@@ -18,8 +18,8 @@ class Box:
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
-        self.rel_x = x / self.canvas.main_diagram.custom_canvas.winfo_width()
-        self.rel_y = y / self.canvas.main_diagram.custom_canvas.winfo_height()
+        self.rel_x = round(x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         self.start_x = x
         self.start_y = y
         self.size = size
@@ -78,6 +78,8 @@ class Box:
         self.canvas.tag_bind(self.rect, '<Leave>', lambda _: self.canvas.on_leave_hover())
 
     def show_context_menu(self, event):
+        print(f"box rels: {[self.rel_x, self.rel_y]}")
+
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
@@ -446,8 +448,9 @@ class Box:
             self.update_position()
             self.update_connections()
             self.update_wires()
-        self.rel_x = self.x / self.canvas.winfo_width()
-        self.rel_y = self.y / self.canvas.winfo_height()
+        print(self.canvas.winfo_width())
+        self.rel_x = round(self.x / self.canvas.winfo_width(), 4)
+        self.rel_y = round(self.y / self.canvas.winfo_height(), 4)
 
     def select(self):
         self.canvas.itemconfig(self.rect, outline=const.SELECT_COLOR)

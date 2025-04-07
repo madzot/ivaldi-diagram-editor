@@ -458,6 +458,8 @@ class CustomCanvas(tk.Canvas):
 
     # binding for drag select
     def __select_start__(self, event):
+        print(f"rel: {event.x / self.winfo_width(), event.y / self.winfo_height()}")
+
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         [box.close_menu() for box in self.boxes]
         [wire.close_menu() for wire in self.wires]
@@ -704,15 +706,18 @@ class CustomCanvas(tk.Canvas):
         self.__on_configure_move__()
 
     def __on_configure_move__(self):
+        print(f"conf: {self.winfo_width()}")
         for item in self.spiders + self.boxes:
             event = tk.Event()
             event.state = False
             event.x = self.winfo_width() * item.rel_x
             event.y = self.winfo_height() * item.rel_y
+            print(f"old rel: {item.rel_x, event.x/self.winfo_width()}")
             if isinstance(item, Box):
                 item.x_dif = 0
                 item.y_dif = 0
             item.on_drag(event)
+            print(f"new rel: {item.rel_x}")
 
     @staticmethod
     def debounce(wait_time):

@@ -49,6 +49,8 @@ class Spider(Connection):
         self.canvas.tag_bind(self.circle, '<Button-2>', lambda x: self.increment_type())
 
     def show_context_menu(self, event):
+        print(f"box rels: {[self.rel_x, self.rel_y]}")
+
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
@@ -175,8 +177,9 @@ class Spider(Connection):
         self.x = go_to_x
         self.y = go_to_y
 
-        self.rel_x = self.x / self.canvas.winfo_width()
-        self.rel_y = self.y / self.canvas.winfo_height()
+        print(self.canvas.winfo_width())
+        self.rel_x = round(self.x / self.canvas.winfo_width(), 4)
+        self.rel_y = round(self.y / self.canvas.winfo_height(), 4)
         self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
                            self.y + self.r)
         [w.update() for w in self.wires]
