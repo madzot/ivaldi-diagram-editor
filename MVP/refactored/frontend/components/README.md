@@ -268,7 +268,7 @@ inside MainDiagram
     .nullify_wire_start()
         Changes current_wire_start color back to 'black' and resets the variable to None.
 
-    .add_box(loc, size, id_, shape)
+    .add_box(loc, size, id_, style)
         Creates a Box object. Location, size, id and shape of the Box can be specified with additional params.
         Returns the created Box tag.
 
@@ -276,7 +276,7 @@ inside MainDiagram
             loc (tuple): (Optional) Location that the Box will be created at. Default is (100, 100)
             size (tuple): (Optional) Size of the Box that will be created. Default is (60, 60)
             id_ (int): (Optional) Custom set ID for the Box that will be created.
-            shape (string): (Optional) Specify shape of the Box that will be created. Default is the canvas selected shape.
+            style (string): (Optional) Specify style of the Box that will be created. Default is the canvas selected style.
 
     .get_box_by_id(box_id)
         Returns Box object with given id. Returns None if no Box with given id found.

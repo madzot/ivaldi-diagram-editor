@@ -831,7 +831,7 @@ class CustomCanvas(tk.Canvas):
             self.current_wire_start.deselect()
         self.current_wire_start = None
 
-    def add_box(self, loc=(100, 100), size=(60, 60), id_=None, shape=None):
+    def add_box(self, loc=(100, 100), size=(60, 60), id_=None, style=None):
         """
         Add a box to the CustomCanvas.
 
@@ -840,12 +840,12 @@ class CustomCanvas(tk.Canvas):
         :param loc: tuple of location that box will be created at.
         :param size: tuple of box size.
         :param id_: custom ID for the Box that's created.
-        :param shape: Define the shape of the Box.
+        :param style: Define the style of the Box.
         :return: Box tag.
         """
-        if shape is None:
-            shape = self.box_shape
-        box = Box(self, *loc, size=size, id_=id_, shape=shape)
+        if style is None:
+            style = self.box_shape
+        box = Box(self, *loc, size=size, id_=id_, style=style)
         self.boxes.append(box)
         return box
 
