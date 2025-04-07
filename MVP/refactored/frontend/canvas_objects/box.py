@@ -78,8 +78,6 @@ class Box:
         self.canvas.tag_bind(self.rect, '<Leave>', lambda _: self.canvas.on_leave_hover())
 
     def show_context_menu(self, event):
-        print(f"box rels: {[self.rel_x, self.rel_y]}")
-
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
 
@@ -250,7 +248,7 @@ class Box:
             self.canvas.selector.selected_items.append(self)
         self.canvas.selector.select_wires_between_selected_items()
 
-    def on_drag(self, event):
+    def on_drag(self, event, from_configuration=False):
         if event.state & 0x4:
             return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
@@ -263,43 +261,44 @@ class Box:
 
         # snapping into place
         found = False
-        for box in self.canvas.boxes:
-            if box == self:
-                continue
+        if not from_configuration:
+            for box in self.canvas.boxes:
+                if box == self:
+                    continue
 
-            if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
-                go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
+                if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
+                    go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
 
-                found = True
-        for spider in self.canvas.spiders:
+                    found = True
+            for spider in self.canvas.spiders:
 
-            if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
-                go_to_x = spider.x - +self.size[0] / 2
+                if abs(spider.location[0] - (go_to_x + self.size[0] / 2)) < self.size[0] / 2 + spider.r:
+                    go_to_x = spider.x - +self.size[0] / 2
 
-                found = True
+                    found = True
 
-        if found:
-            collision = self.find_collisions(go_to_x, go_to_y)
+            if found:
+                collision = self.find_collisions(go_to_x, go_to_y)
 
-            if len(collision) != 0:
-                if self.is_snapped:
-                    return
+                if len(collision) != 0:
+                    if self.is_snapped:
+                        return
 
-                jump_size = 10
-                counter = 0
-                while collision:
-                    if counter % 2 == 0:
-                        go_to_y += counter * jump_size
-                    else:
-                        go_to_y -= counter * jump_size
+                    jump_size = 10
+                    counter = 0
+                    while collision:
+                        if counter % 2 == 0:
+                            go_to_y += counter * jump_size
+                        else:
+                            go_to_y -= counter * jump_size
 
-                    collision = self.find_collisions(go_to_x, go_to_y)
+                        collision = self.find_collisions(go_to_x, go_to_y)
 
-                    counter += 1
+                        counter += 1
 
         self.is_snapped = found
 
-        self.move(go_to_x, go_to_y)
+        self.move(go_to_x, go_to_y, bypass_legality=from_configuration)
         self.move_label()
 
     def get_self_collision_ids(self):
@@ -429,12 +428,12 @@ class Box:
         self.start_x = event.x
         self.start_y = event.y
 
-    def move(self, new_x, new_y):
+    def move(self, new_x, new_y, bypass_legality=False):
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
         is_bad = False
         for connection in self.connections:
-            if connection.has_wire and self.is_illegal_move(connection, new_x):
+            if connection.has_wire and self.is_illegal_move(connection, new_x, bypass=bypass_legality):
                 is_bad = True
                 break
         if is_bad:
@@ -448,7 +447,6 @@ class Box:
             self.update_position()
             self.update_connections()
             self.update_wires()
-        print(self.canvas.winfo_width())
         self.rel_x = round(self.x / self.canvas.winfo_width(), 4)
         self.rel_y = round(self.y / self.canvas.winfo_height(), 4)
 
@@ -605,7 +603,9 @@ class Box:
                 self.receiver.receiver_callback("box_delete", generator_id=self.id)
 
     # BOOLEANS
-    def is_illegal_move(self, connection, new_x):
+    def is_illegal_move(self, connection, new_x, bypass=False):
+        if bypass:
+            return False
         wire = connection.wire
         if connection.side == const.LEFT:
             if connection == wire.start_connection:

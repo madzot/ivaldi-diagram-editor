@@ -49,7 +49,6 @@ class Spider(Connection):
         self.canvas.tag_bind(self.circle, '<Button-2>', lambda x: self.increment_type())
 
     def show_context_menu(self, event):
-        print(f"box rels: {[self.rel_x, self.rel_y]}")
 
         self.close_menu()
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
@@ -117,7 +116,7 @@ class Spider(Connection):
             self.canvas.selector.selected_items.append(self)
         self.canvas.selector.select_wires_between_selected_items()
 
-    def on_drag(self, event):
+    def on_drag(self, event, from_configuration=False):
         if event.state & 0x4:
             return
         if self.canvas.pulling_wire:
@@ -126,48 +125,49 @@ class Spider(Connection):
         go_to_y = event.y
         go_to_x = self.x
         move_legal = False
-        if not self.is_illegal_move(event.x):
+        if not self.is_illegal_move(event.x, bypass=from_configuration):
             go_to_x = event.x
             move_legal = True
 
         # snapping into place
         found = False
-        for box in self.canvas.boxes:
-            if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
-                go_to_x = box.x + box.size[0] / 2
+        if not from_configuration:
+            for box in self.canvas.boxes:
+                if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
+                    go_to_x = box.x + box.size[0] / 2
 
-                found = True
-        for spider in self.canvas.spiders:
-            if spider == self:
-                continue
+                    found = True
+            for spider in self.canvas.spiders:
+                if spider == self:
+                    continue
 
-            cancel = False
-            for wire in spider.wires:
-                if wire.end_connection == self or wire.start_connection == self:
-                    cancel = True
-            if cancel:
-                continue
+                cancel = False
+                for wire in spider.wires:
+                    if wire.end_connection == self or wire.start_connection == self:
+                        cancel = True
+                if cancel:
+                    continue
 
-            if abs(spider.location[0] - go_to_x) < self.r + spider.r and move_legal:
-                go_to_x = spider.location[0]
+                if abs(spider.location[0] - go_to_x) < self.r + spider.r and move_legal:
+                    go_to_x = spider.location[0]
 
-                found = True
-        if found:
-            collision = self.find_collisions(go_to_x, go_to_y)
-            if len(collision) != 0:
-                if self.is_snapped:
-                    return
+                    found = True
+            if found:
+                collision = self.find_collisions(go_to_x, go_to_y)
+                if len(collision) != 0:
+                    if self.is_snapped:
+                        return
 
-                jump_size = 5
-                counter = 0
-                while collision:
-                    if counter % 2 == 0:
-                        go_to_y += counter * jump_size
-                    else:
-                        go_to_y -= counter * jump_size
-                    collision = self.find_collisions(go_to_x, go_to_y)
+                    jump_size = 5
+                    counter = 0
+                    while collision:
+                        if counter % 2 == 0:
+                            go_to_y += counter * jump_size
+                        else:
+                            go_to_y -= counter * jump_size
+                        collision = self.find_collisions(go_to_x, go_to_y)
 
-                    counter += 1
+                        counter += 1
 
         self.switch_wire_start_and_end()
 
@@ -177,7 +177,6 @@ class Spider(Connection):
         self.x = go_to_x
         self.y = go_to_y
 
-        print(self.canvas.winfo_width())
         self.rel_x = round(self.x / self.canvas.winfo_width(), 4)
         self.rel_y = round(self.y / self.canvas.winfo_height(), 4)
         self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
@@ -216,7 +215,9 @@ class Spider(Connection):
                 collision.remove(tag)
         return collision
 
-    def is_illegal_move(self, new_x):
+    def is_illegal_move(self, new_x, bypass=False):
+        if bypass:
+            return False
         for connection in list(filter(lambda x: (x is not None and x != self),
                                       [w.end_connection for w in self.wires] + [w.start_connection for w in
                                                                                 self.wires])):
