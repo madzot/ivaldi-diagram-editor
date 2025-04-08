@@ -82,7 +82,8 @@ class Toolbar(ttk.Frame):
 
         # Current canvas name
         self.canvas_name_text = tk.StringVar()
-        self.canvas_name_label = ttk.Label(self, textvariable=self.canvas_name_text, bootstyle="inverse-light", font=("Helvetica 15 bold"))
+        self.canvas_name_label = ttk.Label(self, textvariable=self.canvas_name_text,
+                                           bootstyle="inverse-light", font="Helvetica 15 bold")
 
     def open_help_window(self):
         """

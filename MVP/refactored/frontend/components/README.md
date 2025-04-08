@@ -517,18 +517,20 @@ Toolbar
 
 ### Toolbar variables
 
-| **Variable**     | **Type**           | **Description**                                                                   |
-|------------------|--------------------|-----------------------------------------------------------------------------------|
-| main_diagram     | MainDiagram        | MainDiagram object used to access functions.                                      |
-| file_button      | tkinter.Menubutton | Menubutton that holds File menu.                                                  |
-| file_menu        | tkinter.Menu       | Menu that is opened when pressing file_button. Holds File sub-menus and commands. |
-| save_submenu     | tkinter.Menu       | Save sub-menu. Holds commands about saving.                                       |
-| generate_submenu | tkinter.Menu       | Generation sub-menu. Holds commands about generation.                             |
-| edit_button      | tkinter.Menubutton | Menubutton that holds Edit menu.                                                  |
-| edit_menu        | tkinter.Menu       | Menu that is opened when pressing edit_button.                                    |
-| view_button      | tkinter.Menubutton | Menubutton that holds View menu.                                                  |
-| view_menu        | tkinter.Menu       | Menu for View commands.                                                           |
-| help_logo        | ImageTk.PhotoImage | Help logo that is used to open the help window.                                   |
+| **Variable**      | **Type**           | **Description**                                                                   |
+|-------------------|--------------------|-----------------------------------------------------------------------------------|
+| main_diagram      | MainDiagram        | MainDiagram object used to access functions.                                      |
+| file_button       | tkinter.Menubutton | Menubutton that holds File menu.                                                  |
+| file_menu         | tkinter.Menu       | Menu that is opened when pressing file_button. Holds File sub-menus and commands. |
+| save_submenu      | tkinter.Menu       | Save sub-menu. Holds commands about saving.                                       |
+| generate_submenu  | tkinter.Menu       | Generation sub-menu. Holds commands about generation.                             |
+| edit_button       | tkinter.Menubutton | Menubutton that holds Edit menu.                                                  |
+| edit_menu         | tkinter.Menu       | Menu that is opened when pressing edit_button.                                    |
+| view_button       | tkinter.Menubutton | Menubutton that holds View menu.                                                  |
+| view_menu         | tkinter.Menu       | Menu for View commands.                                                           |
+| help_logo         | ImageTk.PhotoImage | Help logo that is used to open the help window.                                   |
+| canvas_name_text  | tkinter.StringVar  | StringVar that holds the text for the canvas name.                                |
+| canvas_name_label | ttkbootstrap.Label | Label that holds the canvas name and is shown in the Toolbar.                     |
 
 ### Toolbar functions.
 
