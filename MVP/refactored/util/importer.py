@@ -149,7 +149,7 @@ class Importer:
         return random_string
 
     def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
-        with open(const.BOXES_CONF, 'r') as json_file:
+        with (open(const.BOXES_CONF, 'r') as json_file):
             self.seed = self.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
@@ -158,9 +158,16 @@ class Importer:
             if box["label"]:
                 new_box.set_label(box["label"])
             for i in range(box["left_c"]):
-                new_box.add_left_connection(connection_type=ConnectionType[box["left_c_types"][i]])
-            for _ in range(box["right_c"]):
-                new_box.add_right_connection(connection_type=ConnectionType[box["right_c_types"][i]])
+                try:
+                    new_box.add_left_connection(connection_type=ConnectionType[box.get("left_c_types", [])[i]])
+                except IndexError:
+                    new_box.add_left_connection(connection_type=ConnectionType.GENERIC)
+
+            for i in range(box["right_c"]):
+                try:
+                    new_box.add_right_connection(connection_type=ConnectionType[box.get("right_c_types", [])[i]])
+                except IndexError:
+                    new_box.add_right_connection(connection_type=ConnectionType.GENERIC)
 
             if box["sub_diagram"]:
                 sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False)
