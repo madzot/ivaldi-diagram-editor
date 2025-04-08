@@ -472,3 +472,22 @@ These can be added, removed or edited from this window.
     .search()
         Takes settings and forwards them to SearchAlgorithm to find results.
         Turns on SearchResultButton.
+
+---
+
+## TikzWindow
+
+`TikzWindow` is the window that is displayed when showing TikZ code.
+
+### TikzWindow params
+
+| **Param**    | **Type**    | **Description**                                                        |
+|--------------|-------------|------------------------------------------------------------------------|
+| main_diagram | MainDiagram | MainDiagram object that is used for accessing functions and variables. |
+
+### TikzWindow variables
+
+| **Variable** | **Type**           | **Description**                                                | 
+|--------------|--------------------|----------------------------------------------------------------|
+| main_diagram | MainDiagram        | MainDiagram object used for accessing functions and variables. |
+| copy_logo    | ImageTk.PhotoImage | Icon used for a copy button.                                   |

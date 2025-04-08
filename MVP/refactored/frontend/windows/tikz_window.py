@@ -6,6 +6,9 @@ import constants as const
 
 
 class TikzWindow(tk.Toplevel):
+    """
+    `TikzWindow` is
+    """
     def __init__(self, main_diagram):
         super().__init__(None)
 
