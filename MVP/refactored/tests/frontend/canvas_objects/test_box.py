@@ -2,9 +2,10 @@ import tkinter
 import unittest
 from unittest.mock import patch
 
+import constants as const
 from MVP.refactored.backend.diagram_callback import Receiver
-from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from MVP.refactored.frontend.canvas_objects.box import Box
+from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 
 
 class TestMainDiagram(unittest.TestCase):
@@ -45,8 +46,6 @@ class BoxTests(TestMainDiagram):
 
         self.assertFalse(box.label_text)
         self.assertListEqual([], box.wires)
-
-        self.assertIsNone(box.node)
 
         self.assertTrue(isinstance(box.context_menu, tkinter.Menu))
 
@@ -132,29 +131,29 @@ class BoxTests(TestMainDiagram):
         box.unlock_box()
         self.assertFalse(box.locked)
 
-    def test__select__turns_rect_outline_green(self):
+    def test__select__turns_rect_outline_select_color(self):
         box = Box(self.custom_canvas, 100, 100)
 
-        expected_start_color = "black"
-        actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        expected_start_color = const.BLACK
+        actual_start_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_start_color, actual_start_color)
 
         box.select()
-        expected_selected_color = "green"
-        actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        expected_selected_color = const.SELECT_COLOR
+        actual_selected_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_selected_color, actual_selected_color)
 
     def test__deselect__turns_rect_outline_black(self):
         box = Box(self.custom_canvas, 100, 100)
 
         box.select()
-        expected_selected_color = "green"
-        actual_selected_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        expected_selected_color = const.SELECT_COLOR
+        actual_selected_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_selected_color, actual_selected_color)
 
         box.deselect()
-        expected_start_color = "black"
-        actual_start_color = self.custom_canvas.itemconfig(box.rect)["outline"][-1]
+        expected_start_color = const.BLACK
+        actual_start_color = self.custom_canvas.itemconfig(box.shape)["outline"][-1]
         self.assertEqual(expected_start_color, actual_start_color)
 
     def test__move__updates_x_y(self):
@@ -224,8 +223,8 @@ class BoxTests(TestMainDiagram):
         self.assertEqual(2, box.right_connections)
 
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_event_label")
-    @patch("MVP.refactored.frontend.canvas_objects.box.Box.change_label")
-    def test__edit_label__with_param_changes_label(self, change_label_mock, bind_mock):
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_label")
+    def test__edit_label__with_param_changes_label(self, update_label_mock, bind_mock):
         box = Box(self.custom_canvas, 100, 100)
         bind_mock.call_count = 0  # resetting tag_bind amount from box creation
 
@@ -233,7 +232,7 @@ class BoxTests(TestMainDiagram):
         box.edit_label(expected_label)
 
         self.assertEqual(expected_label, box.label_text)
-        self.assertTrue(change_label_mock.called)
+        self.assertTrue(update_label_mock.called)
         self.assertTrue(bind_mock.called)
 
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.bind_event_label")
