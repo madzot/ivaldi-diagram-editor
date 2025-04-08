@@ -55,11 +55,6 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        print(self.custom_canvas.name_text)
-        print(self.custom_canvas.name)
-
-        self.titlebar.set_canvas_name(self.custom_canvas.name_text)
-
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
 
@@ -173,6 +168,8 @@ class MainDiagram(tk.Tk):
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
+
+        # self.toolbar.update_canvas_label()
 
     @staticmethod
     def calculate_boxes_json_file_hash():
@@ -404,6 +401,8 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
         self.bind_buttons()
+
+        self.toolbar.update_canvas_label()
 
         self.tree.selection_remove(self.tree.selection())
 

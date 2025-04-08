@@ -78,9 +78,7 @@ class CustomCanvas(tk.Canvas):
         else:
             self.id = id_
 
-        self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill=const.BLACK, font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
-        self.set_name(str(self.id))
         self.select_box = None
         self.bind("<ButtonPress-1>", self.__select_start__)
         self.bind('<Motion>', self.start_pulling_wire)
@@ -104,7 +102,6 @@ class CustomCanvas(tk.Canvas):
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
 
-        self.set_name(self.name)
         self.context_menu = tk.Menu(self, tearoff=0)
 
         if not is_search:
@@ -385,11 +382,8 @@ class CustomCanvas(tk.Canvas):
         :param name: new name
         :return: None
         """
-        w = self.winfo_width()
-        self.coords(self.name, w / 2, 12)
-        self.itemconfig(self.name, text=name)
-        self.main_diagram.titlebar.set_canvas_name(name)
         self.name_text = name
+        self.main_diagram.toolbar.update_canvas_label()
 
     def reset_zoom(self):
         """
@@ -966,10 +960,6 @@ class CustomCanvas(tk.Canvas):
         :param _: tkinter.Event
         :return: None
         """
-        # update label loc
-        w = self.canvasx(self.winfo_width())
-        self.coords(self.name, w / 2, self.canvasy(10))
-
         if self.total_scale - 1 > 0.1:
             self.update_corners()
         else:
@@ -977,6 +967,8 @@ class CustomCanvas(tk.Canvas):
 
         self.update_inputs_outputs()
         self.update_prev_winfo_size()
+
+        self.main_diagram.toolbar.update_canvas_label()
 
     @staticmethod
     def debounce(wait_time):

@@ -5,7 +5,6 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 
 from MVP.refactored.frontend.windows.help_window import HelpWindow
-# from MVP.refactored.frontend.windows.main_diagram import MainDiagram
 from constants import *
 
 
@@ -83,8 +82,7 @@ class Toolbar(ttk.Frame):
 
         # Current canvas name
         self.canvas_name_text = tk.StringVar()
-        self.canvas_name_label = tk.Label(self, textvariable=self.canvas_name_text)
-        self.canvas_name_label.place()
+        self.canvas_name_label = ttk.Label(self, textvariable=self.canvas_name_text, bootstyle="inverse-light", font=("Helvetica 15 bold"))
 
     def open_help_window(self):
         """
@@ -118,15 +116,19 @@ class Toolbar(ttk.Frame):
         if not is_importing:
             box.delete_box()
 
-    def set_canvas_name(self, new_name):
-        self.canvas_name_text.set(new_name)
-        self.update_canvas_label()
-
     def update_canvas_label(self):
+        """
+        Update canvas name label.
+
+        Updates the name label in the Toolbar that displays the currently opened CustomCanvas name.
+
+        :return: None
+        """
+        self.canvas_name_text.set(self.main_diagram.custom_canvas.name_text)
         self.canvas_name_label.place_forget()
-        # print(f"main: {self.main_diagram}")
-        # width = self.main_diagram.custom_canvas.winfo_width()
-        self.canvas_name_label.place(x=400/2, anchor=tk.CENTER)
+        tree_width = self.main_diagram.tree.winfo_width() if self.main_diagram.is_tree_visible else 0
+        width = self.main_diagram.custom_canvas.winfo_width()
+        self.canvas_name_label.place(x=tree_width + width / 2, anchor=tk.N)
 
     def confirm_deletion(self):
         """
