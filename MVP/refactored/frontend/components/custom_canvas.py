@@ -909,8 +909,8 @@ class CustomCanvas(tk.Canvas):
         """
         Save current CustomCanvas as PNG file.
 
-        Resets the zoom of the CustomCanvas and asks the user where they would like to save the png file. Afterwards
-        creates png in MainDiagram.
+        Resets the zoom of the CustomCanvas and asks the user where they would like to save the png file.
+        Then MainDiagram is asked for a png file.
 
         :return: None
         """
