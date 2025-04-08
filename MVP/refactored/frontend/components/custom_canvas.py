@@ -419,10 +419,13 @@ class CustomCanvas(tk.Canvas):
         scale = 1
 
         self.prev_scale = self.total_scale
+        self.scan_dragto(0, 0, gain=1)
         if event.num == 5 or event.delta == -120:
             scale *= self.delta
             self.total_scale *= self.delta
         if event.num == 4 or event.delta == 120:
+            if self.total_scale > 10000:
+                return
             scale /= self.delta
             self.total_scale /= self.delta
 
