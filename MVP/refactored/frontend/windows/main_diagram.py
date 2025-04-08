@@ -169,8 +169,6 @@ class MainDiagram(tk.Tk):
         self.manage_methods = None
         self.import_counter = 0
 
-        # self.toolbar.update_canvas_label()
-
     @staticmethod
     def calculate_boxes_json_file_hash():
         with open(const.BOXES_CONF, "r") as file:

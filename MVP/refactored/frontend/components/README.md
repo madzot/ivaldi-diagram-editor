@@ -47,7 +47,6 @@ inside MainDiagram
 | current_wire_start       | Connection             | Connection that is used to remember where the Wire creation was started from.                                                                                       |
 | draw_wire_mode           | boolean                | Boolean stating whether the CustomCanvas is in draw wire mode.                                                                                                      |
 | diagram_source_box       | Box                    | Box that holds the CustomCanvas object, used when CustomCanvas is a sub-diagram.                                                                                    |
-| name                     | int                    | Tag that represents the name of the CustomCanvas on the Canvas.                                                                                                     |
 | name_text                | string                 | String of CustomCanvas name.                                                                                                                                        |
 | select_box               | int                    | The rectangle that is created when selecting items.                                                                                                                 |
 | selecting                | boolean                | Boolean stating if selecting is active.                                                                                                                             |
@@ -539,6 +538,9 @@ Toolbar
     .import_sub_diagram()
         Imports a new diagram as a sub-diagram of the currently opened diagram.
     
+    .update_canvas_label()
+        Update canvas name label in the Toolbar.
+
     .confirm_deletion()
         Opens a dialog for the user asking for confirmation about unsaved progress deletion.
 
