@@ -30,7 +30,17 @@ import constants as const
 
 
 class MainDiagram(tk.Tk):
+    """
+    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
+    you see when using the application.
+    """
     def __init__(self, receiver, load=False):
+        """
+        MainDiagram constructor.
+
+        :param receiver: Receiver object for sending information to backend.
+        :param load: Boolean if a diagram should be loaded upon opening.
+        """
         super().__init__()
         self.title("Dynamic String Diagram Canvas")
         self.receiver = receiver
@@ -249,7 +259,6 @@ class MainDiagram(tk.Tk):
         Will make the next result primarily highlighted, and potentially change canvas if necessary.
 
         :param up: Define if moving is done up or down.
-        :type up: bool
         :return: None
         """
         current_search = self.search_results[self.active_search_index]
@@ -286,7 +295,6 @@ class MainDiagram(tk.Tk):
         If they are on a different CustomCanvas then the active canvas will be changed to the new one.
 
         :param index: index of search result to check canvas of.
-        :type index: int
         :return: None
         """
         new_canvas = self.search_objects[self.search_results[index][0]].canvas
@@ -315,9 +323,7 @@ class MainDiagram(tk.Tk):
         Update the label for a function, searches by `old_label` and changes it to `new_label`
 
         :param old_label: Old label that will be changed
-        :type old_label: str
         :param new_label: String that old label will be changed to
-        :type new_label: str
         :return: None
         """
         if old_label in self.label_content.keys():
@@ -373,8 +379,7 @@ class MainDiagram(tk.Tk):
         Open graph visualization window.
 
         :param canvas: CustomCanvas that will be visualized.
-        :type canvas: CustomCanvas
-        :return:
+        :return: None
         """
         hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
         if hypergraph is None:
@@ -403,7 +408,6 @@ class MainDiagram(tk.Tk):
         Copy text from Tkinter.Text to clipboard.
 
         :param text_box: tkinter.Text containing text that will be copied.
-        :type text_box: tk.Text
         :return: None
         """
         self.clipboard_clear()  # Clear the clipboard
@@ -459,8 +463,8 @@ class MainDiagram(tk.Tk):
 
         Adds a new diagram to the treeview containing canvases.
 
-        :param canvas:
-        :return:
+        :param canvas: CustomCanvas to be added to diagram tree.
+        :return: None
         """
         # Add some items to the tree
         try:
@@ -498,7 +502,6 @@ class MainDiagram(tk.Tk):
         Update canvas name in treeview.
 
         :param canvas: CustomCanvas that will have its name updated.
-        :type canvas: CustomCanvas
         :return: None
         """
         self.tree.item(str(canvas.id), text=canvas.name_text)
@@ -529,7 +532,6 @@ class MainDiagram(tk.Tk):
         Switch the currently displayed CustomCanvas.
 
         :param canvas: CustomCanvas that will be displayed after switch.
-        :type canvas: CustomCanvas
         :return: None
         """
         for item in self.custom_canvas.selector.selected_items:
@@ -582,7 +584,7 @@ class MainDiagram(tk.Tk):
         Add input to currently opened diagram.
 
         :param id_: ID that will be added to input.
-        :return: box connection and diagram input tags
+        :return: Box connection and diagram input tags.
         """
         box_c = None
         if self.custom_canvas.diagram_source_box:
@@ -595,7 +597,7 @@ class MainDiagram(tk.Tk):
         Add output to currently opened diagram.
 
         :param id_: ID that will be added to output.
-        :return: box connection and diagram output tags
+        :return: Box connection and diagram output tags.
         """
         box_c = None
         if self.custom_canvas.diagram_source_box:
@@ -643,7 +645,6 @@ class MainDiagram(tk.Tk):
         Return `Connection` with the highest index on given side.
 
         :param side: side to find Connection on.
-        :type side: str
         :return: Connection object.
         """
         c_max = 0
@@ -684,7 +685,7 @@ class MainDiagram(tk.Tk):
         """
         Open manage quick create window.
 
-        :return:
+        :return: None
         """
         list_window = tk.Toplevel(self, width=100)
         list_window.minsize(100, 150)
@@ -766,9 +767,7 @@ class MainDiagram(tk.Tk):
         Add custom preset Box to currently open CustomCanvas.
 
         :param name: name of box to add.
-        :type name: str
         :param canvas: canvas to add box to.
-        :type canvas: CustomCanvas
         :return: None
         """
         self.importer.add_box_from_menu(canvas, name)
@@ -805,7 +804,7 @@ class MainDiagram(tk.Tk):
         """
         Save current diagram as a json file.
 
-        :return:
+        :return: None
         """
         self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
@@ -842,7 +841,7 @@ class MainDiagram(tk.Tk):
 
         Opens or closes the treeview on the left side of the canvas.
 
-        :return:
+        :return: None
         """
         if not self.is_tree_visible:
             self.is_tree_visible = True
@@ -877,9 +876,8 @@ class MainDiagram(tk.Tk):
         """
         Return TikZ code for given CustomCanvas.
 
-        :param canvas: CustomCanvas that TikZ is generated for
-        :type canvas: CustomCanvas
-        :return: String of TikZ code
+        :param canvas: CustomCanvas that TikZ is generated for.
+        :return: String of TikZ code.
         """
         fig, ax = self.generate_matplot(canvas)
 
@@ -894,7 +892,7 @@ class MainDiagram(tk.Tk):
 
         :param canvas: CustomCanvas that png will be created for.
         :param file_path: file_path of png
-        :return:
+        :return: None
         """
         fig, ax = self.generate_matplot(canvas, True)
         fig.savefig(file_path, format='png', dpi=300, bbox_inches='tight')
@@ -906,7 +904,7 @@ class MainDiagram(tk.Tk):
 
         :param canvas: CustomCanvas that matplot will be generated for.
         :param show_connections: Boolean to show Connections or not.
-        :return:
+        :return: Generated Matplotlib figure and axes containing the drawn canvas elements.
         """
         x_max, y_max = canvas.winfo_width() / 100, canvas.winfo_height() / 100
         fig, ax = plt.subplots(1, figsize=(x_max, y_max))

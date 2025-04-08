@@ -125,7 +125,6 @@ class CodeEditor:
         Handle saving.
 
         :param destroy: Specifies if the editor should be destroyed after saving.
-        :type destroy: bool
         :return: None
         """
         self.save_to_file()

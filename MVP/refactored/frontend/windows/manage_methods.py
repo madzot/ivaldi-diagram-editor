@@ -183,7 +183,6 @@ class ManageMethods(tk.Toplevel):
         Writes content into the functions_conf file.
 
         :param content: Dictionary that will be written to the functions conf file.
-        :type content: dict
         :return:
         """
         with open(const.FUNCTIONS_CONF, "r+") as file:

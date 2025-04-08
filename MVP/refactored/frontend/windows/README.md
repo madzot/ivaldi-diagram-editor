@@ -138,6 +138,7 @@ you see when using the application.
 | custom_canvas           | CustomCanvas            | The currently displayed CustomCanvas.                                                                                                                     |
 | search_window           | SearchWindow            | SearchWindow object.                                                                                                                                      |
 | is_tree_visible         | bool                    | Boolean showing if tree_view is visible or hidden.                                                                                                        |
+| tree                    | ttkbootstrap.Treeview   | A treeview object used for showing and moving between different CustomCanvases in the diagram.                                                            |
 | canvasses               | dict                    | A dictionary holding the ID and CustomCanvas object of all CustomCanvases in the MainDiagram.                                                             |
 | tree_root_id            | str                     | Root canvas ID used for tree_view.                                                                                                                        |
 | control_frame           | ttkbootstrap.Frame      | Frame on the right of the application that holds buttons for diagram editing.                                                                             |
@@ -154,7 +155,7 @@ you see when using the application.
 | quick_create_booleans   | list                    | List containing tkinter.BooleanVar that is used for remembering what preset Boxes are added to quick create when displaying quick creation manage window. |
 | manage_quick_create     | ttkbootstrap.Button     | Button to open the quick creation management window.                                                                                                      |
 | manage_methods_button   | ttkbootstrap.Button     | Button to open method management window.                                                                                                                  |
-| spider_box              | ttkbootstrap.Button     | Button to add a Spider to the CustomCanvas.                                                                                                               |
+| spider_button           | ttkbootstrap.Button     | Button to add a Spider to the CustomCanvas.                                                                                                               |
 | rename                  | ttkbootstrap.Button     | Button to rename the currently opened CustomCanvas.                                                                                                       |
 | random                  | ttkbootstrap.Button     | Button to create Wires at random on current CustomCanvas.                                                                                                 |
 | alg_not                 | ttkbootstrap.Button     | Button to generate algebraic notation for the current diagram.                                                                                            |
@@ -180,6 +181,9 @@ you see when using the application.
 
     .generate_code()
         Generate code from diagram and display it in the CodeEditor.
+
+    .open_manage_methods_window()
+        Open ManageMethods window.
 
     .open_search_window()
         Opens a search window, or highlights the existing one.
@@ -233,6 +237,12 @@ you see when using the application.
 
         Parameters:
             parents (str): treeview item id
+
+    .bind_buttons()
+        Bind button functions to input/output add/remove buttons.
+
+    .add_canvas()
+        Add a new CustomCanvas to the diagram.
 
     .get_canvas_by_id(canvas_id)
         Returns the CustomCanvas object with the given ID.
