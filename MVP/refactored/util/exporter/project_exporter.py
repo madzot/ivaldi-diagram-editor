@@ -74,7 +74,7 @@ class ProjectExporter(Exporter):
                 "connections": self.get_connections(box.connections),
                 "sub_diagram": None,
                 "locked": box.locked,
-                "shape": box.shape
+                "shape": box.style
             }
             if box.sub_diagram:
                 d["sub_diagram"] = self.create_canvas_dict(box.sub_diagram)
@@ -128,7 +128,7 @@ class ProjectExporter(Exporter):
             "right_c": right_connections,
             "left_c_types": left_con_types,
             "right_c_types": right_con_types,
-            "shape": box.shape,
+            "shape": box.style,
             "sub_diagram": None,
         }
         if box.sub_diagram:

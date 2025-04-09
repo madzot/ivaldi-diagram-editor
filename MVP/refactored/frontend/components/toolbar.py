@@ -80,6 +80,11 @@ class Toolbar(ttk.Frame):
 
         help_button.bind("<Button-1>", lambda event: self.open_help_window())
 
+        # Current canvas name
+        self.canvas_name_text = tk.StringVar()
+        self.canvas_name_label = ttk.Label(self, textvariable=self.canvas_name_text,
+                                           bootstyle="inverse-light", font="Helvetica 15 bold")
+
     def open_help_window(self):
         """
         Create and display the help window.
@@ -111,6 +116,20 @@ class Toolbar(ttk.Frame):
         self.main_diagram.importer.canvas = main_canvas
         if not is_importing:
             box.delete_box()
+
+    def update_canvas_label(self):
+        """
+        Update canvas name label.
+
+        Updates the name label in the Toolbar that displays the currently opened CustomCanvas name.
+
+        :return: None
+        """
+        self.canvas_name_text.set(self.main_diagram.custom_canvas.name_text)
+        self.canvas_name_label.place_forget()
+        tree_width = self.main_diagram.tree.winfo_width() if self.main_diagram.is_tree_visible else 0
+        width = self.main_diagram.custom_canvas.winfo_width()
+        self.canvas_name_label.place(x=tree_width + width / 2, anchor=tk.N)
 
     def confirm_deletion(self):
         """

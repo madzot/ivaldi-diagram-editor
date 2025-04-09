@@ -91,7 +91,7 @@ class Selector:
             return
         x = (coordinates[0] + coordinates[2]) / 2
         y = (coordinates[1] + coordinates[3]) / 2
-        box = self.canvas.add_box(loc=(x, y), shape=const.RECTANGLE)
+        box = self.canvas.add_box(loc=(x, y), style=const.RECTANGLE)
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
@@ -592,7 +592,7 @@ class Selector:
             'label': copy.deepcopy(box.label_text),
             'location': (box.x, box.y),
             'size': copy.deepcopy(box.size),
-            'shape': copy.deepcopy(box.shape),
+            'shape': copy.deepcopy(box.style),
             'connections': connections_copy,
             'sub-diagram': copy.deepcopy(box.sub_diagram.id) if box.sub_diagram else None
         })
@@ -614,7 +614,7 @@ class Selector:
 
     def paste_box(self, box, loc, wires, side_wires, canvas, multi=1, replace=False, return_box=False):
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-        new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), shape=box['shape'])
+        new_box = canvas.add_box(loc, size=(box['size'][0] * multi, box['size'][1] * multi), style=box['shape'])
         for c in box['connections']:
             if c['side'] == "right":
                 new_box.add_right_connection(connection_type=c['type'])
