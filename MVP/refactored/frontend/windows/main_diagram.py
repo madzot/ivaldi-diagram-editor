@@ -30,7 +30,17 @@ import constants as const
 
 
 class MainDiagram(tk.Tk):
+    """
+    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
+    you see when using the application.
+    """
     def __init__(self, receiver, load=False):
+        """
+        MainDiagram constructor.
+
+        :param receiver: Receiver object for sending information to backend.
+        :param load: Boolean if a diagram should be loaded upon opening.
+        """
         super().__init__()
         self.title("Dynamic String Diagram Canvas")
         self.receiver = receiver
@@ -75,14 +85,14 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.set_name("root")
         self.tree_root_id = str(self.custom_canvas.id)
         # Bind the treeview to the click event
-        self.tree.bind("<ButtonRelease-1>", self.on_tree_select)
+        self.tree.bind("<ButtonRelease-1>", lambda event: self.on_tree_select())
         self.tree.update()
 
         self.toggle_treeview()
 
         self.control_frame = ttk.Frame(self, bootstyle=LIGHT)
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
-        self.protocol("WM_DELETE_WINDOW", self.do_i_exit)
+        self.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
         self.importer = Importer(self.custom_canvas)
         # Add undefined box
@@ -103,12 +113,12 @@ class MainDiagram(tk.Tk):
         self.quick_create_boxes = []
 
         # Create Menubutton and Menu for dropdown
-        self.dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box to Add", width=16,
-                                              bootstyle=(PRIMARY, OUTLINE))
-        self.dropdown_menu = ttk.Menu(self.dropdown_button, tearoff=0)
-        self.dropdown_button.config(menu=self.dropdown_menu)
-        self.dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
-        self.update_dropdown_menu()
+        self.add_box_dropdown_button = ttk.Menubutton(self.control_frame, text="Select Box to Add", width=16,
+                                                      bootstyle=(PRIMARY, OUTLINE))
+        self.add_box_dropdown_menu = ttk.Menu(self.add_box_dropdown_button, tearoff=0)
+        self.add_box_dropdown_button.config(menu=self.add_box_dropdown_menu)
+        self.add_box_dropdown_button.pack(side=tk.TOP, padx=5, pady=5)
+        self.update_add_box_dropdown_menu()
 
         self.manage_boxes = ttk.Button(self.control_frame, text="Manage Boxes",
                                        command=self.manage_boxes_method, width=20, bootstyle=(PRIMARY, OUTLINE))
@@ -126,9 +136,9 @@ class MainDiagram(tk.Tk):
         self.manage_methods_button.pack(side=tk.TOP, padx=5, pady=5)
 
         # Add Spider
-        self.spider_box = ttk.Button(self.control_frame, text="Add Spider",
-                                     command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
-        self.spider_box.pack(side=tk.TOP, padx=5, pady=5)
+        self.spider_button = ttk.Button(self.control_frame, text="Add Spider",
+                                        command=self.custom_canvas.add_spider, width=20, bootstyle=(PRIMARY, OUTLINE))
+        self.spider_button.pack(side=tk.TOP, padx=5, pady=5)
 
         self.rename = ttk.Button(self.control_frame, text="Rename Diagram",
                                  command=self.rename, width=20, bootstyle=(PRIMARY, OUTLINE))
@@ -171,30 +181,69 @@ class MainDiagram(tk.Tk):
 
     @staticmethod
     def calculate_boxes_json_file_hash():
+        """
+        Return the hash of boxes_conf file.
+
+        :return: String hash of boxes configuration file.
+        """
         with open(const.BOXES_CONF, "r") as file:
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
     def load_functions(self):
+        """
+        Load functions configuration.
+
+        If function configuration exists, it will load them into label_content.
+
+        :return: None
+        """
         if os.stat(const.FUNCTIONS_CONF).st_size != 0:
             with open(const.FUNCTIONS_CONF, "r") as file:
                 self.label_content = json.load(file)
 
     def generate_code(self):
+        """
+        Generate code based on diagram.
+
+        Use CodeGenerator to generate code from diagram. This will also open a CodeEditor to display the code that
+        was generated.
+
+        :return: None
+        """
         print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         CodeEditor(self, code=code, is_generated=True)
 
     def open_manage_methods_window(self):
+        """
+        Open ManageMethods window.
+
+        :return: None
+        """
         self.manage_methods = ManageMethods(self)
 
     def open_search_window(self):
+        """
+        Open SearchWindow.
+
+        Opens a new SearchWindow or brings an existing one into focus.
+
+        :return: None
+        """
         try:
             self.search_window.focus()
         except (tk.TclError, AttributeError):
             self.search_window = SearchWindow(self)
 
     def cancel_search_results(self):
+        """
+        Cancel search results in diagram.
+
+        Clears search result variables and disables search highlighting on canvases.
+
+        :return: None
+        """
         self.is_search_active = False
         self.search_results = []
         self.active_search_index = 0
@@ -204,6 +253,14 @@ class MainDiagram(tk.Tk):
             canvas.remove_search_highlights()
 
     def move_between_search_results(self, up: bool):
+        """
+        Move primary highlight between results.
+
+        Will make the next result primarily highlighted, and potentially change canvas if necessary.
+
+        :param up: Define if moving is done up or down.
+        :return: None
+        """
         current_search = self.search_results[self.active_search_index]
         for index in current_search:
             self.search_objects[index].search_highlight_secondary()
@@ -222,15 +279,37 @@ class MainDiagram(tk.Tk):
         self.update_search_result_button_texts()
 
     def update_search_result_button_texts(self):
+        """
+        Update text on SearchResultButton.
+
+        :return: None
+        """
         for canvas in self.canvasses.values():
             canvas.search_result_button.info_text.set(f"Search: {self.active_search_index + 1}/{len(self.search_results)}")
 
     def check_search_result_canvas(self, index):
+        """
+        Check CustomCanvas of search result items at index.
+
+        Checks if the items at index of search results are on the same CustomCanvas.
+        If they are on a different CustomCanvas then the active canvas will be changed to the new one.
+
+        :param index: index of search result to check canvas of.
+        :return: None
+        """
         new_canvas = self.search_objects[self.search_results[index][0]].canvas
         if new_canvas != self.custom_canvas:
             self.switch_canvas(new_canvas)
 
     def highlight_search_result_by_index(self, index):
+        """
+        Highlight search results at index.
+
+        Given an index, it will highlight the search result objects that are in the results with that index.
+
+        :param index: Index of search results.
+        :return: None
+        """
         new_search = self.search_results[index]
         for index in new_search:
             self.search_objects[index].search_highlight_primary()
@@ -238,6 +317,15 @@ class MainDiagram(tk.Tk):
             wire.search_highlight_primary()
 
     def change_function_label(self, old_label, new_label):
+        """
+        Change label of function.
+
+        Update the label for a function, searches by `old_label` and changes it to `new_label`
+
+        :param old_label: Old label that will be changed
+        :param new_label: String that old label will be changed to
+        :return: None
+        """
         if old_label in self.label_content.keys():
             code = self.label_content[old_label]
             self.label_content[new_label] = code
@@ -248,6 +336,11 @@ class MainDiagram(tk.Tk):
                         box.edit_label(new_label)
 
     def create_algebraic_notation(self):
+        """
+        Opens the algebraic notation window.
+
+        :return: None
+        """
         if not is_canvas_complete(self.custom_canvas):
             text = "Diagram is incomplete!"
             text_window = tk.Toplevel(self)
@@ -282,6 +375,12 @@ class MainDiagram(tk.Tk):
                 copy_button.pack(pady=5)
 
     def visualize_as_graph(self, canvas):
+        """
+        Open graph visualization window.
+
+        :param canvas: CustomCanvas that will be visualized.
+        :return: None
+        """
         hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
         if hypergraph is None:
             messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
@@ -305,20 +404,37 @@ class MainDiagram(tk.Tk):
         plot_window.deiconify()
 
     def copy_to_clipboard(self, text_box):
+        """
+        Copy text from Tkinter.Text to clipboard.
+
+        :param text_box: tkinter.Text containing text that will be copied.
+        :return: None
+        """
         self.clipboard_clear()  # Clear the clipboard
         text = text_box.get("1.0", tk.END)  # Get the content of the text box
         self.clipboard_append(text)  # Append the text to the clipboard
         self.update()  # Now it stays on the clipboard even after the window is closed
 
     def open_children(self, parent):
+        """
+        Open children of parent in treeview.
+
+        :param parent: Treeview item
+        :return: None
+        """
         self.tree.item(parent, open=True)  # open parent
         for child in self.tree.get_children(parent):
             self.open_children(child)  # recursively open children
 
     def bind_buttons(self):
+        """
+        Bind button functions to input/output add/remove buttons.
+
+        :return: None
+        """
         self.undefined_box_button.configure(command=self.custom_canvas.add_box)
         self.manage_boxes.configure(command=self.manage_boxes_method)
-        self.spider_box.configure(command=self.custom_canvas.add_spider)
+        self.spider_button.configure(command=self.custom_canvas.add_spider)
 
         self.draw_wire_button.configure(command=self.custom_canvas.toggle_draw_wire_mode)
 
@@ -342,6 +458,14 @@ class MainDiagram(tk.Tk):
             button.configure(command=buttons[name])
 
     def add_canvas(self, canvas):
+        """
+        Add new CustomCanvas to diagram.
+
+        Adds a new diagram to the treeview containing canvases.
+
+        :param canvas: CustomCanvas to be added to diagram tree.
+        :return: None
+        """
         # Add some items to the tree
         try:
             parent_id = 1
@@ -365,12 +489,31 @@ class MainDiagram(tk.Tk):
         self.open_children(self.tree_root_id)
 
     def get_canvas_by_id(self, canvas_id):
+        """
+        Return CustomCanvas object by ID.
+
+        :param canvas_id: ID for CustomCanvas.
+        :return: CustomCanvas object
+        """
         return self.canvasses[canvas_id]
 
-    def change_canvas_name(self, canvas):
+    def update_canvas_name(self, canvas):
+        """
+        Update canvas name in treeview.
+
+        :param canvas: CustomCanvas that will have its name updated.
+        :return: None
+        """
         self.tree.item(str(canvas.id), text=canvas.name_text)
 
     def rename(self):
+        """
+        Rename the currently open canvas.
+
+        Opens a dialog for the user to change the name for the canvas.
+
+        :return: None
+        """
         # TODO SET limit on how long name can be, same for boxes
         if self.custom_canvas.diagram_source_box:
             txt = "Enter label for sub-diagram:"
@@ -380,11 +523,17 @@ class MainDiagram(tk.Tk):
 
         if new_name:
             self.custom_canvas.set_name(new_name)
-            self.change_canvas_name(self.custom_canvas)
+            self.update_canvas_name(self.custom_canvas)
             if self.custom_canvas.diagram_source_box:
                 self.custom_canvas.diagram_source_box.set_label(new_name)
 
     def switch_canvas(self, canvas):
+        """
+        Switch the currently displayed CustomCanvas.
+
+        :param canvas: CustomCanvas that will be displayed after switch.
+        :return: None
+        """
         for item in self.custom_canvas.selector.selected_items:
             item.deselect()
         width = self.custom_canvas.winfo_width()
@@ -406,10 +555,23 @@ class MainDiagram(tk.Tk):
         self.tree.see(str(canvas.id))
 
     def del_from_canvasses(self, canvas):
+        """
+        Delete `CustomCanvas` from `self.canvasses`.
+
+        :param canvas: CustomCanvas that will be deleted.
+        :return: None
+        """
         self.tree.delete(str(canvas.id))
         del self.canvasses[str(canvas.id)]
 
-    def on_tree_select(self, _):
+    def on_tree_select(self):
+        """
+        Handle tree select.
+
+        Will take the currently selected item in treeview and switch to that canvas.
+
+        :return: None
+        """
         # Get the selected item
         selected_item = self.tree.focus()
         if selected_item:
@@ -418,6 +580,12 @@ class MainDiagram(tk.Tk):
             new_canvas.focus_set()
 
     def add_diagram_input(self, id_=None):
+        """
+        Add input to currently opened diagram.
+
+        :param id_: ID that will be added to input.
+        :return: Box connection and diagram input tags.
+        """
         box_c = None
         if self.custom_canvas.diagram_source_box:
             box_c = self.custom_canvas.diagram_source_box.add_left_connection()
@@ -425,6 +593,12 @@ class MainDiagram(tk.Tk):
         return box_c, canvas_i
 
     def add_diagram_output(self, id_=None):
+        """
+        Add output to currently opened diagram.
+
+        :param id_: ID that will be added to output.
+        :return: Box connection and diagram output tags.
+        """
         box_c = None
         if self.custom_canvas.diagram_source_box:
             box_c = self.custom_canvas.diagram_source_box.add_right_connection()
@@ -432,6 +606,11 @@ class MainDiagram(tk.Tk):
         return box_c, canvas_o
 
     def remove_diagram_input(self):
+        """
+        Remove input from currently opened diagram.
+
+        :return: None
+        """
         if self.custom_canvas.diagram_source_box:
             c = self.find_connection_to_remove(const.LEFT)
             if c:
@@ -444,6 +623,11 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.remove_diagram_input()
 
     def remove_diagram_output(self):
+        """
+        Remove output from currently opened diagram.
+
+        :return: None
+        """
         if self.custom_canvas.diagram_source_box:
 
             c = self.find_connection_to_remove(const.RIGHT)
@@ -457,6 +641,12 @@ class MainDiagram(tk.Tk):
             self.custom_canvas.remove_diagram_output()
 
     def find_connection_to_remove(self, side):
+        """
+        Return `Connection` with the highest index on given side.
+
+        :param side: side to find Connection on.
+        :return: Connection object.
+        """
         c_max = 0
         c = None
         for connection in self.custom_canvas.diagram_source_box.connections:
@@ -466,6 +656,11 @@ class MainDiagram(tk.Tk):
         return c
 
     def manage_boxes_method(self):
+        """
+        Open manage boxes window.
+
+        :return: None
+        """
         list_window = tk.Toplevel(self)
         list_window.title("List of Elements")
 
@@ -487,6 +682,11 @@ class MainDiagram(tk.Tk):
         remove_button.pack(side=tk.LEFT, padx=5)
 
     def manage_quick_create(self):
+        """
+        Open manage quick create window.
+
+        :return: None
+        """
         list_window = tk.Toplevel(self, width=100)
         list_window.minsize(100, 150)
         list_window.title("List of Boxes")
@@ -519,27 +719,43 @@ class MainDiagram(tk.Tk):
         remove_button = tk.Button(button_frame, text="Save", command=save)
         remove_button.pack(padx=5)
 
-    def update_dropdown_menu(self):
+    def update_add_box_dropdown_menu(self):
+        """
+        Update add_box_dropdown menu.
+
+        :return: None
+        """
         self.boxes = {}
 
         self.get_boxes_from_file()
         # Clear existing menu items
 
         # add undefined box button as well to make width greater
-        self.dropdown_menu.delete(0, tk.END)
-        self.dropdown_menu.add_command(label="Add Undefined Box",
-                                       command=self.custom_canvas.add_box)
-        self.dropdown_menu.add_separator()
+        self.add_box_dropdown_menu.delete(0, tk.END)
+        self.add_box_dropdown_menu.add_command(label="Add Undefined Box",
+                                               command=self.custom_canvas.add_box)
+        self.add_box_dropdown_menu.add_separator()
 
         # Add options to the dropdown menu
         for i, name in enumerate(self.boxes):
-            self.dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
+            self.add_box_dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
 
     def remove_option(self, option):
+        """
+        Remove preset Box from configuration files.
+
+        :param option: Preset that will be removed.
+        :return: None
+        """
         self.project_exporter.del_box_menu_option(option)
-        self.update_dropdown_menu()
+        self.update_add_box_dropdown_menu()
 
     def get_boxes_from_file(self):
+        """
+        Load preset Boxes from file.
+
+        :return: None
+        """
         d = self.importer.load_boxes_to_menu()
         self.quick_create_booleans = []
         for k in d:
@@ -547,30 +763,71 @@ class MainDiagram(tk.Tk):
             self.quick_create_booleans.append(tk.BooleanVar())
 
     def add_custom_box(self, name, canvas):
+        """
+        Add custom preset Box to currently open CustomCanvas.
+
+        :param name: name of box to add.
+        :param canvas: canvas to add box to.
+        :return: None
+        """
         self.importer.add_box_from_menu(canvas, name)
 
     def save_box_to_diagram_menu(self, box):
+        """
+        Save new `Box` to presets.
+
+        :param box: `Box` that will be saved
+        :return: None
+        """
         self.project_exporter.export_box_to_menu(box)
-        self.update_dropdown_menu()
+        self.update_add_box_dropdown_menu()
 
     def set_title(self, filename):
+        """
+        Set title of MainDiagram.
+
+        :param filename: New title of MainDiagram
+        :return: None
+        """
         self.title(filename.replace(".json", ""))
 
-    def do_i_exit(self):
+    def confirm_exit(self):
+        """
+        Ask confirmation for exiting the application.
+
+        :return: None
+        """
         if messagebox.askokcancel("Exit", "Do you really want to exit?"):
             self.destroy()
 
     def save_to_file(self):
+        """
+        Save current diagram as a json file.
+
+        :return: None
+        """
         self.custom_canvas.reset_zoom()
         filename = self.project_exporter.export()
         self.set_title(filename)
 
     def load_from_file(self):
+        """
+        Load a diagram into the application.
+
+        :return: None
+        """
         filename = self.importer.import_diagram()
         if filename:
             self.set_title(filename.replace(".json", ""))
 
     def update_shape_dropdown_menu(self):
+        """
+        Update the shape dropdown menu.
+
+        Clears and adds commands with all shapes into the menu.
+
+        :return: None
+        """
         shapes = [const.RECTANGLE, const.TRIANGLE]
         self.shape_dropdown_menu.delete(0, tk.END)
 
@@ -579,6 +836,13 @@ class MainDiagram(tk.Tk):
                                                  command=lambda s=shape: self.custom_canvas.set_box_shape(s))
 
     def toggle_treeview(self):
+        """
+        Toggle open the treeview.
+
+        Opens or closes the treeview on the left side of the canvas.
+
+        :return: None
+        """
         if not self.is_tree_visible:
             self.is_tree_visible = True
             self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
@@ -599,11 +863,22 @@ class MainDiagram(tk.Tk):
 
     @staticmethod
     def pairwise(iterable):
-        "s -> (s0, s1), (s2, s3), (s4, s5), ..."
+        """
+        s -> (s0, s1), (s2, s3), (s4, s5), ...
+
+        :param iterable: iterable that will be turned into pairs.
+        :return: Tuple of pairs of elements from iterable.
+        """
         a = iter(iterable)
         return zip(a, a)
 
     def generate_tikz(self, canvas):
+        """
+        Return TikZ code for given CustomCanvas.
+
+        :param canvas: CustomCanvas that TikZ is generated for.
+        :return: String of TikZ code.
+        """
         fig, ax = self.generate_matplot(canvas)
 
         tikzplotlib.clean_figure(fig=fig)
@@ -612,11 +887,25 @@ class MainDiagram(tk.Tk):
         return tikz
 
     def generate_png(self, canvas, file_path):
+        """
+        Generate a .png file from canvas.
+
+        :param canvas: CustomCanvas that png will be created for.
+        :param file_path: file_path of png
+        :return: None
+        """
         fig, ax = self.generate_matplot(canvas, True)
         fig.savefig(file_path, format='png', dpi=300, bbox_inches='tight')
         plt.close()
 
     def generate_matplot(self, canvas, show_connections=False):
+        """
+        Generates a matplot figure of a given canvas.
+
+        :param canvas: CustomCanvas that matplot will be generated for.
+        :param show_connections: Boolean to show Connections or not.
+        :return: Generated Matplotlib figure and axes containing the drawn canvas elements.
+        """
         x_max, y_max = canvas.winfo_width() / 100, canvas.winfo_height() / 100
         fig, ax = plt.subplots(1, figsize=(x_max, y_max))
         ax.set_aspect('equal', adjustable='box')
@@ -688,6 +977,14 @@ class MainDiagram(tk.Tk):
 
     @staticmethod
     def get_wire_style(wire):
+        """
+        Return style for wire for matplot.
+
+        Takes a Wire and returns the corresponding style for matplot usage.
+
+        :param wire: Wire style is created for.
+        :return: Tuple of color and dash style.
+        """
         match wire.type:
             case WireType.FIRST:
                 style = "black", ":"
