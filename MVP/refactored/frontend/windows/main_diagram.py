@@ -549,6 +549,8 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.update_search_results_button()
         self.bind_buttons()
 
+        self.toolbar.update_canvas_label()
+
         self.tree.selection_remove(self.tree.selection())
 
         self.tree.selection_set(str(canvas.id))
