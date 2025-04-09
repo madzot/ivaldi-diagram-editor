@@ -1,5 +1,5 @@
 import tkinter as tk
-import ttkbootstrap as tkk
+import ttkbootstrap as ttk
 import ctypes
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
@@ -7,7 +7,15 @@ from MVP.refactored.frontend.util.search_algorithm import SearchAlgorithm
 
 
 class SearchWindow(tk.Toplevel):
+    """
+    `SearchWindow` is the window that holds settings and a canvas to conduct searches in the diagram.
+    """
     def __init__(self, main_diagram):
+        """
+        SearchWindow constructor.
+
+        :param main_diagram: MainDiagram object to use for functions and variables.
+        """
         super().__init__()
         self.main_diagram = main_diagram
 
@@ -35,13 +43,13 @@ class SearchWindow(tk.Toplevel):
 
         self.search_all_canvases = tk.IntVar()
         self.search_all_canvases.set(1)
-        self.search_all_option_button = tkk.Checkbutton(self.options_frame, text="Search all canvases",
+        self.search_all_option_button = ttk.Checkbutton(self.options_frame, text="Search all canvases",
                                                         variable=self.search_all_canvases)
         self.search_all_option_button.grid(row=1, column=0, sticky=tk.NSEW, padx=(50, 0))
 
         self.match_labels = tk.IntVar()
         self.match_labels.set(0)
-        self.match_labels_button = tkk.Checkbutton(self.options_frame, text="Match labels",
+        self.match_labels_button = ttk.Checkbutton(self.options_frame, text="Match labels",
                                                    variable=self.match_labels)
         self.match_labels_button.grid(row=1, column=1, sticky=tk.NSEW, padx=(0, 0))
 
@@ -52,7 +60,7 @@ class SearchWindow(tk.Toplevel):
 
         self.canvas_label = tk.Label(self.canvas_label_frame, text="Canvas", font=("Arial", 14, "bold"))
         self.canvas_label.grid(row=1, column=0, sticky=tk.W, padx=(30, 0))
-        self.canvas_frame = tkk.Frame(self, bootstyle=tkk.PRIMARY)
+        self.canvas_frame = ttk.Frame(self, bootstyle=ttk.PRIMARY)
         self.canvas_frame.pack(padx=2, pady=9, fill=tk.BOTH, expand=True)
 
         self.search_canvas = CustomCanvas(self.canvas_frame, self.main_diagram, is_search=True)
@@ -62,10 +70,17 @@ class SearchWindow(tk.Toplevel):
         self.result_frame = tk.Frame(self)
         self.result_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=False)
 
-        self.search_button = tkk.Button(self.result_frame, text="Search", command=self.search)
+        self.search_button = ttk.Button(self.result_frame, text="Search", command=self.search)
         self.search_button.pack(side=tk.RIGHT)
 
     def search(self):
+        """
+        Activate the search.
+
+        Activates search and turns on SearchResultButton.
+
+        :return: None
+        """
         if self.main_diagram.is_search_active:
             self.main_diagram.cancel_search_results()
         algorithm = SearchAlgorithm(self.search_canvas, self.main_diagram.custom_canvas, self)

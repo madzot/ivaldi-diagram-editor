@@ -25,7 +25,7 @@ class Box:
 
     The coordinates of a Box are the top left corner for it.
     """
-    def __init__(self, canvas, x, y, size=(60, 60), id_=None, shape=const.RECTANGLE):
+    def __init__(self, canvas, x, y, size=(60, 60), id_=None, style=const.RECTANGLE):
         """
         Box constructor.
 
@@ -34,9 +34,9 @@ class Box:
         :param y: Y coordinate of the Box.
         :param size: (Optional) Tuple with width and height of box.
         :param id_: (Optional) ID of the box.
-        :param shape: (Optional) Shape of the box.
+        :param style: (Optional) Shape of the box.
         """
-        self.shape = shape
+        self.style = style
         self.canvas = canvas
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
@@ -292,7 +292,7 @@ class Box:
                     self.set_label(name)
                 self.sub_diagram.set_name(name)
                 self.canvas.main_diagram.add_canvas(self.sub_diagram)
-                self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
+                self.canvas.main_diagram.update_canvas_name(self.sub_diagram)
                 if switch:
                     self.canvas.main_diagram.switch_canvas(self.sub_diagram)
 
@@ -570,7 +570,7 @@ class Box:
         if self.label_text:
             if self.sub_diagram:
                 self.sub_diagram.set_name(self.label_text)
-                self.canvas.main_diagram.change_canvas_name(self.sub_diagram)
+                self.canvas.main_diagram.update_canvas_name(self.sub_diagram)
 
         self.bind_event_label()
 
@@ -733,9 +733,9 @@ class Box:
 
         :return: None
         """
-        if self.shape == const.RECTANGLE:
+        if self.style == const.RECTANGLE:
             self.canvas.coords(self.shape, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
-        if self.shape == const.TRIANGLE:
+        if self.style == const.TRIANGLE:
             self.canvas.coords(self.shape,
                                self.x + self.size[0], self.y + self.size[1] / 2,
                                self.x, self.y,
@@ -990,10 +990,10 @@ class Box:
         :return: Tag that represents the Box in CustomCanvas.
         """
         w, h = self.size
-        if self.shape == const.RECTANGLE:
+        if self.style == const.RECTANGLE:
             return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
                                                 outline=const.BLACK, fill=const.WHITE)
-        if self.shape == const.TRIANGLE:
+        if self.style == const.TRIANGLE:
             return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
                                               self.x, self.y + h, outline=const.BLACK, fill=const.WHITE)
 
@@ -1007,9 +1007,9 @@ class Box:
         :return: None
         """
         if shape == const.RECTANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="rectangle")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, style="rectangle")
         elif shape == const.TRIANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, shape="triangle")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, style="triangle")
         else:
             return
         self.canvas.copier.copy_box(self, new_box)

@@ -47,7 +47,6 @@ inside MainDiagram
 | current_wire_start       | Connection             | Connection that is used to remember where the Wire creation was started from.                                                                                       |
 | draw_wire_mode           | boolean                | Boolean stating whether the CustomCanvas is in draw wire mode.                                                                                                      |
 | diagram_source_box       | Box                    | Box that holds the CustomCanvas object, used when CustomCanvas is a sub-diagram.                                                                                    |
-| name                     | int                    | Tag that represents the name of the CustomCanvas on the Canvas.                                                                                                     |
 | name_text                | string                 | String of CustomCanvas name.                                                                                                                                        |
 | select_box               | int                    | The rectangle that is created when selecting items.                                                                                                                 |
 | selecting                | boolean                | Boolean stating if selecting is active.                                                                                                                             |
@@ -268,7 +267,7 @@ inside MainDiagram
     .nullify_wire_start()
         Changes current_wire_start color back to 'black' and resets the variable to None.
 
-    .add_box(loc, size, id_, shape)
+    .add_box(loc, size, id_, style)
         Creates a Box object. Location, size, id and shape of the Box can be specified with additional params.
         Returns the created Box tag.
 
@@ -276,7 +275,7 @@ inside MainDiagram
             loc (tuple): (Optional) Location that the Box will be created at. Default is (100, 100)
             size (tuple): (Optional) Size of the Box that will be created. Default is (60, 60)
             id_ (int): (Optional) Custom set ID for the Box that will be created.
-            shape (string): (Optional) Specify shape of the Box that will be created. Default is the canvas selected shape.
+            style (string): (Optional) Specify style of the Box that will be created. Default is the canvas selected style.
 
     .get_box_by_id(box_id)
         Returns Box object with given id. Returns None if no Box with given id found.
@@ -518,18 +517,20 @@ Toolbar
 
 ### Toolbar variables
 
-| **Variable**     | **Type**           | **Description**                                                                   |
-|------------------|--------------------|-----------------------------------------------------------------------------------|
-| main_diagram     | MainDiagram        | MainDiagram object used to access functions.                                      |
-| file_button      | tkinter.Menubutton | Menubutton that holds File menu.                                                  |
-| file_menu        | tkinter.Menu       | Menu that is opened when pressing file_button. Holds File sub-menus and commands. |
-| save_submenu     | tkinter.Menu       | Save sub-menu. Holds commands about saving.                                       |
-| generate_submenu | tkinter.Menu       | Generation sub-menu. Holds commands about generation.                             |
-| edit_button      | tkinter.Menubutton | Menubutton that holds Edit menu.                                                  |
-| edit_menu        | tkinter.Menu       | Menu that is opened when pressing edit_button.                                    |
-| view_button      | tkinter.Menubutton | Menubutton that holds View menu.                                                  |
-| view_menu        | tkinter.Menu       | Menu for View commands.                                                           |
-| help_logo        | ImageTk.PhotoImage | Help logo that is used to open the help window.                                   |
+| **Variable**      | **Type**           | **Description**                                                                   |
+|-------------------|--------------------|-----------------------------------------------------------------------------------|
+| main_diagram      | MainDiagram        | MainDiagram object used to access functions.                                      |
+| file_button       | tkinter.Menubutton | Menubutton that holds File menu.                                                  |
+| file_menu         | tkinter.Menu       | Menu that is opened when pressing file_button. Holds File sub-menus and commands. |
+| save_submenu      | tkinter.Menu       | Save sub-menu. Holds commands about saving.                                       |
+| generate_submenu  | tkinter.Menu       | Generation sub-menu. Holds commands about generation.                             |
+| edit_button       | tkinter.Menubutton | Menubutton that holds Edit menu.                                                  |
+| edit_menu         | tkinter.Menu       | Menu that is opened when pressing edit_button.                                    |
+| view_button       | tkinter.Menubutton | Menubutton that holds View menu.                                                  |
+| view_menu         | tkinter.Menu       | Menu for View commands.                                                           |
+| help_logo         | ImageTk.PhotoImage | Help logo that is used to open the help window.                                   |
+| canvas_name_text  | tkinter.StringVar  | StringVar that holds the text for the canvas name.                                |
+| canvas_name_label | ttkbootstrap.Label | Label that holds the canvas name and is shown in the Toolbar.                     |
 
 ### Toolbar functions.
 
@@ -539,6 +540,9 @@ Toolbar
     .import_sub_diagram()
         Imports a new diagram as a sub-diagram of the currently opened diagram.
     
+    .update_canvas_label()
+        Update canvas name label in the Toolbar.
+
     .confirm_deletion()
         Opens a dialog for the user asking for confirmation about unsaved progress deletion.
 
