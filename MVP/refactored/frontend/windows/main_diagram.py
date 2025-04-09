@@ -911,7 +911,7 @@ class MainDiagram(tk.Tk):
         ax.set_aspect('equal', adjustable='box')
 
         for box in canvas.boxes:
-            if box.shape == const.TRIANGLE:
+            if box.style == const.TRIANGLE:
                 polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
                                            (box.x / 100, y_max - box.y / 100),
                                            (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),

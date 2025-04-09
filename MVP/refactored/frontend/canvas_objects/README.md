@@ -353,14 +353,14 @@ The coordinates of a Box are the top left corner for it.
 | # **Optional params** |              |                                                                                                                                    |
 | size                  | tuple        | A list containing the height and width of the box. Default value is (60, 60)                                                       |
 | id_                   | int          | Box ID. If no value is given then Box will receive a random ID.                                                                    |
-| shape                 | string       | String describing the shape of the Box. Default value is constants.RECTANGLE.<br/> Usable values for this are: RECTANGLE, TRIANGLE |
+| style                 | string       | String describing the style of the Box. Default value is constants.RECTANGLE.<br/> Usable values for this are: RECTANGLE, TRIANGLE |
 
 
 ### Box variables
 
 | **Variable**      | **Type**     | **Description**                                                                                                                                                                                         |
 |-------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| shape             | string       | Describes shape of Box, as described in Box parameters.                                                                                                                                                 |
+| style             | string       | Describes style of Box, as described in Box parameters.                                                                                                                                                 |
 | canvas            | CustomCanvas | The CustomCanvas object that the Box is drawn on.                                                                                                                                                       |
 | x                 | int          | X coordinate of the top left corner of the Box.                                                                                                                                                         |
 | y                 | int          | Y coordinate of the top left corner of the Box.                                                                                                                                                         |
@@ -377,7 +377,7 @@ The coordinates of a Box are the top left corner for it.
 | wires             | list         | List of Wires attached to the Box's Connections.                                                                                                                                                        |
 | id                | int          | ID of the Box.                                                                                                                                                                                          |
 | context_menu      | tkinter.Menu | Context menu used for Box.                                                                                                                                                                              |
-| rect              | int          | CustomCanvas tag that represents the Box rectangle or other shape in the canvas.                                                                                                                        |
+| shape             | int          | CustomCanvas tag that represents the Box rectangle or other shape in the canvas.                                                                                                                        |
 | resize_handle     | int          | CustomCanvas tag that represents the resizing handle in the Box.                                                                                                                                        |
 | locked            | boolean      | Determines if the Box is locked or not. While locked some feature's are hidden.                                                                                                                         |
 | sub_diagram       | CustomCanvas | CustomCanvas object that is the sub-diagram of the Box. It is None if the Box is not a sub-diagram Box.                                                                                                 |
