@@ -1,4 +1,3 @@
-import inspect
 import os
 from inspect import signature
 from typing import Callable
@@ -41,10 +40,10 @@ class BoxFunction:
         if is_predefined_function:
             predefined_file_code = predefined_functions[self.name]
             self._set_data_from_file_code(predefined_file_code)
-            self.code = predefined_file_code # TODO: Remove this variable after code generation is refactored
+            # self.code = predefined_file_code  # TODO: Remove this variable after code generation is refactored
         elif file_code is not None:
             self._set_data_from_file_code(file_code)
-            self.code = file_code # TODO: Remove this variable after code generation is refactored
+            # self.code = file_code  # TODO: Remove this variable after code generation is refactored
         else:
             self.main_function: Callable = function
             self.min_args: int = min_args
@@ -59,13 +58,6 @@ class BoxFunction:
             self.main_function = CodeInspector.get_main_function(file_code, self.name)  # TODO self.name?
             self.helper_functions = CodeInspector.get_help_methods(file_code, self.name)  # TODO self.name?
         self.imports = CodeInspector.get_imports(file_code)
-        self.min_args = ...
-        self.max_args = ...
-
-        # meta = local["meta"]
-        # self.min_args = meta["min_args"]
-        # self.max_args = meta["max_args"]
-        # my_list = inspect.getmembers(self.main_function)
 
         # TODO: set imports for predefined functions
 
@@ -74,7 +66,7 @@ class BoxFunction:
         sig = signature(self.main_function)
         params = sig.parameters
         count = len(params)
-        if params["self"]:
+        if "self" in params:
             count -= 1
         return count
 

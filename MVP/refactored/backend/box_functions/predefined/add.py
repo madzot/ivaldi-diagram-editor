@@ -1,5 +1,4 @@
 import math
-import copy
 
 def invoke(*numbers: list) -> int:
     if len(numbers) < 2:

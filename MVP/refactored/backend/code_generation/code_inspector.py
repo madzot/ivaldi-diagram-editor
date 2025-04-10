@@ -2,6 +2,7 @@ import ast
 from typing import Optional
 
 import astor  # Requires pip install astor
+import autopep8
 
 
 class CodeInspector(ast.NodeTransformer):
@@ -115,7 +116,7 @@ class CodeInspector(ast.NodeTransformer):
         if main_method is None:
             return None
 
-        return astor.to_source(main_method)
+        return autopep8.fix_code(astor.to_source(main_method))
 
     @classmethod
     def get_help_methods(cls, code_str: str, main_method_name: str) -> Optional[list[str]]:
@@ -129,7 +130,7 @@ class CodeInspector(ast.NodeTransformer):
                 methods.append(node)
 
         if not methods:
-            return None
+            return []
 
         return [astor.to_source(method) for method in methods]
 
@@ -148,6 +149,6 @@ class CodeInspector(ast.NodeTransformer):
                 imports.append(node)
 
         if not imports:
-            return None
+            return []
 
         return [astor.to_source(ast_import) for ast_import in imports]

@@ -16,33 +16,77 @@ from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 class CodeGenerator:
     @classmethod
     def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> str:
+        """
+            Generates and writes Python code for a given canvas and its related components.
+
+            This class method processes the provided canvas, associated canvasses, and main
+            diagram to generate executable Python code. The resultant code includes imports,
+            transformed functions, and a constructed main function. The function further
+            writes this code to a file named 'diagram.py' and also returns the formatted
+            Python code as a string.
+
+            Arguments:
+                canvas (CustomCanvas): The main canvas for which the code is generated.
+                canvasses (dict[str, CustomCanvas]): A dictionary containing other related
+                    canvasses keyed by their IDs as strings.
+                main_diagram: The main diagram associated with the code generation process.
+
+            Returns:
+                str: The formatted Python code as a string after applying code style
+                    adjustments.
+        """
+        # Retrieve all relevant code parts from the canvas and related canvasses.
+        # The dictionary `code_parts` maps BoxFunction objects to corresponding box IDs.
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses, main_diagram)
+
+        # Generate the imports section based on functions' code and start composing the file content.
         file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n\n"
 
+        # Initialize a dictionary to store variables/functions found within each BoxFunction.
         box_functions: dict[BoxFunction, set[str]] = {}
 
+        # Analyze each BoxFunction to identify global variables and function names in its code.
         for box_function in code_parts.keys():
+            # Using CodeInspector to analyze the code content of the BoxFunction.
             renamer = CodeInspector()
             variables = set()
+
+            # Find all global variables in the BoxFunction's code.
             variables.update(renamer.find_globals(box_function.code))
+
+            # Find all function names in the BoxFunction's code.
             variables.update(renamer.find_function_names(box_function.code))
+
+            # Store the discovered variables and names in the dictionary.
             box_functions[box_function] = variables
 
+        # Perform renaming of functions/variables to avoid conflicts or improve readability.
+        # This step might include prefixing or suffixing function and variable names.
         function_list, renamed_functions = cls.rename(box_functions)
+
+        # Remove meta-information (e.g., comments or markers) from the function list if necessary.
         function_list = cls.remove_meta(function_list)
+
+        # Remove redundant imports from the functions to avoid clutter in the generated code.
         function_list = cls.remove_imports(function_list)
 
+        # Add the processed functions' code to the overall file content.
         file_content += "\n".join(function_list)
 
-        file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0], renamed_functions)
+        # Construct the main function using the hypergraph of the current canvas.
+        # This includes defining function calls and handling data flow between components.
+        file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0],
+                                                           renamed_functions)
 
+        # Write the combined code to the "diagram.py" file and format it using autopep8.
         with open("diagram.py", "w") as file:
             file.write(autopep8.fix_code(file_content))
 
+        # Return the final formatted code as a string for potential further use.
         return autopep8.fix_code(file_content)
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> dict[
+    def get_all_code_parts(cls, canvas: CustomCanvas) -> dict[
                             BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         hypergraphs = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
@@ -54,15 +98,6 @@ class CodeGenerator:
                         code_parts[hyper_edge.get_box_function()].append(hyper_edge.id)
                     else:
                         code_parts[hyper_edge.get_box_function()] = [hyper_edge.id]
-        # for box in canvas.boxes:
-        #     if str(box.id) in canvasses:
-        #         code_parts.update(cls.get_all_code_parts(canvasses.get(str(box.id)), canvasses, main_diagram))
-        #     else:
-        #         box_function = BoxFunction(name=box.label_text, file_code=main_diagram.label_content[box.label_text])
-        #         if box_function in code_parts:
-        #             code_parts[box_function].append(box.id)
-        #         else:
-        #             code_parts[box_function] = [box.id]
         return code_parts
 
     @classmethod
@@ -126,7 +161,7 @@ class CodeGenerator:
         for node in hypergraph_source_nodes:
             print(node.__hash__())
         index = 0
-        for node in hypergraph_source_nodes: # TODO it can be wrong order
+        for node in hypergraph_source_nodes:  # TODO it can be wrong order
             if node.new_hash() not in node_and_hyper_edge_to_variable_name:
                 node_and_hyper_edge_to_variable_name[node.new_hash()] = f"input_{index}"
                 function_definition += f"{node_and_hyper_edge_to_variable_name[node.new_hash()]} = None, "
