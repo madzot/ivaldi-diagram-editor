@@ -67,16 +67,6 @@ class CodeGenerator:
         return code_parts
 
     @classmethod
-    def get_imports(cls, code_parts: list[str]) -> str:
-        regex = r"(^import .+)|(^from .+)"
-        imports = set()
-        for part in code_parts:
-            code_imports = re.finditer(regex, part, re.MULTILINE)
-            for code_import in code_imports:
-                imports.add(code_import.group())
-        return "\n".join(imports)
-
-    @classmethod
     def rename(cls, names: dict[BoxFunction, set[str]]) -> tuple[list[str], dict[BoxFunction, str]]:
         """
             Renames functions or variables in the provided code according to the given mapping.
