@@ -25,23 +25,20 @@ class CodeGenerator:
         """
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas)
 
-        file_content = [f.imports for f in code_parts.keys()] + "\n\n"
+        file_content = "".join(i for f in code_parts.keys() for i in f.imports) + "\n"
 
         box_functions: dict[BoxFunction, set[str]] = {}
 
         for box_function in code_parts.keys():
-            renamer = CodeInspector()
             variables = set()
 
-            variables.update(renamer.find_globals(box_function.code))
-
-            variables.update(renamer.find_function_names(box_function.code))
+            variables.update(CodeInspector.get_names(box_function.global_statements))
+            variables.update(CodeInspector.get_names(box_function.helper_functions))
+            variables.update(CodeInspector.get_names([box_function.main_function]))
 
             box_functions[box_function] = variables
 
         function_list, renamed_functions = cls.rename(box_functions)
-
-        function_list = cls.remove_meta(function_list)
 
         function_list = cls.remove_imports(function_list)
 
@@ -81,6 +78,16 @@ class CodeGenerator:
 
     @classmethod
     def rename(cls, names: dict[BoxFunction, set[str]]) -> tuple[list[str], dict[BoxFunction, str]]:
+        """
+            Renames functions or variables in the provided code according to the given mapping.
+
+            Summary:
+            This method takes a mapping of `BoxFunction` objects to a set of names and performs
+            a refactoring by renaming the specified elements in the code. It processes each
+            `BoxFunction` to replace occurrences of the provided names with new, unique names
+            created based on their index. The refactored code parts and the functions renamed with
+            the new "invoke" name are returned.
+        """
         renamed_code_parts: list[str] = list()
         renamed_functions: dict[BoxFunction, str] = dict()
         for i, (box_function, names) in enumerate(names.items()):
@@ -107,18 +114,6 @@ class CodeGenerator:
             cleaned_part = re.sub(regex2, "", cleaned_part)
             code_parts_without_imports.append(cleaned_part)
         return code_parts_without_imports
-
-    @classmethod
-    def remove_meta(cls, code_parts: list[str]) -> list[str]:
-        regex = r"^meta\s=\s{[\s\S]+?}"
-        regex2 = r"^\n+"
-        code_parts_without_meta = []
-
-        for part in code_parts:
-            cleaned_part = re.sub(regex, "", part, flags=re.MULTILINE)
-            cleaned_part = re.sub(regex2, "", cleaned_part)
-            code_parts_without_meta.append(cleaned_part)
-        return code_parts_without_meta
 
     @classmethod
     def construct_main_function(cls, hypergraph: Hypergraph, renamed_functions: dict[BoxFunction, str]) -> str:

@@ -33,6 +33,7 @@ class BoxFunction:
 
         self.name: str = name
         self.imports: List[str] = imports or []
+        self.global_statements: List[str] = []
         self.helper_functions: List[Callable] = []
         self.main_function: Optional[Callable] = None
         self.is_predefined_function = is_predefined_function
@@ -68,6 +69,7 @@ class BoxFunction:
             self.main_function = CodeInspector.get_main_function(file_code, self.name)  # TODO self.name?
             self.helper_functions = CodeInspector.get_help_methods(file_code, self.name)  # TODO self.name?
         self.imports = CodeInspector.get_imports(file_code)
+        self.global_statements = list(CodeInspector.get_global_statements(file_code))
         # TODO min_args/max_args
 
     def count_inputs(self):

@@ -119,15 +119,15 @@ class CodeInspector(ast.NodeTransformer):
         return autopep8.fix_code(astor.to_source(main_method))
 
     @classmethod
-    def get_help_methods(cls, code_str: str, main_method_name: str) -> Optional[list[str]]:
+    def get_help_methods(cls, code_str: str, main_method_name: str) -> list[str]:
         """
         Extracts all method definitions from the given code string, excluding the main method.
         """
         tree = ast.parse(code_str)
-        methods = []
+        methods = set()
         for node in tree.body:
             if isinstance(node, ast.FunctionDef) and node.name != main_method_name:
-                methods.append(node)
+                methods.add(node)
 
         if not methods:
             return []
@@ -135,20 +135,67 @@ class CodeInspector(ast.NodeTransformer):
         return [astor.to_source(method) for method in methods]
 
     @classmethod
-    def get_imports(cls, code_str) -> Optional[list[str]]:
+    def get_imports(cls, code_str) -> list[str]:
         """
         Parse the provided Python code string and extract import statements.
         """
         tree = ast.parse(code_str)
-        imports = []
+        imports = set()
 
         for node in tree.body:
             if isinstance(node, ast.Import):
-                imports.append(node)
+                imports.add(node)
             elif isinstance(node, ast.ImportFrom):
-                imports.append(node)
+                imports.add(node)
 
         if not imports:
             return []
 
         return [astor.to_source(ast_import) for ast_import in imports]
+
+    @classmethod
+    def get_global_statements(cls, code_str: str) -> list[str]:
+        tree = ast.parse(code_str)
+        global_vars = set()
+        assignments = []
+        assigned_vars = set()  # Keep track of assigned global variables
+
+        # First pass: check top-level assignments (global variables)
+        for node in tree.body:
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        if target.id not in global_vars:
+                            global_vars.add(target.id)
+                            assignments.append(node)
+                            assigned_vars.add(target.id)
+
+        # Second pass: check function definitions for 'global' statements
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef):
+                for stmt in node.body:
+                    if isinstance(stmt, ast.Global):
+                        global_vars.update(stmt.names)
+
+        assignments_code = [astor.to_source(assign) for assign in assignments]
+        global_var_names = [f"global {var}" for var in global_vars if var not in assigned_vars]
+
+        return assignments_code + global_var_names
+
+    @classmethod
+    def get_names(cls, elements: list[str]) -> list[str]:
+        names = set()
+        for element in elements:
+            tree = ast.parse(element)
+
+            for node in tree.body:
+                if isinstance(node, ast.FunctionDef):
+                    names.add(node.name)
+                elif isinstance(node, ast.Global):
+                    names.update(node.names)
+                elif isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            names.add(target.id)
+
+        return list(names) if names else []
