@@ -1,9 +1,25 @@
 import math
+x_0 = 5
+global y
+
+
+def passs_0(*args):
+    print(
+        'This function is not supposed to be called. It is only used for testing purposes.'
+    )
+
 
 def invoke_0(*numbers: list) -> int:
+    global y_0
     if len(numbers) < 2:
         raise ValueError('Numbers amount should be at least 2')
     return sum(numbers)
+
+
+def passs_1(*args):
+    print(
+        'This function is not supposed to be called. It is only used for testing purposes.'
+    )
 
 
 def invoke_1(*numbers: list) -> int:

@@ -25,13 +25,12 @@ class CodeGenerator:
         """
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas)
 
-        file_content = "".join(i for f in code_parts.keys() for i in f.imports) + "\n"
+        file_content = "".join(set(imp for f in code_parts.keys() for imp in f.imports))
 
         box_functions: dict[BoxFunction, set[str]] = {}
 
         for box_function in code_parts.keys():
             variables = set()
-
             variables.update(CodeInspector.get_names(box_function.global_statements))
             variables.update(CodeInspector.get_names(box_function.helper_functions))
             variables.update(CodeInspector.get_names([box_function.main_function]))
@@ -82,7 +81,7 @@ class CodeGenerator:
         renamed_functions: dict[BoxFunction, str] = dict()
         for i, (box_function, names) in enumerate(names.items()):
             renamer = CodeInspector()
-            code_part = box_function.code
+            code_part = box_function.__str__()
             for name in names:
                 if name == "meta":
                     continue
@@ -170,7 +169,6 @@ class CodeGenerator:
                 main_function_return += f"{node_and_hyper_edge_to_variable_name[output.new_hash()]}, "
                 added.add(output.new_hash())
         main_function_return = main_function_return[:-2 if len(added) > 0 else -1]
-
 
         main_function += function_definition
         main_function += main_function_content

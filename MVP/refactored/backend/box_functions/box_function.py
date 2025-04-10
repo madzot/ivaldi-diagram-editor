@@ -1,6 +1,9 @@
 import os
 from inspect import signature
 from typing import Optional, Callable, List
+
+import autopep8
+
 from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 
 
@@ -87,6 +90,9 @@ class BoxFunction:
         return self.main_function(*args)
 
     def __eq__(self, other):
+        """
+        Compares the current BoxFunction instance with another object for equality.
+        """
         if isinstance(other, BoxFunction):
             return (self.name == other.name
                     and self.main_function == other.main_function
@@ -97,9 +103,13 @@ class BoxFunction:
         return False
 
     def __hash__(self):
-        helper_hash = tuple(str(func) for func in self.helper_functions)
-        imports_hash = tuple(self.imports)  # Imports are typically strings, which are hashable
-        main_function_hash = hash(str(self.main_function)) if self.main_function else 0
+        """
+        Generates a hash value for an instance based on its attributes to allow its use
+        as a key in hash-based collections like sets and dictionaries.
+        """
+        helper_hash = tuple(func for func in self.helper_functions)
+        imports_hash = tuple(self.imports)
+        main_function_hash = hash(self.main_function) if self.main_function else 0
 
         return hash((
             self.name,
@@ -110,11 +120,24 @@ class BoxFunction:
             self.max_args
         ))
 
-    def __str__(self):
-        return (f"BoxFunction(name={self.name}, "
-                f"imports={self.imports}, "
-                f"main_function={self.main_function}, "
-                f"helper_functions={self.helper_functions})")
+    def __str__(self) -> str:
+        """
+        Generates a string representation of a Python file by organizing and assembling
+        its components, including imports, global statements, helper functions, and
+        the main function. This output is formatted using autopep8 for adherence to
+        PEP 8 style guidelines.
+        """
+        # TODO could be implemented better
+        file_content = ""
+        for imp in self.imports:
+            file_content += f"{imp}\n"
+        for global_statement in self.global_statements:
+            file_content += f"{global_statement}\n"
+        for func in self.helper_functions:
+            file_content += f"\n{func}\n"
+        if self.main_function:
+            file_content += f"\n{self.main_function}\n"
+        return autopep8.fix_code(file_content)
 
     def __repr__(self):
         return self.__str__()

@@ -199,3 +199,7 @@ class CodeInspector(ast.NodeTransformer):
                             names.add(target.id)
 
         return list(names) if names else []
+
+    @classmethod
+    def rename(cls):
+        ...
