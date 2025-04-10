@@ -1,14 +1,12 @@
 import re
-from queue import Queue
-
 import autopep8
+from queue import Queue
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
-from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
@@ -24,77 +22,48 @@ class CodeGenerator:
             transformed functions, and a constructed main function. The function further
             writes this code to a file named 'diagram.py' and also returns the formatted
             Python code as a string.
-
-            Arguments:
-                canvas (CustomCanvas): The main canvas for which the code is generated.
-                canvasses (dict[str, CustomCanvas]): A dictionary containing other related
-                    canvasses keyed by their IDs as strings.
-                main_diagram: The main diagram associated with the code generation process.
-
-            Returns:
-                str: The formatted Python code as a string after applying code style
-                    adjustments.
         """
-        # Retrieve all relevant code parts from the canvas and related canvasses.
-        # The dictionary `code_parts` maps BoxFunction objects to corresponding box IDs.
-        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas, canvasses, main_diagram)
+        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas)
 
-        # Generate the imports section based on functions' code and start composing the file content.
-        file_content = cls.get_imports([f.code for f in code_parts.keys()]) + "\n\n"
+        file_content = [f.imports for f in code_parts.keys()] + "\n\n"
 
-        # Initialize a dictionary to store variables/functions found within each BoxFunction.
         box_functions: dict[BoxFunction, set[str]] = {}
 
-        # Analyze each BoxFunction to identify global variables and function names in its code.
         for box_function in code_parts.keys():
-            # Using CodeInspector to analyze the code content of the BoxFunction.
             renamer = CodeInspector()
             variables = set()
 
-            # Find all global variables in the BoxFunction's code.
             variables.update(renamer.find_globals(box_function.code))
 
-            # Find all function names in the BoxFunction's code.
             variables.update(renamer.find_function_names(box_function.code))
 
-            # Store the discovered variables and names in the dictionary.
             box_functions[box_function] = variables
 
-        # Perform renaming of functions/variables to avoid conflicts or improve readability.
-        # This step might include prefixing or suffixing function and variable names.
         function_list, renamed_functions = cls.rename(box_functions)
 
-        # Remove meta-information (e.g., comments or markers) from the function list if necessary.
         function_list = cls.remove_meta(function_list)
 
-        # Remove redundant imports from the functions to avoid clutter in the generated code.
         function_list = cls.remove_imports(function_list)
 
-        # Add the processed functions' code to the overall file content.
         file_content += "\n".join(function_list)
 
-        # Construct the main function using the hypergraph of the current canvas.
-        # This includes defining function calls and handling data flow between components.
         file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0],
                                                            renamed_functions)
 
-        # Write the combined code to the "diagram.py" file and format it using autopep8.
         with open("diagram.py", "w") as file:
             file.write(autopep8.fix_code(file_content))
 
-        # Return the final formatted code as a string for potential further use.
         return autopep8.fix_code(file_content)
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas) -> dict[
-                            BoxFunction, list[int]]:
+    def get_all_code_parts(cls, canvas: CustomCanvas) -> dict[BoxFunction, list[int]]:
         code_parts: dict[BoxFunction, list[int]] = dict()
         hypergraphs = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
         for hypergraph in hypergraphs:
             hyper_edges = hypergraph.get_all_hyper_edges()
             for hyper_edge in hyper_edges:
                 if hyper_edge.get_box_function() is not None:
-                    if hyper_edge.get_box_function() in code_parts:
+                    if hyper_edge.get_box_function() in code_parts.keys():
                         code_parts[hyper_edge.get_box_function()].append(hyper_edge.id)
                     else:
                         code_parts[hyper_edge.get_box_function()] = [hyper_edge.id]
