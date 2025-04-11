@@ -32,9 +32,11 @@ class BoxFunction:
                  max_args: Optional[int] = None,
                  imports: Optional[List[str]] = None,
                  file_code: Optional[str] = None,
-                 is_predefined_function: bool = False):
+                 is_predefined_function: bool = False,
+                 main_function_name: Optional[str] = None):
 
         self.name: str = name
+        self.main_function_name: str = main_function_name or INVOKE_METHOD
         self.imports: List[str] = imports or []
         self.global_statements: List[str] = []
         self.helper_functions: List[Callable] = []
@@ -128,16 +130,7 @@ class BoxFunction:
         PEP 8 style guidelines.
         """
         # TODO could be implemented better
-        file_content = ""
-        for imp in self.imports:
-            file_content += f"{imp}\n"
-        for global_statement in self.global_statements:
-            file_content += f"{global_statement}\n"
-        for func in self.helper_functions:
-            file_content += f"\n{func}\n"
-        if self.main_function:
-            file_content += f"\n{self.main_function}\n"
-        return autopep8.fix_code(file_content)
+        return "BoxFunction: " + self.name
 
     def __repr__(self):
         return self.__str__()

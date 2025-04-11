@@ -1,22 +1,14 @@
 import math
 x_0 = 5
-global y
 
 
-def passs_0(*args):
+def passs_1(*args):
     print(
         'This function is not supposed to be called. It is only used for testing purposes.'
     )
 
 
-def invoke_0(*numbers: list) -> int:
-    global y_0
-    if len(numbers) < 2:
-        raise ValueError('Numbers amount should be at least 2')
-    return sum(numbers)
-
-
-def passs_1(*args):
+def passs_0(*args):
     print(
         'This function is not supposed to be called. It is only used for testing purposes.'
     )
@@ -32,9 +24,8 @@ def invoke_2(x) -> list:
     return [x, x]
 
 
-def main(input_0=None, input_1=None, input_2=None, input_3=None):
-    res_0 = invoke_0(input_1, input_0)
-    res_1 = invoke_0(input_3, input_2)
-    res_2 = invoke_1(res_1, res_0)
-    res_3 = invoke_2(res_2)
-    return res_3[0], res_3[1]
+def invoke_0(*numbers: list) -> int:
+    global y
+    if len(numbers) < 2:
+        raise ValueError('Numbers amount should be at least 2')
+    return sum(numbers)

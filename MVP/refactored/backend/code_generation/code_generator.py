@@ -1,4 +1,3 @@
-import re
 import autopep8
 from queue import Queue
 
@@ -13,21 +12,15 @@ from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 class CodeGenerator:
     @classmethod
-    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[str, CustomCanvas], main_diagram) -> str:
+    def generate_code(cls, canvas: CustomCanvas) -> str:
         """
-            Generates and writes Python code for a given canvas and its related components.
-
-            This class method processes the provided canvas, associated canvasses, and main
-            diagram to generate executable Python code. The resultant code includes imports,
-            transformed functions, and a constructed main function. The function further
-            writes this code to a file named 'diagram.py' and also returns the formatted
-            Python code as a string.
+            WRITE.
         """
         code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas)
 
         file_content = "".join(set(imp for f in code_parts.keys() for imp in f.imports))
 
-        box_functions: dict[BoxFunction, set[str]] = {}
+        box_functions_items_names: dict[BoxFunction, set[str]] = {}  # {box_func: set(all names of globals and functions)}
 
         for box_function in code_parts.keys():
             variables = set()
@@ -35,16 +28,21 @@ class CodeGenerator:
             variables.update(CodeInspector.get_names(box_function.helper_functions))
             variables.update(CodeInspector.get_names([box_function.main_function]))
 
-            box_functions[box_function] = variables
+            box_functions_items_names[box_function] = variables
 
-        function_list, renamed_functions = cls.rename(box_functions)
+        (global_statements,
+         helper_functions,
+         main_functions,
+         main_functions_new_names) = CodeInspector.rename(box_functions_items_names)
 
-        function_list = cls.remove_imports(function_list)
+        file_content += "".join(global_statements) + "\n"
 
-        file_content += "\n".join(function_list)
+        file_content += "\n\n".join(helper_functions) + "\n\n"
 
-        file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0],
-                                                           renamed_functions)
+        file_content += "\n\n".join(main_functions) + "\n\n"
+
+        # file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0],
+        #                                                    main_functions_new_names)
 
         with open("diagram.py", "w") as file:
             file.write(autopep8.fix_code(file_content))
@@ -53,6 +51,13 @@ class CodeGenerator:
 
     @classmethod
     def get_all_code_parts(cls, canvas: CustomCanvas) -> dict[BoxFunction, list[int]]:
+        """
+            Retrieves all code parts associated with the hyper-edges of a given canvas.
+
+            This class method extracts the hypergraphs related to the provided canvas, iterates
+            through their hyper-edges, and groups the hyper-edge IDs by their associated box
+            functions if present.
+        """
         code_parts: dict[BoxFunction, list[int]] = dict()
         hypergraphs = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
         for hypergraph in hypergraphs:
@@ -64,45 +69,6 @@ class CodeGenerator:
                     else:
                         code_parts[hyper_edge.get_box_function()] = [hyper_edge.id]
         return code_parts
-
-    @classmethod
-    def rename(cls, names: dict[BoxFunction, set[str]]) -> tuple[list[str], dict[BoxFunction, str]]:
-        """
-            Renames functions or variables in the provided code according to the given mapping.
-
-            Summary:
-            This method takes a mapping of `BoxFunction` objects to a set of names and performs
-            a refactoring by renaming the specified elements in the code. It processes each
-            `BoxFunction` to replace occurrences of the provided names with new, unique names
-            created based on their index. The refactored code parts and the functions renamed with
-            the new "invoke" name are returned.
-        """
-        renamed_code_parts: list[str] = list()
-        renamed_functions: dict[BoxFunction, str] = dict()
-        for i, (box_function, names) in enumerate(names.items()):
-            renamer = CodeInspector()
-            code_part = box_function.__str__()
-            for name in names:
-                if name == "meta":
-                    continue
-                new_name = f'{name}_{i}'
-                if name == "invoke":
-                    renamed_functions[box_function] = new_name
-                code_part = renamer.refactor_code(code_part, name, new_name)
-            renamed_code_parts.append(code_part)
-        return renamed_code_parts, renamed_functions
-
-    @classmethod
-    def remove_imports(cls, code_parts: list[str]) -> list[str]:
-        regex = r"(^import .+)|(^from .+)"
-        regex2 = r"^\n+"
-        code_parts_without_imports = []
-
-        for part in code_parts:
-            cleaned_part = re.sub(regex, "", part, flags=re.MULTILINE)
-            cleaned_part = re.sub(regex2, "", cleaned_part)
-            code_parts_without_imports.append(cleaned_part)
-        return code_parts_without_imports
 
     @classmethod
     def construct_main_function(cls, hypergraph: Hypergraph, renamed_functions: dict[BoxFunction, str]) -> str:
@@ -164,7 +130,7 @@ class CodeGenerator:
 
         main_function_return = "\n\treturn "
         added: set[int] = set()
-        for output in hypergraph.get_hypergraph_target(): # TODO it can be wrong order
+        for output in hypergraph.get_hypergraph_target():  # TODO it can be wrong order
             if output.new_hash() in node_and_hyper_edge_to_variable_name and output.new_hash() not in added:
                 main_function_return += f"{node_and_hyper_edge_to_variable_name[output.new_hash()]}, "
                 added.add(output.new_hash())

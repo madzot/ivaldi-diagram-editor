@@ -1,8 +1,11 @@
+from __future__ import annotations
 import ast
-from typing import Optional
-
+from typing import Optional, TYPE_CHECKING
 import astor  # Requires pip install astor
 import autopep8
+
+if TYPE_CHECKING:
+    from MVP.refactored.backend.box_functions.box_function import BoxFunction
 
 
 class CodeInspector(ast.NodeTransformer):
@@ -102,6 +105,55 @@ class CodeInspector(ast.NodeTransformer):
         self.function_names.clear()
 
     @classmethod
+    def rename(cls, box_functions_items_names: dict[BoxFunction, set[str]]) \
+            -> tuple[set[str], set[str], set[str], dict[BoxFunction, str]]:
+        """
+            Renames box function item names for a given dictionary of box functions and their associated
+            item names. Each item name will be appended with an index to make it unique.
+
+            Parameters:
+                cls: The class on which this class method is invoked.
+                box_functions_items_names: A dictionary where keys are BoxFunction instances and values
+                    are sets of strings representing item names associated with each BoxFunction.
+
+            Returns:
+                A tuple containing:
+                - A set of strings representing all renamed global statements.
+                - A set of strings representing all renamed helper functions.
+                - A set of strings representing all renamed main functions.
+                - A dictionary mapping each BoxFunction to its new name if the function name was 'invoke'.
+        """
+        renamed_global_statements: set[str] = set()
+        renamed_helper_functions: set[str] = set()
+        renamed_main_functions: set[str] = set()
+        main_functions_new_names: dict[BoxFunction, str] = dict()
+
+        for i, (box_function, names) in enumerate(box_functions_items_names.items()):
+            renamer = CodeInspector()
+
+            global_statements: set[str] = box_function.global_statements
+            helper_functions: set[str] = box_function.helper_functions
+            main_function: str = box_function.main_function
+
+            for name in names:
+                new_name = f'{name}_{i}'
+                # rename name to new_name in all global_statements, helper_functions or main_function if it contains it
+                global_statements = [renamer.refactor_code(global_statement, name, new_name)
+                                     for global_statement in global_statements]
+                helper_functions = [renamer.refactor_code(helper_function, name, new_name)
+                                    for helper_function in helper_functions]
+                main_function = renamer.refactor_code(main_function, name, new_name)
+
+                if name == box_function.main_function_name:
+                    main_functions_new_names[box_function] = new_name
+
+            renamed_global_statements.update(global_statements)
+            renamed_helper_functions.update(helper_functions)
+            renamed_main_functions.add(main_function)
+
+        return renamed_global_statements, renamed_helper_functions, renamed_main_functions, main_functions_new_names
+
+    @classmethod
     def get_main_function(cls, code_str: str, main_method_name: str) -> Optional[str]:
         """
         Extracts the source code for a function matching `main_method_name` from the given code string.
@@ -155,6 +207,9 @@ class CodeInspector(ast.NodeTransformer):
 
     @classmethod
     def get_global_statements(cls, code_str: str) -> list[str]:
+        """
+        Extract the global variable declarations from the given Python code string.
+        """
         tree = ast.parse(code_str)
         global_vars = set()
         assignments = []
@@ -170,13 +225,6 @@ class CodeInspector(ast.NodeTransformer):
                             assignments.append(node)
                             assigned_vars.add(target.id)
 
-        # Second pass: check function definitions for 'global' statements
-        for node in tree.body:
-            if isinstance(node, ast.FunctionDef):
-                for stmt in node.body:
-                    if isinstance(stmt, ast.Global):
-                        global_vars.update(stmt.names)
-
         assignments_code = [astor.to_source(assign) for assign in assignments]
         global_var_names = [f"global {var}" for var in global_vars if var not in assigned_vars]
 
@@ -184,6 +232,9 @@ class CodeInspector(ast.NodeTransformer):
 
     @classmethod
     def get_names(cls, elements: list[str]) -> list[str]:
+        """
+        Extracts unique names from a list of string representations of Python code.
+        """
         names = set()
         for element in elements:
             tree = ast.parse(element)
@@ -199,7 +250,3 @@ class CodeInspector(ast.NodeTransformer):
                             names.add(target.id)
 
         return list(names) if names else []
-
-    @classmethod
-    def rename(cls):
-        ...
