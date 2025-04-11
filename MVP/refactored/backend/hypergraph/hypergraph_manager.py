@@ -118,19 +118,22 @@ class HypergraphManager:
 
         hypergraph_to_handle: Hypergraph = None
         deleted_hyper_edge = None
+        deleted_hyper_edge_target_nodes = []
         for hypergraph in HypergraphManager.hypergraphs:
             if hypergraph.get_hyper_edge_by_id(id) is not None:
                 hypergraph_to_handle = hypergraph
+                deleted_hyper_edge_target_nodes = hypergraph.get_hyper_edge_by_id(id).get_target_nodes()
                 deleted_hyper_edge = hypergraph.remove_hyper_edge(id)  # remove hyper edge from hypergraph
                 break
 
         if deleted_hyper_edge is None: return # TODO, investigate when it can be None
         # check if new hypergraph appears
-        source_nodes: list[Node] = hypergraph_to_handle.get_hypergraph_source() + deleted_hyper_edge.get_target_nodes()
+        source_nodes: list[Node] = hypergraph_to_handle.get_hypergraph_source() + deleted_hyper_edge_target_nodes
         source_nodes_groups: list[list[Node]] = list()  # list of all source nodes groups
         # TODO move duplicated code into another method?
         for source_node in source_nodes:
             group: list[Node] = list()
+            group.append(source_node)
             for next_source_node in source_nodes:
                 if source_node != next_source_node and source_node.is_connected_to(next_source_node):
                     group.append(next_source_node)

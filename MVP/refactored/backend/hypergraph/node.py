@@ -73,7 +73,7 @@ class Node:
             for node in output_hyper_edge.get_target_nodes():
                 children_nodes[node.id] = node
                 for directly_connected_to in node.get_united_with_nodes():
-                    children_nodes[node.id] = directly_connected_to
+                    children_nodes[directly_connected_to.id] = directly_connected_to
         return list(children_nodes.values())
 
     def get_parent_nodes(self) -> list[Self]:
@@ -174,7 +174,7 @@ class Node:
         other.directly_connected_to.append(self)
 
     def is_connected_to(self, target_node: Self) -> bool:
-        if self == target_node:
+        if self.equals_to_node_group(target_node):
             return True
         visited: set[int] = set()
         queue: Queue[Node] = Queue()

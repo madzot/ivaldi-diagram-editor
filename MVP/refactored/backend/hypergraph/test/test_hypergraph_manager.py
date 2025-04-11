@@ -160,9 +160,9 @@ class TestHypergraphManager(TestCase):
         hypergraph_with_two_nodes = HypergraphManager.get_graph_by_node_id(node_a.id)
         hypergraph_with_one_node = HypergraphManager.get_graph_by_node_id(node_c.id)
 
-        self.assertEqual(len(HypergraphManager.hypergraphs), 2)
+        self.assertEqual(2, len(HypergraphManager.hypergraphs))
         self.assertEqual([node_c], hypergraph_with_one_node.get_all_nodes())
-        self.assertIn([node_a, node_b], hypergraph_with_two_nodes.get_all_nodes())
+        self.assertEqual([node_a, node_b], hypergraph_with_two_nodes.get_all_nodes())
 
     # TEST: Swap edge ID
     # ----------------------------------------------------------

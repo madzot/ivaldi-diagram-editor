@@ -127,11 +127,18 @@ class Hypergraph:
         self.edges[edge_to_remove_id].remove_self()
         return self.edges.pop(edge_to_remove_id)
 
-    def swap_hyper_edge_id(self, prev_id: int, new_id: int):
-        if prev_id in self.edges: # TODO investigate why it could not be
+    def swap_hyper_edge_id(self, prev_id: int, new_id: int) -> bool:
+        """
+        :param prev_id:
+        :param new_id:
+        :return: True if id was changed.
+        """
+        if prev_id in self.edges and prev_id != new_id:
             self.edges[prev_id].swap_id(new_id)
             self.edges[new_id] = self.edges[prev_id]
             self.edges.pop(prev_id)
+            return True
+        return False
 
     def contains_node(self, node: Node) -> bool:
         return node.id in self.get_all_nodes_ids()

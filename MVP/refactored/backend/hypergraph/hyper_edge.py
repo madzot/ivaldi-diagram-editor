@@ -155,7 +155,13 @@ class HyperEdge:
             del self.target_nodes[connection_index]
 
     def remove_self(self):
-        pass
+        for node in self.source_nodes.values():
+            node.remove_output(self)
+        for node in self.target_nodes.values():
+            node.remove_input(self)
+        self.source_nodes.clear()
+        self.target_nodes.clear()
+
 
     def swap_id(self, new_id: int):
         self.id = new_id
