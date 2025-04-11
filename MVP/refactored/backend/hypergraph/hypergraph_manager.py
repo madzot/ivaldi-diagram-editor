@@ -62,7 +62,7 @@ class HypergraphManager:
             for node in hypergraph.get_all_nodes():
                 if node.id == id:
                     _hypergraph = hypergraph
-                    removed_node_outputs_and_directly_connected = node.get_node_children() + node.get_united_with_nodes()
+                    removed_node_outputs_and_directly_connected = node.get_children_nodes() + node.get_united_with_nodes()
                     hypergraph.remove_node(id)
                     break
         # check if new hyper graphs were created

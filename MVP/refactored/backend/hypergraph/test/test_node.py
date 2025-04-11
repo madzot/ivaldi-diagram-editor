@@ -70,7 +70,7 @@ class TestNode(unittest.TestCase):
         self.edge0.get_target_nodes.return_value = [self.node1]
         self.node0.outputs = [self.edge0]
         self.node1.union(self.node2)
-        children = self.node0.get_node_children()
+        children = self.node0.get_children_nodes()
         self.assertIn(self.node1, children)
         self.assertIn(self.node2, children)
 

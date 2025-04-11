@@ -127,9 +127,9 @@ class CodeGenerator:
             print(node.__hash__())
         index = 0
         for node in hypergraph_source_nodes: # TODO it can be wrong order
-            if node.new_hash() not in node_and_hyper_edge_to_variable_name:
-                node_and_hyper_edge_to_variable_name[node.new_hash()] = f"input_{index}"
-                function_definition += f"{node_and_hyper_edge_to_variable_name[node.new_hash()]} = None, "
+            if node.node_group_hash() not in node_and_hyper_edge_to_variable_name:
+                node_and_hyper_edge_to_variable_name[node.node_group_hash()] = f"input_{index}"
+                function_definition += f"{node_and_hyper_edge_to_variable_name[node.node_group_hash()]} = None, "
                 index += 1
         function_definition = function_definition[:-2] + "):"
 
@@ -161,25 +161,25 @@ class CodeGenerator:
             variable = f"res_{index}"
             variable_definition = f"{variable} = {renamed_functions[hyper_edge.get_box_function()]}("
             for source_node in hyper_edge.get_source_nodes():
-                variable_definition += f"{node_and_hyper_edge_to_variable_name[source_node.new_hash()]}, "
+                variable_definition += f"{node_and_hyper_edge_to_variable_name[source_node.node_group_hash()]}, "
             variable_definition = variable_definition[:-2] + ")"
             main_function_content += f"\n\t{variable_definition}"
             if len(hyper_edge.get_target_nodes()) > 1:
                 target_node_index = 0
                 for target_node in hyper_edge.get_target_nodes():
-                    if target_node.new_hash() not in node_and_hyper_edge_to_variable_name:
-                        node_and_hyper_edge_to_variable_name[target_node.new_hash()] = f"{variable}[{target_node_index}]"
+                    if target_node.node_group_hash() not in node_and_hyper_edge_to_variable_name:
+                        node_and_hyper_edge_to_variable_name[target_node.node_group_hash()] = f"{variable}[{target_node_index}]"
                         target_node_index += 1
             else:
-                node_and_hyper_edge_to_variable_name[hyper_edge.get_target_nodes()[0].new_hash()] = variable
+                node_and_hyper_edge_to_variable_name[hyper_edge.get_target_nodes()[0].node_group_hash()] = variable
             index += 1
 
         main_function_return = "\n\treturn "
         added: set[int] = set()
         for output in hypergraph.get_hypergraph_target(): # TODO it can be wrong order
-            if output.new_hash() in node_and_hyper_edge_to_variable_name and output.new_hash() not in added:
-                main_function_return += f"{node_and_hyper_edge_to_variable_name[output.new_hash()]}, "
-                added.add(output.new_hash())
+            if output.node_group_hash() in node_and_hyper_edge_to_variable_name and output.node_group_hash() not in added:
+                main_function_return += f"{node_and_hyper_edge_to_variable_name[output.node_group_hash()]}, "
+                added.add(output.node_group_hash())
         main_function_return = main_function_return[:-2 if len(added) > 0 else -1]
 
 
@@ -254,7 +254,7 @@ class CodeGenerator:
         children = set()
 
         for node in current_level_nodes:
-            current_node_children = node.get_children()
+            current_node_children = node.get_children_nodes()
 
             for node_child in current_node_children:
                 connections_with_parent_node = 0
