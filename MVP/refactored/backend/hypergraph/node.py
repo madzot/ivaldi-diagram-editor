@@ -122,7 +122,6 @@ class Node:
         return list(outputs)
 
     def get_united_with_nodes(self) -> list[Node]:
-        # TODO: replace back sets with lists and fix infinite recursion
         united_with_nodes: set[Node] = set()
         visited: set = set()
         queue: Queue[Node] = Queue()
@@ -138,15 +137,6 @@ class Node:
                 if directly_connected_to_node not in visited:
                     queue.put(directly_connected_to_node)
         return list(united_with_nodes)
-
-    def get_node_children(self) -> list[Node]:
-        children: dict[int, Node] = dict()
-        for hyper_edge in self.get_output_hyper_edges():
-            for target_node in hyper_edge.get_target_nodes():
-                children[target_node.id] = target_node
-                for united_with in target_node.get_united_with_nodes():
-                    children[united_with.id] = united_with
-        return list(children.values())
 
     def set_inputs(self, inputs: list[HyperEdge]):
         self.inputs = inputs
@@ -208,22 +198,22 @@ class Node:
         """Return a string representation of the node."""
         return f"Node ID: {self.id}"
 
-    def __eq__(self, other):
+    def equals_to_node_group(self, other: Node):
         if not isinstance(other, Node):
             return False
         if self.id == other.id:
             return True
         return any(node.id == other.id for node in self.get_united_with_nodes())
 
+    def __eq__(self, other):
+        if not isinstance(other, Node):
+            return False
+        return self.id == other.id
+
     def __hash__(self):
-        # TODO PROBLEM here
-        # group = [self.id]
-        # for node in self.get_united_with_nodes():
-        #     group.append(node.id)
-        # return hash(tuple(sorted(group)))
         return hash(self.id)
 
-    def new_hash(self):
+    def node_group_hash(self):
         group = [self.id]
         for node in self.get_united_with_nodes():
             group.append(node.id)
