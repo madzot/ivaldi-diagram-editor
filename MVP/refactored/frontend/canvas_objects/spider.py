@@ -79,6 +79,7 @@ class Spider(Connection):
             self.wires.append(wire)
             self.has_wire = True
 
+    # Collision not working
     def on_resize_scroll(self, event):
         if event.delta == 120:
             multiplier = 1
@@ -123,7 +124,7 @@ class Spider(Connection):
         if self.canvas.pulling_wire:
             return
 
-        if self.canvas.master.is_rotated:
+        if self.canvas.master.rotation == 90 or self.canvas.master.rotation == 270:
             go_to_x = event.x
             go_to_y = self.x
             move_legal = False
@@ -131,16 +132,16 @@ class Spider(Connection):
                 go_to_y = event.y
                 move_legal = True
         else:
-            go_to_x = self.x
+            go_to_x = self.display_x
             go_to_y = event.y
             move_legal = False
-            if not self.is_illegal_move(event.x):
+            if not self.is_illegal_move(self.canvas.convert_logical_display(event.x, event.y)[0]):
                 go_to_x = event.x
                 move_legal = True
 
         # snapping into place
         found = False
-        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_display_logical(go_to_x, go_to_y)
         for box in self.canvas.boxes:
             box_size = box.get_logical_size()
 
@@ -245,20 +246,22 @@ class Spider(Connection):
             x = self.x
         if not y:
             y = self.y
-        if self.canvas.master.is_rotated:
-            self.x = x
-            self.y = y
-            self.location = [x, y]
-
-            self.display_x = y
-            self.display_y = x
-            self.display_location = [y, x]
-
+        self.x = x
+        self.y = y
+        self.location = [x, y]
+        if self.canvas.winfo_width() < 100:
+            canvas_width = self.canvas.main_diagram.custom_canvas.winfo_width()
         else:
-            self.display_x = x
-            self.display_y = y
-            self.location = [x, y]
+            canvas_width = self.canvas.winfo_width()
+        if self.canvas.master.rotation == 90:
+            self.display_location = [self.location[1], self.location[0]]
+        if self.canvas.master.rotation == 180:
+            self.display_location = [canvas_width - self.location[0], self.location[1]]
+        if self.canvas.master.rotation == 270:
+            self.display_location = [canvas_width - self.location[1], self.canvas.winfo_height() - self.location[0]]
+        else:  # 0
+            self.display_location = self.location
 
-            self.x = x
-            self.y = y
-            self.display_location = [x, y]
+        self.display_x = self.display_location[0]
+        self.display_y = self.display_location[1]
+

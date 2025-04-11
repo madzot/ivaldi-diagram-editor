@@ -17,12 +17,15 @@ class Box:
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
         self.x = x
         self.y = y
-        self.display_x, self.display_y = self.canvas.convert_logical_display(x, y)
+        self.display_x = x
+        self.display_y = y
+        self.size = self.get_logical_size(size)
+
+        self.update_coords(x, y)
 
         self.start_x = self.display_x
         self.start_y = self.display_y
 
-        self.size = size
         self.x_dif = 0
         self.y_dif = 0
         self.connections: list[Connection] = []
@@ -255,6 +258,12 @@ class Box:
             return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
+        if self.canvas.main_diagram.rotation == 180:
+            event.x = event.x + self.size[0]
+        if self.canvas.main_diagram.rotation == 270:
+            event.x = event.x + self.size[0]
+            event.y = event.y + self.size[1]
+
         self.start_x = event.x
         self.start_y = event.y
 
@@ -264,7 +273,7 @@ class Box:
         # snapping into place
         found = False
         size = self.get_logical_size()
-        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_display_logical(go_to_x, go_to_y)
         for box in self.canvas.boxes:
             if box == self:
                 continue
@@ -313,7 +322,10 @@ class Box:
     def find_collisions(self, go_to_x, go_to_y):
         go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         self.get_self_collision_ids()
-        collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
+        if self.canvas.main_diagram.rotation == 270:
+            collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x - self.size[0], go_to_y - self.size[1])
+        else:
+            collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
         collision = list(collision)
         for index in self.collision_ids:
             if index in collision:
@@ -327,6 +339,7 @@ class Box:
                 collision.remove(tag)
         return collision
 
+    # Collision not working for 270, 180 works for 90
     def on_resize_scroll(self, event):
         if event.delta == 120:
             multiplier = 1
@@ -336,11 +349,13 @@ class Box:
             if 20 > min(self.size):
                 return
         old_size = self.size
-        self.size = self.canvas.convert_logical_display(self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier)
-        if self.find_collisions(self.display_x, self.display_y):
+        new_size_x, new_size_y = self.get_logical_size((self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier))
+        self.size = (new_size_x, new_size_y)
+        if self.find_collisions(self.x, self.y):
             self.size = old_size
             return
-        self.update_size(self.size[0], self.size[1])
+        self.size = old_size
+        self.update_size(new_size_x, new_size_y)
         self.move_label()
 
     def on_resize_drag(self, event):
@@ -360,7 +375,7 @@ class Box:
         self.start_y = event.y
         new_size_x = max(20, self.size[0] + dx)
         new_size_y = max(20, self.size[1] + dy)
-        new_size_x, new_size_y = self.canvas.convert_logical_display(new_size_x, new_size_y)
+        new_size_x, new_size_y = self.get_logical_size((new_size_x, new_size_y))
         self.update_size(new_size_x, new_size_y)
         self.move_label()
 
@@ -368,7 +383,7 @@ class Box:
         # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
         height = max([50 * nr_cs, 50])
-        if self.canvas.master.is_rotated:
+        if self.canvas.master.rotation == 90 or self.canvas.master.rotation == 270:
             if self.size[0] < height:
                 self.update_size(self.size[1], height)
                 self.move_label()
@@ -440,7 +455,7 @@ class Box:
     def move(self, new_x, new_y):
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
-        new_x, new_y = self.canvas.convert_logical_display(new_x, new_y)
+        new_x, new_y = self.canvas.convert_display_logical(new_x, new_y)
         is_bad = False
         for connection in self.connections:
             if connection.has_wire and self.is_illegal_move(connection, new_x):
@@ -483,7 +498,14 @@ class Box:
 
     # UPDATES
     def update_size(self, new_size_x, new_size_y):
+        if self.canvas.main_diagram.rotation == 180:  # 180 keeps display_x in the same spot
+            self.x = self.x - (new_size_x - self.get_logical_size()[0])
+        if self.canvas.main_diagram.rotation == 270:  # 270 keeps display_y in the same spot
+            self.x = self.x - (new_size_x - self.get_logical_size()[0])
+            self.y = self.y - (new_size_y - self.get_logical_size()[1])
+
         self.size = self.get_logical_size((new_size_x, new_size_y))
+        self.update_coords()
         self.update_position()
         self.update_connections()
         self.update_wires()
@@ -494,7 +516,7 @@ class Box:
             self.canvas.coords(self.rect, self.display_x, self.display_y, self.display_x + self.size[0],
                                self.display_y + self.size[1])
         if self.shape == "triangle":
-            if self.canvas.master.is_rotated:
+            if self.canvas.master.rotation == 90 or self.canvas.master.rotation == 270:
                 self.canvas.coords(self.rect,
                                    self.display_x + self.size[0], self.display_y,
                                    self.display_x, self.display_y,
@@ -650,7 +672,7 @@ class Box:
 
         elif side == "right":
             i = self.get_new_right_index()
-            return self.x + self.get_logical_size()[0], self.y + (index + 1) *  self.get_logical_size()[1] / (i + 1)
+            return self.x + self.get_logical_size()[0], self.y + (index + 1) * self.get_logical_size()[1] / (i + 1)
 
     def get_new_left_index(self):
         if not self.left_connections > 0:
@@ -668,7 +690,7 @@ class Box:
             return self.canvas.create_rectangle(self.display_x, self.display_y, self.display_x + w, self.display_y + h,
                                                 outline="black", fill="white")
         if self.shape == "triangle":
-            if self.canvas.master.is_rotated:
+            if self.canvas.master.rotation == 90 or self.canvas.master.rotation == 270:
                 return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x, self.display_y,
                                                   self.display_x + w / 2, self.display_y + h, outline="black",
                                                   fill="white")
@@ -701,27 +723,33 @@ class Box:
             outputs_amount = 0
         return inputs_amount, outputs_amount
 
-    def update_coords(self, x, y):
+    def update_coords(self, x=None, y=None):
         if not x:
             x = self.x
         if not y:
             y = self.y
-
-        if self.canvas.master.is_rotated:
-            self.x = x
-            self.y = y
+        if self.canvas.winfo_width() < 100:
+            canvas_width = self.canvas.main_diagram.custom_canvas.winfo_width()
+        else:
+            canvas_width = self.canvas.winfo_width()
+        self.x = x
+        self.y = y
+        if self.canvas.master.rotation == 90:
             self.display_x = y
             self.display_y = x
-
-        else:
+        if self.canvas.master.rotation == 180:
+            self.display_x = canvas_width - (x + self.size[0])
+            self.display_y = y
+        if self.canvas.master.rotation == 270:
+            self.display_x = canvas_width - (y + self.size[0])
+            self.display_y = self.canvas.winfo_height() - (x + self.size[1])
+        else:  # 0
             self.display_x = x
             self.display_y = y
-            self.x = x
-            self.y = y
 
     def get_logical_size(self, size=None):
         if size is None:
             size = self.size
-        if self.canvas.master.is_rotated:
+        if self.canvas.master.rotation == 90 or self.canvas.master.rotation == 270:
             return [size[1], size[0]]
         return size

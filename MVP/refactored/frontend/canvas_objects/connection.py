@@ -204,10 +204,16 @@ class Connection:
         self.canvas.itemconfig(self.circle, fill="black")
 
     def update_connection_coords(self, location):
-        if self.canvas.master.is_rotated:
-            self.display_location = [location[1], location[0]]
-            self.location = location
-
+        self.location = location
+        if self.canvas.winfo_width() < 100:
+            canvas_width = self.canvas.main_diagram.custom_canvas.winfo_width()
         else:
+            canvas_width = self.canvas.winfo_width()
+        if self.canvas.master.rotation == 90:
+            self.display_location = [location[1], location[0]]
+        if self.canvas.master.rotation == 180:
+            self.display_location = [canvas_width - location[0], location[1]]
+        if self.canvas.master.rotation == 270:
+            self.display_location = [canvas_width - location[1], self.canvas.winfo_height() - location[0]]
+        else:  # 0
             self.display_location = location
-            self.location = location

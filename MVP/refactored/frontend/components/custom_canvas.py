@@ -200,6 +200,7 @@ class CustomCanvas(tk.Canvas):
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
 
+    # I/O act weird
     def pan_horizontal(self, event):
         if event.keysym == "Right":
             multiplier = -1
@@ -225,10 +226,8 @@ class CustomCanvas(tk.Canvas):
             self.coords(connection.circle,
                         connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
                         connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
-        if self.main_diagram.is_rotated:
-            self.move_boxes_spiders(False, multiplier)
-        else:
-            self.move_boxes_spiders(True, multiplier)
+
+        self.move_boxes_spiders(True, multiplier)
         self.pan_speed = 20
 
     def pan_vertical(self, event):
@@ -255,26 +254,33 @@ class CustomCanvas(tk.Canvas):
             self.coords(connection.circle,
                         connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
                         connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
-        if self.main_diagram.is_rotated:
-            self.move_boxes_spiders(True, multiplier)
-        else:
-            self.move_boxes_spiders(False, multiplier)
+
+        self.move_boxes_spiders(False, multiplier)
         self.pan_speed = 20
 
     def move_boxes_spiders(self, is_horizontal, multiplier):
         if is_horizontal:
-            attr = "x"
+            attr = "display_x"
             self.pan_history_x += multiplier * self.pan_speed
         else:
-            attr = "y"
+            attr = "display_y"
             self.pan_history_y += multiplier * self.pan_speed
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
-            spider.update_spider_coords(spider.x, spider.y)
+            x, y = self.convert_display_logical(spider.display_x, spider.display_y)
+            spider.update_spider_coords(x, y)
             spider.move_to((spider.x, spider.y))
         for box in self.boxes:
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
-            box.update_coords(box.x, box.y)
+            x = box.display_x
+            y = box.display_y
+            if self.main_diagram.rotation == 180:
+                x = x + box.size[0]
+            if self.main_diagram.rotation == 270:
+                x = x + box.size[0]
+                y = y + box.size[1]
+            x, y = self.convert_display_logical(x, y)
+            box.update_coords(x, y)
             box.update_size(box.get_logical_size()[0], box.get_logical_size()[1])
             box.move_label()
         for wire in self.wires:
@@ -295,15 +301,17 @@ class CustomCanvas(tk.Canvas):
         for box in self.boxes:
             x = (((box.display_x + box.display_x + box.size[0]) / 2) / old_canvas_width * canvas_width) - box.size[0] / 2
             y = None
-            x, y = self.convert_logical_display(x, y)
+            if self.main_diagram.is_flipped:
+                x = x + box.size[0]
+            x, y = self.convert_display_logical(x, y)
             box.update_coords(x, y)
-            box.size = self.convert_logical_display(box.size[0], box.size[1])
-            box.update_size(box.size[0], box.size[1])
+            size = box.get_logical_size((box.size[0], box.size[1]))
+            box.update_size(size[0], size[1])
             box.move_label()
 
         for spider in self.spiders:
             x = (spider.display_x / old_canvas_width) * canvas_width
-            x, y = self.convert_logical_display(x, spider.display_y)
+            x, y = self.convert_display_logical(x, spider.display_y)
             spider.update_spider_coords(x, y)
             spider.move_to((x, y))
 
@@ -385,6 +393,7 @@ class CustomCanvas(tk.Canvas):
             self.init_corners()
         self.configure(scrollregion=self.bbox('all'))
 
+    # Inputs/output act weird
     def update_coordinates(self, denominator, event, scale):
         for corner in self.corners:
             next_location = [
@@ -401,24 +410,30 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(event.y, i_o.display_location[1], denominator)
             ]
             i_o.r *= scale
-            i_o.location = i_o_location
-            self.coords(i_o.circle, i_o.location[0] - i_o.r, i_o.location[1] - i_o.r,
-                        i_o.location[0] + i_o.r, i_o.location[1] + i_o.r)
+            i_o.location[0], i_o.location[1] = self.convert_display_logical(i_o_location[0], i_o_location[1])
+            i_o.update_connection_coords(i_o.location)
+            self.coords(i_o.circle, i_o.display_location[0] - i_o.r, i_o.display_location[1] - i_o.r,
+                        i_o.display_location[0] + i_o.r, i_o.display_location[1] + i_o.r)
             self.itemconfig(i_o.circle, width=i_o.r * 2 / 10)
 
         for box in self.boxes:
             x = self.calculate_zoom_dif(event.x, box.display_x, denominator)
             y = self.calculate_zoom_dif(event.y, box.display_y, denominator)
-            x, y = self.convert_logical_display(x, y)
+            if self.main_diagram.rotation == 180:
+                x = x + box.size[0]
+            if self.main_diagram.rotation == 270:
+                x = x + box.size[0]
+                y = y + box.size[1]
+            x, y = self.convert_display_logical(x, y)
             box.update_coords(x, y)
-            box.size = self.convert_logical_display(box.size[0], box.size[1])
-            box.update_size(box.size[0] * scale, box.size[1] * scale)
+            size = box.get_logical_size()
+            box.update_size(size[0] * scale, size[1] * scale)
             box.move_label()
 
         for spider in self.spiders:
             x = self.calculate_zoom_dif(event.x, spider.display_x, denominator)
             y = self.calculate_zoom_dif(event.y, spider.display_y, denominator)
-            x, y = self.convert_logical_display(x, y)
+            x, y = self.convert_display_logical(x, y)
             spider.update_spider_coords(x, y)
             spider.r *= scale
             self.coords(spider.circle, spider.display_x - spider.r, spider.display_y - spider.r, spider.display_x + spider.r,
@@ -484,7 +499,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu = tk.Menu(self, tearoff=0)
 
             self.context_menu.add_command(label="Add undefined box",
-                                          command=lambda loc=(self.convert_logical_display(event.x, event.y)):
+                                          command=lambda loc=(self.convert_display_logical(event.x, event.y)):
                                           self.add_box(loc))
 
             if len(self.main_diagram.quick_create_boxes) > 0:
@@ -496,7 +511,7 @@ class CustomCanvas(tk.Canvas):
                                          self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
-                                          command=lambda loc=(self.convert_logical_display(event.x, event.y))
+                                          command=lambda loc=(self.convert_display_logical(event.x, event.y))
                                           : self.add_spider(loc))
 
             self.context_menu.add_command(label="Cancel")
@@ -572,7 +587,7 @@ class CustomCanvas(tk.Canvas):
                 self.previous_y = self.canvasy(event.y)
                 self.temp_end_connection.delete()
                 self.temp_end_connection = Connection(None, 0, None,
-                                                      self.convert_logical_display(self.canvasx(event.x),
+                                                      self.convert_display_logical(self.canvasx(event.x),
                                                                                    self.canvasy(event.y)),
                                                       self, connection_type=self.current_wire_start.type)
             self.temp_wire = Wire(self, self.current_wire_start, self.receiver, self.temp_end_connection, None, True,
@@ -683,7 +698,7 @@ class CustomCanvas(tk.Canvas):
         return spider
 
     def add_spider_with_wires(self, start, end, x, y):
-        x, y = self.convert_logical_display(x, y)
+        x, y = self.convert_display_logical(x, y)
         spider = self.add_spider((x, y))
         self.start_wire_from_connection(start)
         self.end_wire_to_connection(spider)
@@ -815,7 +830,7 @@ class CustomCanvas(tk.Canvas):
         output_index = max([o.index for o in self.outputs] + [0])
         for o in self.outputs:
             i = o.index
-            if self.main_diagram.is_rotated:
+            if self.main_diagram.rotation == 90 or self.main_diagram.rotation == 270:
                 step = (x - min_x) / (output_index + 2)
                 o.move_to([y - 7, min_x + step * (i + 1)])
             else:
@@ -825,7 +840,7 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         for o in self.inputs:
             i = o.index
-            if self.main_diagram.is_rotated:
+            if self.main_diagram.rotation == 90 or self.main_diagram.rotation == 270:
                 step = (x - min_x) / (input_index + 2)
                 o.move_to([6 + min_y, min_x + step * (i + 1)])
             else:
@@ -1146,8 +1161,29 @@ class CustomCanvas(tk.Canvas):
         return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
 
     def convert_logical_display(self, x, y):
-        if self.main_diagram.is_rotated:
+        if self.main_diagram.rotation == 90:
             return [y, x]
-        else:
+        if self.main_diagram.rotation == 180:
+            return [self.winfo_width() - x, y]
+        if self.main_diagram.rotation == 270:
+            return [self.winfo_width() - y, self.winfo_height() - x]
+        else:  # 0
             return [x, y]
+
+    def convert_display_logical(self, x, y):
+        if self.main_diagram.rotation == 90:
+            return [y, x]
+        if self.main_diagram.rotation == 180:
+            return [self.winfo_width() - x, y]
+        if self.main_diagram.rotation == 270:
+            return [self.winfo_height() - y, self.winfo_width() - x]
+        else:  # 0
+            return [x, y]
+
+    def swap_cords_if_rotated(self, x, y):
+        if self.main_diagram.rotation == 90 or self.main_diagram.rotation == 270:
+            return [y, x]
+        return [x, y]
+
+
 

@@ -50,7 +50,7 @@ class MainDiagram(tk.Tk):
         self.search_objects = {}
         self.wire_objects = {}
 
-        self.is_rotated = False
+        self.rotation = 270  # Usable values are 0, 90, 180, 270. Other should act like 0.
 
         self.custom_canvas = CustomCanvas(self, None, self.receiver, self, self, False)
         self.custom_canvas.focus_set()

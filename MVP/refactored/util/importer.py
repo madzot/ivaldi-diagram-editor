@@ -199,7 +199,7 @@ class Importer:
         multi_x = 1
         multi_y = 1
 
-        if self.canvas.main_diagram.is_rotated:
+        if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
             if self.canvas.main_diagram.custom_canvas.winfo_height() < max_x:
                 max_x += min_x
                 multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_x, 3)
