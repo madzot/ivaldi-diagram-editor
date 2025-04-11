@@ -12,17 +12,38 @@ from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
 class CodeGenerator:
     @classmethod
-    def generate_code(cls, canvas: CustomCanvas) -> str:
+    def generate_code(cls, canvas: CustomCanvas, canvasses: dict[int, CustomCanvas]) -> str:
         """
-            WRITE.
-        """
-        code_parts: dict[BoxFunction, list[int]] = cls.get_all_code_parts(canvas)
+            Generates Python code based on the structure and functional elements of the provided canvas and related canvasses.
 
-        file_content = "".join(set(imp for f in code_parts.keys() for imp in f.imports))
+            This method processes a set of box functions associated with the given canvas, extracts global statements, helper
+            functions, and main functions, renames them for uniqueness, and constructs the final composite Python script.
+            The resulting script is formatted using the autopep8 library and written to a file named "diagram.py".
+            The formatted code is also returned by the method as a string.
+
+            Arguments:
+                canvas (CustomCanvas): The main canvas from which the function hierarchy
+                    and code elements are derived.
+                canvasses (dict[int, CustomCanvas]): A dictionary mapping canvas IDs to
+                    their corresponding CustomCanvas objects. This is used to retrieve
+                    data interconnected with the primary canvas.
+
+            Returns:
+                str: The generated and auto formatted Python code as a single string.
+
+            Errors:
+                No explicit error handling.
+
+            Note:
+                The generated file, "diagram.py", will be overwritten if it already exists.
+        """
+        box_functions: set[BoxFunction] = cls.get_all_box_functions(canvas, canvasses)
+
+        file_content = "".join(set(imp for f in box_functions for imp in f.imports))
 
         box_functions_items_names: dict[BoxFunction, set[str]] = {}  # {box_func: set(all names of globals and functions)}
 
-        for box_function in code_parts.keys():
+        for box_function in box_functions:
             variables = set()
             variables.update(CodeInspector.get_names(box_function.global_statements))
             variables.update(CodeInspector.get_names(box_function.helper_functions))
@@ -41,8 +62,8 @@ class CodeGenerator:
 
         file_content += "\n\n".join(main_functions) + "\n\n"
 
-        # file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0],
-        #                                                    main_functions_new_names)
+        file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0],
+                                                           main_functions_new_names)
 
         with open("diagram.py", "w") as file:
             file.write(autopep8.fix_code(file_content))
@@ -50,25 +71,21 @@ class CodeGenerator:
         return autopep8.fix_code(file_content)
 
     @classmethod
-    def get_all_code_parts(cls, canvas: CustomCanvas) -> dict[BoxFunction, list[int]]:
+    def get_all_box_functions(cls, canvas: CustomCanvas, canvasses: dict[int, CustomCanvas]) -> set[BoxFunction]:
         """
-            Retrieves all code parts associated with the hyper-edges of a given canvas.
+            Retrieve all unique BoxFunctions from the specified canvas and related canvasses.
 
-            This class method extracts the hypergraphs related to the provided canvas, iterates
-            through their hyper-edges, and groups the hyper-edge IDs by their associated box
-            functions if present.
+            Iterates through all boxes in the provided canvas and recursively collects BoxFunctions
+            from referenced canvasses. This method is designed to explore a hierarchical or nested
+            structure of canvasses and boxes, ensuring all connected BoxFunctions are gathered.
         """
-        code_parts: dict[BoxFunction, list[int]] = dict()
-        hypergraphs = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-        for hypergraph in hypergraphs:
-            hyper_edges = hypergraph.get_all_hyper_edges()
-            for hyper_edge in hyper_edges:
-                if hyper_edge.get_box_function() is not None:
-                    if hyper_edge.get_box_function() in code_parts.keys():
-                        code_parts[hyper_edge.get_box_function()].append(hyper_edge.id)
-                    else:
-                        code_parts[hyper_edge.get_box_function()] = [hyper_edge.id]
-        return code_parts
+        box_functions: set[BoxFunction] = set()
+        for box in canvas.boxes:
+            if str(box.id) in canvasses:
+                box_functions.update(cls.get_all_box_functions(canvasses.get(str(box.id)), canvasses))
+            else:
+                box_functions.add(box.box_function)
+        return box_functions
 
     @classmethod
     def construct_main_function(cls, hypergraph: Hypergraph, renamed_functions: dict[BoxFunction, str]) -> str:
