@@ -48,10 +48,8 @@ class BoxFunction:
         if is_predefined_function:
             predefined_file_code = predefined_functions[self.name]
             self._set_data_from_file_code(predefined_file_code)
-            # self.code = predefined_file_code  # TODO: Remove this variable after code generation is refactored
         elif file_code is not None:
             self._set_data_from_file_code(file_code)
-            # self.code = file_code  # TODO: Remove this variable after code generation is refactored
         else:
             self.main_function: Callable = function
             self.min_args: int = min_args
