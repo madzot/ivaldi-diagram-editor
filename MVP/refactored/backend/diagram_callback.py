@@ -148,8 +148,6 @@ class Receiver:
         elif action == ActionType.DIAGRAM_REMOVE_OUTPUT:
             pass
 
-        print("All")
-
     def spider_callback(self, action: str, **kwargs):
         pass
 
