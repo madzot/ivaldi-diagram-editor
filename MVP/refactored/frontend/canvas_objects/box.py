@@ -738,21 +738,17 @@ class Box:
             x = self.x
         if not y:
             y = self.y
-        if self.canvas.winfo_width() < 100:
-            canvas_width = self.canvas.main_diagram.custom_canvas.winfo_width()
-        else:
-            canvas_width = self.canvas.winfo_width()
         self.x = x
         self.y = y
         if self.canvas.main_diagram.rotation == 90:
             self.display_x = y
             self.display_y = x
         elif self.canvas.main_diagram.rotation == 180:
-            self.display_x = canvas_width - (x + self.size[0])
+            self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (x + self.size[0])
             self.display_y = y
         elif self.canvas.main_diagram.rotation == 270:
-            self.display_x = canvas_width - (y + self.size[0])
-            self.display_y = self.canvas.winfo_height() - (x + self.size[1])
+            self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (y + self.size[0])
+            self.display_y = self.canvas.main_diagram.custom_canvas.winfo_height() - (x + self.size[1])
         else:  # 0
             self.display_x = x
             self.display_y = y

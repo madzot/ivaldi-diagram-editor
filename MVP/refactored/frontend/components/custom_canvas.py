@@ -200,7 +200,6 @@ class CustomCanvas(tk.Canvas):
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
 
-    # I/O act weird
     def pan_horizontal(self, event):
         if event.keysym == "Right":
             multiplier = -1
@@ -223,6 +222,8 @@ class CustomCanvas(tk.Canvas):
                         connection.location[0] + connection.r, connection.location[1] + connection.r)
         for connection in self.inputs + self.outputs:
             connection.display_location[0] = connection.display_location[0] + multiplier * self.pan_speed
+            x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
+            connection.update_connection_coords([x, y])
             self.coords(connection.circle,
                         connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
                         connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
@@ -251,6 +252,8 @@ class CustomCanvas(tk.Canvas):
                         connection.location[0] + connection.r, connection.location[1] + connection.r)
         for connection in self.inputs + self.outputs:
             connection.display_location[1] = connection.display_location[1] + multiplier * self.pan_speed
+            x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
+            connection.update_connection_coords([x, y])
             self.coords(connection.circle,
                         connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
                         connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
@@ -300,9 +303,11 @@ class CustomCanvas(tk.Canvas):
 
         for box in self.boxes:
             x = (((box.display_x + box.display_x + box.size[0]) / 2) / old_canvas_width * canvas_width) - box.size[0] / 2
-            y = None
-            if self.main_diagram.is_flipped:
+            y = box.display_y
+            if self.main_diagram.rotation == 180 or self.main_diagram.rotation == 270:
                 x = x + box.size[0]
+            if self.main_diagram.rotation == 270:
+                y = y + box.size[1]
             x, y = self.convert_display_logical(x, y)
             box.update_coords(x, y)
             size = box.get_logical_size((box.size[0], box.size[1]))
@@ -361,6 +366,7 @@ class CustomCanvas(tk.Canvas):
             event.state = False
             self.zoom(event)
 
+    # Inputs/output move when zooming in/out
     def zoom(self, event):
         if event.state & 0x4:
             return
@@ -393,7 +399,7 @@ class CustomCanvas(tk.Canvas):
             self.init_corners()
         self.configure(scrollregion=self.bbox('all'))
 
-    # Inputs/output act weird
+    # Inputs/output move when zooming in/out
     def update_coordinates(self, denominator, event, scale):
         for corner in self.corners:
             next_location = [
@@ -1164,9 +1170,10 @@ class CustomCanvas(tk.Canvas):
         if self.main_diagram.rotation == 90:
             return [y, x]
         elif self.main_diagram.rotation == 180:
-            return [self.winfo_width() - x, y]
+            return [self.main_diagram.custom_canvas.winfo_width() - x, y]
         elif self.main_diagram.rotation == 270:
-            return [self.winfo_width() - y, self.winfo_height() - x]
+            return [self.main_diagram.custom_canvas.winfo_width() - y,
+                    self.main_diagram.custom_canvas.winfo_height() - x]
         else:  # 0
             return [x, y]
 
@@ -1174,9 +1181,10 @@ class CustomCanvas(tk.Canvas):
         if self.main_diagram.rotation == 90:
             return [y, x]
         elif self.main_diagram.rotation == 180:
-            return [self.winfo_width() - x, y]
+            return [self.main_diagram.custom_canvas.winfo_width() - x, y]
         elif self.main_diagram.rotation == 270:
-            return [self.winfo_height() - y, self.winfo_width() - x]
+            return [self.main_diagram.custom_canvas.winfo_height() - y,
+                    self.main_diagram.custom_canvas.winfo_width() - x]
         else:  # 0
             return [x, y]
 
