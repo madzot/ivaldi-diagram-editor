@@ -71,8 +71,6 @@ class Box:
         coords = self.canvas.coords(self.rect)
         self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-2:]
 
-        # TODO TEMP
-        self.set_label(self.id)
 
     def remove_wire(self, wire: Wire):
         # box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
