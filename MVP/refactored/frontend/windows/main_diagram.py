@@ -655,7 +655,7 @@ class MainDiagram(tk.Tk):
             values = []
             x_y = {}
 
-            if self.is_rotated:
+            if self.rotation == 90 or self.rotation == 270:
                 for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
                     x_y[y_max - y_coord / 100] = x_coord / 100
             else:
@@ -674,7 +674,7 @@ class MainDiagram(tk.Tk):
             values_line = spl(keys_linspace)
 
             color, style = self.get_wire_style(wire)
-            if self.is_rotated:
+            if self.rotation == 90 or self.rotation == 270:
                 plt.plot(values_line, keys_linspace, style, color=color, linewidth=2, zorder=1)
             else:
                 plt.plot(keys_linspace, values_line, style, color=color, linewidth=2, zorder=1)
