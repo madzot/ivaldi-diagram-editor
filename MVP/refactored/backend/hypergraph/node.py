@@ -74,6 +74,8 @@ class Node:
                 children_nodes[node.id] = node
                 for directly_connected_to in node.get_united_with_nodes():
                     children_nodes[directly_connected_to.id] = directly_connected_to
+        if self.id in children_nodes: # can sometimes occur, related to spider
+            children_nodes.pop(self.id)
         return list(children_nodes.values())
 
     def get_parent_nodes(self) -> list[Self]:
@@ -130,7 +132,7 @@ class Node:
             queue.put(directly_connected_to_node)
         while not queue.empty():
             node: Node = queue.get()
-            if not any(node.id == visited_node.id for visited_node in visited):
+            if node not in visited:
                 united_with_nodes.add(node)
                 visited.add(node)
             for directly_connected_to_node in node.directly_connected_to:
@@ -186,7 +188,7 @@ class Node:
         while not queue.empty():
             node: Node = queue.get()
             visited.add(node.id)
-            if node == target_node:
+            if node.equals_to_node_group(target_node):
                 return True
             for hyper_edge in node.get_input_hyper_edges() + node.get_output_hyper_edges():
                 for hyper_edge_node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():

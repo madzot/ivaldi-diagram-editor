@@ -32,6 +32,9 @@ class Hypergraph:
         current_hypergraph += 1
         logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph.get(self.id)}" + message_end)
 
+    def get_node_by_id(self, id: int) -> Node|None:
+        return self.nodes.get(id)
+
     def get_all_nodes(self) -> list[Node]:
         return list(self.nodes.values())
 
@@ -248,6 +251,8 @@ class Hypergraph:
             "sourceNodes": [source_node.id for source_node in self.get_hypergraph_source()],
         }
 
+    def is_empty(self):
+        return len(self.nodes) == 0 and len(self.edges) == 0 and len(self.hypergraph_source) == 0
 
     def __str__(self) -> str:
         result = f"Hypergraph: {self.id}\n"
