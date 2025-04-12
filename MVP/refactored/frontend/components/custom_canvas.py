@@ -328,35 +328,6 @@ class CustomCanvas(tk.Canvas):
         HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
 
-    def update_after_treeview(self, canvas_width, treeview_width, to_left):
-        """
-        Update item locations on the CustomCanvas to account for new space created or taken away by the treeview.
-
-        :param canvas_width: current canvas width.
-        :param treeview_width: Treeview width if open.
-        :param to_left: Boolean determining whether boxes should be moved to the left.
-        :return: None
-        """
-        if to_left:
-            old_canvas_width = canvas_width + treeview_width
-        else:
-
-            old_canvas_width = canvas_width - treeview_width
-
-        for box in self.boxes:
-            relative_pos = ((box.x + box.x + box.size[0]) / 2) / old_canvas_width * canvas_width
-            box.x = relative_pos - box.size[0] / 2
-            box.update_size(box.size[0], box.size[1])
-            box.move_label()
-
-        for spider in self.spiders:
-            relative_pos = (spider.x / old_canvas_width) * canvas_width
-            spider.x = relative_pos
-            spider.move_to((spider.x, spider.y))
-
-        for wire in self.wires:
-            wire.update()
-
     def handle_right_click(self, event):
         """
         Handle right click event on CustomCanvas.
@@ -972,6 +943,27 @@ class CustomCanvas(tk.Canvas):
         self.update_prev_winfo_size()
 
         self.main_diagram.toolbar.update_canvas_label()
+
+        self.__on_configure_move__()
+
+    def __on_configure_move__(self):
+        """
+        Move items to their relative location.
+
+        Activated upon canvas configuration, it will move all spiders and boxes
+        to their relative location.
+
+        :return: None
+        """
+        for item in self.spiders + self.boxes:
+            event = tk.Event()
+            event.state = False
+            event.x = self.winfo_width() * item.rel_x
+            event.y = self.winfo_height() * item.rel_y
+            if isinstance(item, Box):
+                item.x_dif = 0
+                item.y_dif = 0
+            item.on_drag(event, from_configuration=True)
 
     @staticmethod
     def debounce(wait_time):
