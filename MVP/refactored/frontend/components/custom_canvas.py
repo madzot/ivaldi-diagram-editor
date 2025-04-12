@@ -1163,9 +1163,9 @@ class CustomCanvas(tk.Canvas):
     def convert_logical_display(self, x, y):
         if self.main_diagram.rotation == 90:
             return [y, x]
-        if self.main_diagram.rotation == 180:
+        elif self.main_diagram.rotation == 180:
             return [self.winfo_width() - x, y]
-        if self.main_diagram.rotation == 270:
+        elif self.main_diagram.rotation == 270:
             return [self.winfo_width() - y, self.winfo_height() - x]
         else:  # 0
             return [x, y]
@@ -1173,9 +1173,9 @@ class CustomCanvas(tk.Canvas):
     def convert_display_logical(self, x, y):
         if self.main_diagram.rotation == 90:
             return [y, x]
-        if self.main_diagram.rotation == 180:
+        elif self.main_diagram.rotation == 180:
             return [self.winfo_width() - x, y]
-        if self.main_diagram.rotation == 270:
+        elif self.main_diagram.rotation == 270:
             return [self.winfo_height() - y, self.winfo_width() - x]
         else:  # 0
             return [x, y]

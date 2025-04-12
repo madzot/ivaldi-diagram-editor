@@ -79,7 +79,6 @@ class Spider(Connection):
             self.wires.append(wire)
             self.has_wire = True
 
-    # Collision not working
     def on_resize_scroll(self, event):
         if event.delta == 120:
             multiplier = 1
@@ -90,7 +89,7 @@ class Spider(Connection):
                 return
         old_r = self.r
         self.r += 2.5 * multiplier
-        if self.find_collisions(self.display_x, self.display_y):
+        if self.find_collisions(self.x, self.y):
             self.r = old_r
             return
         self.canvas.coords(self.circle, self.display_x - self.r, self.display_y - self.r, self.display_x + self.r,
@@ -124,7 +123,7 @@ class Spider(Connection):
         if self.canvas.pulling_wire:
             return
 
-        if self.canvas.master.rotation == 90 or self.canvas.master.rotation == 270:
+        if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
             go_to_x = event.x
             go_to_y = self.x
             move_legal = False
@@ -253,11 +252,11 @@ class Spider(Connection):
             canvas_width = self.canvas.main_diagram.custom_canvas.winfo_width()
         else:
             canvas_width = self.canvas.winfo_width()
-        if self.canvas.master.rotation == 90:
+        if self.canvas.main_diagram.rotation == 90:
             self.display_location = [self.location[1], self.location[0]]
-        if self.canvas.master.rotation == 180:
+        elif self.canvas.main_diagram.rotation == 180:
             self.display_location = [canvas_width - self.location[0], self.location[1]]
-        if self.canvas.master.rotation == 270:
+        elif self.canvas.main_diagram.rotation == 270:
             self.display_location = [canvas_width - self.location[1], self.canvas.winfo_height() - self.location[0]]
         else:  # 0
             self.display_location = self.location
