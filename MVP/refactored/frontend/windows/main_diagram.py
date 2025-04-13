@@ -329,6 +329,9 @@ class MainDiagram(tk.Tk):
         :param new_label: String that old label will be changed to
         :return: None
         """
+        if len(new_label) > 100:
+            self.show_error_dialog("Label must be less than 100 characters.")
+            return
         if old_label in self.label_content.keys():
             code = self.label_content[old_label]
             self.label_content[new_label] = code
@@ -1008,3 +1011,13 @@ class MainDiagram(tk.Tk):
             case _:
                 style = "black", ""
         return style
+
+    @staticmethod
+    def show_error_dialog(error_message):
+        """
+        Show an error dialog with an error message.
+
+        :param error_message: Message to show in messagebox.
+        :return: None
+        """
+        messagebox.showerror("Error", error_message)
