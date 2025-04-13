@@ -46,4 +46,4 @@ class ManageBoxes(tk.Toplevel):
         :return: None
         """
         self.main_diagram.project_exporter.del_box_menu_option(option)
-        self.main_diagram.update_dropdown_menu()
+        self.main_diagram.update_add_box_dropdown_menu()
