@@ -73,18 +73,6 @@ class Box:
 
 
     def remove_wire(self, wire: Wire):
-        # box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
-        #
-        # if wire.end_connection.box.id == self.id:
-        #     all_right_connected_nodes = self._get_all_left_connected_nodes(wire.start_connection)
-        #     for right_connected_node in all_right_connected_nodes:
-        #         box_node.remove_parent_edges(right_connected_node)
-        #
-        # else:
-        #     all_right_connected_nodes = self._get_all_right_connected_nodes(wire.end_connection)
-        #     for right_connected_node in all_right_connected_nodes:
-        #         box_node.remove_child_edges(right_connected_node)
-
         self.wires.remove(wire)
 
     def set_id(self, id_):
@@ -265,9 +253,6 @@ class Box:
 
     def edit_sub_diagram(self, save_to_canvasses=True, add_boxes=True, switch=True):
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-        if self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.BOX_COMPOUND, generator_id=self.id, canvas_id=self.canvas.id)
-            # self.receiver.receiver_callback("compound", generator_id=self.id, canvas_id=self.canvas.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self, self.receiver, self.canvas.main_diagram,
                                             self.canvas, add_boxes, self.id, highlightthickness=0)
@@ -283,11 +268,14 @@ class Box:
                 if switch:
                     self.canvas.main_diagram.switch_canvas(self.sub_diagram)
 
-            return self.sub_diagram
         else:
             if switch:
                 self.canvas.main_diagram.switch_canvas(self.sub_diagram)
-            return self.sub_diagram
+
+        if self.receiver.listener:
+            self.receiver.receiver_callback(ActionType.BOX_COMPOUND, generator_id=self.id, canvas_id=self.canvas.id,
+                                            new_canvas_id=self.sub_diagram.id)
+        return self.sub_diagram
 
     def close_menu(self):
         if self.context_menu:
