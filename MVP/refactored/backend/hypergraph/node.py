@@ -73,7 +73,9 @@ class Node:
             for node in output_hyper_edge.get_target_nodes():
                 children_nodes[node.id] = node
                 for directly_connected_to in node.get_united_with_nodes():
-                    children_nodes[node.id] = directly_connected_to
+                    children_nodes[directly_connected_to.id] = directly_connected_to
+        if self.id in children_nodes: # can sometimes occur, related to spider
+            children_nodes.pop(self.id)
         return list(children_nodes.values())
 
     def get_parent_nodes(self) -> list[Self]:
@@ -122,7 +124,6 @@ class Node:
         return list(outputs)
 
     def get_united_with_nodes(self) -> list[Node]:
-        # TODO: replace back sets with lists and fix infinite recursion
         united_with_nodes: set[Node] = set()
         visited: set = set()
         queue: Queue[Node] = Queue()
@@ -131,22 +132,13 @@ class Node:
             queue.put(directly_connected_to_node)
         while not queue.empty():
             node: Node = queue.get()
-            if not any(node.id == visited_node.id for visited_node in visited):
+            if node not in visited:
                 united_with_nodes.add(node)
                 visited.add(node)
             for directly_connected_to_node in node.directly_connected_to:
                 if directly_connected_to_node not in visited:
                     queue.put(directly_connected_to_node)
         return list(united_with_nodes)
-
-    def get_node_children(self) -> list[Node]:
-        children: dict[int, Node] = dict()
-        for hyper_edge in self.get_output_hyper_edges():
-            for target_node in hyper_edge.get_target_nodes():
-                children[target_node.id] = target_node
-                for united_with in target_node.get_united_with_nodes():
-                    children[united_with.id] = united_with
-        return list(children.values())
 
     def set_inputs(self, inputs: list[HyperEdge]):
         self.inputs = inputs
@@ -184,7 +176,7 @@ class Node:
         other.directly_connected_to.append(self)
 
     def is_connected_to(self, target_node: Self) -> bool:
-        if self == target_node:
+        if self.equals_to_node_group(target_node):
             return True
         visited: set[int] = set()
         queue: Queue[Node] = Queue()
@@ -196,7 +188,7 @@ class Node:
         while not queue.empty():
             node: Node = queue.get()
             visited.add(node.id)
-            if node == target_node:
+            if node.equals_to_node_group(target_node):
                 return True
             for hyper_edge in node.get_input_hyper_edges() + node.get_output_hyper_edges():
                 for hyper_edge_node in hyper_edge.get_source_nodes() + hyper_edge.get_target_nodes():
@@ -208,22 +200,22 @@ class Node:
         """Return a string representation of the node."""
         return f"Node ID: {self.id}"
 
-    def __eq__(self, other):
+    def equals_to_node_group(self, other: Node):
         if not isinstance(other, Node):
             return False
         if self.id == other.id:
             return True
         return any(node.id == other.id for node in self.get_united_with_nodes())
 
+    def __eq__(self, other):
+        if not isinstance(other, Node):
+            return False
+        return self.id == other.id
+
     def __hash__(self):
-        # TODO PROBLEM here
-        # group = [self.id]
-        # for node in self.get_united_with_nodes():
-        #     group.append(node.id)
-        # return hash(tuple(sorted(group)))
         return hash(self.id)
 
-    def new_hash(self):
+    def node_group_hash(self):
         group = [self.id]
         for node in self.get_united_with_nodes():
             group.append(node.id)

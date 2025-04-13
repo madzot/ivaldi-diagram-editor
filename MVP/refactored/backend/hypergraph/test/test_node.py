@@ -70,7 +70,7 @@ class TestNode(unittest.TestCase):
         self.edge0.get_target_nodes.return_value = [self.node1]
         self.node0.outputs = [self.edge0]
         self.node1.union(self.node2)
-        children = self.node0.get_node_children()
+        children = self.node0.get_children_nodes()
         self.assertIn(self.node1, children)
         self.assertIn(self.node2, children)
 
@@ -131,11 +131,11 @@ class TestNode(unittest.TestCase):
 
     def test_eq_should_return_true_for_same_id_or_united_nodes(self):
         another_node = Node(0)
-        self.assertTrue(self.node0 == another_node)
+        self.assertTrue(self.node0.equals_to_node_group(another_node))
 
         self.node0.union(self.node1)
         node_same_as_1 = Node(self.node1.id)
-        self.assertTrue(self.node0 == node_same_as_1)
+        self.assertTrue(self.node0.equals_to_node_group(node_same_as_1))
 
     def test_eq_should_return_false_for_unrelated_nodes(self):
         self.assertFalse(self.node0 == self.node1)

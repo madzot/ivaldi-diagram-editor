@@ -206,10 +206,8 @@ class TestHypergraph(TestCase):
         self.assertEqual(self.hypergraph.edges[self.edge1.id], self.edge2)
 
     def test_swap_hyper_edge_id_with_nonexistent_edge(self):
-        with self.assertRaises(KeyError):
-            self.hypergraph.swap_hyper_edge_id(999, self.edge2.id)
-        with self.assertRaises(KeyError):
-            self.hypergraph.swap_hyper_edge_id(self.edge1.id, 999)
+        self.assertFalse(self.hypergraph.swap_hyper_edge_id(999, self.edge2.id))
+        self.assertFalse(self.hypergraph.swap_hyper_edge_id(self.edge1.id, 999))
 
     def test_swap_hyper_edge_id_same_id(self):
         self.hypergraph.add_edge(self.edge1)
@@ -232,8 +230,7 @@ class TestHypergraph(TestCase):
         self.hypergraph.add_edge(self.edge2)
         self.hypergraph.remove_hyper_edge(self.edge1.id)
 
-        with self.assertRaises(KeyError):
-            self.hypergraph.swap_hyper_edge_id(self.edge1.id, self.edge2.id)
+        self.assertFalse(self.hypergraph.swap_hyper_edge_id(self.edge1.id, self.edge2.id))
 
     # Test update_source_nodes_descendants
     # --------------------------------------

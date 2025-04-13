@@ -8,6 +8,7 @@ from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 
@@ -138,16 +139,27 @@ class CodeGenerator:
             # This block maps the result of the function call to the target nodes of the hyper edge.
             if len(hyper_edge.get_target_nodes()) > 1:  # If there are multiple target nodes
                 target_node_index = 0  # Index to track tuple elements
+            for source_node in hyper_edge.get_source_nodes():
+                variable_definition += f"{node_and_hyper_edge_to_variable_name[source_node.node_group_hash()]}, "
+            variable_definition = variable_definition[:-2] + ")"
+            main_function_content += f"\n\t{variable_definition}"
+            if len(hyper_edge.get_target_nodes()) > 1:
+                target_node_index = 0
                 for target_node in hyper_edge.get_target_nodes():
                     if target_node.new_hash() not in node_and_hyper_edge_to_variable_name:
                         # Map the target node to a specific tuple element
                         node_and_hyper_edge_to_variable_name[
                             target_node.new_hash()] = f"{variable}[{target_node_index}]"
+                    if target_node.node_group_hash() not in node_and_hyper_edge_to_variable_name:
+                        node_and_hyper_edge_to_variable_name[target_node.node_group_hash()] = f"{variable}[{target_node_index}]"
                         target_node_index += 1
             else:  # If there is a single target node
                 # Map the target node to the result variable
                 node_and_hyper_edge_to_variable_name[hyper_edge.get_target_nodes()[0].new_hash()] = variable
             index += 1  # Increment the result variable index
+            else:
+                node_and_hyper_edge_to_variable_name[hyper_edge.get_target_nodes()[0].node_group_hash()] = variable
+            index += 1
 
         # --- Step 7: Construct the return statement with output variables ---
         main_function_return = "\n\treturn "
@@ -156,6 +168,10 @@ class CodeGenerator:
             if output.new_hash() in node_and_hyper_edge_to_variable_name and output.new_hash() not in added:
                 main_function_return += f"{node_and_hyper_edge_to_variable_name[output.new_hash()]}, "
                 added.add(output.new_hash())
+        for output in hypergraph.get_hypergraph_target(): # TODO it can be wrong order
+            if output.node_group_hash() in node_and_hyper_edge_to_variable_name and output.node_group_hash() not in added:
+                main_function_return += f"{node_and_hyper_edge_to_variable_name[output.node_group_hash()]}, "
+                added.add(output.node_group_hash())
         main_function_return = main_function_return[:-2 if len(added) > 0 else -1]
 
         # --- Step 8: Combine everything into final function string ---
@@ -267,7 +283,7 @@ class CodeGenerator:
         children = set()
 
         for node in current_level_nodes:
-            current_node_children = node.get_children()
+            current_node_children = node.get_children_nodes()
 
             for node_child in current_node_children:
                 connections_with_parent_node = 0

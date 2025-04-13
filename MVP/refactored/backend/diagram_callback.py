@@ -113,9 +113,19 @@ class Receiver:
         elif action == ActionType.BOX_COMPOUND:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.set_type(GeneratorType.COMPOUND)
+            box.set_sub_diagram_id(new_canvas_id)
+
+            hyper_edge = HypergraphManager.get_hyper_edge_by_id(generator_id)
+            if hyper_edge:
+                hyper_edge.set_sub_diagram_canvas_id(new_canvas_id)
         elif action == ActionType.BOX_ATOMIC:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.set_type(GeneratorType.ATOMIC)
+            box.set_sub_diagram_id(-1)
+
+            hyper_edge = HypergraphManager.get_hyper_edge_by_id(generator_id)
+            if hyper_edge:
+                hyper_edge.set_sub_diagram_canvas_id(-1)
         elif action == ActionType.BOX_SUB_BOX:
             pass
         elif action == ActionType.BOX_ADD_OPERATOR:
@@ -149,8 +159,6 @@ class Receiver:
             HypergraphManager.remove_node(connection_id)
         elif action == ActionType.DIAGRAM_REMOVE_OUTPUT:
             pass
-
-        print("All")
 
     def spider_callback(self, action: str, **kwargs):
         pass
@@ -196,6 +204,7 @@ class Receiver:
                     # if we use from frontend connection they will differ.
                     hyper_edge = HypergraphManager.connect_node_with_output_hyper_edge(node, box.id)
                     hyper_edge.set_box_function(box.get_box_function())
+                    hyper_edge.set_sub_diagram_canvas_id(box.get_sub_diagram_id())
                 else:  # it is output
                     output = self.get_output_by_id(connection.get_id(), canvas_id)
                     resource.add_left_connection(output)
@@ -215,6 +224,7 @@ class Receiver:
 
                     hyper_edge = HypergraphManager.connect_node_with_input_hyper_edge(node, box.id)
                     hyper_edge.set_box_function(box.get_box_function())
+                    hyper_edge.set_sub_diagram_canvas_id(box.get_sub_diagram_id())
                 else:  # it is input
                     input = self.get_input_by_id(connection.get_id(), canvas_id)
                     resource.add_right_connection(input)

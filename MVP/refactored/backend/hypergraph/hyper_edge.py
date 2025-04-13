@@ -6,11 +6,11 @@ from MVP.refactored.backend.box_functions.box_function import BoxFunction
 
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
-
+    from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 
 class HyperEdge:
 
-    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None, sub_diagram_canvas_id = None):
+    def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None, sub_diagram_canvas_id = -1):
         if hyper_edge_id is None:
             hyper_edge_id = id(self)
         self.id = hyper_edge_id
@@ -21,8 +21,14 @@ class HyperEdge:
 
         self.sub_diagram_canvas_id = sub_diagram_canvas_id
 
+    def get_hypergraphs_inside(self) -> list[Hypergraph]: # why dynamically get hypergraphs? Because in sub diagram hypergraphs can be modified, deleted, added and that handling is tricky, so it is easier to do that in this way.
+        from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+
+        if self.sub_diagram_canvas_id == -1: return []
+        return HypergraphManager.get_graphs_by_canvas_id(self.sub_diagram_canvas_id)
+
     def is_compound(self) -> bool:
-        return bool(self.sub_diagram_canvas_id)
+        return self.sub_diagram_canvas_id != -1
 
     def set_sub_diagram_canvas_id(self, canvas_id: int):
         self.sub_diagram_canvas_id = canvas_id
@@ -155,7 +161,13 @@ class HyperEdge:
             del self.target_nodes[connection_index]
 
     def remove_self(self):
-        pass
+        for node in self.source_nodes.values():
+            node.remove_output(self)
+        for node in self.target_nodes.values():
+            node.remove_input(self)
+        self.source_nodes.clear()
+        self.target_nodes.clear()
+
 
     def swap_id(self, new_id: int):
         self.id = new_id

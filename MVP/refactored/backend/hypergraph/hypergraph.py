@@ -32,6 +32,9 @@ class Hypergraph:
         current_hypergraph += 1
         logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph.get(self.id)}" + message_end)
 
+    def get_node_by_id(self, id: int) -> Node|None:
+        return self.nodes.get(id)
+
     def get_all_nodes(self) -> list[Node]:
         return list(self.nodes.values())
 
@@ -127,11 +130,18 @@ class Hypergraph:
         self.edges[edge_to_remove_id].remove_self()
         return self.edges.pop(edge_to_remove_id)
 
-    def swap_hyper_edge_id(self, prev_id: int, new_id: int):
-        if prev_id in self.edges: # TODO investigate why it could not be
+    def swap_hyper_edge_id(self, prev_id: int, new_id: int) -> bool:
+        """
+        :param prev_id:
+        :param new_id:
+        :return: True if id was changed.
+        """
+        if prev_id in self.edges and prev_id != new_id:
             self.edges[prev_id].swap_id(new_id)
             self.edges[new_id] = self.edges[prev_id]
             self.edges.pop(prev_id)
+            return True
+        return False
 
     def contains_node(self, node: Node) -> bool:
         return node.id in self.get_all_nodes_ids()
@@ -240,6 +250,9 @@ class Hypergraph:
             "nodeGroups": self.get_node_groups(),
             "sourceNodes": [source_node.id for source_node in self.get_hypergraph_source()],
         }
+
+    def is_empty(self):
+        return len(self.nodes) == 0 and len(self.edges) == 0 and len(self.hypergraph_source) == 0
 
     def __str__(self) -> str:
         result = f"Hypergraph: {self.id}\n"

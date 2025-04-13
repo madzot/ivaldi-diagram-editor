@@ -19,11 +19,19 @@ class Generator:
         self.right: list[ConnectionInfo] = []
         self.left_inner: list[ConnectionInfo] = []
         self.right_inner: list[ConnectionInfo] = []
+        self.sub_diagram_id: int = -1 # -1 if doesn`t have
         self.subset = []
         self.parent = None
         self.spiders = []
         self.operand = None
         self.box_function: BoxFunction | None = None
+
+    def get_sub_diagram_id(self):
+        """Returns -1 if no sub diagram is defined."""
+        return self.sub_diagram_id
+
+    def set_sub_diagram_id(self, sub_diagram_id):
+        self.sub_diagram_id = sub_diagram_id
 
     def get_left_by_id(self, id: int):
         for left in self.left:
