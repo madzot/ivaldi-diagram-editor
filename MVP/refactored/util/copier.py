@@ -1,5 +1,3 @@
-from MVP.refactored.frontend.canvas_objects.box import Box
-
 class Copier:
 
     def copy_canvas_contents(self, canvas, wires, boxes, spiders, selected_coordinates, box):
@@ -165,6 +163,7 @@ class Copier:
                 # if remember_connections:
                 #     new_connection.id = connection.id
         new_box.set_label(old_box.label_text)
+        new_box.set_box_function(old_box.get_box_function())
 
     @staticmethod
     def copy_wire_within_selection(start_c, end_c, canvas):
