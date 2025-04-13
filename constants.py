@@ -13,6 +13,8 @@ BOXES_CONF = CONF_DIR + "boxes_conf.json"
 RECTANGLE = "rectangle"
 TRIANGLE = "triangle"
 
+SHAPES = [RECTANGLE, TRIANGLE]
+
 # box sides
 LEFT = "left"
 RIGHT = "right"
