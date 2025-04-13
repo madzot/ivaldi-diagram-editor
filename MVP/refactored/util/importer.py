@@ -8,7 +8,7 @@ from tkinter import messagebox
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-from constants import *
+import constants as const
 
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
@@ -62,7 +62,7 @@ class Importer:
         for box in d["boxes"]:
             new_box = canvas.add_box((box["x"] * multi_x, box["y"] * multi_y), (box["size"][0] * multi_x,
                                                                                 box["size"][1] * multi_y),
-                                     self.get_id(box["id"]), shape=box.get("shape", "rectangle"))
+                                     self.get_id(box["id"]), style=box.get("shape", const.RECTANGLE))
             if box["label"]:
                 new_box.set_label(box["label"])
             for c in box["connections"]:
@@ -72,7 +72,7 @@ class Importer:
                     new_box.add_right_connection(self.get_id(c["id"]), connection_type=ConnectionType[c.get('type', "GENERIC")])
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False)
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:
                     name = box["label"]
@@ -80,7 +80,7 @@ class Importer:
                     name = str(sub_diagram.id)
                 sub_diagram.set_name(name)
                 canvas.main_diagram.add_canvas(sub_diagram)
-                canvas.itemconfig(new_box.rect, fill="#dfecf2")
+                canvas.itemconfig(new_box.shape, fill="#dfecf2")
 
             new_box.lock_box()
 
@@ -133,7 +133,7 @@ class Importer:
 
     def load_boxes_to_menu(self):
         try:
-            with open(BOXES_CONF, 'r') as json_file:
+            with open(const.BOXES_CONF, 'r') as json_file:
                 data = json.load(json_file)
                 return data
         except FileNotFoundError or IOError or json.JSONDecodeError:
@@ -149,21 +149,28 @@ class Importer:
         return random_string
 
     def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
-        with open(BOXES_CONF, 'r') as json_file:
+        with (open(const.BOXES_CONF, 'r') as json_file):
             self.seed = self.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]
-            new_box = canvas.add_box(loc, shape=box.get("shape", "rectangle"))
+            new_box = canvas.add_box(loc, style=box.get("shape", const.RECTANGLE))
             if box["label"]:
                 new_box.set_label(box["label"])
             for i in range(box["left_c"]):
-                new_box.add_left_connection(connection_type=ConnectionType[box["left_c_types"][i]])
-            for _ in range(box["right_c"]):
-                new_box.add_right_connection(connection_type=ConnectionType[box["right_c_types"][i]])
+                try:
+                    new_box.add_left_connection(connection_type=ConnectionType[box.get("left_c_types", [])[i]])
+                except IndexError:
+                    new_box.add_left_connection(connection_type=ConnectionType.GENERIC)
+
+            for i in range(box["right_c"]):
+                try:
+                    new_box.add_right_connection(connection_type=ConnectionType[box.get("right_c_types", [])[i]])
+                except IndexError:
+                    new_box.add_right_connection(connection_type=ConnectionType.GENERIC)
 
             if box["sub_diagram"]:
-                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False, add_boxes=False)
+                sub_diagram: CustomCanvas = new_box.edit_sub_diagram(save_to_canvasses=False)
 
                 self.load_everything_to_canvas(box["sub_diagram"], sub_diagram)
                 if box["label"]:
@@ -172,7 +179,7 @@ class Importer:
                     name = str(sub_diagram.id)
                 sub_diagram.set_name(name)
                 canvas.main_diagram.add_canvas(sub_diagram)
-                canvas.itemconfig(new_box.rect, fill="#dfecf2")
+                canvas.itemconfig(new_box.shape, fill="#dfecf2")
             new_box.lock_box()
             self.random_id = False
             self.id_randomize = {}
