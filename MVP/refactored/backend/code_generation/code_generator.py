@@ -134,7 +134,7 @@ class CodeGenerator:
 
         main_function_return = "\n\treturn "
         added: set[int] = set()
-        for output in hypergraph.get_hypergraph_target():  # TODO it can be wrong order
+        for output in hypergraph.get_hypergraph_target():  # TODO rewrite this part and move to another method
             if cls.get_actual_node_group_hash(output,
                                               receiver) in node_and_hyper_edge_to_variable_name and output.node_group_hash() not in added:
                 main_function_return += f"{node_and_hyper_edge_to_variable_name[cls.get_actual_node_group_hash(output, receiver)]}, "
@@ -151,6 +151,9 @@ class CodeGenerator:
                                            receiver: Receiver) -> str:
         """
             Create the definition of a main function for the given hypergraph.
+
+            This method generates the function signature for a main function, including
+            input parameters based on the source nodes of the provided diagram.
         """
         definition: str = f"def {func_name}("
 
@@ -179,7 +182,11 @@ class CodeGenerator:
                                      receiver: Receiver
                                      ) -> str:
         """
-            Create the content of the main function.
+            Generate the content of the main function for a given hypergraph.
+
+            This method processes a queue of hyper edges and generates Python code
+            for executing each hyper edge in the correct order. It maps source nodes
+            to input variables and target nodes to output variables or tuple elements.
         """
         main_function_content = ""
         index = 0
@@ -209,6 +216,14 @@ class CodeGenerator:
 
     @classmethod
     def get_actual_node_group_hash(cls, node: Node, receiver: Receiver) -> int:
+        """
+            Retrieve the actual node group hash for a given node.
+
+            This method determines the actual node group hash by traversing compound hyper edges
+            and resolving nested connections within sub-diagrams. If the node is part of a compound
+            hyper edge, it recursively explores the sub-diagram to find the corresponding deeper node
+            and retrieves its group hash. Otherwise, it returns the node's own group hash.
+        """
         for hyper_edge in node.get_output_hyper_edges():
             if hyper_edge.is_compound():
                 con_i: int = next(
@@ -228,7 +243,13 @@ class CodeGenerator:
                                  hyper_edge_queue: Queue[HyperEdge],
                                  seen_hyper_edges: set[HyperEdge] = None
                                  ) -> Queue[HyperEdge]:
+        """
+            Generate a queue of hyper edges for a given hypergraph in topological order.
 
+            This method processes the hypergraph to ensure that all hyper edges are added
+            to the queue in an order that respects their dependencies. It recursively explores
+            nested hypergraphs and ensures that each hyper edge is processed only once.
+        """
         if seen_hyper_edges is None:
             seen_hyper_edges = set()
 
@@ -241,17 +262,13 @@ class CodeGenerator:
             for hyper_edge in to_check:
                 if hyper_edge in seen_hyper_edges:
                     continue
-
                 for subgraph in hyper_edge.get_hypergraphs_inside():
                     cls.get_queue_of_hyper_edges(subgraph, hyper_edge_queue, seen_hyper_edges)
-
                 if hyper_edge not in hyper_edge_input_count_check:
                     hyper_edge_input_count_check[hyper_edge] = 0
-
                 for node in hyper_edge.get_source_nodes():
                     if node in nodes_with_inputs:
                         hyper_edge_input_count_check[hyper_edge] += 1
-
                 if hyper_edge_input_count_check[hyper_edge] == len(hyper_edge.get_source_nodes()):
                     hyper_edge_queue.put(hyper_edge)
                     seen_hyper_edges.add(hyper_edge)
