@@ -49,7 +49,7 @@ class Resource:
         if to_be_removed is not None:
             self.spider_connection.remove(to_be_removed)
 
-    def get_left_connections(self):
+    def get_left_connections(self) -> list[ConnectionInfo]:
         """Return left connections sorted by index.
         Wire will have only one item in the list
         """

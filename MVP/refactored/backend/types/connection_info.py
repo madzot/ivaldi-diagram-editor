@@ -18,7 +18,7 @@ class ConnectionInfo:
         self.side = connection_side
         self.id = connection_id
         # self.related_object = related_object
-        self.related_object: Resource | Generator | None = None
+        self.related_object: Resource | Generator | None = None  # spider or box
         self.set_related_object(related_object)
 
     def is_resource_connection(self) -> bool:

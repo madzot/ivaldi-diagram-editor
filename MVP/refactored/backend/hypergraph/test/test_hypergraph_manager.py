@@ -24,7 +24,7 @@ class TestHypergraphManager(TestCase):
     # ----------------------------------------------------------
     def test_create_new_node_creates_node_and_registers_hypergraph(self):
         canvas_id = 100
-        node = HypergraphManager.create_new_node(id=1, canvas_id=canvas_id)
+        node = HypergraphManager.create_new_node(node_id=1, canvas_id=canvas_id)
 
         self.assertIsInstance(node, Node)
         graph = HypergraphManager.get_graph_by_node_id(node.id)

@@ -29,6 +29,9 @@ class Diagram:
     def get_input_by_id(self, input_id):
         return next((i for i in self.input if i.id == input_id), None)
 
+    def get_input_by_index(self, index):
+        return next((i for i in self.input if i.index == index), None)
+
     def get_output_by_id(self, output_id):
         return next((o for o in self.output if o.id == output_id), None)
 

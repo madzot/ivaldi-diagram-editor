@@ -21,10 +21,11 @@ class HyperEdge:
 
         self.sub_diagram_canvas_id = sub_diagram_canvas_id
 
-    def get_hypergraphs_inside(self) -> list[Hypergraph]: # why dynamically get hypergraphs? Because in sub diagram hypergraphs can be modified, deleted, added and that handling is tricky, so it is easier to do that in this way.
+    def get_hypergraphs_inside(self) -> list[Hypergraph]:  # why dynamically get hypergraphs? Because in sub diagram hypergraphs can be modified, deleted, added and that handling is tricky, so it is easier to do that in this way.
         from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
-        if self.sub_diagram_canvas_id == -1: return []
+        if self.sub_diagram_canvas_id == -1:
+            return []
         return HypergraphManager.get_graphs_by_canvas_id(self.sub_diagram_canvas_id)
 
     def is_compound(self) -> bool:
