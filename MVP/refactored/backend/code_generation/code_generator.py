@@ -73,10 +73,39 @@ class CodeGenerator:
         return box_functions
 
     @classmethod
-    def construct_main_function(cls, hypergraph: Hypergraph, renamed_functions: dict[BoxFunction, str]) -> str:
-            func_name: str) \
-        main_function = ""
+    def get_box_functions_items_names(cls, box_functions: set[BoxFunction]) -> dict[BoxFunction, set[str]]:
+        """
+        Retrieve a mapping of BoxFunction objects to the set of names of globals and
+        functions associated with each BoxFunction.
+        """
+        box_functions_items_names: dict[
+            BoxFunction, set[str]] = {}  # {box_func: set(of all names of globals and functions)}
 
+        for box_function in box_functions:
+            variables = set()
+            variables.update(CodeInspector.get_names(box_function.global_statements))
+            variables.update(CodeInspector.get_names(box_function.helper_functions))
+            variables.update(CodeInspector.get_names([box_function.main_function]))
+
+            box_functions_items_names[box_function] = variables
+        return box_functions_items_names
+
+    @classmethod
+    def construct_main_function(
+            cls,
+            hypergraph: Hypergraph,
+            renamed_functions: dict[BoxFunction, str],
+            func_name: str) \
+            -> str:
+
+        node_and_hyper_edge_to_variable_name: dict[int, str] = dict()  # TODO for what?
+        hypergraph_source_nodes = hypergraph.get_hypergraph_source()
+
+        main_function = ""
+        # --- Step 1: Start building the function definition and initialize mappings ---
+        function_definition = CodeGenerator.create_definition_of_main_function(hypergraph.get_first_level_hyper_edges(), func_name)
+
+        # ---
         function_definition = "def main("
         node_and_hyper_edge_to_variable_name: dict[int, str] = dict()
         hypergraph_source_nodes = hypergraph.get_hypergraph_source()
@@ -90,11 +119,16 @@ class CodeGenerator:
                 index += 1
         function_definition = function_definition[:-2] + "):"
 
+        # ---
+
+        # --- Step 3: Prepare input tracking structures and initialize work queue ---
         nodes_with_inputs: list[Node] = list()
         nodes_with_inputs.extend(hypergraph_source_nodes)
         hyper_edge_input_count_check: dict[HyperEdge, int] = dict()
         hyper_edge_queue: Queue[HyperEdge] = Queue()
         to_check = hypergraph.get_all_hyper_edges()
+
+        # --- Step 4: Topologically sort hyper edges to ensure correct execution order ---
         while len(to_check) > 0:
             to_check_new = list()
             for hyper_edge in to_check:
