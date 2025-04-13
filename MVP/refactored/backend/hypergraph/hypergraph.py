@@ -69,6 +69,12 @@ class Hypergraph:
                     queue.put(target_node)
         return list(target_nodes.values())
 
+    # def get_first_level_hyper_edges(self) -> list[HyperEdge]:
+    #     hyper_edges: set[HyperEdge] = set()
+    #     for node in self.get_hypergraph_source():
+    #         hyper_edges.update(node.get_output_hyper_edges())
+    #     return sorted(hyper_edges, key=lambda hyper_edge: MainDiagram.get_box_by_id(MainDiagram, hyper_edge.id))  # TODO not sure about it
+
     def get_canvas_id(self) -> int:
         return self.canvas_id
 
@@ -240,7 +246,6 @@ class Hypergraph:
             "nodeGroups": self.get_node_groups(),
             "sourceNodes": [source_node.id for source_node in self.get_hypergraph_source()],
         }
-
 
     def __str__(self) -> str:
         result = f"Hypergraph: {self.id}\n"
