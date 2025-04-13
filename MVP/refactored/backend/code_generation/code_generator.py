@@ -30,43 +30,28 @@ class CodeGenerator:
 
             Returns:
                 str: The generated and auto formatted Python code as a single string.
-
-            Errors:
-                No explicit error handling.
-
-            Note:
-                The generated file, "diagram.py", will be overwritten if it already exists.
         """
         box_functions: set[BoxFunction] = cls.get_all_box_functions(canvas, canvasses)
 
-        file_content = "".join(set(imp for f in box_functions for imp in f.imports))
-
-        box_functions_items_names: dict[BoxFunction, set[str]] = {}  # {box_func: set(all names of globals and functions)}
-
-        for box_function in box_functions:
-            variables = set()
-            variables.update(CodeInspector.get_names(box_function.global_statements))
-            variables.update(CodeInspector.get_names(box_function.helper_functions))
-            variables.update(CodeInspector.get_names([box_function.main_function]))
-
-            box_functions_items_names[box_function] = variables
+        box_functions_items_names: dict[BoxFunction, set[str]] = cls.get_box_functions_items_names(box_functions)
 
         (global_statements,
          helper_functions,
          main_functions,
          main_functions_new_names) = CodeInspector.rename(box_functions_items_names)
 
+        # imports
+        file_content = "".join(set(imp for f in box_functions for imp in f.imports))
+        # global statements
         file_content += "".join(global_statements) + "\n"
-
+        # helper functions
         file_content += "\n\n".join(helper_functions) + "\n\n"
-
-        file_content += "\n\n".join(main_functions) + "\n\n"
-
-        file_content += "\n" + cls.construct_main_function(HypergraphManager.get_graphs_by_canvas_id(canvas.id)[0],
-                                                           main_functions_new_names)
-
-        with open("diagram.py", "w") as file:
-            file.write(autopep8.fix_code(file_content))
+        # functions
+        file_content += "\n\n".join(main_functions)
+        # main functions
+        for i, hypergraph in enumerate(HypergraphManager.get_graphs_by_canvas_id(canvas.id)):
+            func_name = f"main_{i}"
+            file_content += "\n\n" + cls.construct_main_function(hypergraph, main_functions_new_names, func_name)
 
         return autopep8.fix_code(file_content)
 
@@ -89,6 +74,7 @@ class CodeGenerator:
 
     @classmethod
     def construct_main_function(cls, hypergraph: Hypergraph, renamed_functions: dict[BoxFunction, str]) -> str:
+            func_name: str) \
         main_function = ""
 
         function_definition = "def main("
@@ -125,6 +111,7 @@ class CodeGenerator:
                     to_check_new.append(hyper_edge)
             to_check = to_check_new
 
+        # --- Step 5: Generate code lines for hyper edge execution ---
         main_function_content = ""
         index = 0
         while not hyper_edge_queue.empty():
@@ -135,16 +122,20 @@ class CodeGenerator:
                 variable_definition += f"{node_and_hyper_edge_to_variable_name[source_node.new_hash()]}, "
             variable_definition = variable_definition[:-2] + ")"
             main_function_content += f"\n\t{variable_definition}"
+
+            # --- Step 6: Map target nodes to output variable or tuple elements ---
             if len(hyper_edge.get_target_nodes()) > 1:
                 target_node_index = 0
                 for target_node in hyper_edge.get_target_nodes():
                     if target_node.new_hash() not in node_and_hyper_edge_to_variable_name:
-                        node_and_hyper_edge_to_variable_name[target_node.new_hash()] = f"{variable}[{target_node_index}]"
+                        node_and_hyper_edge_to_variable_name[
+                            target_node.new_hash()] = f"{variable}[{target_node_index}]"
                         target_node_index += 1
             else:
                 node_and_hyper_edge_to_variable_name[hyper_edge.get_target_nodes()[0].new_hash()] = variable
             index += 1
 
+        # --- Step 7: Construct the return statement with output variables ---
         main_function_return = "\n\treturn "
         added: set[int] = set()
         for output in hypergraph.get_hypergraph_target():  # TODO it can be wrong order
@@ -153,15 +144,21 @@ class CodeGenerator:
                 added.add(output.new_hash())
         main_function_return = main_function_return[:-2 if len(added) > 0 else -1]
 
+        # --- Step 8: Combine everything into final function string ---
         main_function += function_definition
         main_function += main_function_content
         main_function += main_function_return
         return main_function
 
     @classmethod
-    def create_definition_of_main_function(cls, input_hyper_edges: set[HyperEdge]) -> str:
+    def create_definition_of_main_function(cls, input_hyper_edges: set[HyperEdge], func_name: str) -> str:
+        """
+            Create the definition of a main function for the given hypergraph.
 
-        definition = "def main("
+            This method generates the function signature for a main function, including
+            input parameters based on the source nodes of the provided hyper edges.
+        """
+        definition = f"def {func_name}("
         variables_count = sum(map(lambda hyper_edge: len(hyper_edge.get_source_nodes()), input_hyper_edges))
         has_args = False
 
@@ -231,8 +228,9 @@ class CodeGenerator:
                 for parent_node_output in node.outputs:
                     if parent_node_output in node_child.inputs:
                         connections_with_parent_node += 1
-                        
-                node_input_count_check[node_child.id] = node_input_count_check.get(node_child.id, 0) + connections_with_parent_node
+
+                node_input_count_check[node_child.id] = node_input_count_check.get(node_child.id,
+                                                                                   0) + connections_with_parent_node
 
                 if node_input_count_check[node_child.id] == len(node_child.inputs):
                     children.add(node_child)
