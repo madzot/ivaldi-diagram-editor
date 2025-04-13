@@ -127,6 +127,7 @@ class CodeInspector(ast.NodeTransformer):
         renamed_helper_functions: set[str] = set()
         renamed_main_functions: set[str] = set()
         main_functions_new_names: dict[BoxFunction, str] = dict()
+        helper_functions_track: dict[str, str] = dict()
 
         for i, (box_function, names) in enumerate(box_functions_items_names.items()):
             renamer = CodeInspector()

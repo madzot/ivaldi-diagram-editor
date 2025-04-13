@@ -1,3 +1,5 @@
+from typing import Optional
+
 import autopep8
 from queue import Queue
 
@@ -51,7 +53,8 @@ class CodeGenerator:
         # main functions
         for i, hypergraph in enumerate(HypergraphManager.get_graphs_by_canvas_id(canvas.id)):
             func_name = f"main_{i}"
-            file_content += "\n\n" + cls.construct_main_function(hypergraph, main_functions_new_names, func_name)
+            file_content += "\n\n" + cls.construct_main_function(hypergraph, main_functions_new_names, func_name,
+                                                                 canvas)
 
         return autopep8.fix_code(file_content)
 
@@ -95,79 +98,56 @@ class CodeGenerator:
             cls,
             hypergraph: Hypergraph,
             renamed_functions: dict[BoxFunction, str],
-            func_name: str) \
+            func_name: str,
+            canvas: CustomCanvas) \
             -> str:
 
-        node_and_hyper_edge_to_variable_name: dict[int, str] = dict()  # TODO for what?
-        hypergraph_source_nodes = hypergraph.get_hypergraph_source()
-
         main_function = ""
-        # --- Step 1: Start building the function definition and initialize mappings ---
-        function_definition = CodeGenerator.create_definition_of_main_function(hypergraph.get_first_level_hyper_edges(), func_name)
+        diagram_inputs_as_nodes = sorted(
+            (s for s in hypergraph.get_hypergraph_source()
+             if canvas.receiver.diagrams[canvas.id].get_input_by_id(s.id) is not None),
+            key=lambda s: canvas.receiver.diagrams[canvas.id].get_input_by_id(s.id).index
+        )
 
-        # ---
-        function_definition = "def main("
-        node_and_hyper_edge_to_variable_name: dict[int, str] = dict()
-        hypergraph_source_nodes = hypergraph.get_hypergraph_source()
-        for node in hypergraph_source_nodes:
-            print(node.__hash__())
-        index = 0
-        for node in hypergraph_source_nodes:  # TODO it can be wrong order
-            if node.new_hash() not in node_and_hyper_edge_to_variable_name:
-                node_and_hyper_edge_to_variable_name[node.new_hash()] = f"input_{index}"
-                function_definition += f"{node_and_hyper_edge_to_variable_name[node.new_hash()]} = None, "
-                index += 1
-        function_definition = function_definition[:-2] + "):"
+        # --- Step 1: Build the function definition and initialize mappings ---
+        (function_definition,
+         node_and_hyper_edge_to_variable_name) = (cls.create_definition_of_main_function(
+                                                                                        diagram_inputs_as_nodes,
+                                                                                        func_name))
 
-        # ---
-
-        # --- Step 3: Prepare input tracking structures and initialize work queue ---
-        nodes_with_inputs: list[Node] = list()
-        nodes_with_inputs.extend(hypergraph_source_nodes)
-        hyper_edge_input_count_check: dict[HyperEdge, int] = dict()
-        hyper_edge_queue: Queue[HyperEdge] = Queue()
-        to_check = hypergraph.get_all_hyper_edges()
-
-        # --- Step 4: Topologically sort hyper edges to ensure correct execution order ---
-        while len(to_check) > 0:
-            to_check_new = list()
-            for hyper_edge in to_check:
-                hyper_edge_input_count_check[hyper_edge] = 0
-                for node in hyper_edge.get_source_nodes():
-                    if node in nodes_with_inputs:
-                        hyper_edge_input_count_check[hyper_edge] += 1
-                if hyper_edge_input_count_check[hyper_edge] == len(hyper_edge.get_source_nodes()):
-                    hyper_edge_queue.put(hyper_edge)
-                    for target_node in hyper_edge.get_target_nodes():
-                        if target_node not in nodes_with_inputs:
-                            nodes_with_inputs.append(target_node)
-                else:
-                    to_check_new.append(hyper_edge)
-            to_check = to_check_new
+        hyper_edge_queue: Queue[HyperEdge] = cls.get_queue_of_hyper_edges(hypergraph)
 
         # --- Step 5: Generate code lines for hyper edge execution ---
-        main_function_content = ""
-        index = 0
+        # This block generates the Python code for executing each hyper edge in the
+        # order determined by the topological sort. It maps source nodes to input
+        # variables and target nodes to output variables or tuple elements.
+
+        main_function_content = ""  # Initialize the content of the main function
+        index = 0  # Index to track the result variable names
         while not hyper_edge_queue.empty():
-            hyper_edge = hyper_edge_queue.get()
-            variable = f"res_{index}"
+            hyper_edge = hyper_edge_queue.get()  # Get the next hyper edge from the queue
+            variable = f"res_{index}"  # Generate a unique variable name for the result
+            # Create the function call for the hyper edge's associated box function
             variable_definition = f"{variable} = {renamed_functions[hyper_edge.get_box_function()]}("
-            for source_node in hyper_edge.get_source_nodes():
+            for source_node in hyper_edge.get_source_nodes():  # Add source node variables as function arguments
                 variable_definition += f"{node_and_hyper_edge_to_variable_name[source_node.new_hash()]}, "
-            variable_definition = variable_definition[:-2] + ")"
-            main_function_content += f"\n\t{variable_definition}"
+            variable_definition = variable_definition[:-2] + ")"  # Remove trailing comma and close the function call
+            main_function_content += f"\n\t{variable_definition}"  # Append the function call to the main function content
 
             # --- Step 6: Map target nodes to output variable or tuple elements ---
-            if len(hyper_edge.get_target_nodes()) > 1:
-                target_node_index = 0
+            # This block maps the result of the function call to the target nodes of the hyper edge.
+            if len(hyper_edge.get_target_nodes()) > 1:  # If there are multiple target nodes
+                target_node_index = 0  # Index to track tuple elements
                 for target_node in hyper_edge.get_target_nodes():
                     if target_node.new_hash() not in node_and_hyper_edge_to_variable_name:
+                        # Map the target node to a specific tuple element
                         node_and_hyper_edge_to_variable_name[
                             target_node.new_hash()] = f"{variable}[{target_node_index}]"
                         target_node_index += 1
-            else:
+            else:  # If there is a single target node
+                # Map the target node to the result variable
                 node_and_hyper_edge_to_variable_name[hyper_edge.get_target_nodes()[0].new_hash()] = variable
-            index += 1
+            index += 1  # Increment the result variable index
 
         # --- Step 7: Construct the return statement with output variables ---
         main_function_return = "\n\treturn "
@@ -185,23 +165,55 @@ class CodeGenerator:
         return main_function
 
     @classmethod
-    def create_definition_of_main_function(cls, input_hyper_edges: set[HyperEdge], func_name: str) -> str:
+    def create_definition_of_main_function(cls, diagram_inputs_as_nodes: list[Node], func_name: str) -> str:
         """
             Create the definition of a main function for the given hypergraph.
-
-            This method generates the function signature for a main function, including
-            input parameters based on the source nodes of the provided hyper edges.
         """
         definition = f"def {func_name}("
-        variables_count = sum(map(lambda hyper_edge: len(hyper_edge.get_source_nodes()), input_hyper_edges))
-        has_args = False
 
-        for i in range(variables_count):
-            definition += f"input_{i + 1} = None, "
-            has_args = True
-        definition = (definition[:-2] if has_args else definition) + "):\n\t"
+        node_and_hyper_edge_to_variable_name: dict[int, str] = dict()
+        index = 0
 
-        return definition
+        # Iterate over the source nodes to construct the function's input parameters
+        for node in diagram_inputs_as_nodes:
+            node_and_hyper_edge_to_variable_name[node.new_hash()] = f"input_{index}"
+            definition += f"{node_and_hyper_edge_to_variable_name[node.new_hash()]} = None, "
+            index += 1
+
+        definition = (definition[:-2] if index > 0 else definition) + "):\n\t"
+
+        return definition, node_and_hyper_edge_to_variable_name
+
+    @classmethod
+    def get_queue_of_hyper_edges(cls, hypergraph: Hypergraph) -> Queue[HyperEdge]:
+
+        hyper_edge_queue: Queue[HyperEdge] = Queue()
+        nodes_with_inputs: list[Node] = list()
+        nodes_with_inputs.extend(hypergraph.get_hypergraph_source())
+        to_check = hypergraph.get_all_hyper_edges()
+        hyper_edge_input_count_check: dict[HyperEdge, int] = dict()
+
+        while len(to_check) > 0:
+            to_check_new = list()  # Temporary list to hold hyper edges that cannot be executed yet
+            for hyper_edge in to_check:
+                hyper_edge_is_hypergraph: Optional[Hypergraph] = HypergraphManager.get_graphs_by_canvas_id(hyper_edge.id)
+                if hyper_edge not in hyper_edge_input_count_check.keys():
+                    hyper_edge_input_count_check[hyper_edge] = 0  # Initialize input count for the current hyper edge
+                if hyper_edge_is_hypergraph:
+                    cls.get_queue_of_hyper_edges()
+                for node in hyper_edge.get_source_nodes():  # Iterate over source nodes of the hyper edge
+                    if node in nodes_with_inputs:  # Check if the source node has inputs
+                        hyper_edge_input_count_check[hyper_edge] += 1
+                # If all source nodes have inputs, the hyper edge is ready for execution
+                if hyper_edge_input_count_check[hyper_edge] == len(hyper_edge.get_source_nodes()):
+                    hyper_edge_queue.put(hyper_edge)  # Add the hyper edge to the execution queue
+                    for target_node in hyper_edge.get_target_nodes():  # Update target nodes with inputs
+                        if target_node not in nodes_with_inputs:
+                            nodes_with_inputs.append(target_node)
+                else:
+                    to_check_new.append(hyper_edge)  # Keep the hyper edge for the next iteration
+            to_check = to_check_new  # Update the list of hyper edges to process
+        return hyper_edge_queue
 
     @classmethod
     def create_main_function_content(cls, canvas: CustomCanvas, nodes_queue: Queue[Node],
