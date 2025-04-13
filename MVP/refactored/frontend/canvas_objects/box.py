@@ -570,7 +570,7 @@ class Box:
                             else:
                                 return self.edit_label()
         else:
-            if len(new_label) < 100:
+            if len(new_label) > 100:
                 return
             self.label_text = new_label
 
