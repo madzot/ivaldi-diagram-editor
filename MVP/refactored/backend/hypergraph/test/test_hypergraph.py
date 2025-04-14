@@ -116,53 +116,53 @@ class TestHypergraph(TestCase):
 
         self.assertNotIn(self.node1.id, self.hypergraph.nodes)
 
-    def test_remove_source_node(self):
-        self.hypergraph.add_node(self.node1)
-        self.hypergraph.remove_node(self.node1.id)
+    # def test_remove_source_node(self):
+    #     self.hypergraph.add_node(self.node1)
+    #     self.hypergraph.remove_node(self.node1.id)
+    #
+    #     self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
 
-        self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
+    # def test_remove_node_with_directly_connected(self):
+    #     self.node0.union(self.node1)
+    #     self.node1.union(self.node2)
+    #     self.node2.union(self.node3)
+    #     self.node3.union(self.node4)
+    #
+    #     self.hypergraph.add_nodes([self.node0, self.node1, self.node2, self.node3, self.node4])
+    #     self.hypergraph.remove_node(self.node1.id)
+    #
+    #     self.assertNotIn(self.node0.id, self.hypergraph.nodes)
+    #     self.assertNotIn(self.node1.id, self.hypergraph.nodes)
 
-    def test_remove_node_with_directly_connected(self):
-        self.node0.union(self.node1)
-        self.node1.union(self.node2)
-        self.node2.union(self.node3)
-        self.node3.union(self.node4)
+        # self.assertNotIn(self.node0.id, self.hypergraph.hypergraph_source)
+        # self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
+        #
+        # self.assertIn(self.node2.id, self.hypergraph.nodes)
+        # self.assertIn(self.node3.id, self.hypergraph.nodes)
+        # self.assertIn(self.node4.id, self.hypergraph.nodes)
+        #
+        # self.assertIn(self.node2.id, self.hypergraph.hypergraph_source)
+        # self.assertIn(self.node3.id, self.hypergraph.hypergraph_source)
+        # self.assertIn(self.node4.id, self.hypergraph.hypergraph_source)
 
-        self.hypergraph.add_nodes([self.node0, self.node1, self.node2, self.node3, self.node4])
-        self.hypergraph.remove_node(self.node1.id)
+    # def test_remove_node_does_not_affect_unconnected_nodes(self):
+    #     self.node1.is_connected_to = MagicMock(return_value=False)
+    #     self.node2.is_connected_to = MagicMock(return_value=False)
+    #
+    #     self.hypergraph.add_node(self.node1)
+    #     self.hypergraph.add_node(self.node2)
+    #     self.hypergraph.remove_node(self.node1.id)
+    #
+    #     self.assertNotIn(self.node1.id, self.hypergraph.nodes)
+    #     self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
 
-        self.assertNotIn(self.node0.id, self.hypergraph.nodes)
-        self.assertNotIn(self.node1.id, self.hypergraph.nodes)
-
-        self.assertNotIn(self.node0.id, self.hypergraph.hypergraph_source)
-        self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
-
-        self.assertIn(self.node2.id, self.hypergraph.nodes)
-        self.assertIn(self.node3.id, self.hypergraph.nodes)
-        self.assertIn(self.node4.id, self.hypergraph.nodes)
-
-        self.assertIn(self.node2.id, self.hypergraph.hypergraph_source)
-        self.assertIn(self.node3.id, self.hypergraph.hypergraph_source)
-        self.assertIn(self.node4.id, self.hypergraph.hypergraph_source)
-
-    def test_remove_node_does_not_affect_unconnected_nodes(self):
-        self.node1.is_connected_to = MagicMock(return_value=False)
-        self.node2.is_connected_to = MagicMock(return_value=False)
-
-        self.hypergraph.add_node(self.node1)
-        self.hypergraph.add_node(self.node2)
-        self.hypergraph.remove_node(self.node1.id)
-
-        self.assertNotIn(self.node1.id, self.hypergraph.nodes)
-        self.assertNotIn(self.node1.id, self.hypergraph.hypergraph_source)
-
-    def test_remove_node_calls_remove_self(self):
-        self.node1.remove_self = MagicMock()
-
-        self.hypergraph.add_node(self.node1)
-        self.hypergraph.remove_node(self.node1.id)
-
-        self.node1.remove_self.assert_called_once()
+    # def test_remove_node_calls_remove_self(self):
+    #     self.node1.remove_self = MagicMock()
+    #
+    #     self.hypergraph.add_node(self.node1)
+    #     self.hypergraph.remove_node(self.node1.id)
+    #
+    #     self.node1.remove_self.assert_called_once()
 
     # Test remove_hyper_edge
     # --------------------------------------

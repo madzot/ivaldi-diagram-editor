@@ -1,10 +1,11 @@
 import os
 from inspect import signature
-from typing import Callable
+from typing import Optional, Callable, List
+from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 
 
 def get_predefined_functions() -> dict:
-    predefined_functions = {}
+    predefined_functions_dict = {}
     functions_path = os.path.join(os.path.dirname(__file__), "./predefined/")
     dirs_and_files = os.listdir(functions_path)
     for name in dirs_and_files:
@@ -12,89 +13,114 @@ def get_predefined_functions() -> dict:
         if os.path.isfile(full_path):
             with open(full_path, "r") as file:
                 function_name = name.replace(".py", "").replace("_", " ")
-                predefined_functions[function_name] = file.read()
-    return predefined_functions
+                predefined_functions_dict[function_name] = file.read()
+    return predefined_functions_dict
 
 
 predefined_functions = get_predefined_functions()
-
+INVOKE_METHOD = "invoke"
 
 class BoxFunction:
 
     def __init__(self,
-                 name=None,
-                 function=None,
-                 min_args=None,
-                 max_args=None,
-                 imports=None,
-                 file_code=None,
-                 is_predefined_function=False):
-        if imports is None:
-            imports = []
-            self.imports = imports
+                 name: Optional[str] = None,
+                 function: Optional[Callable] = None,
+                 min_args: Optional[int] = None,
+                 max_args: Optional[int] = None,
+                 imports: Optional[List[str]] = None,
+                 file_code: Optional[str] = None,
+                 is_predefined_function: bool = False,
+                 main_function_name: Optional[str] = None):
+
         self.name: str = name
+        self.main_function_name: str = main_function_name or INVOKE_METHOD
+        self.imports: List[str] = imports or []
+        self.global_statements: List[str] = []
+        self.helper_functions: List[Callable] = []
+        self.main_function: Optional[Callable] = None
+        self.is_predefined_function = is_predefined_function
+        self.min_args: Optional[int] = min_args
+        self.max_args: Optional[int] = max_args
 
         if is_predefined_function:
             predefined_file_code = predefined_functions[self.name]
             self._set_data_from_file_code(predefined_file_code)
-            self.code = predefined_file_code # TODO: Remove this variable after code generation is refactored
         elif file_code is not None:
             self._set_data_from_file_code(file_code)
-            self.code = file_code # TODO: Remove this variable after code generation is refactored
         else:
-            self.function: Callable = function
+            self.main_function: Callable = function
             self.min_args: int = min_args
             self.max_args: int = max_args
             self.imports: list = imports
 
-
     def _set_data_from_file_code(self, file_code: str):
-        local = {}
-        exec(file_code, {}, local)
-        meta = local["meta"]
+        """
+        Parse and extract data from the provided file code.
 
-        self.function = local["invoke"]
-        self.min_args = meta["min_args"]
-        self.max_args = meta["max_args"]
-        # TODO: set imports for predefined functions
+        This method processes the given Python file code to extract the main function,
+        helper functions, imports, and global statements. These components are then
+        assigned to the respective attributes of the `BoxFunction` instance.
+        """
+        self.main_function = CodeInspector.get_main_function(file_code, self.main_function_name)  # TODO self.name?
+        self.helper_functions = CodeInspector.get_help_methods(file_code, self.main_function_name)  # TODO self.name?
+        self.imports = CodeInspector.get_imports(file_code)
+        self.global_statements = list(CodeInspector.get_global_statements(file_code))
+        # TODO min_args/max_args
 
     def count_inputs(self):
         # TODO: may not work, fix if needed
-        sig = signature(self.function)
+        if self.main_function is None:
+            raise ValueError("Main function is not set; cannot count inputs.")
+        sig = signature(self.main_function)
         params = sig.parameters
         count = len(params)
-        if params["self"]:
+        if "self" in params:
             count -= 1
         return count
 
     def __call__(self, *args):
-        return self.function(*args)
-
-    # def __eq__(self, other):
-    #     if isinstance(other, BoxFunction):
-    #         return (self.name == other.name
-    #                 and self.function == other.function
-    #                 and self.min_args == other.min_args
-    #                 and self.max_args == other.max_args
-    #                 and self.imports == other.imports)
-    #     return False
+        return self.main_function(*args)
 
     def __eq__(self, other):
+        """
+        Compares the current BoxFunction instance with another object for equality.
+        """
         if isinstance(other, BoxFunction):
-            return self.code == other.code
+            return (self.name == other.name
+                    and self.main_function == other.main_function
+                    and self.helper_functions == other.helper_functions
+                    and self.imports == other.imports
+                    and self.min_args == other.min_args
+                    and self.max_args == other.max_args)
         return False
 
     def __hash__(self):
-        return hash(self.code)
+        """
+        Generates a hash value for an instance based on its attributes to allow its use
+        as a key in hash-based collections like sets and dictionaries.
+        """
+        helper_hash = tuple(func for func in self.helper_functions)
+        imports_hash = tuple(self.imports)
+        main_function_hash = hash(self.main_function) if self.main_function else 0
 
-    # def __hash__(self):
-    #     return hash(self.function)
+        return hash((
+            self.name,
+            main_function_hash,
+            helper_hash,
+            imports_hash,
+            self.min_args,
+            self.max_args
+        ))
 
-    def __str__(self):
-        return f"BoxFunction: {self.name}\n" \
-               f"Min args: {self.min_args}\n" \
-               f"Max args: {self.max_args}\n" \
-               f"Imports: {self.imports}\n"
+    def __str__(self) -> str:
+        """
+        Generates a string representation of a Python file by organizing and assembling
+        its components, including imports, global statements, helper functions, and
+        the main function. This output is formatted using autopep8 for adherence to
+        PEP 8 style guidelines.
+        """
+        # TODO could be implemented better
+        return "BoxFunction: " + self.name
 
     def __repr__(self):
         return self.__str__()

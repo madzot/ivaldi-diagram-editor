@@ -20,7 +20,7 @@ class Receiver:
     def __init__(self):
         self.listener = True
         # self.diagram = Diagram()
-        self.diagrams: dict[int, Diagram] = {} # key is canvas_id where diagram located
+        self.diagrams: dict[int, Diagram] = {}  # key is canvas_id where diagram located
         logger.info("Receiver initialized.")
 
     def add_new_canvas(self, canvas_id: int):
@@ -29,8 +29,8 @@ class Receiver:
 
     def receiver_callback(self, action: ActionType, **kwargs):
         resource_id = kwargs.get('resource_id')
-        start_connection: ConnectionInfo|None = kwargs.get('start_connection')
-        end_connection: ConnectionInfo|None = kwargs.get('end_connection')
+        start_connection: ConnectionInfo | None = kwargs.get('start_connection')
+        end_connection: ConnectionInfo | None = kwargs.get('end_connection')
         connection_id = kwargs.get('connection_id')
         generator_id = kwargs.get('generator_id')
         generator_side = kwargs.get('generator_side')
@@ -72,11 +72,13 @@ class Receiver:
         elif action == ActionType.BOX_ADD_INNER_LEFT:
             return
             box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_left_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_LEFT, connection_id, related_object=box))
+            box.add_left_inner(
+                ConnectionInfo(connection_nr, ConnectionSide.INNER_LEFT, connection_id, related_object=box))
         elif action == ActionType.BOX_ADD_INNER_RIGHT:
             return
             box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_right_inner(ConnectionInfo(connection_nr, ConnectionSide.INNER_RIGHT, connection_id, related_object=box))
+            box.add_right_inner(
+                ConnectionInfo(connection_nr, ConnectionSide.INNER_RIGHT, connection_id, related_object=box))
         elif action == ActionType.BOX_REMOVE_INNER_LEFT:
             return
             box = self.get_generator_by_id(generator_id, canvas_id)
@@ -142,7 +144,7 @@ class Receiver:
 
             HypergraphManager.swap_hyper_edge_id(generator_id, new_id)
         elif action == ActionType.BOX_SWAP_CONNECTION_ID:
-            pass # in original diagram callback that events is not in use. In project there no occurrences for this event
+            pass  # in original diagram callback that events is not in use. In project there no occurrences for this event
         elif action == ActionType.DIAGRAM_ADD_INPUT:
             self.diagrams[canvas_id].add_input(ConnectionInfo(connection_nr, connection_side, connection_id))
 
@@ -167,7 +169,7 @@ class Receiver:
     def box_callback(self, action: str, **kwargs):
         pass
 
-    def create_new_resource(self, id: int, canvas_id: int, spider: bool=False) -> Resource:
+    def create_new_resource(self, id: int, canvas_id: int, spider: bool = False) -> Resource:
         resource = Resource(id)
         if spider:
             self.diagrams[canvas_id].add_spider(resource)
@@ -175,14 +177,14 @@ class Receiver:
             self.diagrams[canvas_id].add_resource(resource)
         return resource
 
-    def delete_resource(self, id: int, canvas_id: int, spider: bool=False):
+    def delete_resource(self, id: int, canvas_id: int, spider: bool = False):
         if spider:
             self.diagrams[canvas_id].remove_spider_by_id(id)
         else:
             self.diagrams[canvas_id].remove_resource_by_id(id)
 
-    def add_connections_to_resource(self, resource: Resource, connections: list[ConnectionInfo|None], canvas_id: int,
-                                    node: Node|None=None):
+    def add_connections_to_resource(self, resource: Resource, connections: list[ConnectionInfo | None], canvas_id: int,
+                                    node: Node | None = None):
         for connection in connections:
             if connection is None: continue
 
@@ -196,13 +198,14 @@ class Receiver:
 
                         HypergraphManager.union_nodes(node, output.get_id())
                         continue
-                    resource.add_left_connection(box.get_left_by_id(connection.get_id())) # We don`t simply add connection from loop (connection in connection),
+                    resource.add_left_connection(box.get_left_by_id(
+                        connection.get_id()))  # We don`t simply add connection from loop (connection in connection),
                     # because we want that box(or input/output) connection and wire connection will be the same object,
                     # if we use from frontend connection they will differ.
                     hyper_edge = HypergraphManager.connect_node_with_output_hyper_edge(node, box.id)
                     hyper_edge.set_box_function(box.get_box_function())
                     hyper_edge.set_sub_diagram_canvas_id(box.get_sub_diagram_id())
-                else: # it is output
+                else:  # it is output
                     output = self.get_output_by_id(connection.get_id(), canvas_id)
                     resource.add_left_connection(output)
 
@@ -222,14 +225,15 @@ class Receiver:
                     hyper_edge = HypergraphManager.connect_node_with_input_hyper_edge(node, box.id)
                     hyper_edge.set_box_function(box.get_box_function())
                     hyper_edge.set_sub_diagram_canvas_id(box.get_sub_diagram_id())
-                else: # it is input
+                else:  # it is input
                     input = self.get_input_by_id(connection.get_id(), canvas_id)
                     resource.add_right_connection(input)
 
                     HypergraphManager.union_nodes(node, input.get_id())
             elif connection.side == ConnectionSide.SPIDER:
                 spider = self.get_spider_by_id(connection.get_id(), canvas_id)
-                connection.index = len(spider.get_spider_connections()) # we use here that rule, that when we add wire to spider
+                connection.index = len(
+                    spider.get_spider_connections())  # we use here that rule, that when we add wire to spider
                 connection.set_related_object(spider)
                 # it always appends to the last connection
                 spider.add_spider_connection(connection)
@@ -273,7 +277,7 @@ class Receiver:
                 resources.append(resource)
         return resources
 
-    def get_spider_by_id(self, spider_id: int, canvas_id: int) -> Resource|None:
+    def get_spider_by_id(self, spider_id: int, canvas_id: int) -> Resource | None:
         return self.diagrams[canvas_id].get_spider_by_id(spider_id)
 
     def get_spiders_by_ids(self, spider_ids: list[int], canvas_id: int) -> list[Resource]:
