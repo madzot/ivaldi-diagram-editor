@@ -1029,22 +1029,34 @@ class Box:
         return inputs_amount, outputs_amount
 
     def update_box(self):
+        """
+        Update the Box display.
+
+        Redirects to shape updating functions that will create or update the location of the Box on the canvas.
+
+        :return: None
+        """
         match self.style:
             case const.RECTANGLE:
                 self.__update_rectangle__()
             case const.TRIANGLE:
                 self.__update_triangle__()
             case const.LOGIC_AND:
-                self.__update_logic_and__()
+                self.__update_and_gate__()
             case const.LOGIC_OR:
-                self.__update_logic_or__()
+                self.__update_or_gate__()
             case const.LOGIC_XOR:
-                self.__update_logic_xor__()
+                self.__update_xor_gate__()
             case _:
                 self.__update_rectangle__()
         self.__update_resize_handle__()
 
     def __update_rectangle__(self):
+        """
+        Update/create rectangle shape Box.
+
+        :return: None
+        """
         w, h = self.size
         if self.shape:
             self.canvas.coords(self.shape, self.x, self.y, self.x + w, self.y + h)
@@ -1053,6 +1065,11 @@ class Box:
                                                       outline=const.BLACK, fill=const.WHITE)
 
     def __update_triangle__(self):
+        """
+        Update/create triangle shape Box.
+
+        :return: None
+        """
         w, h = self.size
         if self.shape:
             self.canvas.coords(self.shape,
@@ -1063,7 +1080,12 @@ class Box:
             self.shape = self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
                                                     self.x, self.y + h, outline=const.BLACK, fill=const.WHITE)
 
-    def __update_logic_and__(self):
+    def __update_and_gate__(self):
+        """
+        Update/create AND gate shape Box.
+
+        :return: None
+        """
         w, h = self.size
         if self.shape:
             self.canvas.coords(self.shape,
@@ -1092,7 +1114,12 @@ class Box:
                                                     self.x, self.y + h, self.x, self.y + h,
                                                     smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
 
-    def __update_logic_or__(self):
+    def __update_or_gate__(self):
+        """
+        Update/create OR gate shape Box.
+
+        :return: None
+        """
         w, h = self.size
         if self.shape:
             self.canvas.coords(self.shape,
@@ -1123,7 +1150,12 @@ class Box:
                                                     self.x + w / 8, self.y + h / 5,
                                                     smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
 
-    def __update_logic_xor__(self):
+    def __update_xor_gate__(self):
+        """
+        Update/create XOR gate shape Box.
+
+        :return: None
+        """
         w, h = self.size
         if self.shape:
             if "xor line" in self.extra_shapes:
@@ -1147,9 +1179,16 @@ class Box:
                                                                        self.x + w / 8 - 5, self.y + h / 5,
                                                                        smooth=1, spline=20,
                                                                        fill=const.WHITE, outline=const.BLACK)
-        self.__update_logic_or__()
+        self.__update_or_gate__()
 
     def __update_resize_handle__(self):
+        """
+        Update/create resize handle for Box.
+
+        Creates a black square known as the resize handle at the bottom left of the Box.
+
+        :return: None
+        """
         w, h = self.size
         if self.resize_handle:
             self.canvas.coords(self.resize_handle, self.x + w - 10, self.y + h - 10,
