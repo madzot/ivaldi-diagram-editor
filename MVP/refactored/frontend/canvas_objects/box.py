@@ -25,6 +25,7 @@ class Box:
 
     The coordinates of a Box are the top left corner for it.
     """
+
     def __init__(self, canvas, x, y, size=(60, 60), id_=None, style=const.RECTANGLE):
         """
         Box constructor.
@@ -137,6 +138,7 @@ class Box:
             self.context_menu.add_cascade(menu=sub_menu, label="Shape")
             sub_menu.add_command(label="Rectangle", command=lambda shape=const.RECTANGLE: self.change_shape(shape))
             sub_menu.add_command(label="Triangle", command=lambda shape=const.TRIANGLE: self.change_shape(shape))
+            sub_menu.add_command(label="and", command=lambda shape=const.LOGIC_AND: self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -752,7 +754,7 @@ class Box:
             case const.LOGIC_AND:
                 self.canvas.coords(self.shape,
                                    self.x, self.y, self.x, self.y,
-                                   self.x + w/2, self.y, self.x + w/2, self.y,
+                                   self.x + w / 2, self.y, self.x + w / 2, self.y,
                                    self.x + 0.75 * w, self.y + h / 20,
                                    self.x + 0.85 * w, self.y + h / 8,
                                    self.x + 0.95 * w, self.y + h / 4,
@@ -760,7 +762,7 @@ class Box:
                                    self.x + 0.95 * w, self.y + 3 * h / 4,
                                    self.x + 0.85 * w, self.y + 7 * h / 8,
                                    self.x + 0.75 * w, self.y + 19 * h / 20,
-                                   self.x + w/2, self.y + h, self.x + w/2, self.y + h,
+                                   self.x + w / 2, self.y + h, self.x + w / 2, self.y + h,
                                    self.x, self.y + h, self.x, self.y + h,
                                    )
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
@@ -1025,15 +1027,15 @@ class Box:
                                                   self.x, self.y + h, outline=const.BLACK, fill=const.WHITE)
             case const.LOGIC_AND:
                 return self.canvas.create_polygon(self.x, self.y, self.x, self.y,
-                                                  self.x + w, self.y, self.x + w, self.y,
-                                                  self.x + 1.15*w, self.y + h/20,
-                                                  self.x + 1.25 * w, self.y + h/8,
-                                                  self.x + 1.35*w, self.y + h/4,
-                                                  self.x + 1.4*w, self.y + h/2,
-                                                  self.x + 1.35*w, self.y + 3*h/4,
-                                                  self.x + 1.25 * w, self.y + 7*h/8,
-                                                  self.x + 1.15*w, self.y + 19*h/20,
-                                                  self.x + w, self.y + h, self.x + w, self.y + h,
+                                                  self.x + w / 2, self.y, self.x + w / 2, self.y,
+                                                  self.x + 0.75 * w, self.y + h / 20,
+                                                  self.x + 0.85 * w, self.y + h / 8,
+                                                  self.x + 0.95 * w, self.y + h / 4,
+                                                  self.x + 1 * w, self.y + h / 2,
+                                                  self.x + 0.95 * w, self.y + 3 * h / 4,
+                                                  self.x + 0.85 * w, self.y + 7 * h / 8,
+                                                  self.x + 0.75 * w, self.y + 19 * h / 20,
+                                                  self.x + w / 2, self.y + h, self.x + w / 2, self.y + h,
                                                   self.x, self.y + h, self.x, self.y + h,
                                                   smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
 
@@ -1046,12 +1048,15 @@ class Box:
         :param shape: Shape of new Box
         :return: None
         """
-        if shape == const.RECTANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.RECTANGLE)
-        elif shape == const.TRIANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.TRIANGLE)
-        else:
-            return
+        match shape:
+            case const.RECTANGLE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.RECTANGLE)
+            case const.TRIANGLE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.TRIANGLE)
+            case const.LOGIC_AND:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.LOGIC_AND)
+            case _:
+                return
         self.canvas.copier.copy_box(self, new_box)
         self.delete_box()
 
