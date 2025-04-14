@@ -14,6 +14,7 @@ RECTANGLE = "rectangle"
 TRIANGLE = "triangle"
 LOGIC_AND = "logic_and"
 LOGIC_OR = "logic_or"
+LOGIC_XOR = "logic_xor"
 
 # box sides
 LEFT = "left"
