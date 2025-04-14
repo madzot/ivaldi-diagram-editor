@@ -1,17 +1,17 @@
 import autopep8
 from queue import Queue
 
-from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 from MVP.refactored.backend.diagram import Diagram
-from MVP.refactored.backend.diagram_callback import Receiver
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
-from MVP.refactored.backend.hypergraph.node import Node
-from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.backend.resource import Resource
+from MVP.refactored.backend.hypergraph.node import Node
+from MVP.refactored.backend.diagram_callback import Receiver
+from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.types.connection_info import ConnectionInfo
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
+from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 
 
 class CodeGenerator:
