@@ -139,9 +139,6 @@ class Box:
             self.context_menu.add_cascade(menu=sub_menu, label="Shape")
             sub_menu.add_command(label="Rectangle", command=lambda shape=const.RECTANGLE: self.change_shape(shape))
             sub_menu.add_command(label="Triangle", command=lambda shape=const.TRIANGLE: self.change_shape(shape))
-            sub_menu.add_command(label="and", command=lambda shape=const.LOGIC_AND: self.change_shape(shape))
-            sub_menu.add_command(label="or", command=lambda shape=const.LOGIC_OR: self.change_shape(shape))
-            sub_menu.add_command(label="xor", command=lambda shape=const.LOGIC_XOR: self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -995,12 +992,12 @@ class Box:
                 new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.RECTANGLE)
             case const.TRIANGLE:
                 new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.TRIANGLE)
-            case const.LOGIC_AND:
-                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.LOGIC_AND)
-            case const.LOGIC_OR:
-                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.LOGIC_OR)
-            case const.LOGIC_XOR:
-                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.LOGIC_XOR)
+            case const.AND_GATE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.AND_GATE)
+            case const.OR_GATE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.OR_GATE)
+            case const.XOR_GATE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.XOR_GATE)
             case _:
                 return
         self.canvas.copier.copy_box(self, new_box)
@@ -1041,11 +1038,11 @@ class Box:
                 self.__update_rectangle__()
             case const.TRIANGLE:
                 self.__update_triangle__()
-            case const.LOGIC_AND:
+            case const.AND_GATE:
                 self.__update_and_gate__()
-            case const.LOGIC_OR:
+            case const.OR_GATE:
                 self.__update_or_gate__()
-            case const.LOGIC_XOR:
+            case const.XOR_GATE:
                 self.__update_xor_gate__()
             case _:
                 self.__update_rectangle__()
