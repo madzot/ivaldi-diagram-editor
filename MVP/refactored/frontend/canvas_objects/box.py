@@ -100,7 +100,6 @@ class Box:
 
         :return: None
         """
-        print(self.shape)
         self.canvas.tag_bind(self.shape, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.shape, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.shape, '<B1-Motion>', self.on_drag)
