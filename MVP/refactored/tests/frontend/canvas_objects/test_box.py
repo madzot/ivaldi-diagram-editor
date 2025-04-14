@@ -60,7 +60,7 @@ class BoxTests(TestMainDiagram):
         self.assertEqual(0, box.x_dif)
         self.assertEqual(0, box.y_dif)
 
-    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_position")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_box")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_connections")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_wires")
     def test__update_size__changes_size(self, mock, mock2, mock3):
@@ -165,16 +165,16 @@ class BoxTests(TestMainDiagram):
         box.move(expected_x, expected_y)
         self.assertEqual((expected_x, expected_y), (box.x, box.y))
 
-    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_position")
+    @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_box")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_connections")
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_wires")
-    def test__move__calls_out_methods(self, update_wires_mock, update_connections_mock, update_position_mock):
+    def test__move__calls_out_methods(self, update_wires_mock, update_connections_mock, update_box_mock):
         box = Box(self.custom_canvas, 100, 100)
         box.move(100, 100)
 
         self.assertTrue(update_wires_mock.called)
         self.assertTrue(update_connections_mock.called)
-        self.assertTrue(update_position_mock.called)
+        self.assertTrue(update_box_mock.called)
 
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.is_illegal_move")
     def test__move__checks_for_illegal_move_when_connections_with_wire_exist(self, is_illegal_move_mock):
@@ -313,7 +313,7 @@ class BoxTests(TestMainDiagram):
         box.show_context_menu(event)
 
         self.assertEqual(1, close_menu_mock.call_count)
-        self.assertEqual(12, add_command_mock.call_count)
+        self.assertEqual(15, add_command_mock.call_count)
         self.assertEqual(1, entry_config_mock.call_count)
         self.assertEqual(1, add_separator_mock.call_count)
         self.assertEqual(1, add_cascade_mock.call_count)
@@ -340,7 +340,7 @@ class BoxTests(TestMainDiagram):
         box.show_context_menu(event)
 
         self.assertEqual(1, close_menu_mock.call_count)
-        self.assertEqual(14, add_command_mock.call_count)
+        self.assertEqual(17, add_command_mock.call_count)
         self.assertEqual(1, entry_config_mock.call_count)
         self.assertEqual(1, add_separator_mock.call_count)
         self.assertEqual(1, add_cascade_mock.call_count)
