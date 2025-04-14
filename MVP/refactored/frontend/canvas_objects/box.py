@@ -740,13 +740,29 @@ class Box:
 
         :return: None
         """
-        if self.style == const.RECTANGLE:
-            self.canvas.coords(self.shape, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
-        if self.style == const.TRIANGLE:
-            self.canvas.coords(self.shape,
-                               self.x + self.size[0], self.y + self.size[1] / 2,
-                               self.x, self.y,
-                               self.x, self.y + self.size[1])
+        w, h = self.size
+        match self.style:
+            case const.RECTANGLE:
+                self.canvas.coords(self.shape, self.x, self.y, self.x + w, self.y + h)
+            case const.TRIANGLE:
+                self.canvas.coords(self.shape,
+                                   self.x + self.size[0], self.y + self.size[1] / 2,
+                                   self.x, self.y,
+                                   self.x, self.y + self.size[1])
+            case const.LOGIC_AND:
+                self.canvas.coords(self.shape,
+                                   self.x, self.y, self.x, self.y,
+                                   self.x + w/2, self.y, self.x + w/2, self.y,
+                                   self.x + 0.75 * w, self.y + h / 20,
+                                   self.x + 0.85 * w, self.y + h / 8,
+                                   self.x + 0.95 * w, self.y + h / 4,
+                                   self.x + 1 * w, self.y + h / 2,
+                                   self.x + 0.95 * w, self.y + 3 * h / 4,
+                                   self.x + 0.85 * w, self.y + 7 * h / 8,
+                                   self.x + 0.75 * w, self.y + 19 * h / 20,
+                                   self.x + w/2, self.y + h, self.x + w/2, self.y + h,
+                                   self.x, self.y + h, self.x, self.y + h,
+                                   )
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                            self.x + self.size[0], self.y + self.size[1])
 
@@ -1000,12 +1016,26 @@ class Box:
         :return: Tag that represents the Box in CustomCanvas.
         """
         w, h = self.size
-        if self.style == const.RECTANGLE:
-            return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
-                                                outline=const.BLACK, fill=const.WHITE)
-        if self.style == const.TRIANGLE:
-            return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
-                                              self.x, self.y + h, outline=const.BLACK, fill=const.WHITE)
+        match self.style:
+            case const.RECTANGLE:
+                return self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
+                                                    outline=const.BLACK, fill=const.WHITE)
+            case const.TRIANGLE:
+                return self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
+                                                  self.x, self.y + h, outline=const.BLACK, fill=const.WHITE)
+            case const.LOGIC_AND:
+                return self.canvas.create_polygon(self.x, self.y, self.x, self.y,
+                                                  self.x + w, self.y, self.x + w, self.y,
+                                                  self.x + 1.15*w, self.y + h/20,
+                                                  self.x + 1.25 * w, self.y + h/8,
+                                                  self.x + 1.35*w, self.y + h/4,
+                                                  self.x + 1.4*w, self.y + h/2,
+                                                  self.x + 1.35*w, self.y + 3*h/4,
+                                                  self.x + 1.25 * w, self.y + 7*h/8,
+                                                  self.x + 1.15*w, self.y + 19*h/20,
+                                                  self.x + w, self.y + h, self.x + w, self.y + h,
+                                                  self.x, self.y + h, self.x, self.y + h,
+                                                  smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
 
     def change_shape(self, shape):
         """
@@ -1017,9 +1047,9 @@ class Box:
         :return: None
         """
         if shape == const.RECTANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, style="rectangle")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.RECTANGLE)
         elif shape == const.TRIANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, style="triangle")
+            new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.TRIANGLE)
         else:
             return
         self.canvas.copier.copy_box(self, new_box)
