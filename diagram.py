@@ -14,6 +14,10 @@ def passs_1(*args):
     )
 
 
+def invoke_0(x) -> list:
+    return [x, x]
+
+
 def invoke_2(*numbers: list) -> int:
     if len(numbers) < 2:
         raise ValueError('Numbers amount should be at least 2')
@@ -27,5 +31,8 @@ def invoke_1(*numbers: list) -> int:
     return sum(numbers)
 
 
-def invoke_0(x) -> list:
-    return [x, x]
+def main_0(input_0=None, input_1=None, input_2=None):
+    res_0 = invoke_0(input_0)
+    res_1 = invoke_1(res_0[0], input_1)
+    res_2 = invoke_2(res_0[1], input_2)
+    return res_1, res_2

@@ -35,6 +35,9 @@ class Diagram:
     def get_output_by_id(self, output_id):
         return next((o for o in self.output if o.id == output_id), None)
 
+    def get_output_by_index(self, index):
+        return next((o for o in self.output if o.index == index), None)
+
     def add_resource(self, resource: Resource):
         if resource not in self.resources:
             self.resources.append(resource)

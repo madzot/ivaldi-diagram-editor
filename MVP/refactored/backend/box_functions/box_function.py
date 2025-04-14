@@ -1,9 +1,6 @@
 import os
 from inspect import signature
 from typing import Optional, Callable, List
-
-import autopep8
-
 from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 
 
@@ -58,19 +55,14 @@ class BoxFunction:
 
     def _set_data_from_file_code(self, file_code: str):
         """
-        Sets data for the object using file code.
+        Parse and extract data from the provided file code.
 
-        This method processes the provided file code to determine the main function,
-        helper functions, and imported modules within the file. Depending on whether
-        the object has a predefined function, it selects the corresponding main and
-        helper functions from the file code using appropriate methods.
+        This method processes the given Python file code to extract the main function,
+        helper functions, imports, and global statements. These components are then
+        assigned to the respective attributes of the `BoxFunction` instance.
         """
-        if self.is_predefined_function:
-            self.main_function = CodeInspector.get_main_function(file_code, INVOKE_METHOD)
-            self.helper_functions = CodeInspector.get_help_methods(file_code, INVOKE_METHOD)
-        else:
-            self.main_function = CodeInspector.get_main_function(file_code, self.name)  # TODO self.name?
-            self.helper_functions = CodeInspector.get_help_methods(file_code, self.name)  # TODO self.name?
+        self.main_function = CodeInspector.get_main_function(file_code, self.main_function_name)  # TODO self.name?
+        self.helper_functions = CodeInspector.get_help_methods(file_code, self.main_function_name)  # TODO self.name?
         self.imports = CodeInspector.get_imports(file_code)
         self.global_statements = list(CodeInspector.get_global_statements(file_code))
         # TODO min_args/max_args
