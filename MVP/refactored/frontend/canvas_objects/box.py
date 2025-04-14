@@ -139,6 +139,7 @@ class Box:
             sub_menu.add_command(label="Rectangle", command=lambda shape=const.RECTANGLE: self.change_shape(shape))
             sub_menu.add_command(label="Triangle", command=lambda shape=const.TRIANGLE: self.change_shape(shape))
             sub_menu.add_command(label="and", command=lambda shape=const.LOGIC_AND: self.change_shape(shape))
+            sub_menu.add_command(label="or", command=lambda shape=const.LOGIC_OR: self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -763,8 +764,21 @@ class Box:
                                    self.x + 0.85 * w, self.y + 7 * h / 8,
                                    self.x + 0.75 * w, self.y + 19 * h / 20,
                                    self.x + w / 2, self.y + h, self.x + w / 2, self.y + h,
+                                   self.x, self.y + h, self.x, self.y + h)
+            case const.LOGIC_OR:
+                self.canvas.coords(self.shape,
+                                   self.x, self.y, self.x, self.y,
+                                   self.x + w / 3, self.y, self.x + w / 3, self.y,
+                                   self.x + 0.8 * w, self.y + h / 7,
+                                   self.x + 0.99 * w, self.y + h / 2 - 1,
+                                   self.x + 1 * w, self.y + h / 2, self.x + 1 * w, self.y + h / 2,
+                                   self.x + 0.99 * w, self.y + h / 2 + 1,
+                                   self.x + 0.8 * w, self.y + 6 * h / 7,
+                                   self.x + w / 3, self.y + h, self.x + w / 3, self.y + h,
                                    self.x, self.y + h, self.x, self.y + h,
-                                   )
+                                   self.x + w / 8, self.y + 4 * h / 5,
+                                   self.x + w / 4, self.y + h / 2,
+                                   self.x + w / 8, self.y + h / 5)
         self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
                            self.x + self.size[0], self.y + self.size[1])
 
@@ -1038,6 +1052,20 @@ class Box:
                                                   self.x + w / 2, self.y + h, self.x + w / 2, self.y + h,
                                                   self.x, self.y + h, self.x, self.y + h,
                                                   smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
+            case const.LOGIC_OR:
+                return self.canvas.create_polygon(self.x, self.y, self.x, self.y,
+                                                  self.x + w / 3, self.y, self.x + w / 3, self.y,
+                                                  self.x + 0.8 * w, self.y + h / 7,
+                                                  self.x + 0.99 * w, self.y + h / 2 - 1,
+                                                  self.x + 1 * w, self.y + h / 2, self.x + 1 * w, self.y + h / 2,
+                                                  self.x + 0.99 * w, self.y + h / 2 + 1,
+                                                  self.x + 0.8 * w, self.y + 6 * h / 7,
+                                                  self.x + w / 3, self.y + h, self.x + w / 3, self.y + h,
+                                                  self.x, self.y + h, self.x, self.y + h,
+                                                  self.x + w / 8, self.y + 4 * h / 5,
+                                                  self.x + w / 4, self.y + h / 2,
+                                                  self.x + w / 8, self.y + h / 5,
+                                                  smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
 
     def change_shape(self, shape):
         """
@@ -1055,6 +1083,8 @@ class Box:
                 new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.TRIANGLE)
             case const.LOGIC_AND:
                 new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.LOGIC_AND)
+            case const.LOGIC_OR:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.LOGIC_OR)
             case _:
                 return
         self.canvas.copier.copy_box(self, new_box)
