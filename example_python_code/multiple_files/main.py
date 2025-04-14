@@ -11,16 +11,14 @@ def return_argument(arg):
 
 
 if __name__ == "__main__":
-    num1, num2 = 12, 8
-    sum_result = add(num1, num2)
-    product_result = multiply(num1, num2)
-    quotient_result = divide(num1, num2)
-    squared_result = square(num1)
+    sum_result = add(12, 8)
+    product_result = multiply(sum_result, 14)
+    quotient_result = divide(sum_result, product_result)
+    squared_result = square(product_result)
 
-    test_string = "level"
-    reversed_str = reverse_string(test_string)
-    uppercase_str = to_uppercase(test_string)
-    palindrome_check = is_palindrome(test_string)
+    reversed_str = reverse_string("level")
+    uppercase_str = to_uppercase("popich")
+    palindrome_check = is_palindrome(reversed_str)
 
     result = return_argument(sum_result)
 

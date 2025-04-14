@@ -1,6 +1,7 @@
 import hashlib
 import json
 import tkinter as tk
+from contextlib import ExitStack
 from tkinter import messagebox, filedialog
 from tkinter import simpledialog
 from tkinter import ttk
@@ -524,32 +525,52 @@ class MainDiagram(tk.Tk):
 
     def load_from_file(self):
         filetypes = (("JSON files", "*.json"), ("Python files", "*.py"), ("All files", "*.*"))
+        allowed_multiple_files_filetypes = {".py"}
+        importers = {".json": self.json_importer, ".py": self.python_importer}
+
         while True:
-            file_path = filedialog.askopenfilename(title="Select JSON / Python file", filetypes=filetypes)
-            if not file_path:
+            file_paths = filedialog.askopenfilenames(title="Select JSON / Python file", filetypes=filetypes)
+            if not file_paths:
                 return
 
-            importers = {".json": self.json_importer, ".py": self.python_importer}
-            try:
-                with open(file_path, 'r') as json_file:
-                    file_name, file_extension = os.path.splitext(file_path)
-                    importer = importers.get(file_extension)
+            with ExitStack() as stack:
+                try:
+                    files = []
+                    imported_files_extension = None
+                    files_names = set()
 
+                    for file_path in file_paths:
+                        file_name, file_extension = os.path.splitext(file_path)
+                        if file_name in files_names:
+                            raise ValueError( f"Duplicate file name: {file_name}. Please select unique files.")
+
+                        if not imported_files_extension:
+                            imported_files_extension = file_extension
+
+                        if file_extension != imported_files_extension:
+                            raise ValueError( "Please select files with the same extension.")
+
+                        files.append(stack.enter_context(open(file_path, 'r')))
+
+                    if imported_files_extension not in allowed_multiple_files_filetypes and len(files) > 1:
+                        raise ValueError("Selected extension does not support multiple files. Please select a single file.")
+
+                    importer = importers.get(imported_files_extension)
                     if not importer:
                         raise ValueError("Unsupported file format!")
 
-                    importer.start_import(json_file)
+                    title = importer.start_import(files)
 
                     messagebox.showinfo("Info", "Imported successfully")
-                    self.set_title(file_name)
+                    self.set_title(title)
                     break
 
-            except ValueError as error:
-                messagebox.showerror("Import failed", str(error))
+                except ValueError as error:
+                    messagebox.showerror("Import failed", str(error))
 
-            except (FileNotFoundError, IOError, json.JSONDecodeError):
-                messagebox.showerror("Error", "File import failed, loading new empty canvas.")
-                break
+                except (FileNotFoundError, IOError, json.JSONDecodeError):
+                    messagebox.showerror("Error", "File import failed, loading new empty canvas.")
+                    break
 
     def update_shape_dropdown_menu(self):
         shapes = ["rectangle", "triangle"]

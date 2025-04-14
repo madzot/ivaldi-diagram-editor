@@ -3,11 +3,12 @@ import json
 import random
 import string
 from tkinter import messagebox
+from typing import List
 from typing import TextIO
-from constants import *
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
+from constants import *
 
 
 class JsonImporter(Importer):
@@ -19,16 +20,20 @@ class JsonImporter(Importer):
         self.random_id = False
         self.boxes_json_conf = "./MVP/refactored/conf/boxes_conf.json"
 
-    def start_import(self, json_file: TextIO):
+    def start_import(self, json_files: List[TextIO]) -> str:
+        json_file = json_files[0]
+
         data = json.load(json_file)
         data = data["main_canvas"]
-        self.load_everything_to_canvas(data, self.canvas)
 
-    def load_everything_to_canvas(self, data, canvas):
-        self.load_boxes_to_canvas(data, canvas)
-        self.load_spiders_to_canvas(data, canvas)
-        self.load_io_to_canvas(data, canvas)
-        self.load_wires_to_canvas(data, canvas)
+        self.load_everything_to_canvas(data)
+        return os.path.basename(json_file.name)
+
+    def load_everything_to_canvas(self, data: dict):
+        self.load_boxes_to_canvas(data, self.canvas)
+        self.load_spiders_to_canvas(data, self.canvas)
+        self.load_io_to_canvas(data, self.canvas)
+        self.load_wires_to_canvas(data, self.canvas)
 
     def load_boxes_to_canvas(self, d, canvas):
         for box in d["boxes"]:
