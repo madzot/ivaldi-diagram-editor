@@ -67,7 +67,6 @@ class Box:
         self.update_box()
 
         self.locked = False
-        self.bind_events()
         self.sub_diagram = None
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:
@@ -79,6 +78,7 @@ class Box:
         self.is_snapped = False
 
         self.collision_ids = [self.shape, self.resize_handle]
+        self.bind_events()
 
     def set_id(self, id_):
         """
@@ -100,6 +100,7 @@ class Box:
 
         :return: None
         """
+        print(self.shape)
         self.canvas.tag_bind(self.shape, '<Control-ButtonPress-1>', lambda event: self.on_control_press())
         self.canvas.tag_bind(self.shape, '<ButtonPress-1>', self.on_press)
         self.canvas.tag_bind(self.shape, '<B1-Motion>', self.on_drag)
@@ -139,6 +140,9 @@ class Box:
             self.context_menu.add_cascade(menu=sub_menu, label="Shape")
             sub_menu.add_command(label="Rectangle", command=lambda shape=const.RECTANGLE: self.change_shape(shape))
             sub_menu.add_command(label="Triangle", command=lambda shape=const.TRIANGLE: self.change_shape(shape))
+            sub_menu.add_command(label="AND gate", command=lambda shape=const.AND_GATE: self.change_shape(shape))
+            sub_menu.add_command(label="OR gate", command=lambda shape=const.OR_GATE: self.change_shape(shape))
+            sub_menu.add_command(label="XOR gate", command=lambda shape=const.XOR_GATE: self.change_shape(shape))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
@@ -1056,10 +1060,17 @@ class Box:
         """
         w, h = self.size
         if self.shape:
-            self.canvas.coords(self.shape, self.x, self.y, self.x + w, self.y + h)
+            self.canvas.coords(self.shape,
+                               self.x, self.y,
+                               self.x + w, self.y,
+                               self.x + w, self.y + h,
+                               self.x, self.y + h, )
         else:
-            self.shape = self.canvas.create_rectangle(self.x, self.y, self.x + w, self.y + h,
-                                                      outline=const.BLACK, fill=const.WHITE)
+            self.shape = self.canvas.create_polygon(self.x, self.y,
+                                                    self.x + w, self.y,
+                                                    self.x + w, self.y + h,
+                                                    self.x, self.y + h,
+                                                    outline=const.BLACK, fill=const.WHITE)
 
     def __update_triangle__(self):
         """
