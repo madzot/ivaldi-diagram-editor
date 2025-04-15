@@ -14,7 +14,7 @@ class Connection:
         self.side = side  # 'spider' if connection is a spider
         self.location = location
         self.display_location = location
-        self.update_connection_coords(location)
+        self.update_coords(location[0], location[1])
         self.type = connection_type
         self.wire = None
         self.has_wire = False
@@ -157,7 +157,7 @@ class Connection:
         self.canvas.itemconfig(self.circle, fill=color)
 
     def move_to(self, location):
-        self.update_connection_coords(location)
+        self.update_coords(location[0], location[1])
         self.canvas.coords(self.circle, self.display_location[0] - self.r, self.display_location[1] - self.r,
                            self.display_location[0] + self.r, self.display_location[1] + self.r)
 
@@ -203,14 +203,7 @@ class Connection:
     def deselect(self):
         self.canvas.itemconfig(self.circle, fill="black")
 
-    def update_connection_coords(self, location):
-        self.location = location
-        if self.canvas.main_diagram.rotation == 90:
-            self.display_location = [location[1], location[0]]
-        elif self.canvas.main_diagram.rotation == 180:
-            self.display_location = [self.canvas.main_diagram.custom_canvas.winfo_width() - location[0], location[1]]
-        elif self.canvas.main_diagram.rotation == 270:
-            self.display_location = [self.canvas.main_diagram.custom_canvas.winfo_width() - location[1],
-                                     self.canvas.main_diagram.custom_canvas.winfo_height() - location[0]]
-        else:  # 0
-            self.display_location = location
+    def update_coords(self, x, y):
+        self.location = [x, y]
+        x, y = self.canvas.convert_logical_display(x, y)
+        self.display_location = [x, y]

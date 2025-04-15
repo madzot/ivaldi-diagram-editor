@@ -295,10 +295,10 @@ class Selector:
                     most_left = item.x
                 if item.y < most_up:
                     most_up = item.y
-                if item.x + item.get_logical_size()[0] > most_right:
-                    most_right = item.x + item.get_logical_size()[0]
-                if item.y + item.get_logical_size()[1] > most_down:
-                    most_down = item.y + item.get_logical_size()[1]
+                if item.x + item.get_logical_size(item.size)[0] > most_right:
+                    most_right = item.x + item.get_logical_size(item.size)[0]
+                if item.y + item.get_logical_size(item.size)[1] > most_down:
+                    most_down = item.y + item.get_logical_size(item.size)[1]
             if isinstance(item, Spider):
                 if item.x - item.r < most_left:
                     most_left = item.x - item.r
@@ -429,10 +429,10 @@ class Selector:
         most_right_distance = 0
         for item in items:
             if isinstance(item, Box):
-                if item.x + item.get_logical_size()[0] / 2 < most_left_distance:
-                    most_left_distance = item.x + item.get_logical_size()[0] / 2
-                if item.x + item.get_logical_size()[0] / 2 > most_right_distance:
-                    most_right_distance = item.x + item.get_logical_size()[0] / 2
+                if item.x + item.get_logical_size(item.size)[0] / 2 < most_left_distance:
+                    most_left_distance = item.x + item.get_logical_size(item.size)[0] / 2
+                if item.x + item.get_logical_size(item.size)[0] / 2 > most_right_distance:
+                    most_right_distance = item.x + item.get_logical_size(item.size)[0] / 2
             if isinstance(item, Spider):
                 if item.x < most_left_distance:
                     most_left_distance = item.x
@@ -441,9 +441,9 @@ class Selector:
 
         for item in items:
             if isinstance(item, Box):
-                if item.x + item.get_logical_size()[0] / 2 == most_left_distance:
+                if item.x + item.get_logical_size(item.size)[0] / 2 == most_left_distance:
                     most_left.append(item)
-                if item.x + item.get_logical_size()[0] / 2 == most_right_distance:
+                if item.x + item.get_logical_size(item.size)[0] / 2 == most_right_distance:
                     most_right.append(item)
             if isinstance(item, Spider):
                 if item.x == most_left_distance:
@@ -595,7 +595,7 @@ class Selector:
             'id': copy.deepcopy(box.id),
             'label': copy.deepcopy(box.label_text),
             'location': (box.x, box.y),
-            'size': copy.deepcopy(box.get_logical_size()),
+            'size': copy.deepcopy(box.get_logical_size(box.size)),
             'shape': copy.deepcopy(box.shape),
             'connections': connections_copy,
             'sub-diagram': copy.deepcopy(box.sub_diagram.id) if box.sub_diagram else None

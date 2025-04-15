@@ -17,7 +17,7 @@ class Spider(Connection):
         self.display_x = self.x
         self.display_y = self.y
 
-        self.update_spider_coords()
+        self.update_coords(self.x, self.y)
 
         if not id_:
             self.id = id(self)
@@ -184,7 +184,7 @@ class Spider(Connection):
         self.switch_wire_start_and_end()
 
         self.is_snapped = found
-        self.update_spider_coords(go_to_x, go_to_y)
+        self.update_coords(go_to_x, go_to_y)
 
         self.canvas.coords(self.circle, self.display_x - self.r, self.display_y - self.r, self.display_x + self.r,
                            self.display_y + self.r)
@@ -242,25 +242,12 @@ class Spider(Connection):
             self.wires.remove(wire)
             self.has_wire = len(self.wires) > 0
 
-    def update_spider_coords(self, x=None, y=None):
-        if not x:
-            x = self.x
-        if not y:
-            y = self.y
+    def update_coords(self, x, y):
         self.x = x
         self.y = y
         self.location = [x, y]
-        if self.canvas.main_diagram.rotation == 90:
-            self.display_location = [self.location[1], self.location[0]]
-        elif self.canvas.main_diagram.rotation == 180:
-            self.display_location = [self.canvas.main_diagram.custom_canvas.winfo_width() - self.location[0],
-                                     self.location[1]]
-        elif self.canvas.main_diagram.rotation == 270:
-            self.display_location = [self.canvas.main_diagram.custom_canvas.winfo_width() - self.location[1],
-                                     self.canvas.main_diagram.custom_canvas.winfo_height() - self.location[0]]
-        else:  # 0
-            self.display_location = self.location
 
-        self.display_x = self.display_location[0]
-        self.display_y = self.display_location[1]
+        self.display_x, self.display_y = self.canvas.convert_logical_display(x, y)
+        self.display_location = [self.display_x, self.display_y]
+
 

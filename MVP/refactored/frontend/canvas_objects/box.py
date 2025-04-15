@@ -272,12 +272,12 @@ class Box:
 
         # snapping into place
         found = False
-        size = self.get_logical_size()
+        size = self.get_logical_size(self.size)
         go_to_x, go_to_y = self.canvas.convert_display_logical(go_to_x, go_to_y)
         for box in self.canvas.boxes:
             if box == self:
                 continue
-            box_size = box.get_logical_size()
+            box_size = box.get_logical_size(self.size)
             if abs(box.x + box_size[0] / 2 - (go_to_x + size[0] / 2)) < box_size[0] / 2 + size[0] / 2:
                 go_to_x = box.x + box_size[0] / 2 - + size[0] / 2
 
@@ -472,7 +472,7 @@ class Box:
                 is_bad = True
                 break
         if is_bad:
-            self.update_coords(None, new_y)
+            self.update_coords(self.x, new_y)
             self.update_position()
             self.update_connections()
             self.update_wires()
@@ -509,37 +509,42 @@ class Box:
     # UPDATES
     def update_size(self, new_size_x, new_size_y):
         if self.canvas.main_diagram.rotation == 180:  # 180 keeps display_x in the same spot
-            self.x = self.x - (new_size_x - self.get_logical_size()[0])
+            self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
         if self.canvas.main_diagram.rotation == 270:  # 270 keeps display_y in the same spot
-            self.x = self.x - (new_size_x - self.get_logical_size()[0])
-            self.y = self.y - (new_size_y - self.get_logical_size()[1])
+            self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
+            self.y = self.y - (new_size_y - self.get_logical_size(self.size)[1])
 
         self.size = self.get_logical_size((new_size_x, new_size_y))
-        self.update_coords()
+        self.update_coords(self.x, self.y)
         self.update_position()
         self.update_connections()
         self.update_wires()
 
-    # changes this
     def update_position(self):
         if self.shape == "rectangle":
             self.canvas.coords(self.rect, self.display_x, self.display_y, self.display_x + self.size[0],
                                self.display_y + self.size[1])
         if self.shape == "triangle":
-            if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
-                self.canvas.coords(self.rect,
-                                   self.display_x + self.size[0], self.display_y,
-                                   self.display_x, self.display_y,
-                                   self.display_x + self.size[0] / 2, self.display_y + self.size[1])
-            else:
-                self.canvas.coords(self.rect,
-                                   self.display_x + self.size[0], self.display_y + self.size[1] / 2,
-                                   self.display_x, self.display_y,
-                                   self.display_x, self.display_y + self.size[1])
+            match self.canvas.main_diagram.rotation:
+                case 90:
+                    self.canvas.coords(self.rect, self.display_x + self.size[0], self.display_y,
+                                       self.display_x, self.display_y,
+                                       self.display_x + self.size[0] / 2, self.display_y + self.size[1])
+                case 180:
+                    self.canvas.coords(self.rect, self.display_x, self.display_y + self.size[1] / 2,
+                                       self.display_x + self.size[0], self.display_y + self.size[1],
+                                       self.display_x + self.size[0], self.display_y)
+                case 270:
+                    self.canvas.coords(self.rect, self.display_x - self.size[0], self.display_y,
+                                       self.display_x, self.display_y,
+                                       self.display_x - self.size[0] / 2, self.display_y - self.size[1])
+                case _:
+                    self.canvas.coords(self.rect, self.display_x + self.size[0], self.display_y + self.size[1] / 2,
+                                       self.display_x, self.display_y,
+                                       self.display_x, self.display_y + self.size[1])
         self.canvas.coords(self.resize_handle, self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
                            self.display_x + self.size[0], self.display_y + self.size[1])
 
-    # changes this
     def update_connections(self):
         for c in self.connections:
             conn_x, conn_y = self.get_connection_coordinates(c.side, c.index)
@@ -669,20 +674,19 @@ class Box:
                 other_connection = wire.start_connection
 
             other_x = other_connection.location[0]
-            if other_x - other_connection.width_between_boxes <= new_x + self.get_logical_size()[0]:
+            if other_x - other_connection.width_between_boxes <= new_x + self.get_logical_size(self.size)[0]:
                 return True
         return False
 
     # HELPERS
     def get_connection_coordinates(self, side, index):
-        # TODO change to input/output
         if side == "left":
             i = self.get_new_left_index()
-            return self.x, self.y + (index + 1) * self.get_logical_size()[1] / (i + 1)
+            return self.x, self.y + (index + 1) * self.get_logical_size(self.size)[1] / (i + 1)
 
         elif side == "right":
             i = self.get_new_right_index()
-            return self.x + self.get_logical_size()[0], self.y + (index + 1) * self.get_logical_size()[1] / (i + 1)
+            return self.x + self.get_logical_size(self.size)[0], self.y + (index + 1) * self.get_logical_size(self.size)[1] / (i + 1)
 
     def get_new_left_index(self):
         if not self.left_connections > 0:
@@ -700,14 +704,23 @@ class Box:
             return self.canvas.create_rectangle(self.display_x, self.display_y, self.display_x + w, self.display_y + h,
                                                 outline="black", fill="white")
         if self.shape == "triangle":
-            if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
-                return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x, self.display_y,
-                                                  self.display_x + w / 2, self.display_y + h, outline="black",
-                                                  fill="white")
-            else:
-                return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x,
-                                                  self.display_y, self.display_x, self.display_y + h,
-                                                  outline="black", fill="white")
+            match self.canvas.main_diagram.rotation:
+                case 90:
+                    return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x, self.display_y,
+                                                      self.display_x + w / 2, self.display_y + h, outline="black",
+                                                      fill="white")
+                case 180:
+                    return self.canvas.create_polygon(self.display_x, self.display_y + h / 2, self.display_x + w,
+                                                      self.display_y + h, self.display_x + w, self.display_y,
+                                                      outline="black", fill="white")
+                case 270:
+                    return self.canvas.create_polygon(self.display_x - w, self.display_y, self.display_x, self.display_y,
+                                                      self.display_x - w / 2, self.display_y - h, outline="black",
+                                                      fill="white")
+                case _:
+                    return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x,
+                                                      self.display_y, self.display_x, self.display_y + h,
+                                                      outline="black", fill="white")
 
     def change_shape(self, shape):
         if shape == "rectangle":
@@ -733,29 +746,26 @@ class Box:
             outputs_amount = 0
         return inputs_amount, outputs_amount
 
-    def update_coords(self, x=None, y=None):
-        if not x:
-            x = self.x
-        if not y:
-            y = self.y
+    def update_coords(self, x, y):
         self.x = x
         self.y = y
-        if self.canvas.main_diagram.rotation == 90:
-            self.display_x = y
-            self.display_y = x
-        elif self.canvas.main_diagram.rotation == 180:
-            self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (x + self.size[0])
-            self.display_y = y
-        elif self.canvas.main_diagram.rotation == 270:
-            self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (y + self.size[0])
-            self.display_y = self.canvas.main_diagram.custom_canvas.winfo_height() - (x + self.size[1])
-        else:  # 0
-            self.display_x = x
-            self.display_y = y
+        match self.canvas.main_diagram.rotation:
+            case 90:
+                self.display_x = y
+                self.display_y = x
+            case 180:
+                self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (x + self.size[0])
+                self.display_y = y
+            case 270:
+                self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (y + self.size[0])
+                self.display_y = self.canvas.main_diagram.custom_canvas.winfo_height() - (x + self.size[1])
+            case _:
+                self.display_x = x
+                self.display_y = y
 
-    def get_logical_size(self, size=None):
-        if size is None:
-            size = self.size
-        if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
-            return [size[1], size[0]]
-        return size
+    def get_logical_size(self, size):
+        match self.canvas.main_diagram.rotation:
+            case 90 | 270:
+                return [size[1], size[0]]
+            case _:
+                return size

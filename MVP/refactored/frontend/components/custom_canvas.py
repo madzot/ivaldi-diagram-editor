@@ -200,6 +200,7 @@ class CustomCanvas(tk.Canvas):
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
 
+    # Issue with corners do not act correct with i/o
     def pan_horizontal(self, event):
         if event.keysym == "Right":
             multiplier = -1
@@ -223,7 +224,7 @@ class CustomCanvas(tk.Canvas):
         for connection in self.inputs + self.outputs:
             connection.display_location[0] = connection.display_location[0] + multiplier * self.pan_speed
             x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
-            connection.update_connection_coords([x, y])
+            connection.update_coords(x, y)
             self.coords(connection.circle,
                         connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
                         connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
@@ -231,6 +232,7 @@ class CustomCanvas(tk.Canvas):
         self.move_boxes_spiders(True, multiplier)
         self.pan_speed = 20
 
+    # Issue with corners do not act correct with i/o
     def pan_vertical(self, event):
         if event.keysym == "Down":
             multiplier = -1
@@ -253,7 +255,7 @@ class CustomCanvas(tk.Canvas):
         for connection in self.inputs + self.outputs:
             connection.display_location[1] = connection.display_location[1] + multiplier * self.pan_speed
             x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
-            connection.update_connection_coords([x, y])
+            connection.update_coords(x, y)
             self.coords(connection.circle,
                         connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
                         connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
@@ -271,7 +273,7 @@ class CustomCanvas(tk.Canvas):
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
             x, y = self.convert_display_logical(spider.display_x, spider.display_y)
-            spider.update_spider_coords(x, y)
+            spider.update_coords(x, y)
             spider.move_to((spider.x, spider.y))
         for box in self.boxes:
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
@@ -284,7 +286,7 @@ class CustomCanvas(tk.Canvas):
                 y = y + box.size[1]
             x, y = self.convert_display_logical(x, y)
             box.update_coords(x, y)
-            box.update_size(box.get_logical_size()[0], box.get_logical_size()[1])
+            box.update_size(box.get_logical_size(box.size)[0], box.get_logical_size(box.size)[1])
             box.move_label()
         for wire in self.wires:
             wire.update()
@@ -317,7 +319,7 @@ class CustomCanvas(tk.Canvas):
         for spider in self.spiders:
             x = (spider.display_x / old_canvas_width) * canvas_width
             x, y = self.convert_display_logical(x, spider.display_y)
-            spider.update_spider_coords(x, y)
+            spider.update_coords(x, y)
             spider.move_to((x, y))
 
         for wire in self.wires:
@@ -337,7 +339,6 @@ class CustomCanvas(tk.Canvas):
         self.itemconfig(self.name, text=name)
         self.name_text = name
 
-    # Is this used?
     def offset_items(self, x_offset, y_offset):
         for box in self.boxes:
             box.x -= x_offset
@@ -366,7 +367,6 @@ class CustomCanvas(tk.Canvas):
             event.state = False
             self.zoom(event)
 
-    # Inputs/output move when zooming in/out
     def zoom(self, event):
         if event.state & 0x4:
             return
@@ -416,8 +416,8 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(event.y, i_o.display_location[1], denominator)
             ]
             i_o.r *= scale
-            i_o.location[0], i_o.location[1] = self.convert_display_logical(i_o_location[0], i_o_location[1])
-            i_o.update_connection_coords(i_o.location)
+            x, y = self.convert_display_logical(i_o_location[0], i_o_location[1])
+            i_o.update_coords(x, y)
             self.coords(i_o.circle, i_o.display_location[0] - i_o.r, i_o.display_location[1] - i_o.r,
                         i_o.display_location[0] + i_o.r, i_o.display_location[1] + i_o.r)
             self.itemconfig(i_o.circle, width=i_o.r * 2 / 10)
@@ -432,7 +432,7 @@ class CustomCanvas(tk.Canvas):
                 y = y + box.size[1]
             x, y = self.convert_display_logical(x, y)
             box.update_coords(x, y)
-            size = box.get_logical_size()
+            size = box.get_logical_size(box.size)
             box.update_size(size[0] * scale, size[1] * scale)
             box.move_label()
 
@@ -440,7 +440,7 @@ class CustomCanvas(tk.Canvas):
             x = self.calculate_zoom_dif(event.x, spider.display_x, denominator)
             y = self.calculate_zoom_dif(event.y, spider.display_y, denominator)
             x, y = self.convert_display_logical(x, y)
-            spider.update_spider_coords(x, y)
+            spider.update_coords(x, y)
             spider.r *= scale
             self.coords(spider.circle, spider.display_x - spider.r, spider.display_y - spider.r, spider.display_x + spider.r,
                         spider.display_y + spider.r)
@@ -1049,7 +1049,6 @@ class CustomCanvas(tk.Canvas):
         """Calculates how much an object will to be moved when zooming."""
         return round(zoom_coord - (zoom_coord - object_coord) / denominator, 4)
 
-    # Is this used?
     @staticmethod
     def get_upper_lower_edges(component):
         if isinstance(component, Box):
@@ -1060,7 +1059,6 @@ class CustomCanvas(tk.Canvas):
             lower_y = component.display_y + component.r
         return upper_y, lower_y
 
-    # Is this used?
     @staticmethod
     def check_if_up_or_down(y_up, y_down, go_to_y_up, go_to_y_down, item):
         break_boolean = True
@@ -1134,14 +1132,14 @@ class CustomCanvas(tk.Canvas):
         for item in self.boxes + self.spiders:
             if item not in self.selector.selected_items:
                 if isinstance(item, Box):
-                    if not (item.y + item.get_logical_size()[1] < area_y1 or item.y > area_y2):
-                        if x > item.x + item.get_logical_size()[0] > area_x1:
-                            area_x1 = item.x + item.get_logical_size()[0]
+                    if not (item.y + item.get_logical_size(item.size)[1] < area_y1 or item.y > area_y2):
+                        if x > item.x + item.get_logical_size(item.size)[0] > area_x1:
+                            area_x1 = item.x + item.get_logical_size(item.size)[0]
                         if x < item.x < area_x2:
                             area_x2 = item.x
-                    if not (item.x > area_x2 or item.x + item.get_logical_size()[0] < area_x1):
-                        if y > item.y + item.get_logical_size()[1] > area_y1:
-                            area_y1 = item.y + item.get_logical_size()[1]
+                    if not (item.x > area_x2 or item.x + item.get_logical_size(item.size)[0] < area_x1):
+                        if y > item.y + item.get_logical_size(item.size)[1] > area_y1:
+                            area_y1 = item.y + item.get_logical_size(item.size)[1]
                         if y < item.y < area_y2:
                             area_y2 = item.y
                 if isinstance(item, Spider):
@@ -1167,31 +1165,40 @@ class CustomCanvas(tk.Canvas):
         return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
 
     def convert_logical_display(self, x, y):
-        if self.main_diagram.rotation == 90:
-            return [y, x]
-        elif self.main_diagram.rotation == 180:
-            return [self.main_diagram.custom_canvas.winfo_width() - x, y]
-        elif self.main_diagram.rotation == 270:
-            return [self.main_diagram.custom_canvas.winfo_width() - y,
-                    self.main_diagram.custom_canvas.winfo_height() - x]
-        else:  # 0
-            return [x, y]
+        match self.main_diagram.rotation:
+            case 90:
+                return [y, x]
+            case 180:
+                return [self.main_diagram.custom_canvas.winfo_width() - x, y]
+            case 270:
+                return [self.main_diagram.custom_canvas.winfo_width() - y,
+                        self.main_diagram.custom_canvas.winfo_height() - x]
+            case _:  # 0
+                return [x, y]
 
     def convert_display_logical(self, x, y):
-        if self.main_diagram.rotation == 90:
-            return [y, x]
-        elif self.main_diagram.rotation == 180:
-            return [self.main_diagram.custom_canvas.winfo_width() - x, y]
-        elif self.main_diagram.rotation == 270:
-            return [self.main_diagram.custom_canvas.winfo_height() - y,
-                    self.main_diagram.custom_canvas.winfo_width() - x]
-        else:  # 0
-            return [x, y]
+        match self.main_diagram.rotation:
+            case 90:
+                return [y, x]
+            case 180:
+                return [self.main_diagram.custom_canvas.winfo_width() - x, y]
+            case 270:
+                return [self.main_diagram.custom_canvas.winfo_height() - y,
+                        self.main_diagram.custom_canvas.winfo_width() - x]
+            case _:  # 0
+                return [x, y]
 
     def swap_cords_if_rotated(self, x, y):
-        if self.main_diagram.rotation == 90 or self.main_diagram.rotation == 270:
-            return [y, x]
-        return [x, y]
+        match self.main_diagram.rotation:
+            case 90 | 270:
+                return [y, x]
+            case _:
+                return [x, y]
 
-
-
+    def mirror_coords(self, x, y):
+        match self.main_diagram.rotation:
+            case 180 | 270:
+                return [self.main_diagram.custom_canvas.winfo_width() - x,
+                        self.main_diagram.custom_canvas.winfo_height() - y]
+            case _:
+                return [x, y]
