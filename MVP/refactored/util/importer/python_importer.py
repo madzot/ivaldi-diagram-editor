@@ -4,6 +4,7 @@ from typing import List
 from typing import TextIO
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
 
@@ -17,7 +18,7 @@ class PythonImporter(Importer):
         main_diagram_name = None
 
         for python_file in python_files:
-            file_functions, file_imports, file_main_logic = self._extract_data_from_file(python_file)
+            file_functions, file_imports, file_main_logic = PythonImporter._extract_data_from_file(python_file)
 
             all_functions.update(file_functions)
             all_imports.extend(file_imports)
@@ -41,65 +42,38 @@ class PythonImporter(Importer):
         return main_diagram_name
 
     def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
-        elements_y_position = 300
-        # TODO: refactor this to appropriate condition
         functions = data["functions"]
         main_logic = data["main_logic"]
 
-        possible_outputs = {}
-        boxes_gap = 900 / (len(main_logic) - 1)
+        elements_y_position = 300
+        boxes_gap = 900 // (len(main_logic) - 1)
         box_x = 100
 
+        possible_outputs = {}
         box_right_connection_spiders = {}
 
         for function_call in main_logic:
             function_name = function_call["function_name"]
-            args = function_call["args"]
+            function_arguments = function_call["args"]
 
             for assigned_variable in function_call["assigned_variables"]:
                 possible_outputs[assigned_variable] = function_name
 
-            new_box = canvas.add_box(loc=(box_x, elements_y_position))
-            new_box.set_label(function_call["function_name"])
+            box_position = (box_x, elements_y_position)
+            new_box = PythonImporter._add_box_to_canvas(canvas, box_position, functions, function_name)
 
-            box_function = functions[function_name]
-            new_box.set_box_function(box_function)
-
-            for arg in args:
+            for function_argument in function_arguments:
                 left_connection = new_box.add_left_connection()
                 canvas.start_wire_from_connection(left_connection)
 
-                wire_end = None
-                for possible_right_connection_function in main_logic:
-                    for assigned_variable in possible_right_connection_function["assigned_variables"]:
-                        if assigned_variable == arg:
-                            wire_end = possible_right_connection_function["function_name"]
-                            if assigned_variable in possible_outputs.keys():
-                                possible_outputs.pop(assigned_variable)
-                            break
+                wire_end_function_name = PythonImporter._find_function_that_returns_variable(main_logic, function_argument)
 
-                if wire_end:
-                    for box in canvas.boxes:
-                        if box.label_text == wire_end:
-
-                            new_spider_added = False
-                            if arg not in box_right_connection_spiders.keys():
-                                spider_x_position = box.x + boxes_gap / 2
-                                new_spider = canvas.add_spider(loc=(spider_x_position, elements_y_position))
-                                box_right_connection_spiders[arg] = new_spider
-
-                                new_spider_added = True
-
-                            connection_spider = box_right_connection_spiders[arg]
-
-                            canvas.end_wire_to_connection(connection_spider, True)
-
-                            if new_spider_added:
-                                wire_end_connection = box.add_right_connection()
-                                canvas.start_wire_from_connection(connection_spider)
-                                canvas.end_wire_to_connection(wire_end_connection, True)
-
-                            break
+                if wire_end_function_name:
+                    possible_outputs.pop(function_argument, None)
+                    PythonImporter._end_wire_to_previous_connected_box(
+                        canvas, function_argument, wire_end_function_name,
+                        box_right_connection_spiders, boxes_gap, elements_y_position
+                    )
                 else:
                     diagram_input = canvas.add_diagram_input()
                     canvas.end_wire_to_connection(diagram_input, True)
@@ -107,7 +81,57 @@ class PythonImporter(Importer):
             new_box.lock_box()
             box_x += boxes_gap
 
-        for diagram_output_variable, box_label in possible_outputs.items():
+        PythonImporter._add_outputs_to_canvas(canvas, possible_outputs)
+
+    @staticmethod
+    def _add_box_to_canvas(canvas: CustomCanvas, box_position: tuple, functions: dict, function_name: str) -> Box:
+        new_box = canvas.add_box(box_position)
+        new_box.set_label(function_name)
+
+        box_function = functions[function_name]
+        new_box.set_box_function(box_function)
+
+        return new_box
+
+    @staticmethod
+    def _find_function_that_returns_variable(main_logic: dict, variable_to_find: str) -> str | None:
+        for possible_right_connection_function in main_logic:
+            for assigned_variable in possible_right_connection_function["assigned_variables"]:
+                if assigned_variable == variable_to_find:
+                    return possible_right_connection_function["function_name"]
+
+        return None
+
+    @staticmethod
+    def _end_wire_to_previous_connected_box(canvas: CustomCanvas,
+                                            function_argument: str,
+                                            previous_connected_box_label: str,
+                                            box_right_connection_spiders: dict,
+                                            boxes_gap: int,
+                                            elements_y_position: int) -> None:
+        for box in canvas.boxes:
+            if box.label_text == previous_connected_box_label:
+
+                new_spider_added = False
+                if function_argument not in box_right_connection_spiders.keys():
+                    spider_x_position = box.x + boxes_gap / 2
+                    new_spider = canvas.add_spider(loc=(spider_x_position, elements_y_position))
+                    box_right_connection_spiders[function_argument] = new_spider
+                    new_spider_added = True
+
+                connection_spider = box_right_connection_spiders[function_argument]
+                canvas.end_wire_to_connection(connection_spider, True)
+
+                if new_spider_added:
+                    wire_end_connection = box.add_right_connection()
+                    canvas.start_wire_from_connection(connection_spider)
+                    canvas.end_wire_to_connection(wire_end_connection, True)
+
+                break
+
+    @staticmethod
+    def _add_outputs_to_canvas(canvas: CustomCanvas, outputs: dict) -> None:
+        for box_label in outputs.values():
             for box in canvas.boxes:
                 if box.label_text == box_label:
                     wire_start_connection = box.add_right_connection()
@@ -117,7 +141,8 @@ class PythonImporter(Importer):
             output = canvas.add_diagram_output()
             canvas.end_wire_to_connection(output, True)
 
-    def _extract_data_from_file(self, python_file: TextIO) -> tuple:
+    @staticmethod
+    def _extract_data_from_file(python_file: TextIO) -> tuple:
         functions = {}
         imports = []
         main_logic = None
@@ -127,14 +152,14 @@ class PythonImporter(Importer):
 
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                self._extract_function(node, source_code, functions)
+                PythonImporter._extract_function(node, source_code, functions)
 
         for node in tree.body:
             if isinstance(node, ast.Import):
-                self._extract_imports(node, imports)
+                PythonImporter._extract_imports(node, imports)
 
             elif isinstance(node, ast.ImportFrom):
-                self._extract_imports_from(node, imports)
+                PythonImporter._extract_imports_from(node, imports)
 
             elif (isinstance(node, ast.If)
                     and isinstance(node.test, ast.Compare)
@@ -142,7 +167,7 @@ class PythonImporter(Importer):
                     and node.test.left.id == "__name__"
                     and isinstance(node.test.comparators[0], ast.Constant)
                     and node.test.comparators[0].value == "__main__"):
-                main_logic = self.extract_main_logic(node.body)
+                main_logic = PythonImporter.extract_main_logic(node.body)
 
         return functions, imports, main_logic
 
