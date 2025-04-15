@@ -16,6 +16,8 @@ message_end = "\x1b[0m"
 
 current_hypergraph = 0
 id_dict_hypergraph = {}
+
+
 class Hypergraph:
     """Hypergraph class."""
 
@@ -32,7 +34,7 @@ class Hypergraph:
         current_hypergraph += 1
         logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph.get(self.id)}" + message_end)
 
-    def get_node_by_id(self, id: int) -> Node|None:
+    def get_node_by_id(self, id: int) -> Node | None:
         return self.nodes.get(id)
 
     def get_all_nodes(self) -> list[Node]:

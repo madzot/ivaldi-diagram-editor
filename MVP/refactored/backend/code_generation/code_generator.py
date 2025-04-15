@@ -119,7 +119,6 @@ class CodeGenerator:
 
         hyper_edge_queue: Queue[HyperEdge] = Queue()
         cls.get_queue_of_hyper_edges(hypergraph, hyper_edge_queue)
-        cls.reverse_queue(hyper_edge_queue)
 
         function_body, name_map = cls.create_main_function_content(hyper_edge_queue, renamed_functions, name_map, receiver)
 
@@ -177,7 +176,7 @@ class CodeGenerator:
             variable_definition = f"{variable} = {renamed_functions[hyper_edge.get_box_function()]}("
 
             for source_node in hyper_edge.get_source_nodes():
-                actual_hash: int = cls.get_input_actual_node_group_hash(source_node, receiver)
+                actual_hash: int = cls.get_output_actual_node_group_hash(source_node, receiver)
                 variable_definition += f"{node_and_hyper_edge_to_variable_name[actual_hash]}, "
             variable_definition = variable_definition[:-2] + ")"
             main_function_content += f"\n\t{variable_definition}"
@@ -319,33 +318,26 @@ class CodeGenerator:
             for hyper_edge in to_check:
                 if hyper_edge in seen_hyper_edges:
                     continue
-                for subgraph in hyper_edge.get_hypergraphs_inside():
-                    cls.get_queue_of_hyper_edges(subgraph, hyper_edge_queue, seen_hyper_edges)
+
                 if hyper_edge not in hyper_edge_input_count_check:
                     hyper_edge_input_count_check[hyper_edge] = 0
                 for node in hyper_edge.get_source_nodes():
                     if node in nodes_with_inputs:
                         hyper_edge_input_count_check[hyper_edge] += 1
-                if hyper_edge_input_count_check[hyper_edge] == len(hyper_edge.get_source_nodes()):
-                    hyper_edge_queue.put(hyper_edge)
+                if hyper_edge_input_count_check[hyper_edge] >= len(hyper_edge.get_source_nodes()):
+                    # Process this edge first
+                    if hyper_edge.box_function is not None:
+                        hyper_edge_queue.put(hyper_edge)
                     seen_hyper_edges.add(hyper_edge)
                     for target_node in hyper_edge.get_target_nodes():
                         nodes_with_inputs.add(target_node)
+
+                    # Then recursively process inside graphs
+                    for subgraph in hyper_edge.get_hypergraphs_inside():
+                        cls.get_queue_of_hyper_edges(subgraph, hyper_edge_queue, seen_hyper_edges)
                 else:
                     to_check_new.append(hyper_edge)
 
             if to_check == to_check_new:
                 break
             to_check = to_check_new
-
-    @classmethod
-    def reverse_queue(cls, hyper_edge_queue: Queue[HyperEdge]):
-        """
-        Reverse the order of elements in a queue.
-
-        This method takes a queue of hyper edges and reverses the order of its elements
-        by extracting all items, reversing them, and then re-adding them to the queue.
-        """
-        reversed_items = list(reversed(list(hyper_edge_queue.queue)))
-        hyper_edge_queue.queue.clear()
-        [hyper_edge_queue.put(item) for item in reversed_items if item.box_function is not None]
