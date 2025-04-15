@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.frontend.windows.main_diagram import MainDiagram
+import constants as const
 
 
 class TestCustomCanvas(unittest.TestCase):
@@ -31,18 +32,14 @@ class Tests(TestCustomCanvas):
         self.assertIsNone(self.custom_canvas.temp_wire)
         self.assertIsNone(self.custom_canvas.temp_end_connection)
         self.assertFalse(self.custom_canvas.pulling_wire)
-        self.assertIsNone(self.custom_canvas.previous_x)
-        self.assertIsNone(self.custom_canvas.previous_y)
         self.assertFalse(self.custom_canvas.quick_pull)
         self.assertIsNone(self.custom_canvas.current_wire_start)
-        self.assertIsNone(self.custom_canvas.current_wire)
         self.assertFalse(self.custom_canvas.draw_wire_mode)
-        self.assertIsNone(self.custom_canvas.selectBox)
+        self.assertIsNone(self.custom_canvas.select_box)
         self.assertFalse(self.custom_canvas.selecting)
-        self.assertIsNone(self.custom_canvas.resize_timer)
 
     def test__init__default_box_shape(self):
-        expected = "rectangle"
+        expected = const.RECTANGLE
         actual = self.custom_canvas.box_shape
         self.assertEqual(expected, actual)
 
@@ -59,17 +56,10 @@ class Tests(TestCustomCanvas):
         self.assertEqual(expected_delta, actual_delta)
         self.assertEqual(expected_prev_scale, actual_prev_scale)
 
-    def test__init__pan_values(self):
-        expected_history_x = 0
-        expected_history_y = 0
+    def test__init__pan_value(self):
         expected_speed = 20
 
-        actual_history_x = self.custom_canvas.pan_history_x
-        actual_history_y = self.custom_canvas.pan_history_y
         actual_speed = self.custom_canvas.pan_speed
-
-        self.assertEqual(expected_history_x, actual_history_x)
-        self.assertEqual(expected_history_y, actual_history_y)
         self.assertEqual(expected_speed, actual_speed)
 
     def test__init__corners_at_canvas_edges(self):

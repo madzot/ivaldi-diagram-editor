@@ -7,6 +7,7 @@ from MVP.refactored.frontend.canvas_objects.wire import Wire
 from constants import *
 
 from MVP.refactored.util.exporter.exporter import Exporter
+import constants as const
 
 
 class ProjectExporter(Exporter):
@@ -73,7 +74,7 @@ class ProjectExporter(Exporter):
                 "connections": self.get_connections(box.connections),
                 "sub_diagram": None,
                 "locked": box.locked,
-                "shape": box.shape
+                "shape": box.style
             }
             if box.sub_diagram:
                 d["sub_diagram"] = self.create_canvas_dict(box.sub_diagram)
@@ -127,20 +128,20 @@ class ProjectExporter(Exporter):
             "right_c": right_connections,
             "left_c_types": left_con_types,
             "right_c_types": right_con_types,
-            "shape": box.shape,
+            "shape": box.style,
             "sub_diagram": None,
         }
         if box.sub_diagram:
             new_entry["sub_diagram"] = self.create_canvas_dict(box.sub_diagram)
         current[box.label_text] = new_entry
 
-        with open(BOXES_CONF, "w") as outfile:
+        with open(const.BOXES_CONF, "w") as outfile:
             json.dump(current, outfile, indent=4)
 
     @staticmethod
     def get_current_data():
         try:
-            with open(BOXES_CONF, 'r') as json_file:
+            with open(const.BOXES_CONF, 'r') as json_file:
                 data = json.load(json_file)
                 return data
         except FileNotFoundError or IOError or json.JSONDecodeError:
@@ -149,5 +150,5 @@ class ProjectExporter(Exporter):
     def del_box_menu_option(self, box):
         current = self.get_current_data()
         current.pop(box)
-        with open(BOXES_CONF, "w") as outfile:
+        with open(const.BOXES_CONF, "w") as outfile:
             json.dump(current, outfile, indent=4)
