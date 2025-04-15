@@ -4,6 +4,7 @@ from typing import List
 from typing import TextIO
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
 
 
@@ -36,10 +37,10 @@ class PythonImporter(Importer):
         first_function = next(iter(all_functions.values()))
         first_function.imports = all_imports
 
-        self.load_everything_to_canvas({"functions": all_functions, "main_logic": main_logic})
+        self.load_everything_to_canvas({"functions": all_functions, "main_logic": main_logic}, self.canvas)
         return main_diagram_name
 
-    def load_everything_to_canvas(self, data: dict) -> None:
+    def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
         elements_y_position = 300
         # TODO: refactor this to appropriate condition
         functions = data["functions"]
@@ -58,7 +59,7 @@ class PythonImporter(Importer):
             for assigned_variable in function_call["assigned_variables"]:
                 possible_outputs[assigned_variable] = function_name
 
-            new_box = self.canvas.add_box(loc=(box_x, elements_y_position))
+            new_box = canvas.add_box(loc=(box_x, elements_y_position))
             new_box.set_label(function_call["function_name"])
 
             box_function = functions[function_name]
@@ -66,7 +67,7 @@ class PythonImporter(Importer):
 
             for arg in args:
                 left_connection = new_box.add_left_connection()
-                self.canvas.start_wire_from_connection(left_connection)
+                canvas.start_wire_from_connection(left_connection)
 
                 wire_end = None
                 for possible_right_connection_function in main_logic:
@@ -78,43 +79,43 @@ class PythonImporter(Importer):
                             break
 
                 if wire_end:
-                    for box in self.canvas.boxes:
+                    for box in canvas.boxes:
                         if box.label_text == wire_end:
 
                             new_spider_added = False
                             if arg not in box_right_connection_spiders.keys():
                                 spider_x_position = box.x + boxes_gap / 2
-                                new_spider = self.canvas.add_spider(loc=(spider_x_position, elements_y_position))
+                                new_spider = canvas.add_spider(loc=(spider_x_position, elements_y_position))
                                 box_right_connection_spiders[arg] = new_spider
 
                                 new_spider_added = True
 
                             connection_spider = box_right_connection_spiders[arg]
 
-                            self.canvas.end_wire_to_connection(connection_spider, True)
+                            canvas.end_wire_to_connection(connection_spider, True)
 
                             if new_spider_added:
                                 wire_end_connection = box.add_right_connection()
-                                self.canvas.start_wire_from_connection(connection_spider)
-                                self.canvas.end_wire_to_connection(wire_end_connection, True)
+                                canvas.start_wire_from_connection(connection_spider)
+                                canvas.end_wire_to_connection(wire_end_connection, True)
 
                             break
                 else:
-                    diagram_input = self.canvas.add_diagram_input()
-                    self.canvas.end_wire_to_connection(diagram_input, True)
+                    diagram_input = canvas.add_diagram_input()
+                    canvas.end_wire_to_connection(diagram_input, True)
 
             new_box.lock_box()
             box_x += boxes_gap
 
         for diagram_output_variable, box_label in possible_outputs.items():
-            for box in self.canvas.boxes:
+            for box in canvas.boxes:
                 if box.label_text == box_label:
                     wire_start_connection = box.add_right_connection()
-                    self.canvas.start_wire_from_connection(wire_start_connection)
+                    canvas.start_wire_from_connection(wire_start_connection)
                     break
 
-            output = self.canvas.add_diagram_output()
-            self.canvas.end_wire_to_connection(output, True)
+            output = canvas.add_diagram_output()
+            canvas.end_wire_to_connection(output, True)
 
     def _extract_data_from_file(self, python_file: TextIO) -> tuple:
         functions = {}
@@ -148,14 +149,12 @@ class PythonImporter(Importer):
     @staticmethod
     def _extract_function(node, source_code: str, functions: dict) -> None:
         func_name = node.name
-        func_code = ast.get_source_segment(source_code, node)
+        function = ast.get_source_segment(source_code, node)
         num_inputs = len(node.args.args)
 
-        namespace = {}
-        exec(func_code, namespace)
-        function = namespace[func_name]
-
-        box_function = BoxFunction(name=func_name, function=function, min_args=num_inputs, max_args=num_inputs)
+        box_function = BoxFunction(
+            main_function_name=func_name, function=function, min_args=num_inputs, max_args=num_inputs
+        )
         functions[func_name] = box_function
 
     @staticmethod

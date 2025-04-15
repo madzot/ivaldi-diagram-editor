@@ -15,5 +15,5 @@ class Importer(ABC):
         pass
 
     @abstractmethod
-    def load_everything_to_canvas(self, data: dict):
+    def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas):
         pass

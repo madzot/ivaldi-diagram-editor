@@ -26,14 +26,14 @@ class JsonImporter(Importer):
         data = json.load(json_file)
         data = data["main_canvas"]
 
-        self.load_everything_to_canvas(data)
+        self.load_everything_to_canvas(data, self.canvas)
         return os.path.basename(json_file.name)
 
-    def load_everything_to_canvas(self, data: dict):
-        self.load_boxes_to_canvas(data, self.canvas)
-        self.load_spiders_to_canvas(data, self.canvas)
-        self.load_io_to_canvas(data, self.canvas)
-        self.load_wires_to_canvas(data, self.canvas)
+    def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
+        self.load_boxes_to_canvas(data, canvas)
+        self.load_spiders_to_canvas(data, canvas)
+        self.load_io_to_canvas(data, canvas)
+        self.load_wires_to_canvas(data, canvas)
 
     def load_boxes_to_canvas(self, d, canvas):
         for box in d["boxes"]:
