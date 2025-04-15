@@ -127,9 +127,9 @@ class Spider(Connection):
 
         if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
             go_to_x = event.x
-            go_to_y = self.x
+            go_to_y = self.display_y
             move_legal = False
-            if not self.is_illegal_move(event.y):
+            if not self.is_illegal_move(self.canvas.convert_display_logical(event.x, event.y)[0]):
                 go_to_y = event.y
                 move_legal = True
         else:
@@ -144,11 +144,10 @@ class Spider(Connection):
         found = False
         go_to_x, go_to_y = self.canvas.convert_display_logical(go_to_x, go_to_y)
         for box in self.canvas.boxes:
-            box_size = box.get_logical_size()
+            box_size = box.get_logical_size(box.size)
 
             if abs(box.x + box_size[0] / 2 - go_to_x) < box_size[0] / 2 + self.r and move_legal:
                 go_to_x = box.x + box_size[0] / 2
-
                 found = True
         for spider in self.canvas.spiders:
             if spider == self:

@@ -204,6 +204,6 @@ class Connection:
         self.canvas.itemconfig(self.circle, fill="black")
 
     def update_coords(self, x, y):
-        self.location = [x, y]
+        self.location = (x, y)
         x, y = self.canvas.convert_logical_display(x, y)
         self.display_location = [x, y]

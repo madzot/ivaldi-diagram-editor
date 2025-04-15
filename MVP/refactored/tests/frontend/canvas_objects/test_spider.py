@@ -27,8 +27,8 @@ class TestMainDiagram(unittest.TestCase):
 
 class SpiderTests(TestMainDiagram):
 
-    @patch("MVP.refactored.frontend.canvas_objects.spider.Spider.update_spider_coords")
-    def test__init__values(self, mock_update_spider_coords):
+    @patch("MVP.refactored.frontend.canvas_objects.spider.Spider.update_coords")
+    def test__init__values(self, mock_update_coords):
         spider = Spider(None, 0, "spider", (100, 150), self.custom_canvas, self.app.receiver)
 
         self.assertEqual(self.custom_canvas, spider.canvas)
