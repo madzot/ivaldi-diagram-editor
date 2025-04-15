@@ -1061,23 +1061,23 @@ class Box:
         :return: Tag that represents the Box in CustomCanvas.
         """
         w, h = self.size
-        if self.shape == const.RECTANGLE:
+        if self.style == const.RECTANGLE:
             return self.canvas.create_rectangle(self.display_x, self.display_y, self.display_x + w, self.display_y + h,
                                                 outline=const.BLACK, fill=const.WHITE)
-        if self.shape == const.TRIANGLE:
+        if self.style == const.TRIANGLE:
             match self.canvas.main_diagram.rotation:
                 case 90:
-                    return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x, self.display_y,
-                                                      self.display_x + w / 2, self.display_y + h, outline=const.BLACK,
-                                                      fill=const.WHITE)
+                    return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x,
+                                                      self.display_y, self.display_x + w / 2, self.display_y + h,
+                                                      outline=const.BLACK, fill=const.WHITE)
                 case 180:
                     return self.canvas.create_polygon(self.display_x, self.display_y + h / 2, self.display_x + w,
                                                       self.display_y + h, self.display_x + w, self.display_y,
                                                       outline=const.BLACK, fill=const.WHITE)
                 case 270:
-                    return self.canvas.create_polygon(self.display_x - w, self.display_y, self.display_x, self.display_y,
-                                                      self.display_x - w / 2, self.display_y - h, outline=const.BLACK,
-                                                      fill=const.WHITE)
+                    return self.canvas.create_polygon(self.display_x - w, self.display_y, self.display_x,
+                                                      self.display_y, self.display_x - w / 2, self.display_y - h,
+                                                      outline=const.BLACK, fill=const.WHITE)
                 case _:
                     return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x,
                                                       self.display_y, self.display_x, self.display_y + h,
