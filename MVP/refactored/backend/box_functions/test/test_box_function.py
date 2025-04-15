@@ -24,11 +24,11 @@ def pow(base, exponent):
 class TestBoxFunction(TestCase):
 
     def setUp(self):
-        self.box_add = BoxFunction(name="add", file_code=add, is_predefined_function=True)
-        self.box_subtract = BoxFunction(name="subtract", file_code=subtract, is_predefined_function=True)
-        self.box_copy = BoxFunction(name="copy", file_code=copy, is_predefined_function=True)
-        self.box_integral = BoxFunction(name="integral", file_code=integral_code)
-        self.box_pow = BoxFunction(name="pow", file_code=pow_code)
+        self.box_add = BoxFunction(predefined_function_file_name="add", file_code=add, is_predefined_function=True)
+        self.box_subtract = BoxFunction(predefined_function_file_name="subtract", file_code=subtract, is_predefined_function=True)
+        self.box_copy = BoxFunction(predefined_function_file_name="copy", file_code=copy, is_predefined_function=True)
+        self.box_integral = BoxFunction(predefined_function_file_name="integral", file_code=integral_code)
+        self.box_pow = BoxFunction(predefined_function_file_name="pow", file_code=pow_code)
 
     def test_initialization_name_add(self):
         self.assertEqual(self.box_add.name, "add")

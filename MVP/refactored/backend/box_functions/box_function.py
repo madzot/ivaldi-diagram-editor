@@ -1,6 +1,6 @@
 import os
-from inspect import signature
-from typing import Optional, Callable, List
+from typing import Optional, List
+
 from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 
 
@@ -23,35 +23,31 @@ INVOKE_METHOD = "invoke"
 class BoxFunction:
 
     def __init__(self,
-                 name: Optional[str] = None,
-                 function: Optional[Callable] = None,
+                 function: Optional[str] = None,
                  min_args: Optional[int] = None,
                  max_args: Optional[int] = None,
                  imports: Optional[List[str]] = None,
                  file_code: Optional[str] = None,
                  is_predefined_function: bool = False,
+                 predefined_function_file_name: Optional[str] = None,
                  main_function_name: Optional[str] = None):
 
-        self.name: str = name
         self.main_function_name: str = main_function_name or INVOKE_METHOD
         self.imports: List[str] = imports or []
         self.global_statements: List[str] = []
-        self.helper_functions: List[Callable] = []
-        self.main_function: Optional[Callable] = None
+        self.helper_functions: List[str] = []
+        self.main_function: Optional[str] = None
         self.is_predefined_function = is_predefined_function
         self.min_args: Optional[int] = min_args
         self.max_args: Optional[int] = max_args
 
         if is_predefined_function:
-            predefined_file_code = predefined_functions[self.name]
+            predefined_file_code = predefined_functions[predefined_function_file_name]
             self._set_data_from_file_code(predefined_file_code)
         elif file_code is not None:
             self._set_data_from_file_code(file_code)
         else:
-            self.main_function: Callable = function
-            self.min_args: int = min_args
-            self.max_args: int = max_args
-            self.imports: list = imports
+            self.main_function: str = function
 
     def _set_data_from_file_code(self, file_code: str):
         """
@@ -61,33 +57,18 @@ class BoxFunction:
         helper functions, imports, and global statements. These components are then
         assigned to the respective attributes of the `BoxFunction` instance.
         """
-        self.main_function = CodeInspector.get_main_function(file_code, self.main_function_name)  # TODO self.name?
-        self.helper_functions = CodeInspector.get_help_methods(file_code, self.main_function_name)  # TODO self.name?
+        self.main_function = CodeInspector.get_main_function(file_code, self.main_function_name)
+        self.helper_functions = CodeInspector.get_help_methods(file_code, self.main_function_name)
         self.imports = CodeInspector.get_imports(file_code)
         self.global_statements = list(CodeInspector.get_global_statements(file_code))
         # TODO min_args/max_args
-
-    def count_inputs(self):
-        # TODO: may not work, fix if needed
-        if self.main_function is None:
-            raise ValueError("Main function is not set; cannot count inputs.")
-        sig = signature(self.main_function)
-        params = sig.parameters
-        count = len(params)
-        if "self" in params:
-            count -= 1
-        return count
-
-    def __call__(self, *args):
-        return self.main_function(*args)
 
     def __eq__(self, other):
         """
         Compares the current BoxFunction instance with another object for equality.
         """
         if isinstance(other, BoxFunction):
-            return (self.name == other.name
-                    and self.main_function == other.main_function
+            return (self.main_function == other.main_function
                     and self.helper_functions == other.helper_functions
                     and self.imports == other.imports
                     and self.min_args == other.min_args
@@ -104,7 +85,6 @@ class BoxFunction:
         main_function_hash = hash(self.main_function) if self.main_function else 0
 
         return hash((
-            self.name,
             main_function_hash,
             helper_hash,
             imports_hash,
@@ -120,7 +100,7 @@ class BoxFunction:
         PEP 8 style guidelines.
         """
         # TODO could be implemented better
-        return "BoxFunction: " + self.name
+        return "BoxFunction: " + self.main_function_name
 
     def __repr__(self):
         return self.__str__()

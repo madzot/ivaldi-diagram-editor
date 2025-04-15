@@ -141,11 +141,11 @@ class Box:
         file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
                                       filetypes=(("Python script", "*.py"),))
         if file:
-            box_function = BoxFunction(name=file.name, file_code=file.read())
+            box_function = BoxFunction(predefined_function_file_name=file.name, file_code=file.read())
             self.set_box_function(box_function)
 
     def set_predefined_function(self, name: str):
-        box_function = BoxFunction(name=name, is_predefined_function=True)
+        box_function = BoxFunction(predefined_function_file_name=name, is_predefined_function=True)
         self.set_box_function(box_function)
 
     def set_box_function(self, box_function: BoxFunction):

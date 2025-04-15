@@ -93,7 +93,7 @@ class CodeGenerator:
             variables = set()
             variables.update(CodeInspector.get_names(box_function.global_statements))
             variables.update(CodeInspector.get_names(box_function.helper_functions))
-            variables.update(CodeInspector.get_names([box_function.main_function]))
+            variables.add(box_function.main_function_name)
 
             box_functions_items_names[box_function] = variables
         return box_functions_items_names
