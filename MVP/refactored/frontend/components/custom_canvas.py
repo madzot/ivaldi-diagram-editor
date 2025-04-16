@@ -61,7 +61,6 @@ class CustomCanvas(tk.Canvas):
 
         self.receiver.add_new_canvas(self.id)
 
-
         self.name = self.create_text(0, 0, text=str(self.id)[-6:], fill="black", font='Helvetica 15 bold')
         self.name_text = str(self.id)[-6:]
         self.set_name(str(self.id))
@@ -208,7 +207,6 @@ class CustomCanvas(tk.Canvas):
             self.temp_wire.update()
 
     def delete(self, *args):
-        # HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
 
     def remove_box(self, box: Box):
@@ -373,15 +371,7 @@ class CustomCanvas(tk.Canvas):
                 y_offset = -next_location[1] * multiplier
                 if round(next_location[1]) > self.canvasy(self.winfo_height()) / 2:
                     y_offset = (self.canvasy(self.winfo_height()) - next_location[1]) * multiplier
-            # TODO does this part also need canvas coords
-            # if 0 < round(next_location[0]) < self.winfo_width():
-            #     x_offset = -next_location[0] * multiplier
-            #     if round(next_location[0]) > self.winfo_width() / 2:
-            #         x_offset = (self.winfo_width() - next_location[0]) * multiplier
-            # if 0 < round(next_location[1]) < self.winfo_height():
-            #     y_offset = -next_location[1] * multiplier
-            #     if round(next_location[1]) > self.winfo_height() / 2:
-            #         y_offset = (self.winfo_height() - next_location[1]) * multiplier
+
         is_allowed = x_offset == 0 == y_offset
         return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
 
@@ -390,10 +380,6 @@ class CustomCanvas(tk.Canvas):
         min_y = self.canvasy(0)
         max_x = self.canvasx(self.winfo_width())
         max_y = self.canvasy(self.winfo_height())
-        # min_x = 0
-        # min_y = 0
-        # max_x = self.winfo_width()
-        # max_y = self.winfo_height()
         count = 0
         locations = [
             [min_x, min_y],
@@ -405,10 +391,10 @@ class CustomCanvas(tk.Canvas):
         for corner in self.corners:
             for location in locations:
                 if ((abs(round(self.canvasx(corner.location[0])) - location[0]) < 2
-                    and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
+                     and abs(round(self.canvasy(corner.location[1])) - location[1]) < 2)
                         or
-                    (abs(round(corner.location[0]) - location[0]) < 2
-                        and abs(round(corner.location[1]) - location[1]) < 2)):
+                        (abs(round(corner.location[0]) - location[0]) < 2
+                         and abs(round(corner.location[1]) - location[1]) < 2)):
                     count += 1
         return count >= 4
 
@@ -509,7 +495,6 @@ class CustomCanvas(tk.Canvas):
     def _fix_new_sub_diagram_box_wires(self, sub_diagram_box: Box) -> None:
         """
         This is workaround to fix the wires that are not connected to the sub-diagram box
-        TODO: Fix the original issue
         """
         if not sub_diagram_box:
             return
@@ -619,7 +604,8 @@ class CustomCanvas(tk.Canvas):
     def get_box_function(self, box_id) -> BoxFunction | None:
         box = self.get_box_by_id(box_id)
         if box:
-            return BoxFunction(predefined_function_file_name=box.label_text, file_code=self.main_diagram.label_content[box.label_text])
+            return BoxFunction(predefined_function_file_name=box.label_text,
+                               file_code=self.main_diagram.label_content[box.label_text])
         return None
 
     def add_spider(self, loc=(100, 100), id_=None):
@@ -649,10 +635,13 @@ class CustomCanvas(tk.Canvas):
         tikz_window = tk.Toplevel(self)
         tikz_window.title("TikZ Generator")
 
-        tk.Label(tikz_window, text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.", justify="left").pack()
+        tk.Label(tikz_window,
+                 text="PGF/TikZ plots can be used with the following packages.\nUse pgfplotsset to change the size of plots.",
+                 justify="left").pack()
 
         pgfplotsset_text = tk.Text(tikz_window, width=30, height=5)
-        pgfplotsset_text.insert(tk.END, "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
+        pgfplotsset_text.insert(tk.END,
+                                "\\usepackage{tikz}\n\\usepackage{pgfplots}\n\\pgfplotsset{\ncompat=newest, \nwidth=15cm, \nheight=10cm\n}")
         pgfplotsset_text.config(state=tk.DISABLED)
         pgfplotsset_text.pack()
 
@@ -693,7 +682,6 @@ class CustomCanvas(tk.Canvas):
         self.update_inputs_outputs()
         self.update_prev_winfo_size()
         # self.offset_items(self.corners[0].location[0], self.corners[0].location[1])
-        # TODO here or somewhere else limit resize if it would mess up output/input display
 
     @staticmethod
     def debounce(wait_time):
@@ -839,7 +827,7 @@ class CustomCanvas(tk.Canvas):
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
                                            ConnectionSide.LEFT, [0, 0], self,
-                                           r=5*self.total_scale, id_=id_)
+                                           r=5 * self.total_scale, id_=id_)
 
         # if self.diagram_source_box and self.receiver.listener:
         #     self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_RIGHT, generator_id=self.diagram_source_box.id,
@@ -873,14 +861,15 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete_me()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_OUTPUT, canvas_id=self.id, connection_id=to_be_removed.id)
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_OUTPUT, canvas_id=self.id,
+                                            connection_id=to_be_removed.id)
 
     def add_diagram_input(self, id_=None):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
         new_input = Connection(self.diagram_source_box, input_index, ConnectionSide.RIGHT, [0, 0], self,
-                               r=5*self.total_scale, id_=id_)
+                               r=5 * self.total_scale, id_=id_)
         # if self.diagram_source_box and self.receiver.listener:
         #     self.receiver.receiver_callback(ActionType.BOX_ADD_INNER_LEFT, generator_id=self.diagram_source_box.id,
         #                                     connection_id=new_input.id, connection_nr=new_input.index, canvas_id=self.id)
@@ -901,7 +890,8 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete_me()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_INPUT, canvas_id=self.id, connection_id=to_be_removed.id)
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_INPUT, canvas_id=self.id,
+                                            connection_id=to_be_removed.id)
 
     def remove_specific_diagram_input(self, con):
         if not self.inputs:
@@ -937,7 +927,6 @@ class CustomCanvas(tk.Canvas):
 
         con.delete_me()
         self.update_inputs_outputs()
-
 
     def find_connection_to_remove(self, side):
         c_max = 0

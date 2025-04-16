@@ -17,7 +17,7 @@ class HyperEdge:
         self.id = hyper_edge_id
         self.box_function: BoxFunction | None = box_function
 
-        self.source_nodes: dict[int, Node] = dict()  # key is connection index, it is needed for keeping the right queue
+        self.source_nodes: dict[int, Node] = dict()  # key is connection index, it is necessary for keeping the right queue
         self.target_nodes: dict[int, Node] = dict()
 
         self.sub_diagram_canvas_id = sub_diagram_canvas_id
@@ -48,7 +48,7 @@ class HyperEdge:
         self.target_nodes.clear()
 
     def remove_source_connection_by_index(self, conn_index: int):
-        """NB! It deletes connection and all connection with index more that current connection index,
+        """NB! It deletes connection and all connections with index more that current connection index,
         their connection decreases.
         """
         if conn_index in self.source_nodes:
@@ -59,7 +59,7 @@ class HyperEdge:
                 del self.source_nodes[key]
 
     def remove_target_connection_by_index(self, conn_index: int):
-        """NB! It deletes connection and all connection with index more that current connection index,
+        """NB! It deletes connection and all connections with index more that current connection index,
         their connection decreases.
         """
         if conn_index in self.source_nodes:
@@ -126,7 +126,7 @@ class HyperEdge:
         self.target_nodes.clear()
 
     def remove_source_connection_by_index(self, conn_index: int):
-        """NB! It deletes connection and all connection with index more that current connection index,
+        """NB! It deletes connection and all connections with index more that current connection index,
         their connection decreases.
         """
         if conn_index in self.source_nodes:
@@ -137,7 +137,7 @@ class HyperEdge:
                 del self.source_nodes[key]
 
     def remove_target_connection_by_index(self, conn_index: int):
-        """NB! It deletes connection and all connection with index more that current connection index,
+        """NB! It deletes connection and all connections with index more that current connection index,
         their connection decreases.
         """
         if conn_index in self.source_nodes:

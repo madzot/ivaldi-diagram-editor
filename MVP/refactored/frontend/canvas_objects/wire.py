@@ -99,14 +99,14 @@ class Wire:
             self.context_menu.destroy()
 
     # BE callback methods
-    def connection_data_optimizer(self)-> tuple[ConnectionInfo, ConnectionInfo]:
-        # [self.start_connection.index, None, self.start_connection.side, self.start_connection.id]
-        start_conn_data: ConnectionInfo = ConnectionInfo(self.start_connection.index, self.start_connection.side, self.start_connection.id)
-        end_conn_data: ConnectionInfo = ConnectionInfo(self.end_connection.index, self.end_connection.side, self.end_connection.id)
+    def connection_data_optimizer(self) -> tuple[ConnectionInfo, ConnectionInfo]:
+        start_conn_data: ConnectionInfo = ConnectionInfo(self.start_connection.index, self.start_connection.side,
+                                                         self.start_connection.id)
+        end_conn_data: ConnectionInfo = ConnectionInfo(self.end_connection.index, self.end_connection.side,
+                                                       self.end_connection.id)
 
         if self.start_connection.box:
             start_conn_data.box_id = self.start_connection.box.id
-            # [1] = self.start_connection.box.id]
         elif isinstance(self.start_connection, Spider):
             start_conn_data.resource_id = self.start_connection.id
         if self.end_connection.box:
@@ -135,17 +135,13 @@ class Wire:
         else:
             self.receiver.receiver_callback(ActionType.WIRE_CREATE, resource_id=self.id,
                                             start_connection=start_conn_data,
-                                            # end_connection=self.end_connection, TODO why?
                                             end_connection=end_conn_data,
                                             canvas_id=self.canvas.id)
-            # self.add_end_connection(self.end_connection) TODO WHY?
 
     # BE callback methods
     def handle_wire_deletion_callback(self, action):
         if not self.receiver.listener:
             return
-        # if action != "sub_diagram":
-        start_conn_data, end_conn_data = self.connection_data_optimizer()
         if self.start_connection.side == 'spider':
             if self.end_connection.box is None:
                 self.receiver.receiver_callback(ActionType.WIRE_DELETE, resource_id=self.id, canvas_id=self.canvas.id)
@@ -158,23 +154,23 @@ class Wire:
                 self.receiver.receiver_callback(ActionType.WIRE_DELETE, resource_id=self.id, canvas_id=self.canvas.id)
         else:
             self.receiver.receiver_callback(ActionType.WIRE_DELETE, resource_id=self.id, canvas_id=self.canvas.id)
-        # else:
-        #     ... # TODO with action "sub_diagram"
 
     # BE callback methods
     def add_end_connection(self, connection):
         self.end_connection = connection
         if connection.box and self.receiver.listener:
             self.receiver.receiver_callback(ActionType.WIRE_CREATE, resource_id=self.id,
-                                            start_connection=ConnectionInfo(connection.index, connection.side, connection.id, connection.box.id),
+                                            start_connection=ConnectionInfo(connection.index, connection.side,
+                                                                            connection.id, connection.box.id),
                                             connection_id=connection.id, canvas_id=self.canvas.id)
         elif connection.box is None and self.receiver.listener and self.start_connection.box is not None:
             self.receiver.receiver_callback(ActionType.WIRE_CREATE, resource_id=self.id,
-                                                        start_connection=ConnectionInfo(connection.index,
-                                                                                        connection.side,
-                                                                                        connection.id,
-                                                                                        related_resource_id=connection.id if isinstance(connection, Spider) else None),
-                                                        connection_id=connection.id, canvas_id=self.canvas.id)
+                                            start_connection=ConnectionInfo(connection.index,
+                                                                            connection.side,
+                                                                            connection.id,
+                                                                            related_resource_id=connection.id if isinstance(
+                                                                                connection, Spider) else None),
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
 
     def __eq__(self, other):
         if type(self) is type(other):

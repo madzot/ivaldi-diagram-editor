@@ -1,6 +1,4 @@
-from unittest import TestCase, mock
-
-from PIL import Image
+from unittest import TestCase
 
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.diagram_callback import Receiver
@@ -64,6 +62,6 @@ class TestCodeGenerator(TestCase):
         self.app.destroy()
 
     def test_construct_main_function(self):
-        code = CodeGenerator.generate_code(self.custom_canvas, self.app.canvasses)
+        code = CodeGenerator.generate_code(self.custom_canvas)
         print(code)
         self.assertIn("def main", code)

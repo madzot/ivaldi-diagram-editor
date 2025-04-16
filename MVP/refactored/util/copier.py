@@ -8,14 +8,12 @@ class Copier:
     @staticmethod
     def copy_over_spiders(spiders, canvas):
         for spider in spiders:
-            # TODO seems like this will add spider to new_diagram
             new_spider = canvas.add_spider(spider.location, id_=spider.id)
             # new_spider.id = spider.id
 
     @staticmethod
     def copy_over_boxes(boxes, canvas):
         for old_box in boxes:
-            # TODO seems like this will add generator to new_diagram
             sub_diagram_box = canvas.add_box((old_box.x, old_box.y), size=old_box.size, shape=old_box.shape)
             sub_diagram_box.set_id(old_box.id)
             Copier.copy_box(old_box, sub_diagram_box)
@@ -35,7 +33,7 @@ class Copier:
             return False
 
     def sort_wires_by_y(self, wires, selected_coordinates):
-        # Find if wire is fully in selected area or if only start/end is in
+        # Find if wire is fully in the selected area or if only start/end is in
         half_in = []
         full_in = []
         for wire in wires:
@@ -50,12 +48,11 @@ class Copier:
         return half_in, full_in
 
     def copy_over_wires(self, wires, selected_coordinates, box, canvas):
-        # TODO has to be analyzed
         add_diagram_io_based_on_side = {
             "left": box.sub_diagram.add_diagram_input_for_sub_d_wire,
             "right": box.sub_diagram.add_diagram_output_for_sub_d_wire,
-        } # TODO seems like this will add inputs/outputs to new_diagram
-        half_in, full_in = self.sort_wires_by_y(wires, selected_coordinates) # TODO what we were looking for!
+        }
+        half_in, full_in = self.sort_wires_by_y(wires, selected_coordinates)
         for wire in full_in:
             start_c = wire.start_connection
             end_c = wire.end_connection
@@ -167,7 +164,6 @@ class Copier:
 
     @staticmethod
     def copy_wire_within_selection(start_c, end_c, canvas):
-        # TODO seems like this will add wires to new_diagram???
         if list(filter(lambda x: (start_c.box and x.id == start_c.box.id), canvas.boxes)):
             for c in (list(filter(lambda x: (start_c.box and x.id == start_c.box.id),
                                   canvas.boxes))[0].connections):
