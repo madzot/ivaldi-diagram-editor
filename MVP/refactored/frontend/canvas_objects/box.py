@@ -9,19 +9,15 @@ from tkinter import simpledialog
 
 from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
-from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, predefined_functions
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from constants import *
 
 if TYPE_CHECKING:
-    from MVP.refactored.frontend.canvas_objects.spider import Spider
     from MVP.refactored.frontend.canvas_objects.wire import Wire
-    from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
 
 class Box:
@@ -61,7 +57,8 @@ class Box:
             self.receiver.receiver_callback(ActionType.BOX_CREATE, generator_id=self.id, canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback(ActionType.BOX_SUB_BOX, generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id, canvas_id=self.canvas.id)
+                                                connection_id=self.canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
 
         self.is_snapped = False
         self.snapped_x = None
@@ -71,16 +68,17 @@ class Box:
         coords = self.canvas.coords(self.rect)
         self.collision_ids = self.canvas.find_overlapping(coords[0], coords[1], coords[2], coords[3])[-2:]
 
-
     def remove_wire(self, wire: Wire):
         self.wires.remove(wire)
 
     def set_id(self, id_):
         if self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.BOX_SWAP_ID, generator_id=self.id, new_id=id_, canvas_id=self.canvas.id)
+            self.receiver.receiver_callback(ActionType.BOX_SWAP_ID, generator_id=self.id, new_id=id_,
+                                            canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
                 self.receiver.receiver_callback(ActionType.BOX_SUB_BOX, generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id, canvas_id=self.canvas.id)
+                                                connection_id=self.canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
         self.id = id_
 
     def bind_events(self):
@@ -195,10 +193,9 @@ class Box:
         self.canvas.main_diagram.save_box_to_diagram_menu(self)
 
     def set_inputs_outputs(self, _):
-        # TODO idea: double click on box with sub diagram opens the sub-diagram?
         if self.locked or self.sub_diagram:
             return
-        # ask for inputs amount
+        # ask for input amount
         inputs = simpledialog.askstring(title="Inputs (left connections)", prompt="Enter amount")
         if inputs and not inputs.isdigit():
             while True:
@@ -210,7 +207,7 @@ class Box:
                 else:
                     break
 
-        # ask for outputs amount
+        # ask for output amount
         outputs = simpledialog.askstring(title="Outputs (right connections)", prompt="Enter amount")
         if outputs and not outputs.isdigit():
             while True:
@@ -242,8 +239,8 @@ class Box:
 
         # add new connections
 
-        # self.receiver.receiver_callback("box_remove_connection_all", generator_id=self.id, canvas_id=self.canvas.id)
-        self.receiver.receiver_callback(ActionType.BOX_REMOVE_ALL_CONNECTIONS, generator_id=self.id, canvas_id=self.canvas.id)
+        self.receiver.receiver_callback(ActionType.BOX_REMOVE_ALL_CONNECTIONS, generator_id=self.id,
+                                        canvas_id=self.canvas.id)
         if outputs:
             for _ in range(int(outputs)):
                 self.add_right_connection()
@@ -326,7 +323,6 @@ class Box:
                 continue
 
             if abs(box.x + box.size[0] / 2 - (go_to_x + self.size[0] / 2)) < box.size[0] / 2 + self.size[0] / 2:
-
                 go_to_x = box.x + box.size[0] / 2 - +self.size[0] / 2
                 self.snapped_x = float(go_to_x + self.size[0] / 2)
 
@@ -432,7 +428,6 @@ class Box:
         self.move_label()
 
     def resize_by_connections(self):
-        # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
         height = max([50 * nr_cs, 50])
         if self.size[1] < height:
@@ -470,8 +465,8 @@ class Box:
             self.label_text = new_label
 
         if self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.BOX_ADD_OPERATOR, generator_id=self.id, operator=self.label_text, canvas_id=self.canvas.id)
-            # self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text, canvas_id=self.canvas.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_OPERATOR, generator_id=self.id, operator=self.label_text,
+                                            canvas_id=self.canvas.id)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
@@ -489,7 +484,8 @@ class Box:
         self.label_text = new_label
 
         if self.receiver.listener:
-            self.receiver.receiver_callback(ActionType.BOX_ADD_OPERATOR, generator_id=self.id, operator=self.label_text, canvas_id=self.canvas.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_OPERATOR, generator_id=self.id, operator=self.label_text,
+                                            canvas_id=self.canvas.id)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
                                                  text=self.label_text, fill="black", font=('Helvetica', 14))
@@ -640,7 +636,8 @@ class Box:
         if self.receiver.listener:
             if circle.side == ConnectionSide.LEFT:
                 self.receiver.receiver_callback(ActionType.BOX_REMOVE_LEFT, generator_id=self.id,
-                                                connection_nr=circle.index, connection_id=circle.id, canvas_id=self.canvas.id)
+                                                connection_nr=circle.index, connection_id=circle.id,
+                                                canvas_id=self.canvas.id)
             elif circle.side == ConnectionSide.RIGHT:
                 self.receiver.receiver_callback(ActionType.BOX_REMOVE_RIGHT, generator_id=self.id,
                                                 connection_nr=circle.index, connection_id=circle.id,
@@ -681,12 +678,6 @@ class Box:
         if self.receiver.listener:
             # if action != "sub_diagram":
             self.receiver.receiver_callback(ActionType.BOX_DELETE, generator_id=self.id, canvas_id=self.canvas.id)
-            # else:
-            #     ... # TODO with action "sub_diagram"
-        # if action != "sub_diagram":
-        #     box_node = BoxToHyperEdgeMapping.get_node_by_box_id(self.id)
-        #     box_node.remove_self()
-        #     BoxToHyperEdgeMapping.remove_pair(self.id)
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x):

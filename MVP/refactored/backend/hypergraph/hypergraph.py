@@ -34,8 +34,8 @@ class Hypergraph:
         current_hypergraph += 1
         logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph.get(self.id)}" + message_end)
 
-    def get_node_by_id(self, id: int) -> Node | None:
-        return self.nodes.get(id)
+    def get_node_by_id(self, node_id: int) -> Node | None:
+        return self.nodes.get(node_id)
 
     def get_all_nodes(self) -> list[Node]:
         return list(self.nodes.values())
@@ -136,7 +136,7 @@ class Hypergraph:
         """
         :param prev_id:
         :param new_id:
-        :return: True if id was changed.
+        :return: True, if id was changed.
         """
         if prev_id in self.edges and prev_id != new_id:
             self.edges[prev_id].swap_id(new_id)
@@ -168,7 +168,7 @@ class Hypergraph:
     #     return self.canvas_id
     #
     # def remove_hyper_edge(self, edge_to_remove_id: int) -> HyperEdge:
-    #     self.edges[edge_to_remove_id].remove_self()  # TODO do nothing?
+    #     self.edges[edge_to_remove_id].remove_self()
     #     return self.edges.pop(edge_to_remove_id)
     #
     # def swap_hyper_edge_id(self, prev_id: int, new_id: int):
@@ -180,7 +180,7 @@ class Hypergraph:
     def update_source_nodes_descendants(self):
         """
         Update all hypergraph nodes.
-        Must be called, when source node is added.
+        Must be called when the source node is added.
         """
         self.nodes.clear()
         queue: Queue[Node] = Queue()
@@ -201,7 +201,7 @@ class Hypergraph:
     def update_edges(self):
         """
         Update all hypergraph edges.
-        Must be called, when source node is added.
+        Must be called when the source node is added.
         """
         self.edges.clear()
         queue: Queue[Node] = Queue()
@@ -225,7 +225,7 @@ class Hypergraph:
     def get_node_groups(self) -> list[list[int]]:
         """
         Return list of node groups.
-        Node group is a list of nodes, that are directly connected with each other.
+        Node group is a list of nodes that are directly connected with each other.
         """
         node_groups: list[list[int]] = []
         visited: set[int] = set()

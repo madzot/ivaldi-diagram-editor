@@ -173,12 +173,6 @@ class MainDiagram(tk.Tk):
         self.import_counter = 0
         self.mainloop()
 
-    def get_all(self):
-        hypergraphs = HypergraphManager
-        receiver = self.receiver
-        canvas = self.custom_canvas
-        print("hi")
-
     @staticmethod
     def calculate_boxes_json_file_hash():
         with open(BOXES_CONF, "r") as file:
@@ -284,7 +278,6 @@ class MainDiagram(tk.Tk):
         self.draw_wire_button.configure(command=self.custom_canvas.toggle_draw_wire_mode)
 
         self.random.configure(command=self.custom_canvas.random)
-        # TODO figure out why this is needed! and change it!
         if not self.custom_canvas.diagram_source_box:
             buttons = {
                 "Remove input": self.custom_canvas.remove_diagram_input,
@@ -329,7 +322,6 @@ class MainDiagram(tk.Tk):
         self.tree.item(str(canvas.id), text=canvas.name_text)
 
     def rename(self):
-        # TODO SET limit on how long name can be, same for boxes
         if self.custom_canvas.diagram_source_box:
             txt = "Enter label for sub-diagram:"
         else:
@@ -599,7 +591,7 @@ class MainDiagram(tk.Tk):
 
     @staticmethod
     def pairwise(iterable):
-        "s -> (s0, s1), (s2, s3), (s4, s5), ..."
+        """s -> (s0, s1), (s2, s3), (s4, s5), ..."""
         a = iter(iterable)
         return zip(a, a)
 

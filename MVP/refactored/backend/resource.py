@@ -2,15 +2,15 @@ from MVP.refactored.backend.types.connection_info import ConnectionInfo
 
 
 class Resource:
-    """Resource is backend representation of wire and spider."""
-    def __init__(self, id):
-        self.id = id
+    """Resource is a backend representation of wire and spider."""
+
+    def __init__(self, resource_id):
+        self.id = resource_id
         self.connections: list[ConnectionInfo] = []
         self.left_connection: list[ConnectionInfo] = []
         self.right_connection: list[ConnectionInfo] = []
         self.spider_connection: list[ConnectionInfo] = []
         self.spider = False
-        # self.spider_connection = None
         self.parent = None
 
     def add_connection(self, connection):
@@ -33,18 +33,18 @@ class Resource:
             if connection not in self.spider_connection:
                 self.spider_connection.append(connection)
         else:
-            # if resource is spider, all connections have same id as spider so we don`t have if
+            # if resource is spider, all connections have the same id as spider so we don't have if
             # and all spider connections should be in order by index
             self.spider_connection.insert(connection.index, connection)
 
     def remove_spider_connection_by_index(self, index: int):
         is_found_connection_with_index = False
-        to_be_removed: ConnectionInfo|None = None
+        to_be_removed: ConnectionInfo | None = None
         for connection in self.spider_connection:
             if connection.index == index:
                 to_be_removed = connection
                 is_found_connection_with_index = True
-            elif is_found_connection_with_index: # From all connections that come after the removed one, is needed to subtract index
+            elif is_found_connection_with_index:  # From all connections that come after the removed one, is needed to subtract index
                 connection.index -= 1
         if to_be_removed is not None:
             self.spider_connection.remove(to_be_removed)

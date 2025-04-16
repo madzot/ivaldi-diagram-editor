@@ -16,7 +16,7 @@ class Node:
         self.inputs: list[HyperEdge] = []
         self.outputs: list[HyperEdge] = []
         self.is_special = is_special  # if it diagram input/output
-        self.is_compound = False  # if it is several nodes, for example input/output and wire => two nodes in one, spider and wire.
+        self.is_compound = False  # if it is several nodes, for example, input/output and wire => two nodes in one, spider and wire.
         self.directly_connected_to: list[Node] = []
         # Should be modified that we can determine how each node connected to another
 
@@ -74,7 +74,7 @@ class Node:
                 children_nodes[node.id] = node
                 for directly_connected_to in node.get_united_with_nodes():
                     children_nodes[directly_connected_to.id] = directly_connected_to
-        if self.id in children_nodes: # can sometimes occur, related to spider
+        if self.id in children_nodes:  # can sometimes occur, related to spider
             children_nodes.pop(self.id)
         return list(children_nodes.values())
 

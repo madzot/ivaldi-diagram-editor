@@ -1,4 +1,3 @@
-from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.wire import Wire
@@ -88,13 +87,12 @@ class Selector:
             if self.canvas.receiver.listener:
                 self.canvas.receiver.receiver_callback(
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
-                ) # TODO WTF
+                )
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
-        # self.canvas.receiver.listener = False # TODO WTF Why it is off for this part
         self.canvas.copier.copy_canvas_contents(
             sub_diagram, self.selected_wires, self.selected_boxes, self.selected_spiders, coordinates, box
-        ) # TODO add receiver callback into copier? I suppose that is solution
+        )
         box.lock_box()
         self.canvas.receiver.listener = prev_status
 
@@ -191,7 +189,6 @@ class Selector:
                             'original_end_index': copy.deepcopy(item.end_connection.index),
                             'original_end_side': copy.deepcopy(item.end_connection.side)
                         })
-
 
     def paste_copied_items(self, event_x=50, event_y=50):
         if len(self.copied_items) > 0:

@@ -61,7 +61,6 @@ class BoxFunction:
         self.helper_functions = CodeInspector.get_help_methods(file_code, self.main_function_name)
         self.imports = CodeInspector.get_imports(file_code)
         self.global_statements = list(CodeInspector.get_global_statements(file_code))
-        # TODO min_args/max_args
 
     def __eq__(self, other):
         """

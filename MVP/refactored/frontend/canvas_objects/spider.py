@@ -1,7 +1,6 @@
 import tkinter as tk
 
 from MVP.refactored.backend.types.ActionType import ActionType
-from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 
 
@@ -57,10 +56,7 @@ class Spider(Connection):
         self.canvas.spiders.remove(self)
         self.delete_me()
         if self.receiver.listener:
-            # if action != "sub_diagram":
             self.receiver.receiver_callback(ActionType.SPIDER_DELETE, resource_id=self.id, canvas_id=self.canvas.id)
-            # else:
-            #     ... # TODO with action "sub_diagram"
 
     def close_menu(self):
         if self.context_menu:
@@ -190,4 +186,3 @@ class Spider(Connection):
     def remove_wire(self, wire=None):
         if wire and wire in self.wires:
             self.wires.remove(wire)
-
