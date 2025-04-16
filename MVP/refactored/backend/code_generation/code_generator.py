@@ -150,7 +150,7 @@ class CodeGenerator:
             definition += f"{var_name}, "
             node_and_hyper_edge_to_variable_name[actual_hash] = var_name
 
-        definition = (definition[:-2] if index > 0 else definition) + "):"
+        definition = (definition[:-2] if index >= 0 else definition) + "):"
 
         return definition, node_and_hyper_edge_to_variable_name
 
@@ -331,6 +331,7 @@ class CodeGenerator:
                     seen_hyper_edges.add(hyper_edge)
                     for target_node in hyper_edge.get_target_nodes():
                         nodes_with_inputs.add(target_node)
+                        nodes_with_inputs.update(target_node.get_united_with_nodes())
 
                     # Then recursively process inside graphs
                     for subgraph in hyper_edge.get_hypergraphs_inside():
