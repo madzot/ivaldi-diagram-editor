@@ -50,8 +50,8 @@ class Box:
         self.start_x = self.display_x
         self.start_y = self.display_y
 
-        self.rel_x = round(x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         self.x_dif = 0
         self.y_dif = 0
         self.connections: list[Connection] = []
@@ -395,14 +395,14 @@ class Box:
             for box in self.canvas.boxes:
                 if box == self:
                     continue
-                box_size = box.get_logical_size(self.size)
+                box_size = box.get_logical_size(box.size)
                 if abs(box.x + box_size[0] / 2 - (go_to_x + size[0] / 2)) < box_size[0] / 2 + size[0] / 2:
-                    go_to_x = box.x + box_size[0] / 2 - + size[0] / 2
+                    go_to_x = box.x + box_size[0] / 2 - size[0] / 2
 
                     found = True
             for spider in self.canvas.spiders:
                 if abs(spider.location[0] - (go_to_x + size[0] / 2)) < size[0] / 2 + spider.r:
-                    go_to_x = spider.x - +size[0] / 2
+                    go_to_x = spider.x - size[0] / 2
 
                     found = True
             if found:
@@ -453,9 +453,9 @@ class Box:
         :return: List of tags that would be colliding with the Box in the given location.
         """
         self.update_self_collision_ids()
-        collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
         go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         if self.canvas.main_diagram.rotation == 180:
+            print("in here")
             collision = self.canvas.find_overlapping(go_to_x - self.size[0], go_to_y, go_to_x, go_to_y + self.size[1])
         elif self.canvas.main_diagram.rotation == 270:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x - self.size[0], go_to_y - self.size[1])
@@ -687,8 +687,8 @@ class Box:
             self.update_position()
             self.update_connections()
             self.update_wires()
-        self.rel_x = round(self.x / self.canvas.winfo_width(), 4)
-        self.rel_y = round(self.y / self.canvas.winfo_height(), 4)
+        self.rel_x = round(self.display_x / self.canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.winfo_height(), 4)
 
     def select(self):
         """
@@ -769,7 +769,6 @@ class Box:
         :param new_size_y: New height
         :return: None
         """
-        self.size = (new_size_x, new_size_y)
         if self.canvas.main_diagram.rotation == 180:  # 180 keeps display_x in the same spot
             self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
         if self.canvas.main_diagram.rotation == 270:  # 270 keeps display_y in the same spot
@@ -789,7 +788,8 @@ class Box:
         :return: None
         """
         if self.style == const.RECTANGLE:
-            self.canvas.coords(self.shape, self.x, self.y, self.x + self.size[0], self.y + self.size[1])
+            self.canvas.coords(self.shape, self.display_x, self.display_y,
+                               self.display_x + self.size[0], self.display_y + self.size[1])
         if self.style == const.TRIANGLE:
             match self.canvas.main_diagram.rotation:
                 case 90:
@@ -808,8 +808,8 @@ class Box:
                     self.canvas.coords(self.shape, self.display_x + self.size[0], self.display_y + self.size[1] / 2,
                                        self.display_x, self.display_y,
                                        self.display_x, self.display_y + self.size[1])
-        self.canvas.coords(self.resize_handle, self.x + self.size[0] - 10, self.y + self.size[1] - 10,
-                           self.x + self.size[0], self.y + self.size[1])
+        self.canvas.coords(self.resize_handle, self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
+                           self.display_x + self.size[0], self.display_y + self.size[1])
 
     def update_connections(self):
         """

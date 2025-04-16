@@ -757,9 +757,9 @@ class CustomCanvas(tk.Canvas):
 
             if event is not None:
                 x, y = self.canvasx(event.x), self.canvasy(event.y)
+                x, y = self.convert_logical_display(x, y)
                 self.pulling_wire = True
-                self.temp_end_connection = Connection(None, None, None,
-                                                      self.convert_logical_display(x, y), self)
+                self.temp_end_connection = Connection(None, None, None, (x, y), self)
 
     def end_wire_to_connection(self, connection, bypass_legality_check=False):
         """
@@ -1510,38 +1510,35 @@ class CustomCanvas(tk.Canvas):
     def convert_logical_display(self, x, y):
         match self.main_diagram.rotation:
             case 90:
-                return [y, x]
+                return y, x
             case 180:
-                return [self.main_diagram.custom_canvas.winfo_width() - x, y]
+                return self.main_diagram.custom_canvas.winfo_width() - x, y
             case 270:
-                return [self.main_diagram.custom_canvas.winfo_width() - y,
-                        self.main_diagram.custom_canvas.winfo_height() - x]
+                return self.main_diagram.custom_canvas.winfo_width() - y, self.main_diagram.custom_canvas.winfo_height() - x
             case _:  # 0
-                return [x, y]
+                return x, y
 
     def convert_display_logical(self, x, y):
         match self.main_diagram.rotation:
             case 90:
-                return [y, x]
+                return y, x
             case 180:
-                return [self.main_diagram.custom_canvas.winfo_width() - x, y]
+                return self.main_diagram.custom_canvas.winfo_width() - x, y
             case 270:
-                return [self.main_diagram.custom_canvas.winfo_height() - y,
-                        self.main_diagram.custom_canvas.winfo_width() - x]
+                return self.main_diagram.custom_canvas.winfo_height() - y, self.main_diagram.custom_canvas.winfo_width() - x
             case _:  # 0
-                return [x, y]
+                return x, y
 
     def swap_cords_if_rotated(self, x, y):
         match self.main_diagram.rotation:
             case 90 | 270:
-                return [y, x]
+                return y, x
             case _:
-                return [x, y]
+                return x, y
 
     def mirror_coords(self, x, y):
         match self.main_diagram.rotation:
             case 180 | 270:
-                return [self.main_diagram.custom_canvas.winfo_width() - x,
-                        self.main_diagram.custom_canvas.winfo_height() - y]
+                return self.main_diagram.custom_canvas.winfo_width() - x, self.main_diagram.custom_canvas.winfo_height() - y
             case _:
-                return [x, y]
+                return x, y

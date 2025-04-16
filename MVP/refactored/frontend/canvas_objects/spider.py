@@ -34,8 +34,8 @@ class Spider(Connection):
 
         self.update_coords(self.x, self.y)
 
-        self.rel_x = round(self.x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         if not id_:
             self.id = id(self)
         else:
@@ -274,8 +274,8 @@ class Spider(Connection):
         self.is_snapped = found
         self.update_coords(go_to_x, go_to_y)
 
-        self.rel_x = round(self.x / self.canvas.winfo_width(), 4)
-        self.rel_y = round(self.y / self.canvas.winfo_height(), 4)
+        self.rel_x = round(self.display_x / self.canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.winfo_height(), 4)
         self.canvas.coords(self.circle, self.display_x - self.r, self.display_y - self.r, self.display_x + self.r,
                            self.display_y + self.r)
         [w.update() for w in self.wires]
