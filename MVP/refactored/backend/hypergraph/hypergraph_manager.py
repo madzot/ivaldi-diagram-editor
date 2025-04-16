@@ -197,6 +197,7 @@ class HypergraphManager:
             node = hypergraph.get_node_by_id(node_id)
             if node is not None:
                 return node
+        return None
 
     @staticmethod
     def union_nodes(node: Node, unite_with_id: int):
