@@ -16,7 +16,9 @@ from ttkbootstrap.constants import *
 
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.hypergraph.visualization.visualization import Visualization
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
@@ -173,12 +175,6 @@ class MainDiagram(tk.Tk):
         self.import_counter = 0
         self.mainloop()
 
-    def get_all(self):
-        hypergraphs = HypergraphManager
-        receiver = self.receiver
-        canvas = self.custom_canvas
-        print("hi")
-
     @staticmethod
     def calculate_boxes_json_file_hash():
         with open(BOXES_CONF, "r") as file:
@@ -242,22 +238,23 @@ class MainDiagram(tk.Tk):
                 copy_button = tk.Button(frame, text="Copy", command=lambda tb=text_box: self.copy_to_clipboard(tb))
                 copy_button.pack(pady=5)
 
-    def visualize_as_graph(self, canvas):
-        hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-        if hypergraph is None:
-            messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
+    def visualize_as_graph(self):
+        hypergraphs: list[Hypergraph] = HypergraphManager.get_graphs_by_canvas_id(self.custom_canvas.id)
+        if len(hypergraphs) == 0:
+            messagebox.showerror("Error", f"No hypergraph found with ID: {self.custom_canvas.id}")
             return
 
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
-        try:
-            figure = hypergraph.visualize()
-        except Exception as e:
-            messagebox.showerror("Error", "Failed to generate the visualization." +
-                                 f"Error during visualization: {e}")
-            plot_window.destroy()
-            return
+        # try:
+        #     figure = Visualization.create_visualization_of_hypergraphs(self.custom_canvas.id)
+        # except Exception as e:
+        #     messagebox.showerror("Error", "Failed to generate the visualization." +
+        #                          f"Error during visualization: {e}")
+        #     plot_window.destroy()
+        #     return
+        figure = Visualization.create_visualization_of_hypergraphs(self.custom_canvas.id)
 
         figure_canvas = FigureCanvasTkAgg(figure, master=plot_window)
         figure_canvas.draw()
