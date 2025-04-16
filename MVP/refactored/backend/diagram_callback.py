@@ -186,7 +186,8 @@ class Receiver:
     def add_connections_to_resource(self, resource: Resource, connections: list[ConnectionInfo | None], canvas_id: int,
                                     node: Node | None = None):
         for connection in connections:
-            if connection is None: continue
+            if connection is None:
+                continue
 
             if connection.side == ConnectionSide.LEFT:
                 if connection.has_box():

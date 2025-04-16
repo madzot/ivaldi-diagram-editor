@@ -46,7 +46,7 @@ class CodeGenerator:
          main_functions_new_names) = CodeInspector.rename(box_functions_items_names)
 
         # imports
-        file_content: str = "".join(set(imp for f in box_functions for imp in f.imports))
+        file_content: str = "\n".join(set(imp for f in box_functions for imp in f.imports))
         # global statements
         file_content += "".join(global_statements) + "\n"
         # helper functions
