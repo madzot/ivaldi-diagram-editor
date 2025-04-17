@@ -2,7 +2,6 @@ import hashlib
 import json
 import os
 import tkinter as tk
-from tkinter import messagebox
 from contextlib import ExitStack
 from tkinter import messagebox, filedialog
 from tkinter import simpledialog
@@ -15,6 +14,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from scipy.interpolate import make_interp_spline
 from ttkbootstrap.constants import *
 
+import constants as const
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
@@ -30,8 +30,8 @@ from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.frontend.windows.search_window import SearchWindow
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
-from MVP.refactored.util.importer import Importer
-import constants as const
+from MVP.refactored.util.importer.json_importer import JsonImporter
+from MVP.refactored.util.importer.python_importer import PythonImporter
 
 
 class MainDiagram(tk.Tk):
@@ -99,7 +99,8 @@ class MainDiagram(tk.Tk):
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
-        self.importer = Importer(self.custom_canvas)
+        self.json_importer = JsonImporter(self.custom_canvas)
+        self.python_importer = PythonImporter(self.custom_canvas)
         # Add undefined box
         self.undefined_box_button = ttk.Button(self.control_frame, text="Add Undefined Box",
                                                command=self.custom_canvas.add_box, width=20,
@@ -219,7 +220,6 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas)
         CodeEditor(self, code=code, is_generated=True)
 
@@ -748,7 +748,7 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        d = self.importer.load_boxes_to_menu()
+        d = self.json_importer.load_boxes_to_menu()
         self.quick_create_booleans = []
         for k in d:
             self.boxes[k] = self.add_custom_box
@@ -762,7 +762,7 @@ class MainDiagram(tk.Tk):
         :param canvas: canvas to add box to.
         :return: None
         """
-        self.importer.add_box_from_menu(canvas, name)
+        self.json_importer.add_box_from_menu(canvas, name)
 
     def save_box_to_diagram_menu(self, box):
         """

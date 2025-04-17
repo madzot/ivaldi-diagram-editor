@@ -1,23 +1,18 @@
 import json
-import os
 import re
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from tkinter import simpledialog
 
-from typing import TYPE_CHECKING
-
+import constants as const
+from MVP.refactored.backend.box_functions.box_function import BoxFunction, predefined_functions
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
-from MVP.refactored.backend.box_functions.box_function import BoxFunction, predefined_functions
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
+from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
-import constants as const
 from constants import *
-
-if TYPE_CHECKING:
-    from MVP.refactored.frontend.canvas_objects.wire import Wire
 
 
 class Box:

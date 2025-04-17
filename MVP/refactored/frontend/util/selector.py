@@ -95,13 +95,10 @@ class Selector:
         box = self.canvas.add_box(loc=(x, y), style=const.RECTANGLE)
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete("sub_diagram")
-            wire.delete_self()
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
             box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
-            box_.delete_box()
         for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):
             spider.delete("sub_diagram")
-            spider.delete_spider()
             if self.canvas.receiver.listener:
                 self.canvas.receiver.receiver_callback(
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id

@@ -6,8 +6,8 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
+import constants as const
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.diagram_callback import Receiver
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.box import Box
@@ -20,18 +20,15 @@ from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.tikz_window import TikzWindow
-from MVP.refactored.frontend.util.event import Event
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-import constants as const
 
 
 class CustomCanvas(tk.Canvas):
     """
     `CustomCanvas` is a wrapper for `tkinter.Canvas` that all `canvas_objects` are drawn on.
     """
-    def __init__(self, master, receiver: Receiver, main_diagram,
-                 parent_diagram, add_boxes, id_=None, is_search=False, diagram_source_box=None, **kwargs):
+    def __init__(self, master, main_diagram, id_=None, is_search=False, diagram_source_box=None, **kwargs):
         """
         CustomCanvas constructor.
 
@@ -780,8 +777,6 @@ class CustomCanvas(tk.Canvas):
             current_wire.update()
             self.nullify_wire_start()
 
-        HypergraphManager.modify_canvas_hypergraph(self)
-
     def cancel_wire_pulling(self, event=None):
         """
         Cancel Wire pulling.
@@ -1331,23 +1326,6 @@ class CustomCanvas(tk.Canvas):
                 c_max = connection.index
                 c = connection
         return c
-
-    def setup_column_removal(self, item, found):
-        if not found and item.snapped_x:
-            self.remove_from_column(item, item.snapped_x)
-            item.snapped_x = None
-            item.prev_snapped = None
-        elif item.is_snapped and found and item.snapped_x != item.prev_snapped:
-            self.remove_from_column(item, item.prev_snapped)
-        item.is_snapped = found
-        item.prev_snapped = item.snapped_x
-
-    def remove_from_column(self, item, snapped_x):
-        self.columns[snapped_x].remove(item)
-        if len(self.columns[snapped_x]) == 1:
-            self.columns[snapped_x][0].snapped_x = None
-            self.columns[snapped_x][0].is_snapped = False
-            self.columns.pop(snapped_x, None)
 
     def export_hypergraph(self):
         """
