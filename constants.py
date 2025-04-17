@@ -12,9 +12,9 @@ BOXES_CONF = CONF_DIR + "boxes_conf.json"
 # box shapes
 RECTANGLE = "rectangle"
 TRIANGLE = "triangle"
-AND_GATE = "logic_and"
-OR_GATE = "logic_or"
-XOR_GATE = "logic_xor"
+AND_GATE = "and_gate"
+OR_GATE = "or_gate"
+XOR_GATE = "xor_gate"
 
 SHAPES = [RECTANGLE, TRIANGLE, AND_GATE, OR_GATE, XOR_GATE]
 
