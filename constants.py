@@ -16,6 +16,8 @@ AND_GATE = "logic_and"
 OR_GATE = "logic_or"
 XOR_GATE = "logic_xor"
 
+SHAPES = [RECTANGLE, TRIANGLE]
+
 # box sides
 LEFT = "left"
 RIGHT = "right"

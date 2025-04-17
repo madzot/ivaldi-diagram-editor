@@ -137,11 +137,9 @@ class Box:
 
             sub_menu = tk.Menu(self.context_menu, tearoff=0)
             self.context_menu.add_cascade(menu=sub_menu, label="Shape")
-            sub_menu.add_command(label="Rectangle", command=lambda shape=const.RECTANGLE: self.change_shape(shape))
-            sub_menu.add_command(label="Triangle", command=lambda shape=const.TRIANGLE: self.change_shape(shape))
-            sub_menu.add_command(label="AND gate", command=lambda shape=const.AND_GATE: self.change_shape(shape))
-            sub_menu.add_command(label="OR gate", command=lambda shape=const.OR_GATE: self.change_shape(shape))
-            sub_menu.add_command(label="XOR gate", command=lambda shape=const.XOR_GATE: self.change_shape(shape))
+
+            for shape in const.SHAPES:
+                sub_menu.add_command(label=shape, command=lambda style=shape: self.change_shape(style))
 
         if self.locked:
             self.context_menu.add_command(label="Unlock Box", command=self.unlock_box)
