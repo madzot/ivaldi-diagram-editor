@@ -816,10 +816,9 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        shapes = [const.RECTANGLE, const.TRIANGLE]
         self.shape_dropdown_menu.delete(0, tk.END)
 
-        for shape in shapes:
+        for shape in const.SHAPES:
             self.shape_dropdown_menu.add_command(label=shape,
                                                  command=lambda s=shape: self.custom_canvas.set_box_shape(s))
 
