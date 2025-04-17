@@ -6,7 +6,7 @@ import constants as const
 
 
 class Selector:
-    def __init__(self, main_diagram, canvas=None):
+    def __init__(self, main_diagram, receiver, canvas=None):
         if canvas is None:
             self.canvas = main_diagram.custom_canvas
         else:
@@ -23,6 +23,7 @@ class Selector:
         self.copied_wire_list = []
         self.copied_left_wires = []
         self.copied_right_wires = []
+        self.receiver = receiver
 
     def start_selection(self, event):
         for item in self.selected_items:
@@ -94,17 +95,19 @@ class Selector:
         box = self.canvas.add_box(loc=(x, y), style=const.RECTANGLE)
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete("sub_diagram")
+            wire.delete_self()
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
             box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
+            box_.delete_box()
         for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):
             spider.delete("sub_diagram")
+            spider.delete_spider()
             if self.canvas.receiver.listener:
                 self.canvas.receiver.receiver_callback(
                     'create_spider_parent', wire_id=spider.id, connection_id=spider.id, generator_id=box.id
                 )
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
-        self.canvas.receiver.listener = False
         self.canvas.copier.copy_canvas_contents(
             sub_diagram, self.selected_wires, self.selected_boxes, self.selected_spiders, coordinates, box
         )

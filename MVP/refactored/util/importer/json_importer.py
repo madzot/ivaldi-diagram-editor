@@ -3,6 +3,8 @@ import json
 import random
 import string
 from tkinter import messagebox, filedialog
+from tkinter import messagebox
+from typing import List
 from typing import TextIO
 
 from MVP.refactored.frontend.canvas_objects.connection import Connection
@@ -12,6 +14,7 @@ import constants as const
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
+from constants import *
 
 
 class JsonImporter(Importer):
@@ -36,18 +39,21 @@ class JsonImporter(Importer):
             self.id_randomize[id_] = hex_dig
             return hex_dig
 
-    def start_import(self, json_file: TextIO):
+    def start_import(self, json_files: List[TextIO]) -> str:
+        json_file = json_files[0]
         data = json.load(json_file)
         self.load_static_variables(data)
         data = data["main_canvas"]
-        self.load_everything_to_canvas(data, self.canvas)
 
-    def load_everything_to_canvas(self, d, canvas):
-        multi_x, multi_y = self.find_multiplier(d)
-        self.load_boxes_to_canvas(d, canvas, multi_x, multi_y)
-        self.load_spiders_to_canvas(d, canvas, multi_x, multi_y)
-        self.load_io_to_canvas(d, canvas)
-        self.load_wires_to_canvas(d, canvas)
+        self.load_everything_to_canvas(data, self.canvas)
+        return os.path.basename(json_file.name)
+
+    def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
+        multi_x, multi_y = self.find_multiplier(data)
+        self.load_boxes_to_canvas(data, canvas, multi_x, multi_y)
+        self.load_spiders_to_canvas(data, canvas, multi_x, multi_y)
+        self.load_io_to_canvas(data, canvas)
+        self.load_wires_to_canvas(data, canvas)
 
     @staticmethod
     def load_static_variables(data):

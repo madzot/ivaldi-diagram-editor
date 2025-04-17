@@ -1,4 +1,8 @@
+from __future__ import annotations
 import tkinter as tk
+
+from MVP.refactored.backend.types.connection_side import ConnectionSide
+
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 import constants as const
 
@@ -13,7 +17,7 @@ class Connection:
 
     active_types = 1
 
-    def __init__(self, box, index, side, location, canvas, r=5, id_=None, connection_type=ConnectionType.GENERIC):
+    def __init__(self, box, index, side: ConnectionSide, location, canvas, r=5, id_=None, connection_type=ConnectionType.GENERIC):
         """
         Connection constructor.
 
@@ -29,7 +33,7 @@ class Connection:
         self.canvas = canvas
         self.box = box  # None if connection is diagram input/output/spider
         self.index = index
-        self.side = side  # 'spider' if connection is a spider
+        self.side: ConnectionSide = side  # 'spider' if connection is a spider
         self.location = location
         self.type = connection_type
         self.wire = None
@@ -355,3 +359,14 @@ class Connection:
         :return: None
         """
         self.change_color(color=const.BLACK)
+
+    def __eq__(self, __value):
+        if isinstance(__value, Connection):
+            return self.id == __value.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __repr__(self):
+        return f"Connection(id={self.id}, box={self.box}, index={self.index}, side={self.side}, location={self.location})"

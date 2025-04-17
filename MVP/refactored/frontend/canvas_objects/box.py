@@ -5,10 +5,19 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
 
+from typing import TYPE_CHECKING
+
+from MVP.refactored.backend.types.ActionType import ActionType
+from MVP.refactored.backend.types.connection_side import ConnectionSide
+from MVP.refactored.backend.box_functions.box_function import BoxFunction, predefined_functions
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 import constants as const
+from constants import *
+
+if TYPE_CHECKING:
+    from MVP.refactored.frontend.canvas_objects.wire import Wire
 
 
 class Box:
@@ -69,14 +78,19 @@ class Box:
         self.sub_diagram = None
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add", generator_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_CREATE, generator_id=self.id, canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
-                self.receiver.receiver_callback("sub_box", generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id)
+                self.receiver.receiver_callback(ActionType.BOX_SUB_BOX, generator_id=self.id,
+                                                connection_id=self.canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
 
         self.is_snapped = False
 
         self.collision_ids = [self.shape, self.resize_handle]
+        self.box_function: BoxFunction = None
+
+    def remove_wire(self, wire: Wire):
+        self.wires.remove(wire)
 
     def set_id(self, id_):
         """
@@ -86,10 +100,12 @@ class Box:
         :return: None
         """
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
+            self.receiver.receiver_callback(ActionType.BOX_SWAP_ID, generator_id=self.id, new_id=id_,
+                                            canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
-                self.receiver.receiver_callback("sub_box", generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id)
+                self.receiver.receiver_callback(ActionType.BOX_SUB_BOX, generator_id=self.id,
+                                                connection_id=self.canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
         self.id = id_
 
     def bind_events(self):
@@ -147,6 +163,7 @@ class Box:
             self.context_menu.add_command(label="Unfold sub-diagram", command=self.unfold)
             self.context_menu.add_command(label="Lock Box", command=self.lock_box)
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
+        self.context_menu.add_command(label="Add function", command=lambda: self.add_function(event))
         if self.sub_diagram:
             self.context_menu.add_command(label="Delete Box", command=lambda: self.delete_box(action="sub_diagram"))
         else:
@@ -173,6 +190,39 @@ class Box:
         self.on_press(event)
         self.canvas.paste_copied_items(event)
 
+    def add_function(self, event):
+        menu = tk.Menu(self.canvas, tearoff=0)
+        for name in predefined_functions:
+            menu.add_command(label=name, command=lambda function=name: self.set_predefined_function(function))
+        menu.add_command(label="Add custom function", command=self.show_add_custom_function_menu)
+        menu.post(event.x_root, event.y_root)
+
+    def show_add_custom_function_menu(self):
+        file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
+                                      filetypes=(("Python script", "*.py"),))
+        if file:
+            box_function = BoxFunction(predefined_function_file_name=file.name, file_code=file.read())
+            self.set_box_function(box_function)
+
+    def set_predefined_function(self, name: str):
+        box_function = BoxFunction(predefined_function_file_name=name, is_predefined_function=True)
+        self.set_box_function(box_function)
+
+    def set_box_function(self, box_function: BoxFunction):
+        self.box_function = box_function
+        self.receiver.receiver_callback(ActionType.BOX_SET_FUNCTION, generator_id=self.id, canvas_id=self.canvas.id,
+                                        box_function=box_function)
+
+    def get_box_function(self) -> BoxFunction:
+        return self.box_function
+
+    def count_inputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "left":
+                count += 1
+        return count
+
     def open_editor(self):
         """
         Open a CodeEditor for Box.
@@ -180,6 +230,27 @@ class Box:
         :return: None
         """
         CodeEditor(self.canvas.main_diagram, box=self)
+
+    def count_outputs(self) -> int:
+        count = 0
+        for connection in self.connections:
+            if connection.side == "right":
+                count += 1
+        return count
+
+    def get_inputs(self) -> list[int]:
+        inputs = []
+        for connection in self.connections:
+            if connection.side == "left":
+                inputs.append(connection.wire.id)
+        return inputs
+
+    def get_outputs(self) -> list[int]:
+        outputs = []
+        for connection in self.connections:
+            if connection.side == "right":
+                outputs.append(connection.wire.id)
+        return outputs
 
     def save_box_to_menu(self):
         """
@@ -218,9 +289,9 @@ class Box:
 
         :return: None
         """
-        if self.locked:
+        if self.locked or self.sub_diagram:
             return
-        # ask for inputs amount
+        # ask for input amount
         inputs = simpledialog.askstring(title="Inputs (left connections)", prompt="Enter amount")
         if inputs and not inputs.isdigit():
             while True:
@@ -232,7 +303,7 @@ class Box:
                 else:
                     break
 
-        # ask for outputs amount
+        # ask for output amount
         outputs = simpledialog.askstring(title="Outputs (right connections)", prompt="Enter amount")
         if outputs and not outputs.isdigit():
             while True:
@@ -261,7 +332,8 @@ class Box:
 
         # add new connections
         if not self.canvas.is_search:
-            self.receiver.receiver_callback("box_remove_connection_all", generator_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_REMOVE_ALL_CONNECTIONS, generator_id=self.id,
+                                            canvas_id=self.canvas.id)
         if outputs:
             for _ in range(int(outputs)):
                 self.add_right_connection()
@@ -281,8 +353,6 @@ class Box:
         :return: CustomCanvas sub-diagram
         """
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-        if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self.canvas.main_diagram,
                                             id_=self.id, highlightthickness=0,
@@ -299,11 +369,14 @@ class Box:
                 if switch:
                     self.canvas.main_diagram.switch_canvas(self.sub_diagram)
 
-            return self.sub_diagram
         else:
             if switch:
                 self.canvas.main_diagram.switch_canvas(self.sub_diagram)
-            return self.sub_diagram
+
+        if self.receiver.listener and not self.canvas.is_search:
+            self.receiver.receiver_callback(ActionType.BOX_COMPOUND, generator_id=self.id, canvas_id=self.canvas.id,
+                                            new_canvas_id=self.sub_diagram.id)
+        return self.sub_diagram
 
     def close_menu(self):
         """
@@ -512,7 +585,6 @@ class Box:
 
         :return: None
         """
-        # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
         height = max([50 * nr_cs, 50])
         if self.size[1] < height:
@@ -588,7 +660,8 @@ class Box:
         :return: None
         """
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_OPERATOR, generator_id=self.id, operator=self.label_text,
+                                            canvas_id=self.canvas.id)
         if not self.label:
             self.label = self.canvas.create_text((self.x + self.size[0] / 2, self.y + self.size[1] / 2),
                                                  text=self.label_text, fill=const.BLACK, font=('Helvetica', 14))
@@ -836,8 +909,8 @@ class Box:
         self.update_connections()
         self.update_wires()
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add_left", generator_id=self.id, connection_nr=i,
-                                            connection_id=connection.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_LEFT, generator_id=self.id, connection_nr=i,
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
 
         self.resize_by_connections()
         return connection
@@ -863,12 +936,12 @@ class Box:
         self.update_connections()
         self.update_wires()
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add_right", generator_id=self.id, connection_nr=i,
-                                            connection_id=connection.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_RIGHT, generator_id=self.id, connection_nr=i,
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
         self.resize_by_connections()
         return connection
 
-    def remove_connection(self, circle):
+    def remove_connection(self, circle: Connection):
         """
         Remove a Connection from the box.
 
@@ -881,8 +954,14 @@ class Box:
             if c.index > circle.index and circle.side == c.side:
                 c.lessen_index_by_one()
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_remove_connection", generator_id=self.id, connection_nr=circle.index,
-                                            generator_side=circle.side)
+            if circle.side == ConnectionSide.LEFT:
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_LEFT, generator_id=self.id,
+                                                connection_nr=circle.index, connection_id=circle.id,
+                                                canvas_id=self.canvas.id)
+            elif circle.side == ConnectionSide.RIGHT:
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_RIGHT, generator_id=self.id,
+                                                connection_nr=circle.index, connection_id=circle.id,
+                                                canvas_id=self.canvas.id)
         if circle.side == const.LEFT:
             self.left_connections -= 1
         elif circle.side == const.RIGHT:
@@ -917,8 +996,7 @@ class Box:
         if self.sub_diagram and not keep_sub_diagram:
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
         if self.receiver.listener and not self.canvas.is_search:
-            if action != "sub_diagram":
-                self.receiver.receiver_callback("box_delete", generator_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_DELETE, generator_id=self.id, canvas_id=self.canvas.id)
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x, bypass=False):
@@ -1047,3 +1125,11 @@ class Box:
         if not outputs:
             outputs_amount = 0
         return inputs_amount, outputs_amount
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)

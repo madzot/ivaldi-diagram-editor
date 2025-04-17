@@ -65,7 +65,7 @@ class Toolbar(ttk.Frame):
         self.view_menu = tk.Menu(self.view_button, tearoff=False)
         self.view_button.config(menu=self.view_menu)
 
-        # View menu buttons
+        # # View menu buttons
         self.view_menu.add_command(label="Visualize hypergraph",
                                    command=lambda: self.main_diagram.visualize_as_graph(self.main_diagram.custom_canvas))
 
