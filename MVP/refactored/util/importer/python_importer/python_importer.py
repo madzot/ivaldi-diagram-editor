@@ -1,5 +1,7 @@
 import ast
 import os
+import random
+import string
 from typing import List
 from typing import TextIO
 
@@ -7,6 +9,7 @@ from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
+from MVP.refactored.util.importer.json_importer.function_call import FunctionCall
 
 
 class PythonImporter(Importer):
@@ -43,7 +46,7 @@ class PythonImporter(Importer):
 
     def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
         functions = data["functions"]
-        main_logic = data["main_logic"]
+        main_logic: List[FunctionCall] = data["main_logic"]
 
         elements_y_position = 300
         boxes_gap = 900 // (len(main_logic) - 1)
@@ -53,10 +56,10 @@ class PythonImporter(Importer):
         box_right_connection_spiders = {}
 
         for function_call in main_logic:
-            function_name = function_call["function_name"]
-            function_arguments = function_call["args"]
+            function_name = function_call.function_name
+            function_arguments = function_call.arguments
 
-            for assigned_variable in function_call["assigned_variables"]:
+            for assigned_variable in function_call.assigned_variables:
                 possible_outputs[assigned_variable] = function_name
 
             box_position = (box_x, elements_y_position)
@@ -94,11 +97,11 @@ class PythonImporter(Importer):
         return new_box
 
     @staticmethod
-    def _find_function_that_returns_variable(main_logic: dict, variable_to_find: str) -> str | None:
+    def _find_function_that_returns_variable(main_logic: List[FunctionCall], variable_to_find: str) -> str | None:
         for possible_right_connection_function in main_logic:
-            for assigned_variable in possible_right_connection_function["assigned_variables"]:
+            for assigned_variable in possible_right_connection_function.assigned_variables:
                 if assigned_variable == variable_to_find:
-                    return possible_right_connection_function["function_name"]
+                    return possible_right_connection_function.function_name
 
         return None
 
@@ -167,7 +170,8 @@ class PythonImporter(Importer):
                     and node.test.left.id == "__name__"
                     and isinstance(node.test.comparators[0], ast.Constant)
                     and node.test.comparators[0].value == "__main__"):
-                main_logic = PythonImporter.extract_main_logic(node.body)
+                main_logic = PythonImporter._extract_main_logic(node.body)
+                PythonImporter._convert_mutable_variables_to_immutable(main_logic)
 
         return functions, imports, main_logic
 
@@ -183,34 +187,96 @@ class PythonImporter(Importer):
         functions[func_name] = box_function
 
     @staticmethod
-    def extract_main_logic(nodes) -> List[dict]:
+    def _extract_main_logic(nodes) -> List[FunctionCall]:
         """Extract function calls from the main block."""
         main_logic = []
         functions_to_ignore = {"print"}
 
         for stmt in nodes:
-            function_call = stmt.value
-            function_name = function_call.func.id if isinstance(function_call.func, ast.Name) else None
+            node_function_call = stmt.value
+            function_name = node_function_call.func.id if isinstance(node_function_call.func, ast.Name) else None
             if function_name is None or function_name in functions_to_ignore:
                 continue
 
-            args = [
-                arg.id if isinstance(arg, ast.Name) else ast.dump(arg)
-                for arg in function_call.args
-            ]
+            arguments = []
+            for arg in node_function_call.args:
+                if isinstance(arg, ast.Name):
+                    arguments.append(arg.id)
+                else:
+                    arguments.append(ast.dump(arg))
 
-            assigned_vars = []
+            assigned_variables = []
             for target in stmt.targets:
                 if isinstance(target, ast.Tuple):
-                    assigned_vars.extend([t.id for t in target.elts if isinstance(t, ast.Name)])
+                    assigned_variables.extend([t.id for t in target.elts if isinstance(t, ast.Name)])
                 elif isinstance(target, ast.Name):
-                    assigned_vars.append(target.id)
+                    assigned_variables.append(target.id)
 
-            function_data = {"function_name": function_name, "args": args, "assigned_variables": assigned_vars}
-            main_logic.append(function_data)
+            function_call = FunctionCall(function_name, arguments, assigned_variables)
+            main_logic.append(function_call)
 
         return main_logic
 
+    @staticmethod
+    def _convert_mutable_variables_to_immutable(function_calls: List[FunctionCall]) -> None:
+        used_variable_names = set()
+        for function_call in function_calls:
+            for assigned_variable in function_call.assigned_variables:
+                used_variable_names.add(assigned_variable)
+
+        declared_variable_names = set()
+        variables_new_names = {}
+
+        for function_call in function_calls:
+
+            arguments = function_call.arguments
+            for index in range(len(arguments)):
+                argument = arguments[index]
+
+                if argument in variables_new_names.keys():
+                    arguments[index] = variables_new_names[argument]
+
+            assigned_variables = function_call.assigned_variables
+            for index in range(len(assigned_variables)):
+                assigned_variable = assigned_variables[index]
+
+                if assigned_variable in declared_variable_names:
+                    new_variable_name = assigned_variable
+                    while new_variable_name in used_variable_names :
+                        new_variable_name = PythonImporter._generate_new_variable_name(assigned_variable)
+
+                    assigned_variables[index] = new_variable_name
+                    variables_new_names[assigned_variable] = new_variable_name
+                else:
+                    declared_variable_names.add(assigned_variable)
+
+    @staticmethod
+    def _check_and_replace_variables(variables: List[str],
+                                     declared_variable_names: set,
+                                     variables_new_names: dict,
+                                     used_variable_names: set) -> None:
+        for index in range(len(variables)):
+            variable = variables[index]
+
+            if variable in declared_variable_names:
+                if variable in variables_new_names.keys():
+                    variables[index] = variables_new_names[variable]
+                else:
+                    new_variable_name = variable
+                    while new_variable_name in used_variable_names:
+                        new_variable_name = PythonImporter._generate_new_variable_name(variable)
+
+                    variables[index] = new_variable_name
+                    variables_new_names[variable] = new_variable_name
+            else:
+                declared_variable_names.add(variable)
+
+    @staticmethod
+    def _generate_new_variable_name(variable_name: str) -> str:
+        """Generate a new variable name by appending a random suffix."""
+        chars = string.ascii_letters + string.digits
+        suffix = ''.join(random.choice(chars) for _ in range(10))
+        return f"{variable_name}_{suffix}"
 
     @staticmethod
     def _extract_imports(node, imports):

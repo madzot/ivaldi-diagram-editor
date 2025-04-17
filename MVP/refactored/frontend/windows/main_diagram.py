@@ -26,8 +26,8 @@ from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
-from MVP.refactored.util.importer.json_importer import JsonImporter
-from MVP.refactored.util.importer.python_importer import PythonImporter
+from MVP.refactored.util.importer.json_importer.json_importer import JsonImporter
+from MVP.refactored.util.importer.python_importer.python_importer import PythonImporter
 from constants import *
 
 
