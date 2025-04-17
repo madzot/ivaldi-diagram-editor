@@ -554,7 +554,7 @@ class Box:
         if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
-                if len(text) > 100:
+                if len(text) > 50:
                     self.canvas.main_diagram.show_error_dialog("Label must be less than 100 characters.")
                     return self.edit_label()
                 self.label_text = text
@@ -570,7 +570,7 @@ class Box:
                             else:
                                 return self.edit_label()
         else:
-            if len(new_label) > 100:
+            if len(new_label) > 50:
                 return
             self.label_text = new_label
 

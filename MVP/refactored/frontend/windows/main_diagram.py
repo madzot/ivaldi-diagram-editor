@@ -329,7 +329,7 @@ class MainDiagram(tk.Tk):
         :param new_label: String that old label will be changed to
         :return: None
         """
-        if len(new_label) > 100:
+        if len(new_label) > 50:
             self.show_error_dialog("Label must be less than 100 characters.")
             return
         if old_label in self.label_content.keys():
