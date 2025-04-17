@@ -389,6 +389,38 @@ you see when using the application.
 
 ---
 
+## ManageBoxes
+
+`ManageBoxes` is a window that allows the user to manage the preset Boxes in the application. It's where they can see
+what preset Boxes exist and remove them if necessary.
+
+### ManageBoxes params
+
+| **Param**    | **Type**    | **Description**                                                |
+|--------------|-------------|----------------------------------------------------------------|
+| master       | Tk          | Master application.                                            |
+| main_diagram | MainDiagram | MainDiagram object used for accessing functions and variables. |
+
+### ManageBoxes variables
+
+| **Variable** | **Type**        | **Description**                                                | 
+|--------------|-----------------|----------------------------------------------------------------| 
+| main_diagram | MainDiagram     | MainDiagram object used for accessing functions and variables. |
+| listbox      | tkinter.Listbox | Listbox object that holds preset Boxes                         |
+
+### ManageBoxes variables
+
+    .remove_selected_item()
+        Removes the currently selected item from the Listbox.
+
+    .remove_option(option)
+        Removes the given preset Box from config files.
+
+        Parameters:
+            option (str): Name of the preset Box to remove.
+
+---
+
 ## ManageMethods
 
 `ManageMethods` is a window that allows overview and management of functions in the application. These are functions 

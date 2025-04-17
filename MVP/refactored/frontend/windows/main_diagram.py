@@ -21,6 +21,7 @@ from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Toolbar
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
+from MVP.refactored.frontend.windows.manage_boxes import ManageBoxes
 from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.frontend.windows.search_window import SearchWindow
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
@@ -666,25 +667,7 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        list_window = tk.Toplevel(self)
-        list_window.title("List of Elements")
-
-        def remove_selected_item():
-            selected_item_index = listbox.curselection()
-            if selected_item_index:
-                name = listbox.get(selected_item_index)
-                self.remove_option(name)
-                listbox.delete(selected_item_index)
-
-        listbox = tk.Listbox(list_window, selectmode=tk.SINGLE)
-        listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
-        [listbox.insert(tk.END, item) for item in self.boxes]
-
-        button_frame = tk.Frame(list_window)
-        button_frame.pack(pady=10)
-
-        remove_button = tk.Button(button_frame, text="Remove Item", command=remove_selected_item)
-        remove_button.pack(side=tk.LEFT, padx=5)
+        ManageBoxes(self, self)
 
     def manage_quick_create(self):
         """
