@@ -177,13 +177,14 @@ class MainDiagram(tk.Tk):
             button.pack(side=tk.BOTTOM, padx=5, pady=5)
             self.saved_buttons[name] = button
 
-        if load:
-            self.load_from_file()
         self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
+
+        if load:
+            self.load_from_file()
 
         self.update()
         self.minsize(self.winfo_width(), self.winfo_height())
@@ -210,6 +211,16 @@ class MainDiagram(tk.Tk):
         if os.stat(const.FUNCTIONS_CONF).st_size != 0:
             with open(const.FUNCTIONS_CONF, "r") as file:
                 self.label_content = json.load(file)
+
+    def add_function_to_label_content(self, function_name: str, function_code: str) -> None:
+        """
+        Add function to label content dictionary.
+
+        :param function_name: Name of the function.
+        :param function_code: Code of the function.
+        :return: None
+        """
+        self.label_content[function_name] = function_code
 
     def generate_code(self):
         """
