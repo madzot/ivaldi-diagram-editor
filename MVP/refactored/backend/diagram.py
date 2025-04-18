@@ -4,7 +4,6 @@ from typing import Self
 from MVP.refactored.backend.generator import Generator
 from MVP.refactored.backend.resource import Resource
 from MVP.refactored.backend.types.connection_info import ConnectionInfo
-from MVP.refactored.backend.types.connection_side import ConnectionSide
 
 
 class Diagram:
@@ -14,8 +13,9 @@ class Diagram:
         self.boxes: list[Generator] = []
         self.resources: list[Resource] = []
         self.spiders: list[Resource] = []
-        self.sub_diagrams: list[Diagram] = [] # There is sub diagram of diagram. If sub diagram contains one more sub diagram,
-        # it won't be added here. Only to sub diagram`s sub diagram
+        self.sub_diagrams: list[
+            Diagram] = []  # There is sub diagram of diagram. If sub diagram contains one more sub diagram.
+        # It won't be added here. Only to sub diagram's sub diagram
 
     def get_generator_by_id(self, box_id: int) -> Generator:
         return next((b for b in self.boxes if b.id == box_id), None)
@@ -23,7 +23,7 @@ class Diagram:
     def get_resource_by_id(self, resource_id: int) -> Resource:
         return next((r for r in self.resources if r.id == resource_id), None)
 
-    def get_spider_by_id(self, spider_id: int) -> Resource|None:
+    def get_spider_by_id(self, spider_id: int) -> Resource | None:
         return next((s for s in self.spiders if s.id == spider_id), None)
 
     def get_input_by_id(self, input_id):
@@ -84,25 +84,25 @@ class Diagram:
                 self.output.remove(i)
                 return
 
-    def remove_box_by_id(self, id: int):
+    def remove_box_by_id(self, box_id: int):
         for box in self.boxes:
-            if box.id == id:
+            if box.id == box_id:
                 self.boxes.remove(box)
                 return
 
-    def remove_resource_by_id(self, id: int):
+    def remove_resource_by_id(self, resource_id: int):
         for resource in self.resources:
-            if resource.id == id:
+            if resource.id == resource_id:
                 self.resources.remove(resource)
-                if not resource.spider: # if it is wire, we need to remove connections from spiders, because spider connections lives as long as they connected to smt
+                if not resource.spider:  # if it is wire, we need to remove connections from spiders, because spider connections live as long as they connected to smt
                     for connection in resource.get_spider_connections():
                         spider = self.get_spider_by_id(connection.id)
                         spider.remove_spider_connection_by_index(connection.index)
                 return
 
-    def remove_spider_by_id(self, id: int):
+    def remove_spider_by_id(self, spider_id: int):
         for spider in self.spiders:
-            if spider.id == id:
+            if spider.id == spider_id:
                 self.spiders.remove(spider)
                 return
 
@@ -153,4 +153,3 @@ class Diagram:
         self.output = data.get("output", [])
         self.boxes = [Generator.from_dict(box_data) for box_data in data.get("boxes", [])]
         self.resources = [Resource.from_dict(resource_data) for resource_data in data.get("resources", [])]
-

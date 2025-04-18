@@ -17,7 +17,6 @@ class ConnectionInfo:
         self.resource_id = related_resource_id
         self.side = connection_side
         self.id = connection_id
-        # self.related_object = related_object
         self.related_object: Resource | Generator | None = None  # spider or box
         self.set_related_object(related_object)
 
@@ -39,8 +38,8 @@ class ConnectionInfo:
     def get_box_id(self) -> int:
         return self.box_id
 
-    def set_box_id(self, id: int | None):
-        self.box_id = id
+    def set_box_id(self, box_id: int | None):
+        self.box_id = box_id
 
     def set_related_object(self, related_object: Resource | Generator | None):
         self.related_object = related_object

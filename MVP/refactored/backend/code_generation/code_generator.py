@@ -87,7 +87,7 @@ class CodeGenerator:
         Retrieve a mapping of BoxFunction objects to the set of names of globals and
         functions associated with each BoxFunction.
         """
-        box_functions_items_names: dict[BoxFunction, set[str]] = {}  # {box_func: set(of all names of globals and functions)}
+        box_functions_items_names: dict[BoxFunction, set[str]] = {}  # {box_func: set (of all names of globals and functions)}
 
         for box_function in box_functions:
             variables = set()
@@ -333,7 +333,7 @@ class CodeGenerator:
                         nodes_with_inputs.add(target_node)
                         nodes_with_inputs.update(target_node.get_united_with_nodes())
 
-                    # Then recursively process inside graphs
+                    # Then recursive process inside graphs
                     for subgraph in hyper_edge.get_hypergraphs_inside():
                         cls.get_queue_of_hyper_edges(subgraph, hyper_edge_queue, seen_hyper_edges)
                 else:
