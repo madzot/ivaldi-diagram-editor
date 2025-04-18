@@ -1,5 +1,7 @@
+import math
 import matplotlib.pyplot as plt
 import hypernetx as hnx
+import matplotlib.patches as patches
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.node import Node
@@ -9,16 +11,63 @@ class Visualization:
 
     @classmethod
     def create_visualization_of_hypergraphs(cls, canvas_id: int) -> plt.Figure:
+        """
+        Create a visualization of all hypergraphs associated with a given canvas ID.
+
+        This method retrieves all hypergraphs linked to the specified canvas ID and
+        generates a grid of subplots, each displaying a visualization of a hypergraph.
+        If no hypergraphs are found, it returns None.
+        """
         hypergraphs: list[Hypergraph] = HypergraphManager.get_graphs_by_canvas_id(canvas_id)
-        visualizations: list[plt.Figure] = []
-        for hypergraph in hypergraphs:
-            visualization = cls.create_visualization_of_hypergraph(hypergraph)
-            visualizations.append(visualization)
-        return cls.combine_visualizations(visualizations)
+        n = len(hypergraphs)
+        if n == 0:
+            return None
+
+        cols = math.ceil(math.sqrt(n))
+        rows = math.ceil(n / cols)
+
+        fig, axs = plt.subplots(rows, cols, figsize=(cols * 8, rows * 8))
+        fig.patch.set_facecolor('white')
+        axs = axs.flatten() if n > 1 else [axs]
+
+        for i, hypergraph in enumerate(hypergraphs):
+            outer_ax = axs[i]
+            outer_ax.set_xticks([])
+            outer_ax.set_yticks([])
+            outer_ax.set_title(f"Hypergraph {hypergraph.id}", fontsize=14)
+            outer_ax.set_frame_on(False)
+
+            rect = patches.Rectangle(
+                (0, 0), 1, 1,
+                transform=outer_ax.transAxes,
+                linewidth=2,
+                edgecolor='black',
+                facecolor='none',
+                zorder=10
+            )
+            outer_ax.add_patch(rect)
+
+            inset_box = [0.125, 0.125, 0.75, 0.75]  # [x0, y0, width, height]
+            inset_ax = outer_ax.inset_axes(inset_box)
+            inset_ax.axis('off')
+
+            cls.create_visualization_of_hypergraph(hypergraph, ax=inset_ax)
+
+        for j in range(len(hypergraphs), len(axs)):
+            axs[j].set_visible(False)
+
+        plt.tight_layout()
+        return fig
 
     @classmethod
-    def create_visualization_of_hypergraph(cls, hypergraph: Hypergraph) -> plt.Figure:
-        # Prepare data for HyperNetX
+    def create_visualization_of_hypergraph(cls, hypergraph: Hypergraph, ax=None) -> None:
+        """
+        Create a visualization of a single hypergraph.
+
+        This method generates a visualization of the given hypergraph, including its
+        nodes and edges. Nodes are color-coded based on their roles (source or target),
+        and a legend is added to the plot.
+        """
         edge_dict = {}
         node_roles = {}
         for edge in hypergraph.get_all_hyper_edges():
@@ -43,27 +92,21 @@ class Visualization:
         color_map = {
             frozenset(['source']): 'darkgreen',
             frozenset(['target']): 'red',
-            frozenset(['source', 'target']): 'plum',
         }
 
         node_facecolors = {
             node.id: color_map.get(frozenset(roles), 'black')
             for node, roles in node_roles.items()
         }
+
         H = hnx.Hypergraph(edge_dict)
+        hnx.draw(H, with_node_labels=True, with_edge_labels=True, ax=ax,
+                 nodes_kwargs={"facecolors": node_facecolors})
 
-        fig, ax = plt.subplots(figsize=(10, 10))
-        fig.patch.set_facecolor('white')
-        ax.axis('off')
-
-        hnx.draw(H, with_node_labels=True, with_edge_labels=True, ax=ax, nodes_kwargs={"facecolors": node_facecolors})
-
-        plt.title("Hypergraph Visualization (HyperNetX)", fontsize=16, color='black')
-        plt.tight_layout()
-        return fig
-
-    @classmethod
-    def combine_visualizations(cls, visualizations: list[plt.Figure]) -> plt.Figure:
-        if not visualizations:
-            return None
-        return visualizations[0]
+        # Add legend
+        if ax is not None:
+            legend_elements = [
+                patches.Patch(facecolor='darkgreen', label='Source Node'),
+                patches.Patch(facecolor='red', label='Target Node'),
+            ]
+            ax.legend(handles=legend_elements, loc='lower left', fontsize=10, frameon=True)

@@ -409,14 +409,13 @@ class MainDiagram(tk.Tk):
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
-        # try:
-        #     figure = Visualization.create_visualization_of_hypergraphs(self.custom_canvas.id)
-        # except Exception as e:
-        #     messagebox.showerror("Error", "Failed to generate the visualization." +
-        #                          f"Error during visualization: {e}")
-        #     plot_window.destroy()
-        #     return
-        figure = Visualization.create_visualization_of_hypergraphs(self.custom_canvas.id)
+        try:
+            figure = Visualization.create_visualization_of_hypergraphs(self.custom_canvas.id)
+        except Exception as e:
+            messagebox.showerror("Error", "Failed to generate the visualization." +
+                                 f"Error during visualization: {e}")
+            plot_window.destroy()
+            return
 
         figure_canvas = FigureCanvasTkAgg(figure, master=plot_window)
         figure_canvas.draw()
