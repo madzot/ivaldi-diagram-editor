@@ -14,6 +14,7 @@ import constants as const
 
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
+from MVP.refactored.util.string_util import StringUtil
 from constants import *
 
 
@@ -136,17 +137,8 @@ class JsonImporter(Importer):
             for con in [c for box in canvas.boxes for c in
                         box.connections] + canvas.inputs + canvas.outputs + canvas.spiders:
                 if con.id == end_c_id:
-                    canvas.end_wire_to_connection(
-                        con, True)
+                    canvas.end_wire_to_connection(con, True)
                     break
-
-    @staticmethod
-    def generate_random_string(length):
-        # Define the possible characters for the random string
-        characters = string.ascii_letters + string.digits + string.punctuation
-        # Generate a random string using the specified characters
-        random_string = ''.join(random.choice(characters) for _ in range(length))
-        return random_string
 
     def load_boxes_to_menu(self):
         try:
@@ -159,7 +151,7 @@ class JsonImporter(Importer):
 
     def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
         with (open(const.BOXES_CONF, 'r') as json_file):
-            self.seed = self.generate_random_string(10)
+            self.seed = StringUtil.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]

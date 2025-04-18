@@ -1,7 +1,5 @@
 import ast
 import os
-import random
-import string
 from typing import List
 from typing import TextIO
 
@@ -10,6 +8,7 @@ from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
 from MVP.refactored.util.importer.json_importer.function_call import FunctionCall
+from MVP.refactored.util.string_util import StringUtil
 
 
 class PythonImporter(Importer):
@@ -244,40 +243,12 @@ class PythonImporter(Importer):
                 if assigned_variable in declared_variable_names:
                     new_variable_name = assigned_variable
                     while new_variable_name in used_variable_names :
-                        new_variable_name = PythonImporter._generate_new_variable_name(assigned_variable)
+                        new_variable_name = StringUtil.generate_new_variable_name(assigned_variable)
 
                     assigned_variables[index] = new_variable_name
                     variables_new_names[assigned_variable] = new_variable_name
                 else:
                     declared_variable_names.add(assigned_variable)
-
-    @staticmethod
-    def _check_and_replace_variables(variables: List[str],
-                                     declared_variable_names: set,
-                                     variables_new_names: dict,
-                                     used_variable_names: set) -> None:
-        for index in range(len(variables)):
-            variable = variables[index]
-
-            if variable in declared_variable_names:
-                if variable in variables_new_names.keys():
-                    variables[index] = variables_new_names[variable]
-                else:
-                    new_variable_name = variable
-                    while new_variable_name in used_variable_names:
-                        new_variable_name = PythonImporter._generate_new_variable_name(variable)
-
-                    variables[index] = new_variable_name
-                    variables_new_names[variable] = new_variable_name
-            else:
-                declared_variable_names.add(variable)
-
-    @staticmethod
-    def _generate_new_variable_name(variable_name: str) -> str:
-        """Generate a new variable name by appending a random suffix."""
-        chars = string.ascii_letters + string.digits
-        suffix = ''.join(random.choice(chars) for _ in range(10))
-        return f"{variable_name}_{suffix}"
 
     @staticmethod
     def _extract_imports(node, imports):
