@@ -129,10 +129,8 @@ class CodeEditor:
         """
         self.save_to_file()
         self.main_diagram.load_functions()
-        if self.box:
-            self.update_boxes()
-        else:
-            self.main_diagram.manage_methods.add_methods()
+        self.update_boxes()
+        self.main_diagram.manage_methods.add_methods()
         if destroy:
             self.window.destroy()
 
@@ -180,6 +178,6 @@ class CodeEditor:
         :return: None
         """
         for box in self.main_diagram.custom_canvas.boxes:
-            if box.label_text in self.box.label_text:
+            if box.label_text == self.label:
                 box.update_io()
         self.main_diagram.label_content[self.label] = self.code_view.get('1.0', tk.END)
