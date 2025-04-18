@@ -91,9 +91,10 @@ class PythonImporter(Importer):
         new_box = canvas.add_box(box_position)
         new_box.set_label(function_name)
 
-        box_function = functions[function_name]
+        box_function: BoxFunction = functions[function_name]
         new_box.set_box_function(box_function)
 
+        canvas.main_diagram.add_function_to_label_content(function_name, box_function.main_function)
         return new_box
 
     @staticmethod
