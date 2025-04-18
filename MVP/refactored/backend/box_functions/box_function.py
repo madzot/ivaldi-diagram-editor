@@ -2,6 +2,7 @@ import os
 from typing import Optional, List
 
 from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
+from MVP.refactored.backend.box_functions.function_structure.function_parser import FunctionParser
 
 
 def get_predefined_functions() -> dict:
@@ -49,6 +50,8 @@ class BoxFunction:
         else:
             self.main_function: str = function
 
+        self._create_function_structure()
+
     def _set_data_from_file_code(self, file_code: str):
         """
         Parse and extract data from the provided file code.
@@ -61,6 +64,12 @@ class BoxFunction:
         self.helper_functions = CodeInspector.get_help_methods(file_code, self.main_function_name)
         self.imports = CodeInspector.get_imports(file_code)
         self.global_statements = list(CodeInspector.get_global_statements(file_code))
+
+    def _create_function_structure(self):
+        if not self.main_function:
+            raise ValueError("Cannot create function structure without a main function.")
+
+        self.function_structure = FunctionParser.parse_function_structure(self.main_function)
 
     def __eq__(self, other):
         """

@@ -7,7 +7,7 @@ from MVP.refactored.backend.box_functions.box_function import BoxFunction
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
-from MVP.refactored.util.importer.json_importer.function_call import FunctionCall
+from MVP.refactored.util.importer.python_importer.function_call import FunctionCall
 from MVP.refactored.util.string_util import StringUtil
 
 
