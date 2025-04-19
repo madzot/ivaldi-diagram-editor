@@ -45,7 +45,7 @@ class Box:
         self.rel_y = round(y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         self.start_x = x
         self.start_y = y
-        self.size = size
+        self.size = list(size)
         self.x_dif = 0
         self.y_dif = 0
         self.connections: list[Connection] = []
