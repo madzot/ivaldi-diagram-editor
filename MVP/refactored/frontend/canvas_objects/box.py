@@ -1124,6 +1124,13 @@ class Box:
         return inputs_amount, outputs_amount
 
     def update_coords(self, x, y):
+        """
+        Updates Box logical and display coordinates based on MainDiagram rotation.
+
+        :param x: The new logical x-coordinate of the Box.
+        :param y: The new logical y-coordinate of the Box.
+        :return: None
+        """
         self.x = x
         self.y = y
         match self.canvas.main_diagram.rotation:
@@ -1141,6 +1148,12 @@ class Box:
                 self.display_y = y
 
     def get_logical_size(self, size):
+        """
+        Return the logical size of the Box, adjusted for the diagram's rotation.
+
+        :param size: The size of the Box as [width, height].
+        :return: The logical size of the Box after rotation adjustment.
+        """
         match self.canvas.main_diagram.rotation:
             case 90 | 270:
                 return [size[1], size[0]]

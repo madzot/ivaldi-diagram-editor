@@ -359,6 +359,13 @@ class Connection:
         self.change_color(color=const.BLACK)
 
     def update_coords(self, x, y):
+        """
+        Updates Connection logical and display coordinates based on MainDiagram rotation.
+
+        :param x: The new logical x-coordinate of the Connection.
+        :param y: The new logical y-coordinate of the Connection.
+        :return: None
+        """
         self.location = (x, y)
         x, y = self.canvas.convert_logical_display(x, y)
         self.display_location = [x, y]

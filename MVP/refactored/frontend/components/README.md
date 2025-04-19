@@ -439,8 +439,26 @@ inside MainDiagram
             x_length (int): width of the copied area.
             y_length (int): height of the copied area.
 
+    .convert_logical_display(x, y)
+        Converts coordinates from logical to display based on MainDiagram rotation.
+        
+        Parameters:
+            x (int): The logical x-coordinate to convert.
+            y (int): The logical y-coordinate to convert.
 
+    .covert_display_logical(x, y)
+        Converts coordinates from display to logical based on MainDiagram rotation.
+        
+        Parameters:
+            x (int): The display x-coordinate to convert.
+            y (int): The display y-coordinate to convert.
 
+    .swap_cords_if_rotated(x, y)
+        Swaps x and y values if Maindiagram is rotated by 90 or 270 degrees.
+
+        Parameters:
+            x (int): The x-coordinate to potentially swap.
+            y (int): The y-coordinate to potentially swap.
 
 
 ## SearchResultButton

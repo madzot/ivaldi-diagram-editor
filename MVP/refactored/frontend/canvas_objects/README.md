@@ -38,6 +38,7 @@ Below is a description of all available variables in the Connection class. It wi
 | index                  | int            | Connection index.                                                                                                                                                     |
 | side                   | str            | String that describes what side the Connection is on. `left` and `right` for Box sides, but flipped for diagram input/output. `Spider` if the Connection is a Spider. |
 | location               | list           | List containing x, y coordinates of the Connection.                                                                                                                   |
+| display_location       | list           | List containing visual x, y coordinates where Connection should be displayed.                                                                                         |
 | type                   | ConnectionType | ConnectionType that defines the style of the Connection.                                                                                                              |
 | wire                   | Wire           | Wire object that is connected to the Connection. `None` if no wire.                                                                                                   |
 | has_wire               | boolean        | Boolean that is True if a wire is connected to the Connection. Otherwise False.                                                                                       |
@@ -136,6 +137,13 @@ Below is a description of all available variables in the Connection class. It wi
     .deselect()
         Changes Connectino color to black.
 
+    .update_coords(x, y)
+        Updates Connection logical and display coordinates.
+        
+        Parameters:
+            x (int): The logical x-coordinate of the Connection
+            y (int): The logical y-coordinate of the Connection
+
 
 ---
 
@@ -159,21 +167,24 @@ Spider is a subclass of Connection. Difference between Connection and Spider is 
 
 Along with these variables Spider has Connection variables as well. Although all of them might not be used.
 
-| **Variable** | **Type**     | **Description**                                                                                                                                                                      |
-|--------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| r            | int          | Radius of Spider circle.                                                                                                                                                             |
-| canvas       | CustomCanvas | CustomCanvas that the Spider is created on.                                                                                                                                          |
-| x            | int          | Quick variable to get the x coordinate of the Spider. It is the first number of location.                                                                                            |
-| y            | int          | Quick variable to get the y coordinate of the Spider. It is the second number of location.                                                                                           |
-| location     | list         | List of x, y coordinates.                                                                                                                                                            |
-| rel_x        | float        | A float describing the x position relative to the canvas width.                                                                                                                      |
-| rel_y        | float        | A float describing the y position relative to the canvas height.                                                                                                                     |
-| id           | int          | Spider ID.                                                                                                                                                                           |
-| connections  | list         | List of containing Connections, it is used in algebraic notation creation. During diagram editing it will not contain connections                                                    |
-| context_menu | tkinter.Menu | Variable that holds the context menu of the Spider.                                                                                                                                  |
-| wires        | list         | List that contains Wire class objects that have been connected to the Spider.<br/> This is the spider version of Connection.wire.<br/> For Spiders the variable `.wire` is not used. |
-| receiver     | Receiver     | Receiver object, usually taken from MainDiagram. Used to send information to the back end portion                                                                                    |
-| is_snapped   | bool         | Boolean stating if the Spider is currently snapped to a column or not.                                                                                                               |
+| **Variable**     | **Type**     | **Description**                                                                                                                                                                      |
+|------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| r                | int          | Radius of Spider circle.                                                                                                                                                             |
+| canvas           | CustomCanvas | CustomCanvas that the Spider is created on.                                                                                                                                          |
+| x                | int          | Quick variable to get the x coordinate of the Spider. It is the first number of location.                                                                                            |
+| y                | int          | Quick variable to get the y coordinate of the Spider. It is the second number of location.                                                                                           |
+| location         | list         | List of x, y coordinates.                                                                                                                                                            |
+| display_x        | int          | Quick variable to get the display_x coordinate of the Spider.                                                                                                                        |
+| display_y        | int          | Quick variable to get the display_y coordinate of the Spider.                                                                                                                        |
+| display_location | list         | List of display_x, display_y coordinates.                                                                                                                                            |
+| rel_x            | float        | A float describing the x position relative to the canvas width.                                                                                                                      |
+| rel_y            | float        | A float describing the y position relative to the canvas height.                                                                                                                     |
+| id               | int          | Spider ID.                                                                                                                                                                           |
+| connections      | list         | List of containing Connections, it is used in algebraic notation creation. During diagram editing it will not contain connections                                                    |
+| context_menu     | tkinter.Menu | Variable that holds the context menu of the Spider.                                                                                                                                  |
+| wires            | list         | List that contains Wire class objects that have been connected to the Spider.<br/> This is the spider version of Connection.wire.<br/> For Spiders the variable `.wire` is not used. |
+| receiver         | Receiver     | Receiver object, usually taken from MainDiagram. Used to send information to the back end portion                                                                                    |
+| is_snapped       | bool         | Boolean stating if the Spider is currently snapped to a column or not.                                                                                                               |
 
 ### Spider functions
 
@@ -366,8 +377,10 @@ The coordinates of a Box are the top left corner for it.
 |-------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | style             | string       | Describes style of Box, as described in Box parameters.                                                                                                                                                 |
 | canvas            | CustomCanvas | The CustomCanvas object that the Box is drawn on.                                                                                                                                                       |
-| x                 | int          | X coordinate of the top left corner of the Box.                                                                                                                                                         |
-| y                 | int          | Y coordinate of the top left corner of the Box.                                                                                                                                                         |
+| x                 | int          | Logical X coordinate of the top left corner of the Box.                                                                                                                                                 |
+| y                 | int          | Logical Y coordinate of the top left corner of the Box.                                                                                                                                                 |
+| display_x         | int          | Visual X coordinate of the top left corner of the Box.                                                                                                                                                  |
+| display_y         | int          | Visual Y coordinate of the top left corner of the Box.                                                                                                                                                  |
 | rel_x             | float        | A float describing the x position relative to the canvas width.                                                                                                                                         |
 | rel_y             | float        | A float describing the y position relative to the canvas height.                                                                                                                                        |
 | start_x           | int          | Used as the x position where to start moving the Box from when dragging.                                                                                                                                |
@@ -626,3 +639,16 @@ The coordinates of a Box are the top left corner for it.
 
         Parameters:
             code (string): Code that will be searched for inputs and outputs.
+
+    .update_coords(x, y)
+        Updates Box logical and display coordinates based on MainDiagram rotation.
+
+        Parameters:
+            x (int): The logical x-coordinate to set for the Box.
+            y (int): The logical y-coordinate to set for the Box.
+
+    .get_logical_size(size)
+        Returns the logical size of the Box, adjusted for the MainDiagram's rotation if necessary.
+        
+        Parameters:
+            size (tuple): A tuple containing the Box's width and height.

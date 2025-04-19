@@ -374,6 +374,13 @@ class Spider(Connection):
             self.has_wire = len(self.wires) > 0
 
     def update_coords(self, x, y):
+        """
+        Updates Spider logical and display coordinates based on MainDiagram rotation.
+
+        :param x: The new logical x-coordinate of the Spider.
+        :param y: The new logical y-coordinate of the Spider.
+        :return: None
+        """
         self.x = x
         self.y = y
         self.location = [x, y]

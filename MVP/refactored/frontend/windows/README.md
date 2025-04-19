@@ -135,6 +135,7 @@ you see when using the application.
 | active_search_index     | int                     | Integer that holds the index of which search result is currently primarily highlighted.                                                                   |
 | search_objects          | dict                    | A dictionary that holds the search result and a list of its objects.                                                                                      |
 | wire_objects            | dict                    | A dictionary that holds the search result and a list of Wires that are highlighted with the result.                                                       |
+| rotation                | int                     | Integer that determines how canvases are rotated.                                                                                                         |
 | custom_canvas           | CustomCanvas            | The currently displayed CustomCanvas.                                                                                                                     |
 | search_window           | SearchWindow            | SearchWindow object.                                                                                                                                      |
 | is_tree_visible         | bool                    | Boolean showing if tree_view is visible or hidden.                                                                                                        |

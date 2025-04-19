@@ -1514,28 +1514,51 @@ class CustomCanvas(tk.Canvas):
         return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
 
     def convert_logical_display(self, x, y):
+        """
+        Converts logical coordinates to visual coordinates.
+
+        :param x: x coordinate.
+        :param y: y coordinate.
+        :return: visual coordinates for given x and y.
+        """
         match self.main_diagram.rotation:
             case 90:
                 return y, x
             case 180:
                 return self.main_diagram.custom_canvas.winfo_width() - x, y
             case 270:
-                return self.main_diagram.custom_canvas.winfo_width() - y, self.main_diagram.custom_canvas.winfo_height() - x
+                return (self.main_diagram.custom_canvas.winfo_width() - y,
+                        self.main_diagram.custom_canvas.winfo_height() - x)
             case _:  # 0
                 return x, y
 
     def convert_display_logical(self, x, y):
+        """
+        Converts visual coordinates to logical coordinates.
+
+        :param x: x coordinate.
+        :param y: y coordinate.
+        :return: logical coordinates for given x and y.
+        """
         match self.main_diagram.rotation:
             case 90:
                 return y, x
             case 180:
                 return self.main_diagram.custom_canvas.winfo_width() - x, y
             case 270:
-                return self.main_diagram.custom_canvas.winfo_height() - y, self.main_diagram.custom_canvas.winfo_width() - x
+                return (self.main_diagram.custom_canvas.winfo_height() - y,
+                        self.main_diagram.custom_canvas.winfo_width() - x)
             case _:  # 0
                 return x, y
 
     def swap_cords_if_rotated(self, x, y):
+        """
+        Swaps coordinates if canvas is rotated otherwise returns original coordinates.
+
+        :param x: x coordinate.
+        :param y: y coordinate.
+        :return: x and y values.
+        """
         match self.main_diagram.rotation:
             case 90 | 270:
                 return y, x
