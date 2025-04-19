@@ -13,6 +13,7 @@ def curved_line(start, end, det=15, rotated=False):
         :param start: x, y coordinates where the line is starting from.
         :param end: x,y coordinates where the line ends.
         :param det: (Optional) parameter used for calculating wire curvature.
+        :param rotated: (Optional) parameter used for determining wire draw style.
         :return: List of coordinates for a curved line from start to end.
         """
     if rotated:

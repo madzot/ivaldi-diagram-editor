@@ -238,7 +238,6 @@ class CustomCanvas(tk.Canvas):
         self.prev_width_min = self.canvasx(0)
         self.prev_height_min = self.canvasy(0)
 
-    # Issue with corners do not act correct with i/o
     def pan_horizontal(self, event):
         """
         Move objects on the CustomCanvas horizontally.
@@ -278,7 +277,6 @@ class CustomCanvas(tk.Canvas):
         self.move_boxes_spiders('display_x', multiplier)
         self.pan_speed = 20
 
-    # Issue with corners do not act correct with i/o
     def pan_vertical(self, event):
         """
         Move objects on the CustomCanvas vertically.
@@ -442,7 +440,6 @@ class CustomCanvas(tk.Canvas):
             self.init_corners()
         self.configure(scrollregion=self.bbox('all'))
 
-    # Inputs/output move when zooming in/out
     def update_coordinates(self, denominator, event, scale):
         """
         Update/move all objects to new location after zooming.
@@ -591,12 +588,12 @@ class CustomCanvas(tk.Canvas):
                 self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
                 for box in self.main_diagram.quick_create_boxes:
                     sub_menu.add_command(label=box,
-                                         command=lambda loc=(event.x, event.y), name=box:
+                                         command=lambda loc=(self.convert_display_logical(event.x, event.y)), name=box:
                                          self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
-                                          command=lambda loc=(self.convert_display_logical(event.x, event.y))
-                                          : self.add_spider(loc))
+                                          command=lambda loc=(self.convert_display_logical(event.x, event.y)):
+                                          self.add_spider(loc))
 
             self.context_menu.add_command(label="Cancel")
             self.context_menu.tk_popup(event.x_root, event.y_root)
@@ -1542,12 +1539,5 @@ class CustomCanvas(tk.Canvas):
         match self.main_diagram.rotation:
             case 90 | 270:
                 return y, x
-            case _:
-                return x, y
-
-    def mirror_coords(self, x, y):
-        match self.main_diagram.rotation:
-            case 180 | 270:
-                return self.main_diagram.custom_canvas.winfo_width() - x, self.main_diagram.custom_canvas.winfo_height() - y
             case _:
                 return x, y
