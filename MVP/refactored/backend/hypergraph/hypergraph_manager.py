@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph, id_dict_hypergraph
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 from MVP.refactored.backend.hypergraph.node import Node
 
@@ -272,7 +272,7 @@ class HypergraphManager:
         """
 
         logger.debug(message_start + f"Combining hypergraphs with following ids: " + ", ".join(
-            map(lambda x: str(id_dict_hypergraph.get(x.id)), hypergraphs)) + message_end)
+            map(lambda x: str(x.id), hypergraphs)) + message_end)
 
         combined_hypergraph = Hypergraph(canvas_id=hypergraphs[0].canvas_id)
         for hypergraph in hypergraphs:
@@ -322,12 +322,12 @@ class HypergraphManager:
 
     @staticmethod
     def add_hypergraph(hypergraph: Hypergraph):
-        logger.debug(message_start + f"Adding hypergraph with id {id_dict_hypergraph.get(hypergraph.id)}" + message_end)
+        logger.debug(message_start + f"Adding hypergraph with id {hypergraph.id}" + message_end)
 
         HypergraphManager.hypergraphs.add(hypergraph)
 
     @staticmethod
     def remove_hypergraph(hypergraph: Hypergraph):
         logger.debug(
-            message_start + f"Removing hypergraph with id {id_dict_hypergraph.get(hypergraph.id)}" + message_end)
+            message_start + f"Removing hypergraph with id {hypergraph.id}" + message_end)
         HypergraphManager.hypergraphs.remove(hypergraph)
