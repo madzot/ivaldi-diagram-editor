@@ -455,7 +455,6 @@ class Box:
         self.update_self_collision_ids()
         go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
         if self.canvas.main_diagram.rotation == 180:
-            print("in here")
             collision = self.canvas.find_overlapping(go_to_x - self.size[0], go_to_y, go_to_x, go_to_y + self.size[1])
         elif self.canvas.main_diagram.rotation == 270:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x - self.size[0], go_to_y - self.size[1])
