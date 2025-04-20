@@ -16,15 +16,11 @@ logger = logging.getLogger(__name__)
 message_start = "\x1b[33;20m"
 message_end = "\x1b[0m"
 
-current_hypergraph = 0
-id_dict_hypergraph = {}
-
 
 class Hypergraph:
     """Hypergraph class."""
 
     def __init__(self, hypergraph_id=None, canvas_id=None):
-        global current_hypergraph
         self.id = hypergraph_id
         if hypergraph_id is None:
             self.id = IdGenerator.id(self)
@@ -32,9 +28,8 @@ class Hypergraph:
         self.hypergraph_source: dict[int, Node] = {}
         self.nodes: dict[int, Node] = {}
         self.edges: dict[int, HyperEdge] = {}
-        id_dict_hypergraph[self.id] = current_hypergraph
-        current_hypergraph += 1
-        logger.debug(message_start + f"Creating hypergraph with id {id_dict_hypergraph.get(self.id)}" + message_end)
+
+        logger.debug(message_start + f"Creating hypergraph with id {self.id}" + message_end)
 
     def get_node_by_id(self, node_id: int) -> Node | None:
         return self.nodes.get(node_id)

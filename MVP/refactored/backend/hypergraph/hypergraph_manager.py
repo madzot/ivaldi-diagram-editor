@@ -20,15 +20,6 @@ def debug(x):
     logger.debug(message_start + x + message_end)
 
 
-current_count_node = 0
-
-id_dict_node = {}
-
-current_count_hyper_edge = 0
-
-id_dict_hyper_edge = {}
-
-
 class HypergraphManager:
     hypergraphs: set[Hypergraph] = set()
 
@@ -45,7 +36,7 @@ class HypergraphManager:
 
         :param node_id: The unique identifier of the node to be removed.
         """
-        logger.debug(message_start + f"Removing node with id {id_dict_node.get(node_id)}" + message_end)
+        logger.debug(message_start + f"Removing node with id {node_id}" + message_end)
 
         removed_node_outputs_and_directly_connected = []
         _hypergraph: Hypergraph = None
@@ -76,9 +67,9 @@ class HypergraphManager:
                 source_nodes_groups.append(group)
 
         logger.debug(message_start + "Source nodes are " + ", ".join(
-            f"{id_dict_node.get(n.id)}" for n in source_nodes_and_potentially_source_nodes) + message_end)
+            f"{n.id}" for n in source_nodes_and_potentially_source_nodes) + message_end)
         logger.debug(message_start + "Source node groups are " + ", ".join(
-            f"[{', '.join(map(str, (id_dict_node.get(n.id) for n in group)))}]" for group in
+            f"[{', '.join(map(str, (n.id for n in group)))}]" for group in
             source_nodes_groups) + message_end)
 
         # if after deleting node hype graph split to two or more hyper graphs, we need to handle that
@@ -111,7 +102,7 @@ class HypergraphManager:
         :param hyper_edge_id: The unique identifier of the node to be removed.
         """
         logger.debug(
-            message_start + f"Removing hyper edge with id {id_dict_hyper_edge.get(hyper_edge_id)}" + message_end)
+            message_start + f"Removing hyper edge with id {hyper_edge_id}" + message_end)
 
         hypergraph_to_handle: Hypergraph = None
         deleted_hyper_edge = None
@@ -140,9 +131,9 @@ class HypergraphManager:
                 source_nodes_groups.append(group)
 
         logger.debug(message_start + "Source nodes are " + ", ".join(
-            f"{id_dict_node.get(n.id)}" for n in source_nodes) + message_end)
+            f"{n.id}" for n in source_nodes) + message_end)
         logger.debug(message_start + "Source node groups are " + ", ".join(
-            f"[{', '.join(map(str, (id_dict_node.get(n.id) for n in group)))}]" for group in
+            f"[{', '.join(map(str, (n.id for n in group)))}]" for group in
             source_nodes_groups) + message_end)
         # if after deleting node hype graph split to two or more hyper graphs, we need to handle that
         if len(source_nodes_groups) > 1:  # If group count isn't 1, so there occurred new hyper graphs
@@ -179,10 +170,7 @@ class HypergraphManager:
 
         :return: Created node
         """
-        global current_count_node
-        id_dict_node[node_id] = current_count_node
-        current_count_node += 1
-        logger.debug(message_start + f"Creating new node with id {id_dict_node.get(node_id)}" + message_end)
+        logger.debug(message_start + f"Creating new node with id {node_id}" + message_end)
 
         new_hypergraph: Hypergraph = Hypergraph(canvas_id=canvas_id)
         new_node = Node(node_id)
@@ -202,7 +190,7 @@ class HypergraphManager:
     @staticmethod
     def union_nodes(node: Node, unite_with_id: int):
         logger.debug(
-            message_start + f"Union node with id {id_dict_node.get(node.id)} with other node with id {id_dict_node.get(unite_with_id)}" + message_end)
+            message_start + f"Union node with id {node.id} with other node with id {unite_with_id}" + message_end)
 
         unite_with = HypergraphManager.get_node_by_node_id(unite_with_id)
         unite_with_hypergraph: Hypergraph = HypergraphManager.get_graph_by_node_id(
@@ -227,13 +215,10 @@ class HypergraphManager:
 
         if connect_to_hypergraph is None:
             hyper_edge = HyperEdge(hyper_edge_id)
-            global current_count_hyper_edge
-            id_dict_hyper_edge[hyper_edge_id] = current_count_hyper_edge
-            current_count_hyper_edge += 1
         else:
             hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
         logger.debug(
-            message_start + f"Connecting to node with id {id_dict_node.get(node.id)} input a hyper edge with id {id_dict_hyper_edge.get(hyper_edge_id)}" + message_end)
+            message_start + f"Connecting to node with id {node.id} input a hyper edge with id {hyper_edge_id}" + message_end)
         # box = hyper edge
         hyper_edge.append_target_node(node)
         node.append_input(hyper_edge)
@@ -261,13 +246,10 @@ class HypergraphManager:
 
         if connect_to_hypergraph is None:
             hyper_edge = HyperEdge(hyper_edge_id)
-            global current_count_hyper_edge
-            id_dict_hyper_edge[hyper_edge_id] = current_count_hyper_edge
-            current_count_hyper_edge += 1
         else:
             hyper_edge = connect_to_hypergraph.get_hyper_edge_by_id(hyper_edge_id)
         logger.debug(
-            message_start + f"Connecting to node with id {id_dict_node[node.id]} output a hyper edge with id {id_dict_hyper_edge[hyper_edge_id]}" + message_end)
+            message_start + f"Connecting to node with id {node.id} output a hyper edge with id {hyper_edge_id}" + message_end)
         # box = hyper edge
         hyper_edge.append_source_node(node)
         node.append_output(hyper_edge)
