@@ -25,6 +25,9 @@ class Box:
 
     The coordinates of a Box are the top left corner for it.
     """
+
+    max_label_size = 50
+
     def __init__(self, canvas, x, y, size=(60, 60), id_=None, style=const.RECTANGLE):
         """
         Box constructor.
@@ -554,8 +557,9 @@ class Box:
         if new_label is None:
             text = simpledialog.askstring("Input", "Enter label:", initialvalue=self.label_text)
             if text is not None:
-                if len(text) > 50:
-                    self.canvas.main_diagram.show_error_dialog("Label must be less than 100 characters.")
+                if len(text) > Box.max_label_size:
+                    self.canvas.main_diagram.show_error_dialog(f"Label must be less than {Box.max_label_size}"
+                                                               f" characters.")
                     return self.edit_label()
                 self.label_text = text
             if os.stat(const.FUNCTIONS_CONF).st_size != 0:
@@ -570,7 +574,7 @@ class Box:
                             else:
                                 return self.edit_label()
         else:
-            if len(new_label) > 50:
+            if len(new_label) > Box.max_label_size:
                 return
             self.label_text = new_label
 

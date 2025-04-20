@@ -16,6 +16,7 @@ from ttkbootstrap.constants import *
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Toolbar
@@ -329,8 +330,8 @@ class MainDiagram(tk.Tk):
         :param new_label: String that old label will be changed to
         :return: None
         """
-        if len(new_label) > 50:
-            self.show_error_dialog("Label must be less than 100 characters.")
+        if len(new_label) > Box.max_label_size:
+            self.show_error_dialog(f"Label must be less than {Box.max_label_size} characters.")
             return
         if old_label in self.label_content.keys():
             code = self.label_content[old_label]
