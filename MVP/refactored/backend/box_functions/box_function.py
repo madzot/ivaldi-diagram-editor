@@ -1,6 +1,7 @@
 import os
 from typing import Optional, List
 
+from MVP.refactored.backend.box_functions.function_structure.function_structure import FunctionStructure
 from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
 from MVP.refactored.backend.box_functions.function_structure.function_parser import FunctionParser
 
@@ -69,7 +70,7 @@ class BoxFunction:
         if not self.main_function:
             raise ValueError("Cannot create function structure without a main function.")
 
-        self.function_structure = FunctionParser.parse_function_structure(self.main_function)
+        self.function_structure: FunctionStructure = FunctionParser.parse_function_code(self.main_function)
 
     def __eq__(self, other):
         """
