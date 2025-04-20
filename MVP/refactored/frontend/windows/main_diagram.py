@@ -17,7 +17,9 @@ from ttkbootstrap.constants import *
 import constants as const
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.hypergraph.visualization.visualization import Visualization
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
@@ -394,23 +396,22 @@ class MainDiagram(tk.Tk):
                 copy_button = tk.Button(frame, text="Copy", command=lambda tb=text_box: self.copy_to_clipboard(tb))
                 copy_button.pack(pady=5)
 
-    def visualize_as_graph(self, canvas):
+    def visualize_as_graph(self):
         """
         Open graph visualization window.
 
-        :param canvas: CustomCanvas that will be visualized.
         :return: None
         """
-        hypergraph = HypergraphManager.get_graphs_by_canvas_id(canvas.id)
-        if hypergraph is None:
-            messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
+        hypergraphs: list[Hypergraph] = HypergraphManager.get_graphs_by_canvas_id(self.custom_canvas.id)
+        if len(hypergraphs) == 0:
+            messagebox.showerror("Error", f"No hypergraph found with ID: {self.custom_canvas.id}")
             return
 
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
         try:
-            figure = hypergraph.visualize()
+            figure = Visualization.create_visualization_of_hypergraphs(self.custom_canvas.id)
         except Exception as e:
             messagebox.showerror("Error", "Failed to generate the visualization." +
                                  f"Error during visualization: {e}")
