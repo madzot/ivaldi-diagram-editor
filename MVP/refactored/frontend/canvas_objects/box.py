@@ -512,7 +512,6 @@ class Box:
 
         :return: None
         """
-        # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
         height = max([50 * nr_cs, 50])
         if self.size[1] < height:
@@ -595,6 +594,9 @@ class Box:
             self.collision_ids.append(self.label)
         else:
             self.canvas.itemconfig(self.label, text=self.label_text)
+        label_width = abs(self.canvas.bbox(self.label)[0] - self.canvas.bbox(self.label)[2])
+        self.update_size(label_width + 20 if label_width > self.size[0] else self.size[0], self.size[1])
+        self.move_label()
 
     def set_label(self, new_label):
         """
