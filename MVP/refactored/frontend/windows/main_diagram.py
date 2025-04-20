@@ -61,8 +61,6 @@ class MainDiagram(tk.Tk):
         self.search_objects = {}
         self.wire_objects = {}
 
-        self.rotation = 0  # Usable values are 0, 90, 180, 270. Other values should act like 0.
-
         self.custom_canvas = CustomCanvas(self, self)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -945,7 +943,7 @@ class MainDiagram(tk.Tk):
             values = []
             x_y = {}
 
-            if self.rotation == 90 or self.rotation == 270:
+            if self.custom_canvas.rotation == 90 or self.custom_canvas.rotation == 270:
                 for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
                     x_y[y_max - y_coord / 100] = x_coord / 100
             else:
@@ -964,7 +962,7 @@ class MainDiagram(tk.Tk):
             values_line = spl(keys_linspace)
 
             color, style = self.get_wire_style(wire)
-            if self.rotation == 90 or self.rotation == 270:
+            if self.custom_canvas.rotation == 90 or self.custom_canvas.rotation == 270:
                 plt.plot(values_line, keys_linspace, style, color=color, linewidth=2, zorder=1)
             else:
                 plt.plot(keys_linspace, values_line, style, color=color, linewidth=2, zorder=1)

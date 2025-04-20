@@ -28,7 +28,7 @@ class CustomCanvas(tk.Canvas):
     `CustomCanvas` is a wrapper for `tkinter.Canvas` that all `canvas_objects` are drawn on.
     """
     def __init__(self, master, main_diagram,
-                 id_=None, is_search=False, diagram_source_box=None, **kwargs):
+                 id_=None, is_search=False, diagram_source_box=None, rotation=0, **kwargs):
         """
         CustomCanvas constructor.
 
@@ -142,6 +142,8 @@ class CustomCanvas(tk.Canvas):
         self.search_result_highlights = []
 
         self.wire_label_tags = []
+
+        self.rotation = rotation  # Usable values are 0, 90, 180, 270. Other values should act like 0.
 
     def on_hover(self, item):
         """
@@ -332,9 +334,9 @@ class CustomCanvas(tk.Canvas):
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
             x = box.display_x
             y = box.display_y
-            if self.main_diagram.rotation == 180:
+            if self.rotation == 180:
                 x = x + box.size[0]
-            if self.main_diagram.rotation == 270:
+            if self.rotation == 270:
                 x = x + box.size[0]
                 y = y + box.size[1]
             x, y = self.convert_display_logical(x, y)
@@ -473,9 +475,9 @@ class CustomCanvas(tk.Canvas):
         for box in self.boxes:
             x = self.calculate_zoom_dif(event.x, box.display_x, denominator)
             y = self.calculate_zoom_dif(event.y, box.display_y, denominator)
-            if self.main_diagram.rotation == 180:
+            if self.rotation == 180:
                 x = x + box.size[0]
-            if self.main_diagram.rotation == 270:
+            if self.rotation == 270:
                 x = x + box.size[0]
                 y = y + box.size[1]
             x, y = self.convert_display_logical(x, y)
@@ -1084,16 +1086,16 @@ class CustomCanvas(tk.Canvas):
         min_y = self.corners[0].location[1]
         min_x = self.corners[0].location[0]
         if len(self.outputs) != 0 or len(self.inputs) != 0:
-            if self.main_diagram.rotation == 180 or self.main_diagram.rotation == 270:
+            if self.rotation == 180 or self.rotation == 270:
                 x = self.main_diagram.custom_canvas.winfo_width() - self.corners[0].location[0]
                 min_x = self.main_diagram.custom_canvas.winfo_width() - self.corners[3].location[0]
-            if self.main_diagram.rotation == 270:
+            if self.rotation == 270:
                 y = self.main_diagram.custom_canvas.winfo_height() - self.corners[0].location[1]
                 min_y = self.main_diagram.custom_canvas.winfo_height() - self.corners[3].location[1]
         output_index = max([o.index for o in self.outputs] + [0])
         for o in self.outputs:
             i = o.index
-            match self.main_diagram.rotation:
+            match self.rotation:
                 case 90 | 270:
                     step = (x - min_x) / (output_index + 2)
                     o.move_to([y - 7, min_x + step * (i + 1)])
@@ -1104,7 +1106,7 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         for o in self.inputs:
             i = o.index
-            match self.main_diagram.rotation:
+            match self.rotation:
                 case 90 | 270:
                     step = (x - min_x) / (input_index + 2)
                     o.move_to([6 + min_y, min_x + step * (i + 1)])
@@ -1521,7 +1523,7 @@ class CustomCanvas(tk.Canvas):
         :param y: y coordinate.
         :return: visual coordinates for given x and y.
         """
-        match self.main_diagram.rotation:
+        match self.rotation:
             case 90:
                 return y, x
             case 180:
@@ -1540,7 +1542,7 @@ class CustomCanvas(tk.Canvas):
         :param y: y coordinate.
         :return: logical coordinates for given x and y.
         """
-        match self.main_diagram.rotation:
+        match self.rotation:
             case 90:
                 return y, x
             case 180:
@@ -1559,7 +1561,7 @@ class CustomCanvas(tk.Canvas):
         :param y: y coordinate.
         :return: x and y values.
         """
-        match self.main_diagram.rotation:
+        match self.rotation:
             case 90 | 270:
                 return y, x
             case _:

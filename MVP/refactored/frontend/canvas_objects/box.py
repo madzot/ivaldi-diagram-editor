@@ -294,7 +294,7 @@ class Box:
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self.canvas.main_diagram,
                                             id_=self.id, highlightthickness=0,
-                                            diagram_source_box=self)
+                                            diagram_source_box=self, rotation=self.canvas.rotation)
             self.canvas.itemconfig(self.shape, fill="#dfecf2")
             if save_to_canvasses:
                 name = self.label_text
@@ -375,9 +375,9 @@ class Box:
             return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
-        if self.canvas.main_diagram.rotation == 180:
+        if self.canvas.rotation == 180:
             event.x = event.x + self.size[0]
-        if self.canvas.main_diagram.rotation == 270:
+        if self.canvas.rotation == 270:
             event.x = event.x + self.size[0]
             event.y = event.y + self.size[1]
 
@@ -454,9 +454,9 @@ class Box:
         """
         self.update_self_collision_ids()
         go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
-        if self.canvas.main_diagram.rotation == 180:
+        if self.canvas.rotation == 180:
             collision = self.canvas.find_overlapping(go_to_x - self.size[0], go_to_y, go_to_x, go_to_y + self.size[1])
-        elif self.canvas.main_diagram.rotation == 270:
+        elif self.canvas.rotation == 270:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x - self.size[0], go_to_y - self.size[1])
         else:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
@@ -492,11 +492,11 @@ class Box:
         old_size = self.size
         new_size_x, new_size_y = self.get_logical_size((self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier))
         self.size = (new_size_x, new_size_y)
-        if self.canvas.main_diagram.rotation == 180:
+        if self.canvas.rotation == 180:
             if self.find_collisions(self.x - (new_size_x - old_size[0]), self.y):
                 self.size = old_size
                 return
-        elif self.canvas.main_diagram.rotation == 270:
+        elif self.canvas.rotation == 270:
             if self.find_collisions(self.x - (new_size_x - old_size[0]), self.y - (new_size_y - old_size[1])):
                 self.size = old_size
                 return
@@ -548,7 +548,7 @@ class Box:
         # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
         height = max([50 * nr_cs, 50])
-        if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
+        if self.canvas.rotation == 90 or self.canvas.rotation == 270:
             if self.size[0] < height:
                 self.update_size(self.size[1], height)
                 self.move_label()
@@ -768,9 +768,9 @@ class Box:
         :param new_size_y: New height
         :return: None
         """
-        if self.canvas.main_diagram.rotation == 180:  # 180 keeps display_x in the same spot
+        if self.canvas.rotation == 180:  # 180 keeps display_x in the same spot
             self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
-        if self.canvas.main_diagram.rotation == 270:  # 270 keeps display_y in the same spot
+        if self.canvas.rotation == 270:  # 270 keeps display_y in the same spot
             self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
             self.y = self.y - (new_size_y - self.get_logical_size(self.size)[1])
 
@@ -790,7 +790,7 @@ class Box:
             self.canvas.coords(self.shape, self.display_x, self.display_y,
                                self.display_x + self.size[0], self.display_y + self.size[1])
         if self.style == const.TRIANGLE:
-            match self.canvas.main_diagram.rotation:
+            match self.canvas.rotation:
                 case 90:
                     self.canvas.coords(self.shape, self.display_x + self.size[0], self.display_y,
                                        self.display_x, self.display_y,
@@ -1064,7 +1064,7 @@ class Box:
             return self.canvas.create_rectangle(self.display_x, self.display_y, self.display_x + w, self.display_y + h,
                                                 outline=const.BLACK, fill=const.WHITE)
         if self.style == const.TRIANGLE:
-            match self.canvas.main_diagram.rotation:
+            match self.canvas.rotation:
                 case 90:
                     return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x,
                                                       self.display_y, self.display_x + w / 2, self.display_y + h,
@@ -1132,7 +1132,7 @@ class Box:
         """
         self.x = x
         self.y = y
-        match self.canvas.main_diagram.rotation:
+        match self.canvas.rotation:
             case 90:
                 self.display_x = y
                 self.display_y = x
@@ -1153,7 +1153,7 @@ class Box:
         :param size: The size of the Box as [width, height].
         :return: The logical size of the Box after rotation adjustment.
         """
-        match self.canvas.main_diagram.rotation:
+        match self.canvas.rotation:
             case 90 | 270:
                 return [size[1], size[0]]
             case _:

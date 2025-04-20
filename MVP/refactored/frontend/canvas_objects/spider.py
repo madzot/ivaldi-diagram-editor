@@ -212,7 +212,7 @@ class Spider(Connection):
         if self.canvas.pulling_wire:
             return
 
-        if self.canvas.main_diagram.rotation == 90 or self.canvas.main_diagram.rotation == 270:
+        if self.canvas.rotation == 90 or self.canvas.rotation == 270:
             go_to_x = event.x
             go_to_y = self.display_y
             move_legal = False

@@ -202,6 +202,7 @@ class Selector:
     def paste_canvas(self, canvas, canvas_id):
         for diagram in self.copied_sub_diagrams:
             if canvas_id == diagram['Canvas']:
+                canvas.rotation = diagram['Rotation']
                 for item in diagram['Components']:
                     if item['component'] == 'Box':
                         self.paste_box(item, item['location'], diagram['Wires'], [], canvas)
@@ -577,6 +578,7 @@ class Selector:
         self.copied_sub_diagrams.append({
             'Canvas': copy.deepcopy(canvas.id),
             'Components': copied_items,
+            'Rotation': copy.deepcopy(canvas.rotation),
             'Wires': wires
         })
 
