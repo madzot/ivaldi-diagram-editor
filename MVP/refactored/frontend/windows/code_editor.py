@@ -177,7 +177,8 @@ class CodeEditor:
 
         :return: None
         """
-        for box in self.main_diagram.custom_canvas.boxes:
-            if box.label_text == self.label:
-                box.update_io()
+        for canvas in self.main_diagram.canvasses.values():
+            for box in canvas.boxes:
+                if box.label_text == self.label:
+                    box.update_io()
         self.main_diagram.label_content[self.label] = self.code_view.get('1.0', tk.END)
