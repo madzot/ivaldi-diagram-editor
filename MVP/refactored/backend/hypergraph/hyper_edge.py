@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.id_generator import IdGenerator
 
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
@@ -13,7 +14,7 @@ class HyperEdge:
 
     def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None, sub_diagram_canvas_id=-1):
         if hyper_edge_id is None:
-            hyper_edge_id = id(self)
+            hyper_edge_id = IdGenerator.id(self)
         self.id = hyper_edge_id
         self.box_function: BoxFunction | None = box_function
 

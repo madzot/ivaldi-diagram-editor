@@ -1,5 +1,6 @@
 import tkinter as tk
 
+from MVP.refactored.backend.id_generator import IdGenerator
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
@@ -31,7 +32,7 @@ class Spider(Connection):
         self.rel_x = round(self.x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
         self.rel_y = round(self.y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id(self)
         else:
             self.id = id_
 
