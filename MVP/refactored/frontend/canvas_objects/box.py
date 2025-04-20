@@ -6,6 +6,7 @@ from tkinter import simpledialog
 
 import constants as const
 from MVP.refactored.backend.box_functions.box_function import BoxFunction, predefined_functions
+from MVP.refactored.backend.id_generator import IdGenerator
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.connection import Connection
@@ -59,7 +60,7 @@ class Box:
         self.label_text = ""
         self.wires = []
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id(self)
         else:
             self.id = id_
         self.context_menu = tk.Menu(self.canvas, tearoff=0)

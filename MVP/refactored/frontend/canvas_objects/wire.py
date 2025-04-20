@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import simpledialog
 
+from MVP.refactored.backend.id_generator import IdGenerator
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 import constants as const
@@ -64,7 +65,7 @@ class Wire:
         self.line = None
         self.wire_width = 3
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id(self)
         else:
             self.id = id_
         self.receiver = canvas.main_diagram.receiver

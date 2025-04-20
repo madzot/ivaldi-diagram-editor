@@ -4,6 +4,8 @@ from queue import Queue
 from typing import Self
 from typing import TYPE_CHECKING
 
+from MVP.refactored.backend.id_generator import IdGenerator
+
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.hyper_edge import HyperEdge
 
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
 class Node:
     def __init__(self, node_id: int = None, is_special=False):
         if node_id is None:
-            node_id = id(self)
+            node_id = IdGenerator.id(self)
         self.id = node_id
         self.inputs: list[HyperEdge] = []
         self.outputs: list[HyperEdge] = []

@@ -4,6 +4,8 @@ import logging
 from queue import Queue
 from typing import TYPE_CHECKING
 
+from MVP.refactored.backend.id_generator import IdGenerator
+
 if TYPE_CHECKING:
     from MVP.refactored.backend.hypergraph.node import Node
 
@@ -25,7 +27,7 @@ class Hypergraph:
         global current_hypergraph
         self.id = hypergraph_id
         if hypergraph_id is None:
-            self.id = id(self)
+            self.id = IdGenerator.id(self)
         self.canvas_id = canvas_id
         self.hypergraph_source: dict[int, Node] = {}
         self.nodes: dict[int, Node] = {}

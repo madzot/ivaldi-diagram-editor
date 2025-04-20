@@ -8,6 +8,7 @@ from ttkbootstrap.constants import *
 
 import constants as const
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
+from MVP.refactored.backend.id_generator import IdGenerator
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.box import Box
@@ -74,7 +75,7 @@ class CustomCanvas(tk.Canvas):
         self.diagram_source_box = diagram_source_box  # Only here if canvas is sub-diagram
 
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id(self)
         else:
             self.id = id_
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import tkinter as tk
 
+from MVP.refactored.backend.id_generator import IdGenerator
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
@@ -40,7 +41,7 @@ class Connection:
         self.has_wire = False
         self.r = r
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id(self)
         else:
             self.id = id_
 
