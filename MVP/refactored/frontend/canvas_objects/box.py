@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import re
 import tkinter as tk
@@ -790,23 +791,15 @@ class Box:
             self.canvas.coords(self.shape, self.display_x, self.display_y,
                                self.display_x + self.size[0], self.display_y + self.size[1])
         if self.style == const.TRIANGLE:
-            match self.canvas.rotation:
-                case 90:
-                    self.canvas.coords(self.shape, self.display_x + self.size[0], self.display_y,
-                                       self.display_x, self.display_y,
-                                       self.display_x + self.size[0] / 2, self.display_y + self.size[1])
-                case 180:
-                    self.canvas.coords(self.shape, self.display_x, self.display_y + self.size[1] / 2,
-                                       self.display_x + self.size[0], self.display_y + self.size[1],
-                                       self.display_x + self.size[0], self.display_y)
-                case 270:
-                    self.canvas.coords(self.shape, self.display_x - self.size[0], self.display_y,
-                                       self.display_x, self.display_y,
-                                       self.display_x - self.size[0] / 2, self.display_y - self.size[1])
-                case _:
-                    self.canvas.coords(self.shape, self.display_x + self.size[0], self.display_y + self.size[1] / 2,
-                                       self.display_x, self.display_y,
-                                       self.display_x, self.display_y + self.size[1])
+            w, h = self.get_logical_size(self.size)
+            points = [
+                (w, h / 2),
+                (0, 0),
+                (0, h),
+            ]
+            rotated = self.rotate_point(points)
+            self.canvas.coords(self.shape, *rotated)
+
         self.canvas.coords(self.resize_handle, self.display_x + self.size[0] - 10, self.display_y + self.size[1] - 10,
                            self.display_x + self.size[0], self.display_y + self.size[1])
 
@@ -1064,23 +1057,13 @@ class Box:
             return self.canvas.create_rectangle(self.display_x, self.display_y, self.display_x + w, self.display_y + h,
                                                 outline=const.BLACK, fill=const.WHITE)
         if self.style == const.TRIANGLE:
-            match self.canvas.rotation:
-                case 90:
-                    return self.canvas.create_polygon(self.display_x + w, self.display_y, self.display_x,
-                                                      self.display_y, self.display_x + w / 2, self.display_y + h,
-                                                      outline=const.BLACK, fill=const.WHITE)
-                case 180:
-                    return self.canvas.create_polygon(self.display_x, self.display_y + h / 2, self.display_x + w,
-                                                      self.display_y + h, self.display_x + w, self.display_y,
-                                                      outline=const.BLACK, fill=const.WHITE)
-                case 270:
-                    return self.canvas.create_polygon(self.display_x - w, self.display_y, self.display_x,
-                                                      self.display_y, self.display_x - w / 2, self.display_y - h,
-                                                      outline=const.BLACK, fill=const.WHITE)
-                case _:
-                    return self.canvas.create_polygon(self.display_x + w, self.display_y + h / 2, self.display_x,
-                                                      self.display_y, self.display_x, self.display_y + h,
-                                                      outline=const.BLACK, fill=const.WHITE)
+            points = [
+                (self.get_logical_size(self.size)[0], self.get_logical_size(self.size)[1] / 2),
+                (0, 0),
+                (0, self.get_logical_size(self.size)[1]),
+            ]
+            rotated = self.rotate_point(points)
+            return self.canvas.create_polygon(*rotated, outline=const.BLACK, fill=const.WHITE)
 
     def change_shape(self, shape):
         """
@@ -1158,3 +1141,25 @@ class Box:
                 return [size[1], size[0]]
             case _:
                 return size
+
+    def rotate_point(self, points):
+        w, h = self.get_logical_size(self.size)
+        rotated = []
+        cx = w / 2
+        cy = h / 2
+        angle = math.radians(self.canvas.rotation)
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
+        for x, y in points:
+            dx = x - cx
+            dy = y - cy
+            rotated.append(
+                (cx + dx * cos_a - dy * sin_a, cy + dx * sin_a + dy * cos_a))
+
+        min_x = min(x for x, y in rotated)
+        min_y = min(y for x, y in rotated)
+        shifted = [(x - min_x, y - min_y) for x, y in rotated]
+        translated = [(x + self.display_x, y + self.display_y) for x, y in shifted]
+        flat_points = [coord for point in translated for coord in point]
+
+        return flat_points
