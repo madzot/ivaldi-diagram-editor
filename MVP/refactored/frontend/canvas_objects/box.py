@@ -18,10 +18,11 @@ class Box:
 
     Boxes represent a function, the function itself can be defined by the user.
 
-    Boxes are also used to contain sub-diagrams. The sub-diagram is accessible from the treeview on canvases on the left side of the application.
+    Boxes are also used to contain sub-diagrams. The sub-diagram is accessible from the treeview on canvases on the left
+    side of the application.
 
-    Boxes can contain code. The functions are findable in the "Manage methods" window. Applying code to boxes can be done
-    by renaming them to match an existing function or by adding code to them yourself through the code editor.
+    Boxes can contain code. The functions are findable in the "Manage methods" window. Applying code to boxes can be
+    done by renaming them to match an existing function or by adding code to them yourself through the code editor.
     Code can only be added to a box with an existing label.
 
     The coordinates of a Box are the top left corner for it.
@@ -382,11 +383,7 @@ class Box:
             return
         event.x, event.y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
 
-        if self.canvas.rotation == 180:
-            event.x = event.x + self.size[0]
-        if self.canvas.rotation == 270:
-            event.x = event.x + self.size[0]
-            event.y = event.y + self.size[1]
+        event.x, event.y = self.update_coords_by_size(event.x, event.y)
 
         self.start_x = event.x
         self.start_y = event.y
@@ -556,7 +553,7 @@ class Box:
         # TODO resize by label too if needed
         nr_cs = max([c.index for c in self.connections] + [0])
         height = max([50 * nr_cs, 50])
-        if self.canvas.rotation == 90 or self.canvas.rotation == 270:
+        if self.canvas.is_vertical():
             if self.size[0] < height:
                 self.update_size(self.size[1], height)
                 self.move_label()
@@ -1031,7 +1028,8 @@ class Box:
 
         elif side == const.RIGHT:
             i = self.get_new_right_index()
-            return self.x + self.get_logical_size(self.size)[0], self.y + (index + 1) * self.get_logical_size(self.size)[1] / (i + 1)
+            return (self.x + self.get_logical_size(self.size)[0],
+                    self.y + (index + 1) * self.get_logical_size(self.size)[1] / (i + 1))
 
     def get_new_left_index(self):
         """
@@ -1150,6 +1148,12 @@ class Box:
                 return size
 
     def rotate_point(self, points):
+        """
+        Rotate box point around its own center based on canvas rotation and translates them to display coordinates.
+
+        :param points: A list of (x, y) tuples representing the original point coordinates.
+        :return: A list of coordinates after rotation and translation.
+        """
         w, h = self.get_logical_size(self.size)
         rotated = []
         cx = w / 2
@@ -1170,3 +1174,19 @@ class Box:
         flat_points = [coord for point in translated for coord in point]
 
         return flat_points
+
+    def update_coords_by_size(self, x, y):
+        """
+        Adjust x and y coordinates based on rotation and box size.
+
+        :param x: x coordinate.
+        :param y: y coordinate.
+        :return: x and y coordinates.
+        """
+        if self.canvas.rotation == 180:
+            x = x + self.size[0]
+        if self.canvas.rotation == 270:
+            x = x + self.size[0]
+            y = y + self.size[1]
+
+        return x, y

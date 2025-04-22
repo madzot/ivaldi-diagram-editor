@@ -321,11 +321,7 @@ class CustomCanvas(tk.Canvas):
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
             x = box.display_x
             y = box.display_y
-            if self.rotation == 180:
-                x = x + box.size[0]
-            if self.rotation == 270:
-                x = x + box.size[0]
-                y = y + box.size[1]
+            x, y = box.update_coords_by_size(x, y)
             x, y = self.convert_coords(x, y, to_logical=True)
             box.update_coords(x, y)
             box.update_size(*box.get_logical_size(box.size))
@@ -460,11 +456,7 @@ class CustomCanvas(tk.Canvas):
         for box in self.boxes:
             x = self.calculate_zoom_dif(event.x, box.display_x, denominator)
             y = self.calculate_zoom_dif(event.y, box.display_y, denominator)
-            if self.rotation == 180:
-                x = x + box.size[0]
-            if self.rotation == 270:
-                x = x + box.size[0]
-                y = y + box.size[1]
+            x, y = box.update_coords_by_size(x, y)
             x, y = self.convert_coords(x, y, to_logical=True)
             box.update_coords(x, y)
             size = box.get_logical_size(box.size)
@@ -966,8 +958,8 @@ class CustomCanvas(tk.Canvas):
         """
         Handle canvas resizing.
 
-        Updates the locations on Corner objects and diagram inputs and outputs along with previous winfo sizes and canvas
-        label location. This is activated when the application is configured.
+        Updates the locations on Corner objects and diagram inputs and outputs along with previous winfo sizes and
+        canvas label location. This is activated when the application is configured.
 
         :param _: tkinter.Event
         :return: None
@@ -1089,24 +1081,22 @@ class CustomCanvas(tk.Canvas):
         output_index = max([o.index for o in self.outputs] + [0])
         for o in self.outputs:
             i = o.index
-            match self.rotation:
-                case 90 | 270:
-                    step = (x - min_x) / (output_index + 2)
-                    o.update_location([y - 7, min_x + step * (i + 1)])
-                case _:
-                    step = (y - min_y) / (output_index + 2)
-                    o.update_location([x - 7, min_y + step * (i + 1)])
+            if self.is_vertical():
+                step = (x - min_x) / (output_index + 2)
+                o.update_location([y - 7, min_x + step * (i + 1)])
+            else:
+                step = (y - min_y) / (output_index + 2)
+                o.update_location([x - 7, min_y + step * (i + 1)])
 
         input_index = max([o.index for o in self.inputs] + [0])
         for o in self.inputs:
             i = o.index
-            match self.rotation:
-                case 90 | 270:
-                    step = (x - min_x) / (input_index + 2)
-                    o.update_location([6 + min_y, min_x + step * (i + 1)])
-                case _:
-                    step = (y - min_y) / (input_index + 2)
-                    o.update_location([6 + min_x, min_y + step * (i + 1)])
+            if self.is_vertical():
+                step = (x - min_x) / (input_index + 2)
+                o.update_location([6 + min_y, min_x + step * (i + 1)])
+            else:
+                step = (y - min_y) / (input_index + 2)
+                o.update_location([6 + min_x, min_y + step * (i + 1)])
         [w.update() for w in self.wires]
 
     def delete_everything(self):
@@ -1512,13 +1502,13 @@ class CustomCanvas(tk.Canvas):
 
     def convert_coords(self, x, y, to_display=True, to_logical=False):
         """
-        Converts logical coordinates to visual coordinates.
+        Converts coordinates either to visual or logical based on to_display and to_logical values.
 
         :param x: x coordinate.
         :param y: y coordinate.
         :param to_display: Whether to convert from logical to display coordinates.
         :param to_logical: Whether to convert from display to logical coordinates.
-        :return: visual coordinates for given x and y.
+        :return: Converted coordinates for given x and y.
         """
         coords = [x, y]
         match self.rotation:
@@ -1549,7 +1539,17 @@ class CustomCanvas(tk.Canvas):
             return x, y
 
     def is_vertical(self):
+        """
+        Check if the canvas is in a vertical orientation.
+
+        :return: True if the rotation is 90 or 270 degrees, otherwise False.
+        """
         return self.rotation in [90, 270]
 
     def is_horizontal(self):
+        """
+        Check if the canvas is in a horizontal orientation.
+
+        :return: True if the rotation is 0 or 180 degrees, otherwise False.
+        """
         return self.rotation in [0, 180]

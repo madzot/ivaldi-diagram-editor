@@ -31,8 +31,8 @@ import constants as const
 
 class MainDiagram(tk.Tk):
     """
-    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
-    you see when using the application.
+    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window
+    that you see when using the application.
     """
 
     def __init__(self, receiver, load=False):

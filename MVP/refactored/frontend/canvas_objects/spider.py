@@ -366,8 +366,15 @@ class Spider(Connection):
             self.has_wire = len(self.wires) > 0
 
     def update_location(self, new_location):
+        """
+        Move the Spider to the given location.
+
+        Takes a coordinate logical location and moves it to the given location on the canvas.
+
+        :param new_location: tuple or list of coordinates. (x, y)
+        :return: None
+        """
         self.x, self.y = new_location
 
         super().update_location(new_location)
         self.display_x, self.display_y = self.display_location
-

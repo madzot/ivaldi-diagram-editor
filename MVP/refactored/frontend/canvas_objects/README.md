@@ -137,13 +137,6 @@ Below is a description of all available variables in the Connection class. It wi
     .deselect()
         Changes Connectino color to black.
 
-    .update_coords(x, y)
-        Updates Connection logical and display coordinates.
-        
-        Parameters:
-            x (int): The logical x-coordinate of the Connection
-            y (int): The logical y-coordinate of the Connection
-
 
 ---
 
@@ -652,3 +645,17 @@ The coordinates of a Box are the top left corner for it.
         
         Parameters:
             size (tuple): A tuple containing the Box's width and height.
+
+    .rotate_point(points)
+        Rotates box point around its own center based on canvas rotation and translates them to display coordinates
+        return list of display coordinates.
+        
+        Parameters:
+            points (list): A list of (x, y) tuples representing the original point coordinates.
+
+    .update_coords_by_size(x, y)
+        Adjust x and y coordinates based on rotation and box size.
+
+        Parameters:
+            x (int): x-coordinate.
+            y (int): y-coordinate.
