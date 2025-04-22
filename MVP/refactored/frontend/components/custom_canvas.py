@@ -144,7 +144,7 @@ class CustomCanvas(tk.Canvas):
 
         self.wire_label_tags = []
 
-        self.rotation = 270  # Usable values are 0, 90, 180, 270. Other values should act like 0.
+        self.rotation = rotation  # Usable values are 0, 90, 180, 270. Other values should act like 0.
 
     def on_hover(self, item):
         """
@@ -560,20 +560,29 @@ class CustomCanvas(tk.Canvas):
         :return: None
         """
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
+
+        box_events = self.convert_coords(event.x, event.y, to_logical=True)
+        if self.rotation == 180:
+            box_events[0] = box_events[0] - Box.default_size[0]
+        if self.rotation == 270:
+            box_events[0] = box_events[0] - Box.default_size[0]
+            box_events[1] = box_events[1] - Box.default_size[1]
+
+        loc_box = tuple(box_events)
+
         if not self.is_mouse_on_object(event):
             self.close_menu()
             self.context_menu = tk.Menu(self, tearoff=0)
 
             self.context_menu.add_command(label="Add undefined box",
-                                          command=lambda loc=(self.convert_coords(event.x, event.y, to_logical=True)):
-                                          self.add_box(loc))
+                                          command=lambda loc=loc_box: self.add_box(loc))
 
             if len(self.main_diagram.quick_create_boxes) > 0:
                 sub_menu = tk.Menu(self.context_menu, tearoff=0)
                 self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
                 for box in self.main_diagram.quick_create_boxes:
                     sub_menu.add_command(label=box,
-                                         command=lambda loc=(self.convert_coords(event.x, event.y, to_logical=True)), name=box:
+                                         command=lambda loc=loc_box, name=box:
                                          self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",

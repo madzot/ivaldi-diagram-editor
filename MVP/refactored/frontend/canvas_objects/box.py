@@ -26,7 +26,10 @@ class Box:
 
     The coordinates of a Box are the top left corner for it.
     """
-    def __init__(self, canvas, x, y, size=(60, 60), id_=None, style=const.RECTANGLE):
+
+    default_size = (60, 60)
+
+    def __init__(self, canvas, x, y, size=default_size, id_=None, style=const.RECTANGLE):
         """
         Box constructor.
 
@@ -45,12 +48,6 @@ class Box:
         self.display_x = x
         self.display_y = y
         self.size = self.get_logical_size(size)
-
-        if self.canvas.rotation == 180:
-            self.x = self.x - self.size[0]
-        if self.canvas.rotation == 270:
-            self.x = self.x - self.size[0]
-            self.y = self.y - self.size[1]
 
         self.update_coords(self.x, self.y)
 
