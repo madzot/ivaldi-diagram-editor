@@ -56,8 +56,6 @@ class Box:
         self.start_x = self.display_x
         self.start_y = self.display_y
 
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         self.x_dif = 0
         self.y_dif = 0
         self.connections: list[Connection] = []
@@ -89,6 +87,9 @@ class Box:
         self.is_snapped = False
 
         self.collision_ids = [self.shape, self.resize_handle]
+
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
 
         self.update_size(size[0], size[1])
         self.bind_events()

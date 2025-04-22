@@ -32,8 +32,6 @@ class Spider(Connection):
         self.display_x = self.x
         self.display_y = self.y
 
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         if not id_:
             self.id = id(self)
         else:
@@ -51,6 +49,9 @@ class Spider(Connection):
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id)
 
         self.is_snapped = False
+
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
 
         self.update_location(location)  # This can be removed if Connection has separate x and y coords like spider does
         self.bind_events()
