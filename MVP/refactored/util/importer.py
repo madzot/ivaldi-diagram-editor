@@ -40,7 +40,7 @@ class Importer:
         self.load_everything_to_canvas(d, self.canvas)
 
     def load_everything_to_canvas(self, d, canvas):
-        self.canvas.rotation = d.get("rotation", 0)
+        canvas.rotation = d.get("rotation", 0)
         multi_x, multi_y = self.find_multiplier(d)
         self.load_boxes_to_canvas(d, canvas, multi_x, multi_y)
         self.load_spiders_to_canvas(d, canvas, multi_x, multi_y)
@@ -207,7 +207,7 @@ class Importer:
         multi_x = 1
         multi_y = 1
 
-        if self.canvas.rotation == 90 or self.canvas.rotation == 270:
+        if self.canvas.is_vertical():
             if self.canvas.main_diagram.custom_canvas.winfo_height() < max_x:
                 max_x += min_x
                 multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_x, 3)

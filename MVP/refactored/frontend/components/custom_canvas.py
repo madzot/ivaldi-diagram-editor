@@ -1545,8 +1545,13 @@ class CustomCanvas(tk.Canvas):
         :param y: y coordinate.
         :return: x and y values.
         """
-        match self.rotation:
-            case 90 | 270:
-                return y, x
-            case _:
-                return x, y
+        if self.is_vertical():
+            return y, x
+        else:
+            return x, y
+
+    def is_vertical(self):
+        return self.rotation in [90, 270]
+
+    def is_horizontal(self):
+        return self.rotation in [0, 180]
