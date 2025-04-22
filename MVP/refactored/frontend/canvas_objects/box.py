@@ -26,6 +26,8 @@ class Box:
     The coordinates of a Box are the top left corner for it.
     """
 
+    max_label_size = 50
+
     def __init__(self, canvas, x, y, size=(60, 60), id_=None, style=const.RECTANGLE):
         """
         Box constructor.
