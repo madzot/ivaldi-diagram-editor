@@ -166,7 +166,7 @@ class Selector:
 
     def paste_copied_items(self, event_x=50, event_y=50, replace=False, multi=1):
         if len(self.copied_items) > 0:
-            event_x, event_y = self.canvas.convert_display_logical(event_x, event_y)
+            event_x, event_y = self.canvas.convert_coords(event_x, event_y)
             middle_point = self.find_middle_point(event_x, event_y)
             wires = self.copied_left_wires + self.copied_right_wires
             pasted_items = []

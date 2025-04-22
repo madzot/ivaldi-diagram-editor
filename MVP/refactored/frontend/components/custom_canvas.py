@@ -27,6 +27,7 @@ class CustomCanvas(tk.Canvas):
     """
     `CustomCanvas` is a wrapper for `tkinter.Canvas` that all `canvas_objects` are drawn on.
     """
+
     def __init__(self, master, main_diagram,
                  id_=None, is_search=False, diagram_source_box=None, rotation=0, **kwargs):
         """
@@ -267,7 +268,7 @@ class CustomCanvas(tk.Canvas):
             corner.move_to((corner.location[0] + multiplier * self.pan_speed, corner.location[1]))
         for connection in self.inputs + self.outputs:
             connection.display_location[0] = connection.display_location[0] + multiplier * self.pan_speed
-            x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
+            x, y = self.convert_coords(connection.display_location[0], connection.display_location[1])
             connection.update_location((x, y))
 
         self.move_boxes_spiders('display_x', multiplier)
@@ -299,7 +300,7 @@ class CustomCanvas(tk.Canvas):
             corner.move_to((corner.location[0], corner.location[1] + multiplier * self.pan_speed))
         for connection in self.inputs + self.outputs:
             connection.display_location[1] = connection.display_location[1] + multiplier * self.pan_speed
-            x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
+            x, y = self.convert_coords(connection.display_location[0], connection.display_location[1])
             connection.update_location((x, y))
 
         self.move_boxes_spiders('display_y', multiplier)
@@ -325,7 +326,7 @@ class CustomCanvas(tk.Canvas):
             if self.rotation == 270:
                 x = x + box.size[0]
                 y = y + box.size[1]
-            x, y = self.convert_display_logical(x, y)
+            x, y = self.convert_coords(x, y)
             box.update_coords(x, y)
             box.update_size(*box.get_logical_size(box.size))
             box.move_label()
@@ -452,7 +453,7 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(event.y, i_o.display_location[1], denominator)
             ]
             i_o.r *= scale
-            x, y = self.convert_display_logical(*i_o_location)
+            x, y = self.convert_coords(*i_o_location)
             i_o.update_location((x, y))
             self.itemconfig(i_o.circle, width=i_o.r * 2 / 10)
 
@@ -464,7 +465,7 @@ class CustomCanvas(tk.Canvas):
             if self.rotation == 270:
                 x = x + box.size[0]
                 y = y + box.size[1]
-            x, y = self.convert_display_logical(x, y)
+            x, y = self.convert_coords(x, y)
             box.update_coords(x, y)
             size = box.get_logical_size(box.size)
             box.update_size(size[0] * scale, size[1] * scale)
@@ -473,7 +474,7 @@ class CustomCanvas(tk.Canvas):
         for spider in self.spiders:
             x = self.calculate_zoom_dif(event.x, spider.display_x, denominator)
             y = self.calculate_zoom_dif(event.y, spider.display_y, denominator)
-            x, y = self.convert_display_logical(x, y)
+            x, y = self.convert_coords(x, y)
             spider.r *= scale
             spider.update_location((x, y))
             self.itemconfig(spider.circle, width=round(min(spider.r / 5, 5)))
@@ -564,7 +565,7 @@ class CustomCanvas(tk.Canvas):
             self.context_menu = tk.Menu(self, tearoff=0)
 
             self.context_menu.add_command(label="Add undefined box",
-                                          command=lambda loc=(self.convert_display_logical(event.x, event.y)):
+                                          command=lambda loc=(self.convert_coords(event.x, event.y)):
                                           self.add_box(loc))
 
             if len(self.main_diagram.quick_create_boxes) > 0:
@@ -572,11 +573,11 @@ class CustomCanvas(tk.Canvas):
                 self.context_menu.add_cascade(menu=sub_menu, label="Add custom box")
                 for box in self.main_diagram.quick_create_boxes:
                     sub_menu.add_command(label=box,
-                                         command=lambda loc=(self.convert_display_logical(event.x, event.y)), name=box:
+                                         command=lambda loc=(self.convert_coords(event.x, event.y)), name=box:
                                          self.main_diagram.importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
-                                          command=lambda loc=(self.convert_display_logical(event.x, event.y)):
+                                          command=lambda loc=(self.convert_coords(event.x, event.y)):
                                           self.add_spider(loc))
 
             self.context_menu.add_command(label="Cancel")
@@ -696,8 +697,8 @@ class CustomCanvas(tk.Canvas):
             if self.temp_end_connection.display_location != (self.canvasx(event.x), self.canvasy(event.y)):
                 self.temp_end_connection.delete()
                 self.temp_end_connection = Connection(None, 0, None,
-                                                      self.convert_display_logical(self.canvasx(event.x),
-                                                                                   self.canvasy(event.y)),
+                                                      self.convert_coords(self.canvasx(event.x),
+                                                                          self.canvasy(event.y)),
                                                       self, connection_type=self.current_wire_start.type)
             self.temp_wire = Wire(self, self.current_wire_start, self.temp_end_connection, None, True,
                                   wire_type=WireType[self.current_wire_start.type.name])
@@ -739,7 +740,7 @@ class CustomCanvas(tk.Canvas):
 
             if event is not None:
                 x, y = self.canvasx(event.x), self.canvasy(event.y)
-                x, y = self.convert_logical_display(x, y)
+                x, y = self.convert_coords(x, y)
                 self.pulling_wire = True
                 self.temp_end_connection = Connection(None, None, None, (x, y), self)
 
@@ -898,7 +899,7 @@ class CustomCanvas(tk.Canvas):
         :param y: Y coordinate that Spider is created on.
         :return: None
         """
-        x, y = self.convert_display_logical(x, y)
+        x, y = self.convert_coords(x, y)
         spider = self.add_spider((x, y))
         self.start_wire_from_connection(start)
         self.end_wire_to_connection(spider)
@@ -1164,7 +1165,8 @@ class CustomCanvas(tk.Canvas):
         if start.side == end.side == const.SPIDER:
             return True
 
-        return not (start.side == end.side or start.side == const.LEFT and start.location[0] - start.width_between_boxes <=
+        return not (start.side == end.side or start.side == const.LEFT and start.location[
+            0] - start.width_between_boxes <=
                     end.location[0] or start.side == const.RIGHT and start.location[0] + start.width_between_boxes >=
                     end.location[0])
 
@@ -1494,48 +1496,35 @@ class CustomCanvas(tk.Canvas):
             area_x2 = area_x2 - 10
         x_multiplier = round((area_x2 - area_x1) / x_length, 3)
         y_multiplier = round((area_y2 - area_y1) / y_length, 3)
-        area_x1, area_y1 = self.convert_logical_display(area_x1, area_y1)
-        area_x2, area_y2 = self.convert_logical_display(area_x2, area_y2)
+        area_x1, area_y1 = self.convert_coords(area_x1, area_y1)
+        area_x2, area_y2 = self.convert_coords(area_x2, area_y2)
 
         return min(x_multiplier, y_multiplier), (area_x1 + area_x2) / 2, (area_y1 + area_y2) / 2
 
-    def convert_logical_display(self, x, y):
+    def convert_coords(self, x, y, to_display=True, to_logical=False):
         """
         Converts logical coordinates to visual coordinates.
 
         :param x: x coordinate.
         :param y: y coordinate.
+        :param to_display: Whether to convert from logical to display coordinates.
+        :param to_logical: Whether to convert from display to logical coordinates.
         :return: visual coordinates for given x and y.
         """
+        coords = [x, y]
         match self.rotation:
             case 90:
-                return y, x
+                coords = [y, x]
             case 180:
-                return self.main_diagram.custom_canvas.winfo_width() - x, y
+                coords = [self.main_diagram.custom_canvas.winfo_width() - x, y]
             case 270:
-                return (self.main_diagram.custom_canvas.winfo_width() - y,
-                        self.main_diagram.custom_canvas.winfo_height() - x)
-            case _:  # 0
-                return x, y
-
-    def convert_display_logical(self, x, y):
-        """
-        Converts visual coordinates to logical coordinates.
-
-        :param x: x coordinate.
-        :param y: y coordinate.
-        :return: logical coordinates for given x and y.
-        """
-        match self.rotation:
-            case 90:
-                return y, x
-            case 180:
-                return self.main_diagram.custom_canvas.winfo_width() - x, y
-            case 270:
-                return (self.main_diagram.custom_canvas.winfo_height() - y,
-                        self.main_diagram.custom_canvas.winfo_width() - x)
-            case _:  # 0
-                return x, y
+                if to_display and not to_logical:
+                    coords = [self.main_diagram.custom_canvas.winfo_width() - y,
+                              self.main_diagram.custom_canvas.winfo_height() - x]
+                else:
+                    coords = [self.main_diagram.custom_canvas.winfo_height() - y,
+                              self.main_diagram.custom_canvas.winfo_width() - x]
+        return coords
 
     def get_rotated_coords(self, x, y):
         """
