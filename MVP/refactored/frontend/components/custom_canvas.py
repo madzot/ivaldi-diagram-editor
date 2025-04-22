@@ -316,7 +316,7 @@ class CustomCanvas(tk.Canvas):
         """
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
-            spider.update_location((spider.x, spider.y))
+            spider.update_location(self.convert_coords(spider.display_x, spider.display_y, to_logical=True))
         for box in self.boxes:
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
             x = box.display_x
