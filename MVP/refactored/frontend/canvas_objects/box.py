@@ -399,7 +399,7 @@ class Box:
         # snapping into place
         found = False
         size = self.get_logical_size(self.size)
-        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_logical=True)
         if not from_configuration:
             for box in self.canvas.boxes:
                 if box == self:
@@ -435,7 +435,7 @@ class Box:
 
         self.is_snapped = found
 
-        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_display=True)
         self.move(go_to_x, go_to_y, bypass_legality=from_configuration)
         self.move_label()
 
@@ -462,13 +462,14 @@ class Box:
         :return: List of tags that would be colliding with the Box in the given location.
         """
         self.update_self_collision_ids()
-        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_display=True)
         if self.canvas.rotation == 180:
             collision = self.canvas.find_overlapping(go_to_x - self.size[0], go_to_y, go_to_x, go_to_y + self.size[1])
         elif self.canvas.rotation == 270:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x - self.size[0], go_to_y - self.size[1])
         else:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
+
         collision = list(collision)
         for index in self.collision_ids:
             if index in collision:
@@ -679,7 +680,7 @@ class Box:
         """
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
-        new_x, new_y = self.canvas.convert_coords(new_x, new_y)
+        new_x, new_y = self.canvas.convert_coords(new_x, new_y, to_logical=True)
         is_bad = False
         for connection in self.connections:
             if connection.has_wire and self.is_illegal_move(connection, new_x, bypass=bypass_legality):

@@ -252,7 +252,7 @@ class Connection:
         :return: None
         """
         self.location = list(new_location)
-        x, y = self.canvas.convert_coords(*self.location)
+        x, y = self.canvas.convert_coords(*self.location, to_display=True)
         self.display_location = [x, y]
         self.canvas.coords(self.circle, self.display_location[0] - self.r, self.display_location[1] - self.r,
                            self.display_location[0] + self.r, self.display_location[1] + self.r)

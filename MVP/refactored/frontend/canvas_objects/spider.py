@@ -212,7 +212,7 @@ class Spider(Connection):
         if self.canvas.pulling_wire:
             return
 
-        log_ev_x, log_ev_y = self.canvas.convert_coords(event.x, event.y)
+        log_ev_x, log_ev_y = self.canvas.convert_coords(event.x, event.y, to_logical=True)
 
         go_to_x = self.x
         go_to_y = log_ev_y
@@ -309,7 +309,7 @@ class Spider(Connection):
         :param go_to_y: y coordinate for the center of the search.
         :return: List of ints.
         """
-        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_display=True)
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
                                                  go_to_y + self.r)
         collision = list(collision)
