@@ -36,7 +36,7 @@ class ConnectionTests(TestApplication):
         self.assertIsNone(connection.box)
         self.assertEqual(1010, connection.index)
         self.assertEqual(const.LEFT, connection.side)
-        self.assertEqual((111, 222), connection.location)
+        self.assertEqual([111, 222], connection.location)
         self.assertIsNone(connection.wire)
         self.assertFalse(connection.has_wire)
         self.assertEqual(5, connection.r)

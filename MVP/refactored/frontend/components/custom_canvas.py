@@ -600,7 +600,6 @@ class CustomCanvas(tk.Canvas):
         :param event: tkinter.Event.
         :return: None
         """
-        print(event)
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         [box.close_menu() for box in self.boxes]
         [wire.close_menu() for wire in self.wires]
