@@ -387,6 +387,12 @@ you see when using the application.
         Parameters:
             wire (Wire): Wire that style is gotten for.
 
+    .show_error_dialog(error_message)
+        Displays an error message.
+
+        Parameters:
+            error_message (String): Error message that will shown.
+
 ---
 
 ## ManageBoxes
