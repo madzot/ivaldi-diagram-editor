@@ -166,7 +166,7 @@ class Selector:
 
     def paste_copied_items(self, event_x=50, event_y=50, replace=False, multi=1):
         if len(self.copied_items) > 0:
-            event_x, event_y = self.canvas.convert_display_logical(event_x, event_y)
+            event_x, event_y = self.canvas.convert_coords(event_x, event_y, to_logical=True)
             middle_point = self.find_middle_point(event_x, event_y)
             wires = self.copied_left_wires + self.copied_right_wires
             pasted_items = []
@@ -244,7 +244,7 @@ class Selector:
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
 
-        canvas_width, canvas_height = self.canvas.swap_cords_if_rotated(canvas_width, canvas_height)
+        canvas_width, canvas_height = self.canvas.get_rotated_coords(canvas_width, canvas_height)
 
         if most_left - (middle_x - event_x) < self.canvas.canvasx(0):
             middle_x = event_x + most_left - self.canvas.canvasx(0)
@@ -263,7 +263,7 @@ class Selector:
         most_right = 0
         most_up = self.canvas.winfo_height()
         most_down = 0
-        most_left, most_up = self.canvas.swap_cords_if_rotated(most_left, most_up)
+        most_left, most_up = self.canvas.get_rotated_coords(most_left, most_up)
         for item in self.copied_items:
             if item['component'] == "Box":
                 if item['location'][0] < most_left:
@@ -290,7 +290,7 @@ class Selector:
         most_right = 0
         most_up = self.canvas.winfo_height()
         most_down = 0
-        most_left, most_up = self.canvas.swap_cords_if_rotated(most_left, most_up)
+        most_left, most_up = self.canvas.get_rotated_coords(most_left, most_up)
         for item in self.selected_items:
             if isinstance(item, Box):
                 if item.x < most_left:

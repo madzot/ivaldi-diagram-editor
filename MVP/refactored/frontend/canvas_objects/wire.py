@@ -8,17 +8,17 @@ import constants as const
 
 def curved_line(start, end, canvas, det=15):
     """
-        Calculate the coordinates for a curved line.
+    Calculate the coordinates for a curved line.
 
-        :param start: x, y coordinates where the line is starting from.
-        :param end: x,y coordinates where the line ends.
-        :param canvas: canvas on which wire is drawn.
-        :param det: (Optional) parameter used for calculating wire curvature.
-        :return: List of coordinates for a curved line from start to end.
-        """
+    :param start: x, y coordinates where the line is starting from.
+    :param end: x, y coordinates where the line ends.
+    :param canvas: canvas on which wire is drawn.
+    :param det: (Optional) parameter used for calculating wire curvature.
+    :return: List of coordinates for a curved line from start to end.
+    """
 
-    start_x, start_y = canvas.swap_cords_if_rotated(start[0], start[1])
-    end_x, end_y = canvas.swap_cords_if_rotated(end[0], end[1])
+    start_x, start_y = canvas.get_rotated_coords(start[0], start[1])
+    end_x, end_y = canvas.get_rotated_coords(end[0], end[1])
 
     sx = start_x
     sy = start_y
@@ -28,7 +28,7 @@ def curved_line(start, end, canvas, det=15):
     coordinates = [0] * (det * 2 + 2)
     for i in range(det + 1):
         t = i / det
-        x, y = canvas.swap_cords_if_rotated(sx + dx * t, sy + dy * (3 * t ** 2 - 2 * t ** 3))
+        x, y = canvas.get_rotated_coords(sx + dx * t, sy + dy * (3 * t ** 2 - 2 * t ** 3))
 
         coordinates[i * 2] = x
         coordinates[i * 2 + 1] = y

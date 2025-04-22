@@ -26,7 +26,10 @@ class Box:
 
     The coordinates of a Box are the top left corner for it.
     """
-    def __init__(self, canvas, x, y, size=(60, 60), id_=None, style=const.RECTANGLE):
+
+    default_size = (60, 60)
+
+    def __init__(self, canvas, x, y, size=default_size, id_=None, style=const.RECTANGLE):
         """
         Box constructor.
 
@@ -46,13 +49,13 @@ class Box:
         self.display_y = y
         self.size = self.get_logical_size(size)
 
-        self.update_coords(x, y)
+        self.update_coords(self.x, self.y)
+
+        self.display_x, self.display_y = self.canvas.convert_coords(x, y)
 
         self.start_x = self.display_x
         self.start_y = self.display_y
 
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         self.x_dif = 0
         self.y_dif = 0
         self.connections: list[Connection] = []
@@ -73,7 +76,6 @@ class Box:
                                                           self.display_y + self.size[1],
                                                           outline=const.BLACK, fill=const.BLACK)
         self.locked = False
-        self.bind_events()
         self.sub_diagram = None
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:
@@ -87,6 +89,10 @@ class Box:
         self.collision_ids = [self.shape, self.resize_handle]
 
         self.update_size(size[0], size[1])
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+
+        self.bind_events()
 
     def set_id(self, id_):
         """
@@ -391,7 +397,7 @@ class Box:
         # snapping into place
         found = False
         size = self.get_logical_size(self.size)
-        go_to_x, go_to_y = self.canvas.convert_display_logical(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_logical=True)
         if not from_configuration:
             for box in self.canvas.boxes:
                 if box == self:
@@ -427,7 +433,7 @@ class Box:
 
         self.is_snapped = found
 
-        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_display=True)
         self.move(go_to_x, go_to_y, bypass_legality=from_configuration)
         self.move_label()
 
@@ -454,13 +460,14 @@ class Box:
         :return: List of tags that would be colliding with the Box in the given location.
         """
         self.update_self_collision_ids()
-        go_to_x, go_to_y = self.canvas.convert_logical_display(go_to_x, go_to_y)
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_display=True)
         if self.canvas.rotation == 180:
             collision = self.canvas.find_overlapping(go_to_x - self.size[0], go_to_y, go_to_x, go_to_y + self.size[1])
         elif self.canvas.rotation == 270:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x - self.size[0], go_to_y - self.size[1])
         else:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x + self.size[0], go_to_y + self.size[1])
+
         collision = list(collision)
         for index in self.collision_ids:
             if index in collision:
@@ -671,7 +678,7 @@ class Box:
         """
         new_x = round(new_x, 4)
         new_y = round(new_y, 4)
-        new_x, new_y = self.canvas.convert_display_logical(new_x, new_y)
+        new_x, new_y = self.canvas.convert_coords(new_x, new_y, to_logical=True)
         is_bad = False
         for connection in self.connections:
             if connection.has_wire and self.is_illegal_move(connection, new_x, bypass=bypass_legality):
@@ -811,7 +818,7 @@ class Box:
         """
         for c in self.connections:
             conn_x, conn_y = self.get_connection_coordinates(c.side, c.index)
-            c.move_to((conn_x, conn_y))
+            c.update_location((conn_x, conn_y))
 
     def update_wires(self):
         """

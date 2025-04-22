@@ -36,7 +36,7 @@ class ConnectionTests(TestApplication):
         self.assertIsNone(connection.box)
         self.assertEqual(1010, connection.index)
         self.assertEqual(const.LEFT, connection.side)
-        self.assertEqual((111, 222), connection.location)
+        self.assertEqual([111, 222], connection.location)
         self.assertIsNone(connection.wire)
         self.assertFalse(connection.has_wire)
         self.assertEqual(5, connection.r)
@@ -437,7 +437,7 @@ class ConnectionTests(TestApplication):
 
     def test__move_to__changes_location(self):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
-        connection.move_to((1010, 2020))
+        connection.update_location((1010, 2020))
         self.assertEqual(1010, connection.location[0])
         self.assertEqual(2020, connection.location[1])
 

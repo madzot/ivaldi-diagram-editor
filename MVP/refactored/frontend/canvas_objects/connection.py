@@ -32,7 +32,6 @@ class Connection:
         self.side = side  # 'spider' if connection is a spider
         self.location = location
         self.display_location = location
-        self.update_coords(location[0], location[1])
         self.type = connection_type
         self.wire = None
         self.has_wire = False
@@ -48,6 +47,8 @@ class Connection:
                                               fill=const.BLACK, outline=ConnectionType.COLORS.value[self.type.value],
                                               width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
+
+        self.update_location(location)
         self.bind_events()
 
     def update(self):
@@ -241,16 +242,18 @@ class Connection:
         """
         self.canvas.itemconfig(self.circle, fill=color)
 
-    def move_to(self, location):
+    def update_location(self, new_location):
         """
         Move the Connection to the given location.
 
-        Takes a coordinate location and moves it to the given location on the canvas.
+        Takes a coordinate logical location and moves it to the given location on the canvas.
 
-        :param location: tuple of coordinates. (x, y)
+        :param new_location: tuple or list of coordinates. (x, y)
         :return: None
         """
-        self.update_coords(location[0], location[1])
+        self.location = list(new_location)
+        x, y = self.canvas.convert_coords(*self.location, to_display=True)
+        self.display_location = [x, y]
         self.canvas.coords(self.circle, self.display_location[0] - self.r, self.display_location[1] - self.r,
                            self.display_location[0] + self.r, self.display_location[1] + self.r)
 
@@ -357,15 +360,3 @@ class Connection:
         :return: None
         """
         self.change_color(color=const.BLACK)
-
-    def update_coords(self, x, y):
-        """
-        Updates Connection logical and display coordinates based on MainDiagram rotation.
-
-        :param x: The new logical x-coordinate of the Connection.
-        :param y: The new logical y-coordinate of the Connection.
-        :return: None
-        """
-        self.location = (x, y)
-        x, y = self.canvas.convert_logical_display(x, y)
-        self.display_location = [x, y]
