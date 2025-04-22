@@ -437,7 +437,7 @@ class ConnectionTests(TestApplication):
 
     def test__move_to__changes_location(self):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
-        connection.move_to((1010, 2020))
+        connection.update_location((1010, 2020))
         self.assertEqual(1010, connection.location[0])
         self.assertEqual(2020, connection.location[1])
 

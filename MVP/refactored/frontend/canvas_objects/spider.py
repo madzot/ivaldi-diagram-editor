@@ -32,8 +32,6 @@ class Spider(Connection):
         self.display_x = self.x
         self.display_y = self.y
 
-        self.update_coords(self.x, self.y)
-
         self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
         self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         if not id_:
@@ -43,7 +41,6 @@ class Spider(Connection):
 
         self.connections: list[Connection] = []
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.bind_events()
         self.wires = []
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:
@@ -54,6 +51,9 @@ class Spider(Connection):
                 self.receiver.receiver_callback('create_spider', wire_id=self.id, connection_id=self.id)
 
         self.is_snapped = False
+
+        self.update_location(location)  # This can be removed if Connection has separate x and y coords like spider does
+        self.bind_events()
 
     def is_spider(self):
         """
@@ -212,30 +212,23 @@ class Spider(Connection):
         if self.canvas.pulling_wire:
             return
 
-        if self.canvas.rotation == 90 or self.canvas.rotation == 270:
-            go_to_x = event.x
-            go_to_y = self.display_y
-            move_legal = False
-            if not self.is_illegal_move(self.canvas.convert_display_logical(event.x, event.y)[0], bypass=from_configuration):
-                go_to_y = event.y
-                move_legal = True
-        else:
-            go_to_x = self.display_x
-            go_to_y = event.y
-            move_legal = False
-            if not self.is_illegal_move(self.canvas.convert_logical_display(event.x, event.y)[0], bypass=from_configuration):
-                go_to_x = event.x
-                move_legal = True
+        log_ev_x, log_ev_y = self.canvas.convert_display_logical(event.x, event.y)
+
+        go_to_x = self.x
+        go_to_y = log_ev_y
+        move_legal = False
+
+        if not self.is_illegal_move(log_ev_x, bypass=from_configuration):
+            go_to_x = log_ev_x
+            move_legal = True
 
         # snapping into place
         found = False
-        go_to_x, go_to_y = self.canvas.convert_display_logical(go_to_x, go_to_y)
         if not from_configuration:
             for box in self.canvas.boxes:
-                box_size = box.get_logical_size(box.size)
 
-                if abs(box.x + box_size[0] / 2 - go_to_x) < box_size[0] / 2 + self.r and move_legal:
-                    go_to_x = box.x + box_size[0] / 2
+                if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
+                    go_to_x = box.x + box.size[0] / 2
                     found = True
             for spider in self.canvas.spiders:
                 if spider == self:
@@ -272,12 +265,10 @@ class Spider(Connection):
         self.align_wire_ends()
 
         self.is_snapped = found
-        self.update_coords(go_to_x, go_to_y)
+        self.update_location((go_to_x, go_to_y))
 
         self.rel_x = round(self.display_x / self.canvas.winfo_width(), 4)
         self.rel_y = round(self.display_y / self.canvas.winfo_height(), 4)
-        self.canvas.coords(self.circle, self.display_x - self.r, self.display_y - self.r, self.display_x + self.r,
-                           self.display_y + self.r)
         [w.update() for w in self.wires]
 
     def align_wire_ends(self):
@@ -311,8 +302,8 @@ class Spider(Connection):
         """
         Find collisions at the desired location.
 
-        Takes x and y coordinates and checks the surrounding area, equal to the size of the Spider. Returns a list
-        of canvas tags that are in the location. Wires are excluded from this.
+        Takes x and y logical coordinates and checks the surrounding area, equal to the size of the Spider.
+        Returns a list of canvas tags that are in the location. Wires are excluded from this.
 
         :param go_to_x: x coordinate for the center of the search.
         :param go_to_y: y coordinate for the center of the search.
@@ -373,19 +364,9 @@ class Spider(Connection):
             self.wires.remove(wire)
             self.has_wire = len(self.wires) > 0
 
-    def update_coords(self, x, y):
-        """
-        Updates Spider logical and display coordinates based on MainDiagram rotation.
+    def update_location(self, new_location):
+        self.x, self.y = new_location
 
-        :param x: The new logical x-coordinate of the Spider.
-        :param y: The new logical y-coordinate of the Spider.
-        :return: None
-        """
-        self.x = x
-        self.y = y
-        self.location = [x, y]
-
-        self.display_x, self.display_y = self.canvas.convert_logical_display(x, y)
-        self.display_location = [self.display_x, self.display_y]
-
+        super().update_location(new_location)
+        self.display_x, self.display_y = self.display_location
 

@@ -263,18 +263,12 @@ class CustomCanvas(tk.Canvas):
                 self.pan_speed = min(abs(1 - corner.location[0]), abs(self.winfo_width() - corner.location[0] - 1))
                 return
 
-        for connection in self.corners:
-            connection.location[0] = connection.location[0] + multiplier * self.pan_speed
-            self.coords(connection.circle,
-                        connection.location[0] - connection.r, connection.location[1] - connection.r,
-                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        for corner in self.corners:
+            corner.move_to((corner.location[0] + multiplier * self.pan_speed, corner.location[1]))
         for connection in self.inputs + self.outputs:
             connection.display_location[0] = connection.display_location[0] + multiplier * self.pan_speed
             x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
-            connection.update_coords(x, y)
-            self.coords(connection.circle,
-                        connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
-                        connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
+            connection.update_location((x, y))
 
         self.move_boxes_spiders('display_x', multiplier)
         self.pan_speed = 20
@@ -301,18 +295,12 @@ class CustomCanvas(tk.Canvas):
                 self.pan_speed = min(abs(1 - corner.location[1]), abs(self.winfo_height() - corner.location[1] - 1))
                 return
 
-        for connection in self.corners:
-            connection.location[1] = connection.location[1] + multiplier * self.pan_speed
-            self.coords(connection.circle,
-                        connection.location[0] - connection.r, connection.location[1] - connection.r,
-                        connection.location[0] + connection.r, connection.location[1] + connection.r)
+        for corner in self.corners:
+            corner.move_to((corner.location[0], corner.location[1] + multiplier * self.pan_speed))
         for connection in self.inputs + self.outputs:
             connection.display_location[1] = connection.display_location[1] + multiplier * self.pan_speed
             x, y = self.convert_display_logical(connection.display_location[0], connection.display_location[1])
-            connection.update_coords(x, y)
-            self.coords(connection.circle,
-                        connection.display_location[0] - connection.r, connection.display_location[1] - connection.r,
-                        connection.display_location[0] + connection.r, connection.display_location[1] + connection.r)
+            connection.update_location((x, y))
 
         self.move_boxes_spiders('display_y', multiplier)
         self.pan_speed = 20
@@ -327,9 +315,7 @@ class CustomCanvas(tk.Canvas):
         """
         for spider in self.spiders:
             setattr(spider, attr, getattr(spider, attr) + multiplier * self.pan_speed)
-            x, y = self.convert_display_logical(spider.display_x, spider.display_y)
-            spider.update_coords(x, y)
-            spider.move_to((spider.x, spider.y))
+            spider.update_location((spider.x, spider.y))
         for box in self.boxes:
             setattr(box, attr, getattr(box, attr) + multiplier * self.pan_speed)
             x = box.display_x
@@ -341,7 +327,7 @@ class CustomCanvas(tk.Canvas):
                 y = y + box.size[1]
             x, y = self.convert_display_logical(x, y)
             box.update_coords(x, y)
-            box.update_size(box.get_logical_size(box.size)[0], box.get_logical_size(box.size)[1])
+            box.update_size(*box.get_logical_size(box.size))
             box.move_label()
         for wire in self.wires:
             wire.update()
@@ -466,10 +452,8 @@ class CustomCanvas(tk.Canvas):
                 self.calculate_zoom_dif(event.y, i_o.display_location[1], denominator)
             ]
             i_o.r *= scale
-            x, y = self.convert_display_logical(i_o_location[0], i_o_location[1])
-            i_o.update_coords(x, y)
-            self.coords(i_o.circle, i_o.display_location[0] - i_o.r, i_o.display_location[1] - i_o.r,
-                        i_o.display_location[0] + i_o.r, i_o.display_location[1] + i_o.r)
+            x, y = self.convert_display_logical(*i_o_location)
+            i_o.update_location((x, y))
             self.itemconfig(i_o.circle, width=i_o.r * 2 / 10)
 
         for box in self.boxes:
@@ -490,10 +474,8 @@ class CustomCanvas(tk.Canvas):
             x = self.calculate_zoom_dif(event.x, spider.display_x, denominator)
             y = self.calculate_zoom_dif(event.y, spider.display_y, denominator)
             x, y = self.convert_display_logical(x, y)
-            spider.update_coords(x, y)
             spider.r *= scale
-            self.coords(spider.circle, spider.display_x - spider.r, spider.display_y - spider.r, spider.display_x + spider.r,
-                        spider.display_y + spider.r)
+            spider.update_location((x, y))
             self.itemconfig(spider.circle, width=round(min(spider.r / 5, 5)))
 
         for wire in self.wires:
@@ -617,6 +599,7 @@ class CustomCanvas(tk.Canvas):
         :param event: tkinter.Event.
         :return: None
         """
+        print(event)
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
         [box.close_menu() for box in self.boxes]
         [wire.close_menu() for wire in self.wires]
@@ -1085,23 +1068,24 @@ class CustomCanvas(tk.Canvas):
         y = self.corners[3].location[1]
         min_y = self.corners[0].location[1]
         min_x = self.corners[0].location[0]
-        if len(self.outputs) != 0 or len(self.inputs) != 0:
+        if len(self.outputs + self.inputs) != 0:
             if self.rotation == 180 or self.rotation == 270:
                 x = self.main_diagram.custom_canvas.winfo_width() - self.corners[0].location[0]
                 min_x = self.main_diagram.custom_canvas.winfo_width() - self.corners[3].location[0]
             if self.rotation == 270:
                 y = self.main_diagram.custom_canvas.winfo_height() - self.corners[0].location[1]
                 min_y = self.main_diagram.custom_canvas.winfo_height() - self.corners[3].location[1]
+
         output_index = max([o.index for o in self.outputs] + [0])
         for o in self.outputs:
             i = o.index
             match self.rotation:
                 case 90 | 270:
                     step = (x - min_x) / (output_index + 2)
-                    o.move_to([y - 7, min_x + step * (i + 1)])
+                    o.update_location([y - 7, min_x + step * (i + 1)])
                 case _:
                     step = (y - min_y) / (output_index + 2)
-                    o.move_to([x - 7, min_y + step * (i + 1)])
+                    o.update_location([x - 7, min_y + step * (i + 1)])
 
         input_index = max([o.index for o in self.inputs] + [0])
         for o in self.inputs:
@@ -1109,10 +1093,10 @@ class CustomCanvas(tk.Canvas):
             match self.rotation:
                 case 90 | 270:
                     step = (x - min_x) / (input_index + 2)
-                    o.move_to([6 + min_y, min_x + step * (i + 1)])
+                    o.update_location([6 + min_y, min_x + step * (i + 1)])
                 case _:
                     step = (y - min_y) / (input_index + 2)
-                    o.move_to([6 + min_x, min_y + step * (i + 1)])
+                    o.update_location([6 + min_x, min_y + step * (i + 1)])
         [w.update() for w in self.wires]
 
     def delete_everything(self):
@@ -1553,7 +1537,7 @@ class CustomCanvas(tk.Canvas):
             case _:  # 0
                 return x, y
 
-    def swap_cords_if_rotated(self, x, y):
+    def get_rotated_coords(self, x, y):
         """
         Swaps coordinates if canvas is rotated otherwise returns original coordinates.
 

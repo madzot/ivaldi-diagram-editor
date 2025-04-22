@@ -46,7 +46,15 @@ class Box:
         self.display_y = y
         self.size = self.get_logical_size(size)
 
-        self.update_coords(x, y)
+        if self.canvas.rotation == 180:
+            self.x = self.x - self.size[0]
+        if self.canvas.rotation == 270:
+            self.x = self.x - self.size[0]
+            self.y = self.y - self.size[1]
+
+        self.update_coords(self.x, self.y)
+
+        self.display_x, self.display_y = self.canvas.convert_logical_display(x, y)
 
         self.start_x = self.display_x
         self.start_y = self.display_y
@@ -73,7 +81,6 @@ class Box:
                                                           self.display_y + self.size[1],
                                                           outline=const.BLACK, fill=const.BLACK)
         self.locked = False
-        self.bind_events()
         self.sub_diagram = None
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:
@@ -87,6 +94,7 @@ class Box:
         self.collision_ids = [self.shape, self.resize_handle]
 
         self.update_size(size[0], size[1])
+        self.bind_events()
 
     def set_id(self, id_):
         """
@@ -811,7 +819,7 @@ class Box:
         """
         for c in self.connections:
             conn_x, conn_y = self.get_connection_coordinates(c.side, c.index)
-            c.move_to((conn_x, conn_y))
+            c.update_location((conn_x, conn_y))
 
     def update_wires(self):
         """
