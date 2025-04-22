@@ -88,10 +88,10 @@ class Box:
 
         self.collision_ids = [self.shape, self.resize_handle]
 
+        self.update_size(size[0], size[1])
         self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
         self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
 
-        self.update_size(size[0], size[1])
         self.bind_events()
 
     def set_id(self, id_):
