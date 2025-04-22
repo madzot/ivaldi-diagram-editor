@@ -54,7 +54,8 @@ class ManageMethods(tk.Toplevel):
 
         self.edit_label_button = ttk.Button(self.button_frame, text="Edit label", command=self.open_label_editor)
 
-        self.delete_button = ttk.Button(self.button_frame, text="Delete", command=self.delete_method, bootstyle=ttk.DANGER)
+        self.delete_button = ttk.Button(self.button_frame, text="Delete", command=self.delete_method,
+                                        bootstyle=ttk.DANGER)
 
         self.main_diagram.load_functions()
 
@@ -190,4 +191,3 @@ class ManageMethods(tk.Toplevel):
             file.seek(0)
             file.truncate(0)
             file.write(json_object)
-
