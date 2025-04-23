@@ -41,11 +41,21 @@ class RotationButton(tk.LabelFrame):
 
         :return: None
         """
+        self.update_location()
+        self.update_arrow()
+
+    def update_location(self):
+        """
+        Update location of the RotationButton.
+
+        Replaces it back to the bottom right corner of the CustomCanvas.
+
+        :return:
+        """
         self.place_forget()
         gap_size = 5
         self.place(x=self.custom_canvas.winfo_width() - self.winfo_width() - gap_size,
                    y=self.custom_canvas.winfo_height() - self.winfo_height() - gap_size)
-        self.update_arrow()
 
     def update_arrow(self):
         """

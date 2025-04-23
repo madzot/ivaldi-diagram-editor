@@ -55,6 +55,8 @@ class MainDiagram(tk.Tk):
         self.wm_minsize(screen_width_min, screen_height_min)
 
         self.is_search_active = False
+        self.is_tree_visible = True
+        self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
 
         self.selector = None
 
@@ -76,13 +78,10 @@ class MainDiagram(tk.Tk):
         self.bind("<Control-f>", lambda event: self.open_search_window())
         self.search_window = None
 
-        self.is_tree_visible = True
-        self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
         self.tree.bind("<Motion>", "break")
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
-
         # Add some items to the tree
         self.tree.insert("", "end", str(self.custom_canvas.id), text="Root")
         self.canvasses = {str(self.custom_canvas.id): self.custom_canvas}

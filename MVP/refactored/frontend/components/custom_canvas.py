@@ -979,6 +979,8 @@ class CustomCanvas(tk.Canvas):
 
         self.main_diagram.toolbar.update_canvas_label()
 
+        self.rotation_button.update_location()
+
         self.__on_configure_move__()
 
     def __on_configure_move__(self):

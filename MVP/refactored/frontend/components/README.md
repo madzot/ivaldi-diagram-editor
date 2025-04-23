@@ -492,6 +492,9 @@ RotationButton is a button that allows the user to change the direction/rotation
     .update()
         Updates the entire button.
 
+    .update_location()
+        Update the location of the button. Replaces it back to the bottom right corner of the CustomCanvas.
+
     .update_arrow()
         Updates the arrow inside the button.
 
