@@ -67,7 +67,7 @@ class Toolbar(ttk.Frame):
 
         # View menu buttons
         self.view_menu.add_command(label="Visualize hypergraph",
-                                   command=lambda: self.main_diagram.visualize_as_graph(self.main_diagram.custom_canvas))
+                                   command=lambda: self.main_diagram.visualize_as_graph())
 
         self.view_button.pack(side=ttk.LEFT)
 
@@ -170,5 +170,3 @@ class Toolbar(ttk.Frame):
             root_canvas.delete_everything()
         if import_:
             self.main_diagram.load_from_file()
-
-

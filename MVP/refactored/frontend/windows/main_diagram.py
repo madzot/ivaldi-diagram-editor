@@ -2,7 +2,8 @@ import hashlib
 import json
 import os
 import tkinter as tk
-from tkinter import messagebox
+from contextlib import ExitStack
+from tkinter import messagebox, filedialog
 from tkinter import simpledialog
 
 import matplotlib.patches as patches
@@ -13,9 +14,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from scipy.interpolate import make_interp_spline
 from ttkbootstrap.constants import *
 
+import constants as const
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
+from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.hypergraph.visualization.visualization import Visualization
+from MVP.refactored.backend.types.ActionType import ActionType
+from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
@@ -27,7 +33,8 @@ from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.frontend.windows.search_window import SearchWindow
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
-from MVP.refactored.util.importer import Importer
+from MVP.refactored.util.importer.json_importer.json_importer import JsonImporter
+from MVP.refactored.util.importer.python_importer.python_importer import PythonImporter
 import constants as const
 
 
@@ -96,7 +103,8 @@ class MainDiagram(tk.Tk):
         self.control_frame.pack(side=tk.RIGHT, fill=tk.Y)
         self.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         self.project_exporter = ProjectExporter(self.custom_canvas)
-        self.importer = Importer(self.custom_canvas)
+        self.json_importer = JsonImporter(self.custom_canvas)
+        self.python_importer = PythonImporter(self.custom_canvas)
         # Add undefined box
         self.undefined_box_button = ttk.Button(self.control_frame, text="Add Undefined Box",
                                                command=self.custom_canvas.add_box, width=20,
@@ -173,13 +181,14 @@ class MainDiagram(tk.Tk):
             button.pack(side=tk.BOTTOM, padx=5, pady=5)
             self.saved_buttons[name] = button
 
-        if load:
-            self.load_from_file()
         self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
         self.load_functions()
         self.manage_methods = None
         self.import_counter = 0
+
+        if load:
+            self.load_from_file()
 
         self.update()
         self.minsize(self.winfo_width(), self.winfo_height())
@@ -207,6 +216,16 @@ class MainDiagram(tk.Tk):
             with open(const.FUNCTIONS_CONF, "r") as file:
                 self.label_content = json.load(file)
 
+    def add_function_to_label_content(self, function_name: str, function_code: str) -> None:
+        """
+        Add function to label content dictionary.
+
+        :param function_name: Name of the function.
+        :param function_code: Code of the function.
+        :return: None
+        """
+        self.label_content[function_name] = function_code
+
     def generate_code(self):
         """
         Generate code based on diagram.
@@ -216,8 +235,7 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
-        code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
+        code = CodeGenerator.generate_code(self.custom_canvas)
         CodeEditor(self, code=code, is_generated=True)
 
     def open_manage_methods_window(self):
@@ -382,23 +400,22 @@ class MainDiagram(tk.Tk):
                 copy_button = tk.Button(frame, text="Copy", command=lambda tb=text_box: self.copy_to_clipboard(tb))
                 copy_button.pack(pady=5)
 
-    def visualize_as_graph(self, canvas):
+    def visualize_as_graph(self):
         """
         Open graph visualization window.
 
-        :param canvas: CustomCanvas that will be visualized.
         :return: None
         """
-        hypergraph = HypergraphManager.get_graph_by_id(canvas.id)
-        if hypergraph is None:
-            messagebox.showerror("Error", f"No hypergraph found with ID: {canvas.id}")
+        hypergraphs: list[Hypergraph] = HypergraphManager.get_graphs_by_canvas_id(self.custom_canvas.id)
+        if len(hypergraphs) == 0:
+            messagebox.showerror("Error", f"No hypergraph found with ID: {self.custom_canvas.id}")
             return
 
         plot_window = tk.Toplevel(self)
         plot_window.title("Graph Visualization")
 
         try:
-            figure = hypergraph.visualize()
+            figure = Visualization.create_visualization_of_hypergraphs(self.custom_canvas.id)
         except Exception as e:
             messagebox.showerror("Error", "Failed to generate the visualization." +
                                  f"Error during visualization: {e}")
@@ -447,7 +464,6 @@ class MainDiagram(tk.Tk):
         self.draw_wire_button.configure(command=self.custom_canvas.toggle_draw_wire_mode)
 
         self.random.configure(command=self.custom_canvas.random)
-        # TODO figure out why this is needed! and change it!
         if not self.custom_canvas.diagram_source_box:
             buttons = {
                 "Remove input": self.custom_canvas.remove_diagram_input,
@@ -522,7 +538,6 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        # TODO SET limit on how long name can be, same for boxes
         if self.custom_canvas.diagram_source_box:
             txt = "Enter label for sub-diagram:"
         else:
@@ -627,8 +642,9 @@ class MainDiagram(tk.Tk):
                 self.custom_canvas.diagram_source_box.remove_connection(c)
             self.custom_canvas.remove_diagram_input()
             if self.receiver.listener:
-                self.receiver.receiver_callback("remove_inner_left",
-                                                generator_id=self.custom_canvas.diagram_source_box.id)
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_INNER_LEFT,
+                                                generator_id=self.custom_canvas.diagram_source_box.id,
+                                                canvas_id=self.custom_canvas.id, connection_id=c.id)
         else:
             self.custom_canvas.remove_diagram_input()
 
@@ -645,8 +661,9 @@ class MainDiagram(tk.Tk):
                 self.custom_canvas.diagram_source_box.remove_connection(c)
             self.custom_canvas.remove_diagram_output()
             if self.receiver.listener:
-                self.receiver.receiver_callback("remove_inner_right",
-                                                generator_id=self.custom_canvas.diagram_source_box.id)
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_INNER_RIGHT,
+                                                generator_id=self.custom_canvas.diagram_source_box.id, canvas_id=self.custom_canvas.id,
+                                                connection_id=c.id)
         else:
             self.custom_canvas.remove_diagram_output()
 
@@ -748,7 +765,7 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        d = self.importer.load_boxes_to_menu()
+        d = self.json_importer.load_boxes_to_menu()
         self.quick_create_booleans = []
         for k in d:
             self.boxes[k] = self.add_custom_box
@@ -762,7 +779,7 @@ class MainDiagram(tk.Tk):
         :param canvas: canvas to add box to.
         :return: None
         """
-        self.importer.add_box_from_menu(canvas, name)
+        self.json_importer.add_box_from_menu(canvas, name)
 
     def save_box_to_diagram_menu(self, box):
         """
@@ -808,9 +825,53 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        filename = self.importer.import_diagram()
-        if filename:
-            self.set_title(filename.replace(".json", ""))
+        filetypes = (("JSON files", "*.json"), ("Python files", "*.py"), ("All files", "*.*"))
+        allowed_multiple_files_filetypes = {".py"}
+        importers = {".json": self.json_importer, ".py": self.python_importer}
+
+        while True:
+            file_paths = filedialog.askopenfilenames(title="Select JSON / Python file", filetypes=filetypes)
+            if not file_paths:
+                return
+
+            with ExitStack() as stack:
+                try:
+                    files = []
+                    imported_files_extension = None
+                    files_names = set()
+
+                    for file_path in file_paths:
+                        file_name, file_extension = os.path.splitext(file_path)
+                        if file_name in files_names:
+                            raise ValueError( f"Duplicate file name: {file_name}. Please select unique files.")
+
+                        if not imported_files_extension:
+                            imported_files_extension = file_extension
+
+                        if file_extension != imported_files_extension:
+                            raise ValueError( "Please select files with the same extension.")
+
+                        files.append(stack.enter_context(open(file_path, 'r')))
+
+                    if imported_files_extension not in allowed_multiple_files_filetypes and len(files) > 1:
+                        raise ValueError("Selected extension does not support multiple files. Please select a single file.")
+
+                    importer = importers.get(imported_files_extension)
+                    if not importer:
+                        raise ValueError("Unsupported file format!")
+
+                    title = importer.start_import(files)
+
+                    messagebox.showinfo("Info", "Imported successfully")
+                    self.set_title(title)
+                    break
+
+                except ValueError as error:
+                    messagebox.showerror("Import failed", str(error))
+
+                except (FileNotFoundError, IOError, json.JSONDecodeError):
+                    messagebox.showerror("Error", "File import failed, loading new empty canvas.")
+                    break
 
     def update_shape_dropdown_menu(self):
         """

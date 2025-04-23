@@ -104,7 +104,6 @@ class Selector:
                 )
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
-        self.canvas.receiver.listener = False
         self.canvas.copier.copy_canvas_contents(
             sub_diagram, self.selected_wires, self.selected_boxes, self.selected_spiders, coordinates, box
         )

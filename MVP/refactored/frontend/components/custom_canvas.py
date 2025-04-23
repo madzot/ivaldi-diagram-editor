@@ -6,8 +6,11 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
+import constants as const
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.id_generator import IdGenerator
+from MVP.refactored.backend.types.ActionType import ActionType
+from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
@@ -74,9 +77,11 @@ class CustomCanvas(tk.Canvas):
         self.diagram_source_box = diagram_source_box  # Only here if canvas is sub-diagram
 
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id(self)
         else:
             self.id = id_
+
+        self.receiver.add_new_canvas(self.id)
 
         self.name_text = str(self.id)[-6:]
         self.select_box = None
@@ -325,7 +330,6 @@ class CustomCanvas(tk.Canvas):
 
         :return: None
         """
-        HypergraphManager.modify_canvas_hypergraph(self)
         super().delete(*args)
 
     def handle_right_click(self, event):
@@ -489,6 +493,7 @@ class CustomCanvas(tk.Canvas):
                 y_offset = -next_location[1] * multiplier
                 if round(next_location[1]) > self.canvasy(self.winfo_height()) / 2:
                     y_offset = (self.canvasy(self.winfo_height()) - next_location[1]) * multiplier
+
         is_allowed = x_offset == 0 == y_offset
         return is_allowed, x_offset, y_offset, self.check_corner_start_locations()
 
@@ -643,6 +648,17 @@ class CustomCanvas(tk.Canvas):
                     return circle
         return None
 
+    def _fix_new_sub_diagram_box_wires(self, sub_diagram_box: Box) -> None:
+        """
+        This is workaround to fix the wires that are not connected to the sub-diagram box
+        """
+        if not sub_diagram_box:
+            return
+
+        for connection in sub_diagram_box.connections:
+            correct_wire = connection.wire
+            correct_wire.end_connection.wire = correct_wire
+
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event, connection=None):
         """
@@ -764,8 +780,6 @@ class CustomCanvas(tk.Canvas):
             current_wire.update()
             self.nullify_wire_start()
 
-        HypergraphManager.modify_canvas_hypergraph(self)
-
     def cancel_wire_pulling(self, event=None):
         """
         Cancel Wire pulling.
@@ -839,7 +853,8 @@ class CustomCanvas(tk.Canvas):
         """
         box = self.get_box_by_id(box_id)
         if box:
-            return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
+            return BoxFunction(predefined_function_file_name=box.label_text,
+                               file_code=self.main_diagram.label_content[box.label_text])
         return None
 
     def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC):
@@ -1162,18 +1177,17 @@ class CustomCanvas(tk.Canvas):
         if len(self.outputs) != 0:
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
-                                           const.LEFT, [0, 0], self,
+                                           ConnectionSide.LEFT, [0, 0], self,
                                            r=5 * self.total_scale, id_=id_, connection_type=connection_type)
 
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
-                                            connection_id=connection_output_new.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_output", generator_id=None,
-                                            connection_id=connection_output_new.id)
+        if self.receiver.listener:
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_OUTPUT, connection_nr=connection_output_new.index,
+                                            connection_id=connection_output_new.id,
+                                            connection_side=connection_output_new.side, canvas_id=self.id)
 
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
+
         return connection_output_new
 
     def add_diagram_input_for_sub_d_wire(self, id_=None):
@@ -1216,7 +1230,8 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_output")
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_OUTPUT, canvas_id=self.id,
+                                            connection_id=to_be_removed.id)
 
     def add_diagram_input(self, id_=None, connection_type=ConnectionType.GENERIC):
         """
@@ -1232,16 +1247,16 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, const.RIGHT, [0, 0], self,
+        new_input = Connection(self.diagram_source_box, input_index, ConnectionSide.RIGHT, [0, 0], self,
                                r=5 * self.total_scale, id_=id_, connection_type=connection_type)
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
-                                            connection_id=new_input.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_input", generator_id=None,
-                                            connection_id=new_input.id)
+        if self.receiver.listener:
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_INPUT,
+                                            connection_id=new_input.id, connection_nr=new_input.index,
+                                            connection_side=new_input.side, canvas_id=self.id)
+
         self.inputs.append(new_input)
         self.update_inputs_outputs()
+
         return new_input
 
     def remove_diagram_input(self):
@@ -1256,7 +1271,8 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_input")
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_INPUT, canvas_id=self.id,
+                                            connection_id=to_be_removed.id)
 
     def remove_specific_diagram_input(self, con):
         """
@@ -1304,6 +1320,15 @@ class CustomCanvas(tk.Canvas):
 
         con.delete()
         self.update_inputs_outputs()
+
+    def find_connection_to_remove(self, side):
+        c_max = 0
+        c = None
+        for connection in self.diagram_source_box.connections:
+            if connection.side == side and connection.index >= c_max:
+                c_max = connection.index
+                c = connection
+        return c
 
     def export_hypergraph(self):
         """
