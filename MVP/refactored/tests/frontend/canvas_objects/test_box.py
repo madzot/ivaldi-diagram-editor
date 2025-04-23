@@ -449,8 +449,8 @@ class BoxTests(TestMainDiagram):
     @patch("MVP.refactored.frontend.components.custom_canvas.CustomCanvas.canvasy", return_value=400)
     def test__on_press__variable_changes(self, canvas_y_mock, canvas_x_mock):
         box = Box(self.custom_canvas, 100, 100)
-        box.x = 100
-        box.y = 100
+        box.display_x = 100
+        box.display_y = 100
         event = tkinter.Event()
         event.x = 300
         event.y = 400

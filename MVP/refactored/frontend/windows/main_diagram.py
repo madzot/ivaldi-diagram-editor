@@ -31,9 +31,10 @@ import constants as const
 
 class MainDiagram(tk.Tk):
     """
-    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
-    you see when using the application.
+    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window
+    that you see when using the application.
     """
+
     def __init__(self, receiver, load=False):
         """
         MainDiagram constructor.
@@ -214,7 +215,8 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
+        print(
+            "Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         CodeEditor(self, code=code, is_generated=True)
 
@@ -288,7 +290,8 @@ class MainDiagram(tk.Tk):
         :return: None
         """
         for canvas in self.canvasses.values():
-            canvas.search_result_button.info_text.set(f"Search: {self.active_search_index + 1}/{len(self.search_results)}")
+            canvas.search_result_button.info_text.set(
+                f"Search: {self.active_search_index + 1}/{len(self.search_results)}")
 
     def check_search_result_canvas(self, index):
         """
@@ -743,7 +746,8 @@ class MainDiagram(tk.Tk):
 
         # Add options to the dropdown menu
         for i, name in enumerate(self.boxes):
-            self.add_box_dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
+            self.add_box_dropdown_menu.add_command(label=name,
+                                                   command=lambda n=name: self.boxes[n](n, self.custom_canvas))
 
     def remove_option(self, option):
         """
@@ -912,32 +916,35 @@ class MainDiagram(tk.Tk):
         ax.set_aspect('equal', adjustable='box')
 
         for box in canvas.boxes:
-            if box.style == const.TRIANGLE:
-                polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
-                                           (box.x / 100, y_max - box.y / 100),
-                                           (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),
+            if box.shape == const.TRIANGLE:
+                polygon = patches.Polygon(((box.display_x / 100, y_max - box.display_y / 100 - box.size[1] / 100),
+                                           (box.display_x / 100, y_max - box.display_y / 100),
+                                           (box.display_x / 100 + box.size[0] / 100,
+                                            y_max - box.display_y / 100 - box.size[1] / 200)),
                                           edgecolor=const.BLACK, facecolor="none")
             else:
-                polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
+                polygon = patches.Rectangle((box.display_x / 100, y_max - box.display_y / 100 - box.size[1] / 100),
+                                            box.size[0] / 100,
                                             box.size[1] / 100, label="_nolegend_", edgecolor=const.BLACK,
                                             facecolor="none")
             if show_connections:
                 for connection in box.connections:
-                    circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
-                                            connection.r / 100, color=const.BLACK, zorder=2)
+                    circle = patches.Circle(
+                        (connection.display_location[0] / 100, y_max - connection.display_location[1] / 100),
+                        connection.r / 100, color=const.BLACK, zorder=2)
                     ax.add_patch(circle)
 
-            plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
-                     horizontalalignment="center", verticalalignment="center", zorder=2)
+            plt.text(box.display_x / 100 + box.size[0] / 2 / 100, y_max - box.display_y / 100 - box.size[1] / 2 / 100,
+                     box.label_text, horizontalalignment="center", verticalalignment="center", zorder=2)
             ax.add_patch(polygon)
 
         for spider in canvas.spiders:
-            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100,
+            circle = patches.Circle((spider.display_x / 100, y_max - spider.display_y / 100), spider.r / 100,
                                     color=const.BLACK, zorder=2)
             ax.add_patch(circle)
 
         for i_o in canvas.inputs + canvas.outputs:
-            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100,
+            con = patches.Circle((i_o.display_location[0] / 100, y_max - i_o.display_location[1] / 100), i_o.r / 100,
                                  color=const.BLACK, zorder=2)
             ax.add_patch(con)
 
@@ -945,9 +952,13 @@ class MainDiagram(tk.Tk):
             x = []
             y = []
             x_y = {}
-            for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
-                x_y[x_coord / 100] = y_max - y_coord / 100
 
+            if self.custom_canvas.is_vertical():
+                for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                    x_y[y_max - y_coord / 100] = x_coord / 100
+            else:
+                for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                    x_y[x_coord / 100] = y_max - y_coord / 100
             x_y = dict(sorted(x_y.items()))
             for x_coord in x_y.keys():
                 x.append(x_coord)
@@ -961,8 +972,10 @@ class MainDiagram(tk.Tk):
             y_line = spl(x_linspace)
 
             color, style = self.get_wire_style(wire)
-
-            plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
+            if self.custom_canvas.is_vertical():
+                plt.plot(y_line, x_linspace, style, color=color, linewidth=2, zorder=1)
+            else:
+                plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
 
         for label_tag in canvas.wire_label_tags:
             coords = canvas.coords(label_tag)
