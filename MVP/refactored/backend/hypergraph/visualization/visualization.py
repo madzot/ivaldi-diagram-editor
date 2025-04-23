@@ -1,6 +1,6 @@
 import math
 import matplotlib.pyplot as plt
-import hypernetx as hnx
+# import hypernetx as hnx
 import matplotlib.patches as patches
 from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
@@ -99,9 +99,9 @@ class Visualization:
             for node, roles in node_roles.items()
         }
 
-        H = hnx.Hypergraph(edge_dict)
-        hnx.draw(H, with_node_labels=True, with_edge_labels=True, ax=ax,
-                 nodes_kwargs={"facecolors": node_facecolors})
+        # H = hnx.Hypergraph(edge_dict)
+        # hnx.draw(H, with_node_labels=True, with_edge_labels=True, ax=ax,
+        #          nodes_kwargs={"facecolors": node_facecolors})
 
         # Add legend
         if ax is not None:

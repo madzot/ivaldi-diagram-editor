@@ -25,7 +25,6 @@ class JsonImporter(Importer):
         self.id_randomize = {}
         self.seed = ""
         self.random_id = False
-        self.boxes_json_conf = "./MVP/refactored/conf/boxes_conf.json"
 
     def get_id(self, id_):
         if not self.random_id:
@@ -142,7 +141,7 @@ class JsonImporter(Importer):
 
     def load_boxes_to_menu(self):
         try:
-            with open(self.boxes_json_conf, 'r') as json_file:
+            with open(const.BOXES_CONF, 'r') as json_file:
                 data = json.load(json_file)
                 return data
         except FileNotFoundError or IOError or json.JSONDecodeError:

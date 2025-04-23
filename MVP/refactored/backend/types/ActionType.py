@@ -1,7 +1,8 @@
 from enum import auto, StrEnum
 
+
 class ActionType(StrEnum):
-    WIRE_CREATE = auto(), # canvas_id, start and end connections
+    WIRE_CREATE = auto(),  # canvas_id, start and end connections
     WIRE_DELETE = auto(),
 
     SPIDER_CREATE = auto(),

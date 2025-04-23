@@ -21,7 +21,6 @@ from MVP.refactored.backend.hypergraph.hypergraph import Hypergraph
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
 from MVP.refactored.backend.hypergraph.visualization.visualization import Visualization
 from MVP.refactored.backend.types.ActionType import ActionType
-from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
@@ -35,7 +34,6 @@ from MVP.refactored.modules.notations.notation_tool import get_notations, is_can
 from MVP.refactored.util.exporter.project_exporter import ProjectExporter
 from MVP.refactored.util.importer.json_importer.json_importer import JsonImporter
 from MVP.refactored.util.importer.python_importer.python_importer import PythonImporter
-import constants as const
 
 
 class MainDiagram(tk.Tk):
@@ -184,6 +182,7 @@ class MainDiagram(tk.Tk):
         self.json_file_hash = self.calculate_boxes_json_file_hash()
         self.label_content = {}
         self.load_functions()
+        print(self.label_content)
         self.manage_methods = None
         self.import_counter = 0
 

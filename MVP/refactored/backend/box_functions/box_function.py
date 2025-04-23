@@ -16,6 +16,7 @@ def get_predefined_functions() -> dict:
             with open(full_path, "r") as file:
                 function_name = name.replace(".py", "").replace("_", " ")
                 predefined_functions_dict[function_name] = file.read()
+
     return predefined_functions_dict
 
 

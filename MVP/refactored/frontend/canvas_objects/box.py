@@ -14,7 +14,6 @@ from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
-import constants as const
 
 
 class Box:
@@ -203,8 +202,8 @@ class Box:
             box_function = BoxFunction(predefined_function_file_name=file.name, file_code=file.read())
             self.set_box_function(box_function)
 
-    def set_predefined_function(self, name: str):
-        box_function = BoxFunction(predefined_function_file_name=name, is_predefined_function=True)
+    def set_predefined_function(self, name: str, code):
+        box_function = BoxFunction(predefined_function_file_name=name, file_code=code)
         self.set_box_function(box_function)
 
     def set_box_function(self, box_function: BoxFunction):
@@ -640,6 +639,7 @@ class Box:
                                                       "A box with this label already exists."
                                                       " Do you want to use the existing box?"):
                                 self.update_io()
+                                self.set_predefined_function(self.label_text, self.canvas.main_diagram.label_content[self.label_text])
                             else:
                                 return self.edit_label()
         else:
