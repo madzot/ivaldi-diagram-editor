@@ -15,6 +15,7 @@ from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.tikz_window import TikzWindow
@@ -145,6 +146,7 @@ class CustomCanvas(tk.Canvas):
         self.wire_label_tags = []
 
         self.rotation = rotation  # Usable values are 0, 90, 180, 270. Other values should act like 0.
+        self.rotation_button = RotationButton(self, self)
 
     def on_hover(self, item):
         """
@@ -974,6 +976,8 @@ class CustomCanvas(tk.Canvas):
 
         self.main_diagram.toolbar.update_canvas_label()
 
+        self.rotation_button.update_location()
+
         self.__on_configure_move__()
 
     def __on_configure_move__(self):
@@ -1553,3 +1557,11 @@ class CustomCanvas(tk.Canvas):
         :return: True if the rotation is 0 or 180 degrees, otherwise False.
         """
         return self.rotation in [0, 180]
+
+    def set_rotation(self, rotation):
+        """
+        Set rotation of the CustomCanvas.
+
+        :return: None
+        """
+        self.rotation = rotation % 360

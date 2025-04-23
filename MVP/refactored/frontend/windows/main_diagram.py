@@ -19,6 +19,7 @@ from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManag
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Toolbar
+from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.frontend.windows.manage_methods import ManageMethods
@@ -54,6 +55,8 @@ class MainDiagram(tk.Tk):
         self.wm_minsize(screen_width_min, screen_height_min)
 
         self.is_search_active = False
+        self.is_tree_visible = True
+        self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
 
         self.selector = None
 
@@ -65,6 +68,7 @@ class MainDiagram(tk.Tk):
         self.custom_canvas = CustomCanvas(self, self)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.custom_canvas.update()
 
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
@@ -73,13 +77,10 @@ class MainDiagram(tk.Tk):
         self.bind("<Control-f>", lambda event: self.open_search_window())
         self.search_window = None
 
-        self.is_tree_visible = True
-        self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
         self.tree.bind("<Motion>", "break")
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
-
         # Add some items to the tree
         self.tree.insert("", "end", str(self.custom_canvas.id), text="Root")
         self.canvasses = {str(self.custom_canvas.id): self.custom_canvas}
@@ -491,6 +492,7 @@ class MainDiagram(tk.Tk):
             if box.sub_diagram:
                 self.tree.move(str(box.sub_diagram.id), str(canvas.id), "end")
 
+
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
 
@@ -553,6 +555,7 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.configure(width=width)
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
+        self.custom_canvas.rotation_button.update()
         self.bind_buttons()
 
         self.toolbar.update_canvas_label()
@@ -865,6 +868,7 @@ class MainDiagram(tk.Tk):
             self.tree.update()
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
+        self.custom_canvas.rotation_button.update_location()
 
     @staticmethod
     def pairwise(iterable):

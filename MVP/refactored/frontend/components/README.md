@@ -70,6 +70,7 @@ inside MainDiagram
 | search_result_highlights | list                   | List containing highlighted objects when showing search results.                                                                                                    |
 | wire_label_tags          | list                   | List of tags that represent the Wire labels on the CustomCanvas.                                                                                                    |
 | rotation                 | int                    | Integer that determines how canvas is rotated.                                                                                                                      |
+| rotation_button          | RotationButton         | RotationButton that controls CustomCanvas rotation/direction.                                                                                                       |
 
 
 ### CustomCanvas functions
@@ -463,6 +464,45 @@ inside MainDiagram
     .is_horizontal()
         Check if the canvas is in a horizontal orientation.
 
+---
+
+## RotationButton
+
+RotationButton is a button that allows the user to change the direction/rotation of the current diagram.
+
+### RotationButton parameters
+
+| **Params**    | **Type**     | **Description**                        |
+|---------------|--------------|----------------------------------------|
+| master        | tkinter.Tk   | tk.Tk master widget.                   |
+| custom_canvas | CustomCanvas | CustomCanvas that the button controls. |
+| **kwargs      |              | Keyword arguments.                     |
+
+### RotationButton variables
+
+| **Variable**  | **Type**               | **Description**                                  |
+|---------------|------------------------|--------------------------------------------------|
+| custom_canvas | CustomCanvas           | CustomCanvas that the button controls.           |
+| arrow_base    | PIL.Image.Image        | Base image of the arrow in the button.           |
+| arrow         | PIL.Image.Image        | Copy the base image that changes with rotations. |
+| arrow_image   | PIL.PhotoTk.PhotoImage | PhotoImage that is displayed.                    |
+| button        | tkinter.Label          | tkinter.Label that holds the arrow.              |
+
+### RotationButton functions
+
+    .update()
+        Updates the entire button.
+
+    .update_location()
+        Update the location of the button. Replaces it back to the bottom right corner of the CustomCanvas.
+
+    .update_arrow()
+        Updates the arrow inside the button.
+
+    .rotate_diagram()
+        Activates diagram rotation.
+
+---
 
 ## SearchResultButton
 
