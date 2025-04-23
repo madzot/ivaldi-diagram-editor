@@ -72,7 +72,6 @@ class MainDiagram(tk.Tk):
 
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
-        self.custom_canvas.rotation_button = RotationButton(self.custom_canvas, self.custom_canvas)
 
         self.bind("<Button-1>", lambda event: self.custom_canvas.focus_set())
         self.bind("<Control-f>", lambda event: self.open_search_window())
@@ -493,7 +492,7 @@ class MainDiagram(tk.Tk):
             if box.sub_diagram:
                 self.tree.move(str(box.sub_diagram.id), str(canvas.id), "end")
 
-        canvas.rotation_button = RotationButton(canvas, canvas)
+        # canvas.rotation_button = RotationButton(canvas, canvas)
 
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
@@ -870,7 +869,7 @@ class MainDiagram(tk.Tk):
             self.tree.update()
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
-        self.custom_canvas.update_rotation_button()
+        self.custom_canvas.rotation_button.update_location()
 
     @staticmethod
     def pairwise(iterable):

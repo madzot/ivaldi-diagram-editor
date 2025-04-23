@@ -15,6 +15,7 @@ from MVP.refactored.frontend.canvas_objects.spider import Spider
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
+from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.components.search_result_button import SearchResultButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.tikz_window import TikzWindow
@@ -115,7 +116,6 @@ class CustomCanvas(tk.Canvas):
             tree_button.place(x=28, y=20, anchor=tk.CENTER)
 
         self.search_result_button = SearchResultButton(self, self.main_diagram)
-        self.rotation_button = None
 
         self.box_shape = const.RECTANGLE
 
@@ -146,6 +146,7 @@ class CustomCanvas(tk.Canvas):
         self.wire_label_tags = []
 
         self.rotation = rotation  # Usable values are 0, 90, 180, 270. Other values should act like 0.
+        self.rotation_button = RotationButton(self, self)
 
     def on_hover(self, item):
         """
@@ -196,10 +197,6 @@ class CustomCanvas(tk.Canvas):
         if self.main_diagram.is_search_active:
             self.search_result_button.place_forget()
             self.search_result_button.place(x=self.winfo_width() - 90, y=20, anchor=tk.CENTER, width=175, height=30)
-
-    def update_rotation_button(self):
-        if self.rotation_button:
-            self.rotation_button.update()
 
     def remove_search_highlights(self):
         """
