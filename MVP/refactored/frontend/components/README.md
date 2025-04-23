@@ -70,6 +70,7 @@ inside MainDiagram
 | search_result_highlights | list                   | List containing highlighted objects when showing search results.                                                                                                    |
 | wire_label_tags          | list                   | List of tags that represent the Wire labels on the CustomCanvas.                                                                                                    |
 | rotation                 | int                    | Integer that determines how canvas is rotated.                                                                                                                      |
+| rotation_button          | RotationButton         | RotationButton that controls CustomCanvas rotation/direction.                                                                                                       |
 
 
 ### CustomCanvas functions
