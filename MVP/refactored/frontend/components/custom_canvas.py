@@ -556,7 +556,7 @@ class CustomCanvas(tk.Canvas):
                 for box in self.main_diagram.quick_create_boxes:
                     sub_menu.add_command(label=box,
                                          command=lambda loc=(event.x, event.y), name=box:
-                                         self.main_diagram.importer.add_box_from_menu(self, name, loc))
+                                         self.main_diagram.json_importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(event.x, event.y): self.add_spider(loc))
