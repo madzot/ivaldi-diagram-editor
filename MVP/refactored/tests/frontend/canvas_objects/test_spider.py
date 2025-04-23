@@ -35,7 +35,7 @@ class SpiderTests(TestMainDiagram):
         self.assertEqual(100, spider.x)
         self.assertEqual(150, spider.y)
         self.assertEqual(10, spider.r)
-        self.assertEqual((100, 150), spider.location)
+        self.assertEqual([100, 150], spider.location)
 
         self.assertTrue(isinstance(spider.connections, list))
         self.assertListEqual([], spider.wires)

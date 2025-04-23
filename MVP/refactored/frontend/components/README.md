@@ -12,16 +12,17 @@ inside MainDiagram
 
 ### CustomCanvas parameters
 
-| **Parameter**         | **Type**     | **Description**                                                                                                                                                                 | 
-|-----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| master                | Tk           | The parent widget of this canvas. If None, tkinter will attempt to use the default root.                                                                                        |
-| main_diagram          | MainDiagram  | MainDiagram object used for accessing variables across the application.                                                                                                         |
-|                       |              |                                                                                                                                                                                 |
-| # **Optional params** |              |                                                                                                                                                                                 |
-| id_                   | int          | Custom ID for canvas.                                                                                                                                                           |
-| is_search             | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
-| diagram_source_box    | Box          | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |
-| **kwargs              |              | Kwargs for `tkinter.Canvas`                                                                                                                                                     |
+| **Parameter**         | **Type**    | **Description**                                                                                                                                                                 | 
+|-----------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| master                | Tk          | The parent widget of this canvas. If None, tkinter will attempt to use the default root.                                                                                        |
+| main_diagram          | MainDiagram | MainDiagram object used for accessing variables across the application.                                                                                                         |
+|                       |             |                                                                                                                                                                                 |
+| # **Optional params** |             |                                                                                                                                                                                 |
+| id_                   | int         | Custom ID for canvas.                                                                                                                                                           |
+| is_search             | boolean     | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
+| diagram_source_box    | Box         | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |
+| rotation              | int         | Integer that determines how canvas is rotated. <br/> Default value is 0.                                                                                                        |
+| **kwargs              |             | Kwargs for `tkinter.Canvas`                                                                                                                                                     |
 
 
 ### CustomCanvas variables
@@ -68,6 +69,7 @@ inside MainDiagram
 | hover_item               | Any                    | Item that is currently being hovered over. This may not show all items being hovered on.                                                                            |
 | search_result_highlights | list                   | List containing highlighted objects when showing search results.                                                                                                    |
 | wire_label_tags          | list                   | List of tags that represent the Wire labels on the CustomCanvas.                                                                                                    |
+| rotation                 | int                    | Integer that determines how canvas is rotated.                                                                                                                      |
 
 
 ### CustomCanvas functions
@@ -439,8 +441,27 @@ inside MainDiagram
             x_length (int): width of the copied area.
             y_length (int): height of the copied area.
 
+    .convert_coords(x, y, to_display, to_logical)
+        Converts coordinates either to visual or logical based on to_display and to_logical values..
+        
+        Parameters:
+            x (int): The logical x-coordinate to convert.
+            y (int): The logical y-coordinate to convert.
+            to_display (boolean): (Optional) Whether to convert from logical to display coordinates.
+            to_logical (boolean): (Optional) Whether to convert from display to logical coordinates.
 
+    .swap_cords_if_rotated(x, y)
+        Swaps x and y values if rotation is 90 or 270 degrees.
 
+        Parameters:
+            x (int): The x-coordinate to potentially swap.
+            y (int): The y-coordinate to potentially swap.
+
+    .is_vertical()
+        Check if the canvas is in a vertical orientation.
+
+    .is_horizontal()
+        Check if the canvas is in a horizontal orientation.
 
 
 ## SearchResultButton

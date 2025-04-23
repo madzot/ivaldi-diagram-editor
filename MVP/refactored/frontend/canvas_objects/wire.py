@@ -6,25 +6,33 @@ from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 import constants as const
 
 
-def curved_line(start, end, det=15):
+def curved_line(start, end, canvas, det=15):
     """
     Calculate the coordinates for a curved line.
 
     :param start: x, y coordinates where the line is starting from.
-    :param end: x,y coordinates where the line ends.
+    :param end: x, y coordinates where the line ends.
+    :param canvas: canvas on which wire is drawn.
     :param det: (Optional) parameter used for calculating wire curvature.
     :return: List of coordinates for a curved line from start to end.
     """
-    sx = start[0]
-    sy = start[1]
-    dx = end[0] - sx
-    dy = end[1] - sy
+
+    start_x, start_y = canvas.get_rotated_coords(start[0], start[1])
+    end_x, end_y = canvas.get_rotated_coords(end[0], end[1])
+
+    sx = start_x
+    sy = start_y
+    dx = end_x - sx
+    dy = end_y - sy
 
     coordinates = [0] * (det * 2 + 2)
     for i in range(det + 1):
         t = i / det
-        coordinates[i * 2] = sx + dx * t
-        coordinates[i * 2 + 1] = sy + dy * (3 * t ** 2 - 2 * t ** 3)
+        x, y = canvas.get_rotated_coords(sx + dx * t, sy + dy * (3 * t ** 2 - 2 * t ** 3))
+
+        coordinates[i * 2] = x
+        coordinates[i * 2 + 1] = y
+
     return coordinates
 
 
@@ -155,11 +163,13 @@ class Wire:
         if self.end_connection:
             if self.line:
                 self.canvas.coords(self.line,
-                                   *curved_line(self.start_connection.location, self.end_connection.location))
+                                   *curved_line(self.start_connection.display_location,
+                                                self.end_connection.display_location,
+                                                self.canvas))
             else:
                 self.line = self.canvas.create_line(
-                    *curved_line(self.start_connection.location, self.end_connection.location),
-                    fill=self.color, width=self.wire_width, dash=self.dash_style)
+                    *curved_line(self.start_connection.display_location, self.end_connection.display_location,
+                                 self.canvas), fill=self.color, width=self.wire_width, dash=self.dash_style)
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
             self.update_wire_label()
             self.canvas.tag_lower(self.line)
@@ -177,24 +187,24 @@ class Wire:
             if self.start_label or self.end_label:
                 if self.start_label:
                     self.canvas.coords(self.start_label,
-                                       self.start_connection.location[0] + self.start_connection.r + size,
-                                       self.start_connection.location[1] - 10)
+                                       self.start_connection.display_location[0] + self.start_connection.r + size,
+                                       self.start_connection.display_location[1] - 10)
                     self.canvas.itemconfig(self.start_label, text=Wire.defined_wires[self.type.name])
                 if self.end_label:
                     self.canvas.coords(self.end_label,
-                                       self.end_connection.location[0] - self.end_connection.r - size,
-                                       self.end_connection.location[1] - 10)
+                                       self.end_connection.display_location[0] - self.end_connection.r - size,
+                                       self.end_connection.display_location[1] - 10)
                     self.canvas.itemconfig(self.end_label, text=Wire.defined_wires[self.type.name])
             else:
                 if not self.start_connection.is_spider():
-                    self.start_label = self.canvas.create_text(self.start_connection.location[0] + size,
-                                                               self.start_connection.location[1] - 10,
+                    self.start_label = self.canvas.create_text(self.start_connection.display_location[0] + size,
+                                                               self.start_connection.display_location[1] - 10,
                                                                text=Wire.defined_wires[self.type.name],
                                                                font="Courier 10")
                     self.canvas.wire_label_tags.append(self.start_label)
                 if not self.end_connection.is_spider():
-                    self.end_label = self.canvas.create_text(self.end_connection.location[0] - size,
-                                                             self.end_connection.location[1] - 10,
+                    self.end_label = self.canvas.create_text(self.end_connection.display_location[0] - size,
+                                                             self.end_connection.display_location[1] - 10,
                                                              text=Wire.defined_wires[self.type.name],
                                                              font="Courier 10")
                     self.canvas.wire_label_tags.append(self.end_label)
