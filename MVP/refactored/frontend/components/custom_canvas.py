@@ -1558,3 +1558,11 @@ class CustomCanvas(tk.Canvas):
         :return: True if the rotation is 0 or 180 degrees, otherwise False.
         """
         return self.rotation in [0, 180]
+
+    def set_rotation(self, rotation):
+        """
+        Set rotation of the CustomCanvas.
+
+        :return: None
+        """
+        self.rotation = rotation % 360

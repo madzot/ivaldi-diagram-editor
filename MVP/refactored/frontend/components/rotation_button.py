@@ -14,20 +14,33 @@ class RotationButton(tk.LabelFrame):
     """
 
     def __init__(self, master, custom_canvas, **kwargs):
+        """
+        RotationButton constructor.
+
+        :param master: tk.Tk master widget.
+        :param custom_canvas: CustomCanvas that the button controls.
+        :param kwargs: key word arguments.
+        """
         super().__init__(master, **kwargs)
         self.custom_canvas = custom_canvas
 
         self.config(height=60, width=60, text="Direction")
 
         self.arrow_base = Image.open(const.ASSETS_DIR + "/arrow-right-thin.png").resize((60, 50))
+        self.arrow = self.arrow_base
         self.arrow_image = PhotoImage(self.arrow_base)
 
-        self.bind("<Button-1>", lambda event: self.rotate_arrow())
+        self.bind("<Button-1>", lambda event: self.rotate_diagram())
 
         self.button = None
         self.update()
 
     def update(self):
+        """
+        Update the RotationButton.
+
+        :return: None
+        """
         self.place_forget()
         gap_size = 5
         self.place(x=self.custom_canvas.winfo_width() - self.winfo_width() - gap_size,
@@ -35,20 +48,28 @@ class RotationButton(tk.LabelFrame):
         self.update_arrow()
 
     def update_arrow(self):
-        # rotating arrow based on direction variable here
-        arrow = self.arrow_base
-        arrow = PhotoImage(arrow.rotate(self.custom_canvas.rotation))
+        """
+        Update the arrow of the button.
+
+        :return: None
+        """
+        self.arrow = self.arrow_base
+        self.arrow = PhotoImage(self.arrow.rotate(-self.custom_canvas.rotation))
 
         if self.button:
             self.button.pack_forget()
-        self.button = tk.Label(self, image=arrow)
+        self.button = tk.Label(self, image=self.arrow)
         self.button.image = self.arrow_image
-        self.button.bind("<Button-1>", lambda event: self.rotate_arrow())
+        self.button.bind("<Button-1>", lambda event: self.rotate_diagram())
         self.button.pack(anchor=tk.CENTER, fill=tk.BOTH, expand=True)
 
-    def rotate_arrow(self):
-        #  This should be deleted when #132 merged and changing rotation should be done in update_arrow
-        #  It is currently just for testing rotating the arrow inside the button
-        self.arrow_base = self.arrow_base.rotate(-90)
-        self.arrow_image = PhotoImage(self.arrow_base)
+    def rotate_diagram(self):
+        """
+        Rotate diagram function.
+
+        Activated on button press.
+
+        :return: None
+        """
+        self.custom_canvas.set_rotation(self.custom_canvas.rotation + 90)
         self.update_arrow()
