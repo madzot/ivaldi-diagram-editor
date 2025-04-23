@@ -492,7 +492,6 @@ class MainDiagram(tk.Tk):
             if box.sub_diagram:
                 self.tree.move(str(box.sub_diagram.id), str(canvas.id), "end")
 
-        # canvas.rotation_button = RotationButton(canvas, canvas)
 
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
