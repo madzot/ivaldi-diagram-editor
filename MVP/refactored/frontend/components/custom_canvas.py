@@ -1564,4 +1564,33 @@ class CustomCanvas(tk.Canvas):
 
         :return: None
         """
+        self.reset_zoom()
         self.rotation = rotation % 360
+        self.rotate_objects()
+
+    def rotate_objects(self):
+        """
+        Moves all objects on canvas based on rotation.
+
+        :return: None
+        """
+        if self.is_vertical():
+            x_multi = self.winfo_height() / self.winfo_width()
+            y_multi = self.winfo_width() / self.winfo_height()
+        else:
+            x_multi = self.winfo_width() / self.winfo_height()
+            y_multi = self.winfo_height() / self.winfo_width()
+
+        for box in self.boxes:
+            if self.is_vertical():
+                box.size = [box.size[1], box.size[0] * x_multi]
+            else:
+                box.size = [box.size[1] * x_multi, box.size[0]]
+            box.update_coords(box.x * x_multi, box.y * y_multi)
+            box.update_position()
+            box.update_connections()
+            box.update_wires()
+            box.move_label()
+        for spider in self.spiders:
+            spider.update_location([spider.location[0] * x_multi, spider.location[1] * y_multi])
+        self.update_inputs_outputs()

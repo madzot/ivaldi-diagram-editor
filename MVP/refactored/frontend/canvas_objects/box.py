@@ -1133,6 +1133,8 @@ class Box:
             case _:
                 self.display_x = x
                 self.display_y = y
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
 
     def get_logical_size(self, size):
         """
