@@ -7,6 +7,11 @@ import constants as const
 
 
 class RotationButton(tk.LabelFrame):
+    """
+    A LabelFrame wrapper that is used as an indicator for showing the direction/rotation of the diagram.
+
+    Clicking on it will change the direction/rotation of the diagram.
+    """
 
     def __init__(self, master, custom_canvas, **kwargs):
         super().__init__(master, **kwargs)
@@ -18,8 +23,6 @@ class RotationButton(tk.LabelFrame):
         self.arrow_image = PhotoImage(self.arrow_base)
 
         self.bind("<Button-1>", lambda event: self.rotate_arrow())
-        self.val1 = True
-        self.val2 = False
 
         self.button = None
         self.update()
@@ -33,10 +36,12 @@ class RotationButton(tk.LabelFrame):
 
     def update_arrow(self):
         # rotating arrow based on direction variable here
+        arrow = self.arrow_base
+        arrow = PhotoImage(arrow.rotate(self.custom_canvas.rotation))
 
         if self.button:
             self.button.pack_forget()
-        self.button = tk.Label(self, image=self.arrow_image)
+        self.button = tk.Label(self, image=arrow)
         self.button.image = self.arrow_image
         self.button.bind("<Button-1>", lambda event: self.rotate_arrow())
         self.button.pack(anchor=tk.CENTER, fill=tk.BOTH, expand=True)
