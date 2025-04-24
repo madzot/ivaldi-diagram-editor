@@ -261,7 +261,7 @@ inside MainDiagram
 
     .add_box(loc, size, id_, style)
         Creates a Box object. Location, size, id and shape of the Box can be specified with additional params.
-        Returns the created Box tag.
+        Returns the created Box object.
 
         Parameters:
             loc (tuple): (Optional) Location that the Box will be created at. Default is (100, 100)
@@ -283,7 +283,7 @@ inside MainDiagram
 
     .add_spider(loc, id, connection_type)
         Creates a Spider object. Location, id and connection_type can be specified with additional parameters.
-        Returns the created Spider tag.
+        Returns the created Spider object.
 
         Parameters:
             loc (tuple): (Optional) Location that the Spider will be created on. Default is (100, 100).
