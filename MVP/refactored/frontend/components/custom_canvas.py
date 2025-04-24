@@ -556,6 +556,8 @@ class CustomCanvas(tk.Canvas):
         event.x, event.y = self.canvasx(event.x), self.canvasy(event.y)
 
         box_events = self.convert_coords(event.x, event.y, to_logical=True)
+        if self.rotation == 90:
+            box_events[1] = box_events[1] - Box.default_size[1]
         if self.rotation == 180:
             box_events[0] = box_events[0] - Box.default_size[0]
         if self.rotation == 270:
@@ -1075,7 +1077,7 @@ class CustomCanvas(tk.Canvas):
         min_y = self.corners[0].location[1]
         min_x = self.corners[0].location[0]
         if len(self.outputs + self.inputs) != 0:
-            if self.rotation == 180 or self.rotation == 270:
+            if self.rotation == 90 or self.rotation == 180 or self.rotation == 270:
                 x = self.main_diagram.custom_canvas.winfo_width() - self.corners[0].location[0]
                 min_x = self.main_diagram.custom_canvas.winfo_width() - self.corners[3].location[0]
             if self.rotation == 270:
@@ -1517,7 +1519,10 @@ class CustomCanvas(tk.Canvas):
         coords = [x, y]
         match self.rotation:
             case 90:
-                coords = [y, x]
+                if to_display and not to_logical:
+                    coords = [self.main_diagram.custom_canvas.winfo_width() - y, x]
+                else:
+                    coords = [y, self.main_diagram.custom_canvas.winfo_width() - x]
             case 180:
                 coords = [self.main_diagram.custom_canvas.winfo_width() - x, y]
             case 270:

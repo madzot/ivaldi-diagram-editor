@@ -458,7 +458,8 @@ class Box:
         """
         self.update_self_collision_ids()
         go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_display=True)
-        if self.canvas.rotation == 180:
+
+        if self.canvas.rotation == 90 or self.canvas.rotation == 180:
             collision = self.canvas.find_overlapping(go_to_x - self.size[0], go_to_y, go_to_x, go_to_y + self.size[1])
         elif self.canvas.rotation == 270:
             collision = self.canvas.find_overlapping(go_to_x, go_to_y, go_to_x - self.size[0], go_to_y - self.size[1])
@@ -497,12 +498,16 @@ class Box:
         old_size = self.size
         new_size_x, new_size_y = self.get_logical_size((self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier))
         self.size = (new_size_x, new_size_y)
+        if self.canvas.rotation == 90:
+            if self.find_collisions(self.x, self.y - (new_size_x - old_size[1])):
+                self.size = old_size
+                return
         if self.canvas.rotation == 180:
             if self.find_collisions(self.x - (new_size_x - old_size[0]), self.y):
                 self.size = old_size
                 return
         elif self.canvas.rotation == 270:
-            if self.find_collisions(self.x - (new_size_x - old_size[0]), self.y - (new_size_y - old_size[1])):
+            if self.find_collisions(self.x - (new_size_y - old_size[0]), self.y - (new_size_x - old_size[1])):
                 self.size = old_size
                 return
         else:
@@ -773,11 +778,10 @@ class Box:
         :param new_size_y: New height
         :return: None
         """
-        if self.canvas.rotation == 180:  # 180 keeps display_x in the same spot
-            self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
-        if self.canvas.rotation == 270:  # 270 keeps display_y in the same spot
-            self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
+        if self.canvas.rotation == 90 or self.canvas.rotation == 270:  # keeps display_y in the same spot
             self.y = self.y - (new_size_y - self.get_logical_size(self.size)[1])
+        if self.canvas.rotation == 180 or self.canvas.rotation == 270:  # keeps display_x in the same spot
+            self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
 
         self.size = self.get_logical_size((new_size_x, new_size_y))
         self.update_coords(self.x, self.y)
@@ -1122,7 +1126,7 @@ class Box:
         self.y = y
         match self.canvas.rotation:
             case 90:
-                self.display_x = y
+                self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (y + self.size[0])
                 self.display_y = x
             case 180:
                 self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (x + self.size[0])
@@ -1185,7 +1189,7 @@ class Box:
         :param y: y coordinate.
         :return: x and y coordinates.
         """
-        if self.canvas.rotation == 180:
+        if self.canvas.rotation == 180 or self.canvas.rotation == 90:
             x = x + self.size[0]
         if self.canvas.rotation == 270:
             x = x + self.size[0]
