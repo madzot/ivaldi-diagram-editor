@@ -499,10 +499,11 @@ class Box:
         new_size_x, new_size_y = self.get_logical_size((self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier))
         self.size = (new_size_x, new_size_y)
         if self.canvas.rotation == 90:
+            self.size = (new_size_y, new_size_x)
             if self.find_collisions(self.x, self.y - (new_size_x - old_size[1])):
                 self.size = old_size
                 return
-        if self.canvas.rotation == 180:
+        elif self.canvas.rotation == 180:
             if self.find_collisions(self.x - (new_size_x - old_size[0]), self.y):
                 self.size = old_size
                 return

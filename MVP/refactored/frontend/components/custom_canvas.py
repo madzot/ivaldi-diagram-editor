@@ -1571,9 +1571,9 @@ class CustomCanvas(tk.Canvas):
         """
         self.reset_zoom()
         self.rotation = rotation % 360
-        self.rotate_objects()
+        self.__on_rotation_change__()
 
-    def rotate_objects(self):
+    def __on_rotation_change__(self):
         """
         Moves all objects on canvas based on rotation.
 
