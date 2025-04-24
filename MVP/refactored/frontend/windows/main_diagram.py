@@ -16,12 +16,14 @@ from ttkbootstrap.constants import *
 import tikzplotlib
 from MVP.refactored.backend.code_generation.code_generator import CodeGenerator
 from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Toolbar
 from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
+from MVP.refactored.frontend.windows.manage_boxes import ManageBoxes
 from MVP.refactored.frontend.windows.manage_methods import ManageMethods
 from MVP.refactored.frontend.windows.search_window import SearchWindow
 from MVP.refactored.modules.notations.notation_tool import get_notations, is_canvas_complete
@@ -333,6 +335,9 @@ class MainDiagram(tk.Tk):
         :param new_label: String that old label will be changed to
         :return: None
         """
+        if len(new_label) > Box.max_label_size:
+            self.show_error_dialog(f"Label must be less than {Box.max_label_size} characters.")
+            return
         if old_label in self.label_content.keys():
             code = self.label_content[old_label]
             self.label_content[new_label] = code
@@ -672,25 +677,7 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        list_window = tk.Toplevel(self)
-        list_window.title("List of Elements")
-
-        def remove_selected_item():
-            selected_item_index = listbox.curselection()
-            if selected_item_index:
-                name = listbox.get(selected_item_index)
-                self.remove_option(name)
-                listbox.delete(selected_item_index)
-
-        listbox = tk.Listbox(list_window, selectmode=tk.SINGLE)
-        listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
-        [listbox.insert(tk.END, item) for item in self.boxes]
-
-        button_frame = tk.Frame(list_window)
-        button_frame.pack(pady=10)
-
-        remove_button = tk.Button(button_frame, text="Remove Item", command=remove_selected_item)
-        remove_button.pack(side=tk.LEFT, padx=5)
+        ManageBoxes(self, self)
 
     def manage_quick_create(self):
         """
@@ -840,10 +827,9 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        shapes = [const.RECTANGLE, const.TRIANGLE]
         self.shape_dropdown_menu.delete(0, tk.END)
 
-        for shape in shapes:
+        for shape in const.SHAPES:
             self.shape_dropdown_menu.add_command(label=shape,
                                                  command=lambda s=shape: self.custom_canvas.set_box_shape(s))
 
@@ -1025,3 +1011,13 @@ class MainDiagram(tk.Tk):
             case _:
                 style = "black", ""
         return style
+
+    @staticmethod
+    def show_error_dialog(error_message):
+        """
+        Show an error dialog with an error message.
+
+        :param error_message: Message to show in messagebox.
+        :return: None
+        """
+        messagebox.showerror("Error", error_message)
