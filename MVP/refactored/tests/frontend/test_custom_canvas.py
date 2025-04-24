@@ -157,7 +157,10 @@ class Tests(TestCustomCanvas):
         self.assertEqual(0, place_mock.call_count)
 
     @patch('MVP.refactored.frontend.canvas_objects.spider.Spider.deselect')
-    def test__remove_search_highlights__deselects_items_in_search_result_highlights(self, deselect_mock):
+    @patch('MVP.refactored.frontend.canvas_objects.box.Box.deselect')
+    def test__remove_search_highlights__deselects_items_in_search_result_highlights(self,
+                                                                                    spider_deselect_mock,
+                                                                                    box_deselect_mock):
         spider = Spider((100, 100), self.custom_canvas)
         box = Box(self.custom_canvas, 100, 200)
 
@@ -166,7 +169,8 @@ class Tests(TestCustomCanvas):
 
         self.custom_canvas.remove_search_highlights()
 
-        self.assertEqual(1, deselect_mock.call_count)
+        self.assertEqual(1, spider_deselect_mock.call_count)
+        self.assertEqual(1, box_deselect_mock.call_count)
 
     def test__remove_search_highlights__removes_items_in_search_result_highlights(self):
         spider = Spider((100, 100), self.custom_canvas)
@@ -391,7 +395,7 @@ class Tests(TestCustomCanvas):
         self.assertFalse(self.custom_canvas.quick_pull)
 
     @patch('MVP.refactored.frontend.canvas_objects.connection.Connection.deselect')
-    def test__nullify_wire_start__deselects_and_turns_to_null(self, deselect_mock):
+    def test__nullify_wire_start__deselects_and_turns_to_none(self, deselect_mock):
         self.custom_canvas.current_wire_start = Connection(None, 1, const.LEFT, (100, 100), self.custom_canvas)
 
         self.custom_canvas.nullify_wire_start()
@@ -625,35 +629,3 @@ class Tests(TestCustomCanvas):
         self.custom_canvas.set_box_shape("new shape")
 
         self.assertEqual("new shape", self.custom_canvas.box_shape)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
