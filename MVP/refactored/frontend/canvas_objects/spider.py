@@ -22,6 +22,7 @@ class Spider(Connection):
         :param connection_type: ConnectionType that will define the style of the Connection.
         """
         self.r = 10
+        location = list(location)
         super().__init__(None, 0, const.SPIDER, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
         self.x = location[0]

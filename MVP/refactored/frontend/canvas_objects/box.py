@@ -75,8 +75,7 @@ class Box:
 
         self.resize_handle = self.canvas.create_rectangle(self.display_x + self.size[0] - 10, self.display_y +
                                                           self.size[1] - 10, self.display_x + self.size[0],
-                                                          self.display_y + self.size[1],
-                                                          outline=const.BLACK, fill=const.BLACK)
+                                                          self.display_y + self.size[1],                                               outline=const.BLACK, fill=const.BLACK)
         self.locked = False
         self.sub_diagram = None
         self.receiver = canvas.main_diagram.receiver

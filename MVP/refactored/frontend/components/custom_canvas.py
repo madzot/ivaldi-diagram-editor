@@ -841,7 +841,7 @@ class CustomCanvas(tk.Canvas):
         :param size: tuple of box size.
         :param id_: custom ID for the Box that's created.
         :param style: Define the style of the Box.
-        :return: Box tag.
+        :return: Box object.
         """
         if style is None:
             style = self.box_shape
@@ -883,7 +883,7 @@ class CustomCanvas(tk.Canvas):
         :param loc: (Optional) location of the spider.
         :param id_: (Optional) id of the spider.
         :param connection_type: (Optional) Type of Connection.
-        :return: Spider tag
+        :return: Spider object.
         """
         spider = Spider(loc, self, id_=id_, connection_type=connection_type)
         self.spiders.append(spider)
