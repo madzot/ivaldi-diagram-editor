@@ -1077,7 +1077,7 @@ class CustomCanvas(tk.Canvas):
         min_y = self.corners[0].location[1]
         min_x = self.corners[0].location[0]
         if len(self.outputs + self.inputs) != 0:
-            if self.rotation == 90 or self.rotation == 180 or self.rotation == 270:
+            if self.is_vertical() or self.rotation == 180:
                 x = self.main_diagram.custom_canvas.winfo_width() - self.corners[0].location[0]
                 min_x = self.main_diagram.custom_canvas.winfo_width() - self.corners[3].location[0]
             if self.rotation == 270:

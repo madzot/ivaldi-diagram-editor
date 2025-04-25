@@ -498,23 +498,24 @@ class Box:
         old_size = self.size
         new_size_x, new_size_y = self.get_logical_size((self.size[0] + 5 * multiplier, self.size[1] + 5 * multiplier))
         self.size = (new_size_x, new_size_y)
-        if self.canvas.rotation == 90:
-            self.size = (new_size_y, new_size_x)
-            if self.find_collisions(self.x, self.y - (new_size_x - old_size[1])):
-                self.size = old_size
-                return
-        elif self.canvas.rotation == 180:
-            if self.find_collisions(self.x - (new_size_x - old_size[0]), self.y):
-                self.size = old_size
-                return
-        elif self.canvas.rotation == 270:
-            if self.find_collisions(self.x - (new_size_y - old_size[0]), self.y - (new_size_x - old_size[1])):
-                self.size = old_size
-                return
-        else:
-            if self.find_collisions(self.x, self.y):
-                self.size = old_size
-                return
+        match self.canvas.rotation:
+            case 90:
+                self.size = (new_size_y, new_size_x)
+                if self.find_collisions(self.x, self.y - (new_size_x - old_size[1])):
+                    self.size = old_size
+                    return
+            case 180:
+                if self.find_collisions(self.x - (new_size_x - old_size[0]), self.y):
+                    self.size = old_size
+                    return
+            case 270:
+                if self.find_collisions(self.x - (new_size_y - old_size[0]), self.y - (new_size_x - old_size[1])):
+                    self.size = old_size
+                    return
+            case _:
+                if self.find_collisions(self.x, self.y):
+                    self.size = old_size
+                    return
         self.size = old_size
         self.update_size(new_size_x, new_size_y)
         self.move_label()
@@ -779,7 +780,7 @@ class Box:
         :param new_size_y: New height
         :return: None
         """
-        if self.canvas.rotation == 90 or self.canvas.rotation == 270:  # keeps display_y in the same spot
+        if self.canvas.is_vertical():  # keeps display_y in the same spot
             self.y = self.y - (new_size_y - self.get_logical_size(self.size)[1])
         if self.canvas.rotation == 180 or self.canvas.rotation == 270:  # keeps display_x in the same spot
             self.x = self.x - (new_size_x - self.get_logical_size(self.size)[0])
@@ -1190,7 +1191,7 @@ class Box:
         :param y: y coordinate.
         :return: x and y coordinates.
         """
-        if self.canvas.rotation == 180 or self.canvas.rotation == 90:
+        if self.canvas.rotation == 90 or self.canvas.rotation == 180:
             x = x + self.size[0]
         if self.canvas.rotation == 270:
             x = x + self.size[0]
