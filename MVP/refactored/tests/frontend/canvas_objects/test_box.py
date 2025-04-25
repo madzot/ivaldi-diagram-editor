@@ -35,7 +35,7 @@ class BoxTests(TestMainDiagram):
         self.assertEqual(expected_x, box.x)
         self.assertEqual(expected_y, box.y)
 
-        self.assertEqual((expected_width, expected_height), box.size)
+        self.assertEqual([expected_width, expected_height], box.size)
 
         self.assertListEqual([], box.connections)
 
