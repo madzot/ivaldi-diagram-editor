@@ -909,6 +909,8 @@ class Box:
         if self in self.canvas.boxes:
             self.canvas.boxes.remove(self)
         self.canvas.delete(self.label)
+        for tag in self.extra_shapes.values():
+            self.canvas.delete(tag)
         if self.sub_diagram and not keep_sub_diagram:
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
         if self.receiver.listener and not self.canvas.is_search:
