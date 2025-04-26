@@ -385,6 +385,7 @@ The coordinates of a Box are the top left corner for it.
 | context_menu           | tkinter.Menu | Context menu used for Box.                                                                                                                                                                              |
 | shape                  | int          | CustomCanvas tag that represents the Box rectangle or other shape in the canvas.                                                                                                                        |
 | resize_handle          | int          | CustomCanvas tag that represents the resizing handle in the Box.                                                                                                                                        |
+| extra_shapes           | dict         | Dictionary that can hold extra shape tags related to the Box. Such as 'xor line' tag.                                                                                                                   |
 | locked                 | boolean      | Determines if the Box is locked or not. While locked some feature's are hidden.                                                                                                                         |
 | sub_diagram            | CustomCanvas | CustomCanvas object that is the sub-diagram of the Box. It is None if the Box is not a sub-diagram Box.                                                                                                 |
 | receiver               | Receiver     | Receiver object used to send information to the backend.                                                                                                                                                |
@@ -549,9 +550,6 @@ The coordinates of a Box are the top left corner for it.
             new_size_x (int): New width of the Box.
             new_size_y (int): New height of the Box.
 
-    .update_position()
-        Updates the position of the Box on the CustomCanvas.
-
     .update_connections()
         Updates Connection locations that are attached to the Box.
 
@@ -615,9 +613,6 @@ The coordinates of a Box are the top left corner for it.
     .get_new_right_index()
         Returns new right side Connection index.
 
-    .create_shape()
-        Creates the Box shape on CustomCanvas. Returns the tag associated with the shape.
-
     .change_shape(shape)
         Changes the shape of the Box. This is done by Creating a new Box and copying the existing Boxs attributes into
         the new Box and then deleting the old Box.
@@ -630,3 +625,24 @@ The coordinates of a Box are the top left corner for it.
 
         Parameters:
             code (string): Code that will be searched for inputs and outputs.
+
+    .update_box()
+        Redirects to correct Box shape updating, updates or creates the Box shape location and resize handle location. 
+
+    .__update_rectangle__()
+        Updates or creates the rectangle shape on the canvas.
+
+    .__update_triangle__()
+        Updates or creates the triangle shape on the canvas.
+
+    .__update_and_gate__()
+        Updates or creates the AND gate shape on the canvas.
+
+    .__update_or_gate__()
+        Updates or creates the OR gate shape on the canvas.
+
+    .__update_xor_gate__()
+        Updates or creates the XOR gate shape on the canvas.
+
+    .__update_resize_handle__()
+        Updates or creates the resize handle rectangle on the canvas.

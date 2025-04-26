@@ -36,6 +36,7 @@ class MainDiagram(tk.Tk):
     `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
     you see when using the application.
     """
+
     def __init__(self, receiver, load=False):
         """
         MainDiagram constructor.
@@ -290,7 +291,8 @@ class MainDiagram(tk.Tk):
         :return: None
         """
         for canvas in self.canvasses.values():
-            canvas.search_result_button.info_text.set(f"Search: {self.active_search_index + 1}/{len(self.search_results)}")
+            canvas.search_result_button.info_text.set(
+                f"Search: {self.active_search_index + 1}/{len(self.search_results)}")
 
     def check_search_result_canvas(self, index):
         """
@@ -730,7 +732,8 @@ class MainDiagram(tk.Tk):
 
         # Add options to the dropdown menu
         for i, name in enumerate(self.boxes):
-            self.add_box_dropdown_menu.add_command(label=name, command=lambda n=name: self.boxes[n](n, self.custom_canvas))
+            self.add_box_dropdown_menu.add_command(label=name,
+                                                   command=lambda n=name: self.boxes[n](n, self.custom_canvas))
 
     def remove_option(self, option):
         """
@@ -898,15 +901,15 @@ class MainDiagram(tk.Tk):
         ax.set_aspect('equal', adjustable='box')
 
         for box in canvas.boxes:
-            if box.style == const.TRIANGLE:
-                polygon = patches.Polygon(((box.x / 100, y_max - box.y / 100 - box.size[1] / 100),
-                                           (box.x / 100, y_max - box.y / 100),
-                                           (box.x / 100 + box.size[0] / 100, y_max - box.y / 100 - box.size[1] / 200)),
-                                          edgecolor=const.BLACK, facecolor="none")
-            else:
-                polygon = patches.Rectangle((box.x / 100, y_max - box.y / 100 - box.size[1] / 100), box.size[0] / 100,
-                                            box.size[1] / 100, label="_nolegend_", edgecolor=const.BLACK,
-                                            facecolor="none")
+            polygons = []
+            if box.extra_shapes:
+                for extra_shape in box.extra_shapes.values():
+                    polygons.append(patches.Polygon([*((x / 100, y_max - y / 100)
+                                                       for x, y in self.pairwise(canvas.coords(extra_shape)))],
+                                                    edgecolor=const.BLACK, facecolor="none"))
+            polygons.append(patches.Polygon([*((x / 100, y_max - y / 100)
+                                               for x, y in self.pairwise(canvas.coords(box.shape)))],
+                                            edgecolor=const.BLACK, facecolor="none"))
             if show_connections:
                 for connection in box.connections:
                     circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
@@ -915,7 +918,8 @@ class MainDiagram(tk.Tk):
 
             plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
                      horizontalalignment="center", verticalalignment="center", zorder=2)
-            ax.add_patch(polygon)
+            for polygon in polygons:
+                ax.add_patch(polygon)
 
         for spider in canvas.spiders:
             circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100,
