@@ -41,6 +41,9 @@ class MainDiagram(tk.Tk):
     `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
     you see when using the application.
     """
+
+    label_content = {}
+
     def __init__(self, receiver, load=False):
         """
         MainDiagram constructor.
@@ -180,9 +183,7 @@ class MainDiagram(tk.Tk):
             self.saved_buttons[name] = button
 
         self.json_file_hash = self.calculate_boxes_json_file_hash()
-        self.label_content = {}
         self.load_functions()
-        print(self.label_content)
         self.manage_methods = None
         self.import_counter = 0
 
@@ -213,17 +214,23 @@ class MainDiagram(tk.Tk):
         """
         if os.stat(const.FUNCTIONS_CONF).st_size != 0:
             with open(const.FUNCTIONS_CONF, "r") as file:
-                self.label_content = json.load(file)
+                MainDiagram.label_content = json.load(file)
 
-    def add_function_to_label_content(self, function_name: str, function_code: str) -> None:
+    def add_function(self, function_label, function_code):
         """
-        Add function to label content dictionary.
+        Add function to the application.
 
-        :param function_name: Name of the function.
+        Adds a function to the `label_content` dictionary.
+
+        :param function_label: Name of the function.
         :param function_code: Code of the function.
         :return: None
         """
-        self.label_content[function_name] = function_code
+        MainDiagram.label_content[function_label] = function_code
+
+    @staticmethod
+    def get_function(function_name):
+        return MainDiagram.label_content.get(function_name, None)
 
     def generate_code(self):
         """
@@ -351,10 +358,10 @@ class MainDiagram(tk.Tk):
         if len(new_label) > Box.max_label_size:
             self.show_error_dialog(f"Label must be less than {Box.max_label_size} characters.")
             return
-        if old_label in self.label_content.keys():
-            code = self.label_content[old_label]
-            self.label_content[new_label] = code
-            del self.label_content[old_label]
+        if old_label in MainDiagram.label_content.keys():
+            code = MainDiagram.label_content[old_label]
+            MainDiagram.label_content[new_label] = code
+            del MainDiagram.label_content[old_label]
             for canvas in self.canvasses.values():
                 for box in canvas.boxes:
                     if box.label_text == old_label:

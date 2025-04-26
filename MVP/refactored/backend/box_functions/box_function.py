@@ -37,6 +37,7 @@ class BoxFunction:
                  main_function_name: Optional[str] = None):
 
         self.main_function_name: str = main_function_name or INVOKE_METHOD
+        print(f"func name: {self.main_function_name}")
         self.imports: List[str] = imports or []
         self.global_statements: List[str] = []
         self.helper_functions: List[str] = []
@@ -49,7 +50,10 @@ class BoxFunction:
             predefined_file_code = predefined_functions[predefined_function_file_name]
             self._set_data_from_file_code(predefined_file_code)
         elif file_code is not None:
+            print("Sets data from file code")
             self._set_data_from_file_code(file_code)
+            print(f"main func: {self.main_function}")
+            print(f"file code: {file_code}")
         else:
             self.main_function: str = function
 

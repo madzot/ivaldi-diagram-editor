@@ -20,11 +20,12 @@ class Generator:
         self.right: list[ConnectionInfo] = []
         self.left_inner: list[ConnectionInfo] = []
         self.right_inner: list[ConnectionInfo] = []
-        self.sub_diagram_id: int = -1  # -1 if does`t have
+        self.sub_diagram_id: int = -1  # -1 if doesn't have
         self.subset = []
         self.parent = None
         self.spiders = []
         self.operand = None
+        self.label = ""
         self.box_function: BoxFunction | None = None
 
     def get_sub_diagram_id(self):
@@ -33,6 +34,12 @@ class Generator:
 
     def set_sub_diagram_id(self, sub_diagram_id):
         self.sub_diagram_id = sub_diagram_id
+
+    def set_label(self, label):
+        self.label = label
+
+    def get_label(self):
+        return self.label
 
     def get_left_by_id(self, left_id: int):
         for left in self.left:
@@ -76,8 +83,11 @@ class Generator:
     def remove_operand(self):
         self.operand = None
 
-    def set_box_function(self, box_function: BoxFunction):
-        self.box_function = box_function
+    def set_box_function(self, box_function):
+        pass
+        # from MVP.refactored.frontend.windows.main_diagram import MainDiagram
+        # box_func = BoxFunction(is_predefined_function=False, file_code=MainDiagram.get_function(self.label))
+        # self.box_function = box_func
 
     def get_box_function(self) -> BoxFunction | None:
         return self.box_function

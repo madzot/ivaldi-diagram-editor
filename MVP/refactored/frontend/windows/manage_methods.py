@@ -34,6 +34,7 @@ class ManageMethods(tk.Toplevel):
         self.table = ttk.Treeview(self, columns="Function", bootstyle=ttk.PRIMARY)
         self.table.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         self.table.bind("<Motion>", "break")
+        self.table.bind("<Destroy>", lambda event: self.destroy())
         self.table.bind("<ButtonRelease-1>", lambda event: self.check_selection())
 
         self.table.column("#0", width=100, minwidth=100, anchor=tk.W)
@@ -62,6 +63,10 @@ class ManageMethods(tk.Toplevel):
         self.add_methods()
 
         self.buttons_hidden = True
+
+    def destroy(self):
+        self.main_diagram.manage_methods = None
+        super().destroy()
 
     def check_selection(self):
         """

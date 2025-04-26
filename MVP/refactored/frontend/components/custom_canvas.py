@@ -648,17 +648,6 @@ class CustomCanvas(tk.Canvas):
                     return circle
         return None
 
-    def _fix_new_sub_diagram_box_wires(self, sub_diagram_box: Box) -> None:
-        """
-        This is workaround to fix the wires that are not connected to the sub-diagram box
-        """
-        if not sub_diagram_box:
-            return
-
-        for connection in sub_diagram_box.connections:
-            correct_wire = connection.wire
-            correct_wire.end_connection.wire = correct_wire
-
     # HANDLE CLICK ON CANVAS
     def on_canvas_click(self, event, connection=None):
         """
@@ -1320,15 +1309,6 @@ class CustomCanvas(tk.Canvas):
 
         con.delete()
         self.update_inputs_outputs()
-
-    def find_connection_to_remove(self, side):
-        c_max = 0
-        c = None
-        for connection in self.diagram_source_box.connections:
-            if connection.side == side and connection.index >= c_max:
-                c_max = connection.index
-                c = connection
-        return c
 
     def export_hypergraph(self):
         """

@@ -1,5 +1,6 @@
 {
     "method1": "def method1(x1):\n    return (x1)",
-    "test": "def invoke(x) -> list:\n    return [x, x]",
-    "method2": "def method2(x2):\n    return (x2)"
+    "method2": "def method2(x2):\n    return (x2)",
+    "test": "def test(x) -> tuple:\n    return (x, x)",
+    "test2": "def test2(x0, x1):\n    return (x0)"
 }

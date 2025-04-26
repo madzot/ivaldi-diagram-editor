@@ -86,9 +86,14 @@ class Box:
         self.is_snapped = False
 
         self.collision_ids = [self.shape, self.resize_handle]
-        self.box_function: BoxFunction = None
 
-    def remove_wire(self, wire: Wire):
+    def remove_wire(self, wire):
+        """
+        Remove specific wire from Box.
+
+        :param wire: Wire to remove
+        :return: None
+        """
         self.wires.remove(wire)
 
     def set_id(self, id_):
@@ -188,39 +193,6 @@ class Box:
         self.on_press(event)
         self.canvas.paste_copied_items(event)
 
-    def add_function(self, event):
-        menu = tk.Menu(self.canvas, tearoff=0)
-        for name in predefined_functions:
-            menu.add_command(label=name, command=lambda function=name: self.set_predefined_function(function))
-        menu.add_command(label="Add custom function", command=self.show_add_custom_function_menu)
-        menu.post(event.x_root, event.y_root)
-
-    def show_add_custom_function_menu(self):
-        file = filedialog.askopenfile(title="Send a python script, that contains function \"invoke\"",
-                                      filetypes=(("Python script", "*.py"),))
-        if file:
-            box_function = BoxFunction(predefined_function_file_name=file.name, file_code=file.read())
-            self.set_box_function(box_function)
-
-    def set_predefined_function(self, name: str, code):
-        box_function = BoxFunction(predefined_function_file_name=name, file_code=code)
-        self.set_box_function(box_function)
-
-    def set_box_function(self, box_function: BoxFunction):
-        self.box_function = box_function
-        self.receiver.receiver_callback(ActionType.BOX_SET_FUNCTION, generator_id=self.id, canvas_id=self.canvas.id,
-                                        box_function=box_function)
-
-    def get_box_function(self) -> BoxFunction:
-        return self.box_function
-
-    def count_inputs(self) -> int:
-        count = 0
-        for connection in self.connections:
-            if connection.side == "left":
-                count += 1
-        return count
-
     def open_editor(self):
         """
         Open a CodeEditor for Box.
@@ -228,27 +200,6 @@ class Box:
         :return: None
         """
         CodeEditor(self.canvas.main_diagram, box=self)
-
-    def count_outputs(self) -> int:
-        count = 0
-        for connection in self.connections:
-            if connection.side == "right":
-                count += 1
-        return count
-
-    def get_inputs(self) -> list[int]:
-        inputs = []
-        for connection in self.connections:
-            if connection.side == "left":
-                inputs.append(connection.wire.id)
-        return inputs
-
-    def get_outputs(self) -> list[int]:
-        outputs = []
-        for connection in self.connections:
-            if connection.side == "right":
-                outputs.append(connection.wire.id)
-        return outputs
 
     def save_box_to_menu(self):
         """
@@ -639,7 +590,6 @@ class Box:
                                                       "A box with this label already exists."
                                                       " Do you want to use the existing box?"):
                                 self.update_io()
-                                self.set_predefined_function(self.label_text, self.canvas.main_diagram.label_content[self.label_text])
                             else:
                                 return self.edit_label()
         else:
@@ -650,6 +600,9 @@ class Box:
         self.update_label()
 
         if self.label_text:
+            self.receiver.receiver_callback(action=ActionType.BOX_ADD_LABEL, new_label=self.label_text,
+                                            generator_id=self.id, canvas_id=self.canvas.id)
+
             if self.sub_diagram:
                 self.sub_diagram.set_name(self.label_text)
                 self.canvas.main_diagram.update_canvas_name(self.sub_diagram)

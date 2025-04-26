@@ -119,16 +119,17 @@ class PythonImporter(Importer):
         new_box.set_label(function_name)
 
         box_function: BoxFunction = functions[function_name]
-        new_box.set_box_function(box_function)
 
         PythonImporter._create_box_sub_diagram(new_box, assigned_variables_amount)
-        canvas.main_diagram.add_function_to_label_content(function_name, box_function.main_function)
+        canvas.main_diagram.add_function(function_name, box_function.main_function)
 
         return new_box
 
     @staticmethod
     def _create_box_sub_diagram(box: Box, assigned_variables_amount: int) -> None:
-        function_structure: FunctionStructure = box.get_box_function().function_structure
+        box_func = BoxFunction(is_predefined_function=False,
+                               file_code=box.canvas.main_diagram.label_content[box.label_text])
+        function_structure: FunctionStructure = box_func.function_structure
         arguments = function_structure.arguments
 
         sub_diagram_canvas: CustomCanvas = box.edit_sub_diagram(save_to_canvasses=True, switch=False)

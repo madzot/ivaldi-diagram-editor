@@ -78,7 +78,10 @@ class CodeGenerator:
                 for subgraph in hyper_edge.get_hypergraphs_inside():
                     box_functions.update(cls.get_all_box_functions(subgraph))
             else:
-                box_functions.add(hyper_edge.box_function)
+                from MVP.refactored.frontend.windows.main_diagram import MainDiagram
+                box_functions.add(BoxFunction(is_predefined_function=False,
+                                              file_code=MainDiagram.get_function(hyper_edge.box_label),
+                                              main_function_name=hyper_edge.box_label))
         return box_functions
 
     @classmethod

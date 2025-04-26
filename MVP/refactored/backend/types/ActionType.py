@@ -29,6 +29,7 @@ class ActionType(StrEnum):
 
     BOX_ADD_OPERATOR = auto(),
     BOX_SET_FUNCTION = auto(),
+    BOX_ADD_LABEL = auto(),
 
     BOX_SWAP_ID = auto(),
     BOX_SWAP_CONNECTION_ID = auto(),

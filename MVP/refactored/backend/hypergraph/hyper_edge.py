@@ -23,6 +23,8 @@ class HyperEdge:
 
         self.sub_diagram_canvas_id = sub_diagram_canvas_id
 
+        self.box_label = ""
+
     def get_hypergraphs_inside(self) -> list[Hypergraph]:
         # why dynamically get hypergraphs?
         # Because in sub diagram hypergraphs can be modified, deleted, added and that handling is tricky,
@@ -107,8 +109,8 @@ class HyperEdge:
             self.set_target_node(conn_index + 1, self.target_nodes[conn_index])
         self.target_nodes[conn_index] = node
 
-    def set_box_function(self, function: BoxFunction):
-        self.box_function = function
+    def set_box_label(self, label: str):
+        self.box_label = label
 
     def append_target_node(self, node: Node):
         self.target_nodes[len(self.target_nodes)] = node

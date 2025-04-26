@@ -151,11 +151,12 @@ class Copier:
     def copy_box(old_box, new_box, remember_connections=True):
         for connection in old_box.connections:
             if connection.side == "right":
-                new_connection = new_box.add_right_connection(connection_type=connection.type, id_=connection.id if remember_connections else None)
+                new_box.add_right_connection(connection_type=connection.type,
+                                             id_=connection.id if remember_connections else None)
             if connection.side == "left":
-                new_connection = new_box.add_left_connection(connection_type=connection.type, id_=connection.id if remember_connections else None)
+                new_box.add_left_connection(connection_type=connection.type,
+                                            id_=connection.id if remember_connections else None)
         new_box.set_label(old_box.label_text)
-        new_box.set_box_function(old_box.get_box_function())
 
     @staticmethod
     def copy_wire_within_selection(start_c, end_c, canvas):
