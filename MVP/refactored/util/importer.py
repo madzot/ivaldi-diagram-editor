@@ -41,6 +41,7 @@ class Importer:
 
     def load_everything_to_canvas(self, d, canvas):
         canvas.rotation = d.get("rotation", 0)
+        canvas.rotation_button.update_arrow()
         multi_x, multi_y = self.find_multiplier(d)
         self.load_boxes_to_canvas(d, canvas, multi_x, multi_y)
         self.load_spiders_to_canvas(d, canvas, multi_x, multi_y)

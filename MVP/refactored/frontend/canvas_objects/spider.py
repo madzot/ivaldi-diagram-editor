@@ -228,9 +228,9 @@ class Spider(Connection):
         found = False
         if not from_configuration:
             for box in self.canvas.boxes:
-
-                if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
-                    go_to_x = box.x + box.size[0] / 2
+                if (abs(box.x + box.get_logical_size(box.size)[0] / 2 - go_to_x) < box.get_logical_size(box.size)[0] / 2
+                        + self.r and move_legal):
+                    go_to_x = box.x + box.get_logical_size(box.size)[0] / 2
                     found = True
             for spider in self.canvas.spiders:
                 if spider == self:
@@ -379,3 +379,5 @@ class Spider(Connection):
 
         super().update_location(new_location)
         self.display_x, self.display_y = self.display_location
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
