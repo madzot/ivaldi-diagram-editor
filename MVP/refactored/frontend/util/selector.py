@@ -53,13 +53,11 @@ class Selector:
             self.selected_boxes = [box for box in boxes if self.is_within_selection(box.shape, selected_coordinates)]
 
             self.selected_spiders = [spider for spider in spiders if
-                                     self.is_within_selection_point(spider.display_location, selected_coordinates)]
+                                     self.is_within_selection(spider.circle, selected_coordinates)]
 
             self.selected_wires = [wire for wire in wires if
-                                   self.is_within_selection_point(wire.start_connection.display_location,
-                                                                  selected_coordinates)
-                                   or self.is_within_selection_point(wire.end_connection.display_location,
-                                                                     selected_coordinates)]
+                                   self.is_within_selection(wire.start_connection.circle, selected_coordinates)
+                                   or self.is_within_selection(wire.end_connection.circle, selected_coordinates)]
             self.selected_items = self.selected_boxes + self.selected_spiders + self.selected_wires
             for item in self.selected_items:
                 item.select()
@@ -116,17 +114,10 @@ class Selector:
         box.set_label(str(sub_diagram.id)[-6:])
         self.canvas.main_diagram.add_canvas(sub_diagram)
 
-    def is_within_selection(self, rect, selection_coords):
-        if len(self.canvas.coords(rect)) == 4:
-            x1, y1, x2, y2 = self.canvas.coords(rect)
-            x = (x1 + x2) / 2
-            y = (y1 + y2) / 2
-        elif len(self.canvas.coords(rect)) == 6:
-            x1, y1, x2, y2, x3, y3 = self.canvas.coords(rect)
-            x = (x1 + x2 + x3) / 3
-            y = (y1 + y2 + y3) / 3
-        else:
-            return False
+    def is_within_selection(self, tag, selection_coords):
+        x1, y1, x2, y2 = self.canvas.bbox(tag)
+        x = (x1 + x2) / 2
+        y = (y1 + y2) / 2
         return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def delete_selected_items(self):
@@ -140,12 +131,6 @@ class Selector:
             if isinstance(item, Spider):
                 item.delete()
         self.selected_items.clear()
-
-    @staticmethod
-    def is_within_selection_point(point, selection_coords):
-        """Check if a point is within the selection area."""
-        x, y = point
-        return selection_coords[0] <= x <= selection_coords[2] and selection_coords[1] <= y <= selection_coords[3]
 
     def copy_selected_items(self, canvas=None):
         if len(self.selected_items) > 0:

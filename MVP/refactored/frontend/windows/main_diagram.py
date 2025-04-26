@@ -497,7 +497,6 @@ class MainDiagram(tk.Tk):
             if box.sub_diagram:
                 self.tree.move(str(box.sub_diagram.id), str(canvas.id), "end")
 
-
         # Expand all items in the tree
         self.open_children(self.tree_root_id)
 
@@ -906,17 +905,15 @@ class MainDiagram(tk.Tk):
         ax.set_aspect('equal', adjustable='box')
 
         for box in canvas.boxes:
-            if box.shape == const.TRIANGLE:
-                polygon = patches.Polygon(((box.display_x / 100, y_max - box.display_y / 100 - box.size[1] / 100),
-                                           (box.display_x / 100, y_max - box.display_y / 100),
-                                           (box.display_x / 100 + box.size[0] / 100,
-                                            y_max - box.display_y / 100 - box.size[1] / 200)),
-                                          edgecolor=const.BLACK, facecolor="none")
-            else:
-                polygon = patches.Rectangle((box.display_x / 100, y_max - box.display_y / 100 - box.size[1] / 100),
-                                            box.size[0] / 100,
-                                            box.size[1] / 100, label="_nolegend_", edgecolor=const.BLACK,
-                                            facecolor="none")
+            polygons = []
+            if box.extra_shapes:
+                for extra_shape in box.extra_shapes.values():
+                    polygons.append(patches.Polygon([*((x / 100, y_max - y / 100)
+                                                       for x, y in self.pairwise(canvas.coords(extra_shape)))],
+                                                    edgecolor=const.BLACK, facecolor="none"))
+            polygons.append(patches.Polygon([*((x / 100, y_max - y / 100)
+                                               for x, y in self.pairwise(canvas.coords(box.shape)))],
+                                            edgecolor=const.BLACK, facecolor="none"))
             if show_connections:
                 for connection in box.connections:
                     circle = patches.Circle(
@@ -927,6 +924,8 @@ class MainDiagram(tk.Tk):
             plt.text(box.display_x / 100 + box.size[0] / 2 / 100, y_max - box.display_y / 100 - box.size[1] / 2 / 100,
                      box.label_text, horizontalalignment="center", verticalalignment="center", zorder=2)
             ax.add_patch(polygon)
+            for polygon in polygons:
+                ax.add_patch(polygon)
 
         for spider in canvas.spiders:
             circle = patches.Circle((spider.display_x / 100, y_max - spider.display_y / 100), spider.r / 100,

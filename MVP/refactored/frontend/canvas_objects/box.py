@@ -71,7 +71,11 @@ class Box:
         else:
             self.id = id_
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.shape = self.create_shape()
+
+        self.extra_shapes = {}
+        self.shape = None
+        self.resize_handle = None
+        self.update_box()
 
         self.resize_handle = self.canvas.create_rectangle(self.display_x + self.size[0] - 10, self.display_y +
                                                           self.size[1] - 10, self.display_x + self.size[0],
@@ -448,6 +452,8 @@ class Box:
             self.collision_ids.append(self.label)
         for connection in self.connections:
             self.collision_ids.append(connection.circle)
+        for extra_tag in self.extra_shapes.values():
+            self.collision_ids.append(extra_tag)
 
     def find_collisions(self, go_to_x, go_to_y):
         """
@@ -699,14 +705,12 @@ class Box:
                 break
         if is_bad:
             self.update_coords(self.x, new_y)
-            self.update_position()
-            self.update_connections()
-            self.update_wires()
+
         else:
             self.update_coords(new_x, new_y)
-            self.update_position()
-            self.update_connections()
-            self.update_wires()
+        self.update_position()
+        self.update_connections()
+        self.update_wires()
         self.rel_x = round(self.display_x / self.canvas.winfo_width(), 4)
         self.rel_y = round(self.display_y / self.canvas.winfo_height(), 4)
 
@@ -796,7 +800,7 @@ class Box:
 
         self.size = self.get_logical_size((new_size_x, new_size_y))
         self.update_coords(self.x, self.y)
-        self.update_position()
+        self.update_box()
         self.update_connections()
         self.update_wires()
 
@@ -985,6 +989,8 @@ class Box:
         if self in self.canvas.boxes:
             self.canvas.boxes.remove(self)
         self.canvas.delete(self.label)
+        for tag in self.extra_shapes.values():
+            self.canvas.delete(tag)
         if self.sub_diagram and not keep_sub_diagram:
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
         if self.receiver.listener and not self.canvas.is_search:
@@ -1094,12 +1100,19 @@ class Box:
         :param shape: Shape of new Box
         :return: None
         """
-        if shape == const.RECTANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, style="rectangle")
-        elif shape == const.TRIANGLE:
-            new_box = self.canvas.add_box((self.x, self.y), self.size, style="triangle")
-        else:
-            return
+        match shape:
+            case const.RECTANGLE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.RECTANGLE)
+            case const.TRIANGLE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.TRIANGLE)
+            case const.AND_GATE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.AND_GATE)
+            case const.OR_GATE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.OR_GATE)
+            case const.XOR_GATE:
+                new_box = self.canvas.add_box((self.x, self.y), self.size, style=const.XOR_GATE)
+            case _:
+                return
         self.canvas.copier.copy_box(self, new_box)
         self.delete_box()
 
@@ -1124,6 +1137,183 @@ class Box:
         if not outputs:
             outputs_amount = 0
         return inputs_amount, outputs_amount
+
+    def update_box(self):
+        """
+        Update the Box display.
+
+        Redirects to shape updating functions that will create or update the location of the Box on the canvas.
+
+        :return: None
+        """
+        match self.style:
+            case const.RECTANGLE:
+                self.__update_rectangle__()
+            case const.TRIANGLE:
+                self.__update_triangle__()
+            case const.AND_GATE:
+                self.__update_and_gate__()
+            case const.OR_GATE:
+                self.__update_or_gate__()
+            case const.XOR_GATE:
+                self.__update_xor_gate__()
+            case _:
+                self.__update_rectangle__()
+        self.__update_resize_handle__()
+
+    def __update_rectangle__(self):
+        """
+        Update/create rectangle shape Box.
+
+        :return: None
+        """
+        w, h = self.size
+        if self.shape:
+            self.canvas.coords(self.shape,
+                               self.x, self.y,
+                               self.x + w, self.y,
+                               self.x + w, self.y + h,
+                               self.x, self.y + h, )
+        else:
+            self.shape = self.canvas.create_polygon(self.x, self.y,
+                                                    self.x + w, self.y,
+                                                    self.x + w, self.y + h,
+                                                    self.x, self.y + h,
+                                                    outline=const.BLACK, fill=const.WHITE)
+
+    def __update_triangle__(self):
+        """
+        Update/create triangle shape Box.
+
+        :return: None
+        """
+        w, h = self.size
+        if self.shape:
+            self.canvas.coords(self.shape,
+                               self.x + self.size[0], self.y + self.size[1] / 2,
+                               self.x, self.y,
+                               self.x, self.y + self.size[1])
+        else:
+            self.shape = self.canvas.create_polygon(self.x + w, self.y + h / 2, self.x, self.y,
+                                                    self.x, self.y + h, outline=const.BLACK, fill=const.WHITE)
+
+    def __update_and_gate__(self):
+        """
+        Update/create AND gate shape Box.
+
+        :return: None
+        """
+        w, h = self.size
+        if self.shape:
+            self.canvas.coords(self.shape,
+                               self.x, self.y, self.x, self.y,
+                               self.x + w / 2, self.y, self.x + w / 2, self.y,
+                               self.x + 0.75 * w, self.y + h / 20,
+                               self.x + 0.85 * w, self.y + h / 8,
+                               self.x + 0.95 * w, self.y + h / 4,
+                               self.x + 1 * w, self.y + h / 2,
+                               self.x + 0.95 * w, self.y + 3 * h / 4,
+                               self.x + 0.85 * w, self.y + 7 * h / 8,
+                               self.x + 0.75 * w, self.y + 19 * h / 20,
+                               self.x + w / 2, self.y + h, self.x + w / 2, self.y + h,
+                               self.x, self.y + h, self.x, self.y + h)
+        else:
+            self.shape = self.canvas.create_polygon(self.x, self.y, self.x, self.y,
+                                                    self.x + w / 2, self.y, self.x + w / 2, self.y,
+                                                    self.x + 0.75 * w, self.y + h / 20,
+                                                    self.x + 0.85 * w, self.y + h / 8,
+                                                    self.x + 0.95 * w, self.y + h / 4,
+                                                    self.x + 1 * w, self.y + h / 2,
+                                                    self.x + 0.95 * w, self.y + 3 * h / 4,
+                                                    self.x + 0.85 * w, self.y + 7 * h / 8,
+                                                    self.x + 0.75 * w, self.y + 19 * h / 20,
+                                                    self.x + w / 2, self.y + h, self.x + w / 2, self.y + h,
+                                                    self.x, self.y + h, self.x, self.y + h,
+                                                    smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
+
+    def __update_or_gate__(self):
+        """
+        Update/create OR gate shape Box.
+
+        :return: None
+        """
+        w, h = self.size
+        if self.shape:
+            self.canvas.coords(self.shape,
+                               self.x, self.y, self.x, self.y,
+                               self.x + w / 3, self.y, self.x + w / 3, self.y,
+                               self.x + 0.8 * w, self.y + h / 7,
+                               self.x + 0.99 * w, self.y + h / 2 - 1,
+                               self.x + 1 * w, self.y + h / 2, self.x + 1 * w, self.y + h / 2,
+                               self.x + 0.99 * w, self.y + h / 2 + 1,
+                               self.x + 0.8 * w, self.y + 6 * h / 7,
+                               self.x + w / 3, self.y + h, self.x + w / 3, self.y + h,
+                               self.x, self.y + h, self.x, self.y + h,
+                               self.x + w / 8, self.y + 4 * h / 5,
+                               self.x + w / 4, self.y + h / 2,
+                               self.x + w / 8, self.y + h / 5)
+        else:
+            self.shape = self.canvas.create_polygon(self.x, self.y, self.x, self.y,
+                                                    self.x + w / 3, self.y, self.x + w / 3, self.y,
+                                                    self.x + 0.8 * w, self.y + h / 7,
+                                                    self.x + 0.99 * w, self.y + h / 2 - 1,
+                                                    self.x + 1 * w, self.y + h / 2, self.x + 1 * w, self.y + h / 2,
+                                                    self.x + 0.99 * w, self.y + h / 2 + 1,
+                                                    self.x + 0.8 * w, self.y + 6 * h / 7,
+                                                    self.x + w / 3, self.y + h, self.x + w / 3, self.y + h,
+                                                    self.x, self.y + h, self.x, self.y + h,
+                                                    self.x + w / 8, self.y + 4 * h / 5,
+                                                    self.x + w / 4, self.y + h / 2,
+                                                    self.x + w / 8, self.y + h / 5,
+                                                    smooth=1, splinesteps=20, fill=const.WHITE, outline=const.BLACK)
+
+    def __update_xor_gate__(self):
+        """
+        Update/create XOR gate shape Box.
+
+        :return: None
+        """
+        w, h = self.size
+        if self.shape:
+            if "xor line" in self.extra_shapes:
+                self.canvas.coords(self.extra_shapes["xor line"],
+                                   self.x - 5, self.y, self.x - 5, self.y,
+                                   self.x + w / 8 - 5, self.y + h / 5,
+                                   self.x + w / 4 - 5, self.y + h / 2,
+                                   self.x + w / 8 - 5, self.y + 4 * h / 5,
+                                   self.x - 5, self.y + h, self.x - 5, self.y + h,
+                                   self.x + w / 8 - 5, self.y + 4 * h / 5,
+                                   self.x + w / 4 - 5, self.y + h / 2,
+                                   self.x + w / 8 - 5, self.y + h / 5, )
+        else:
+            self.extra_shapes["xor line"] = self.canvas.create_polygon(self.x - 5, self.y, self.x - 5, self.y,
+                                                                       self.x + w / 8 - 5, self.y + h / 5,
+                                                                       self.x + w / 4 - 5, self.y + h / 2,
+                                                                       self.x + w / 8 - 5, self.y + 4 * h / 5,
+                                                                       self.x - 5, self.y + h, self.x - 5, self.y + h,
+                                                                       self.x + w / 8 - 5, self.y + 4 * h / 5,
+                                                                       self.x + w / 4 - 5, self.y + h / 2,
+                                                                       self.x + w / 8 - 5, self.y + h / 5,
+                                                                       smooth=1, spline=20,
+                                                                       fill=const.WHITE, outline=const.BLACK)
+        self.__update_or_gate__()
+
+    def __update_resize_handle__(self):
+        """
+        Update/create resize handle for Box.
+
+        Creates a black square known as the resize handle at the bottom left of the Box.
+
+        :return: None
+        """
+        w, h = self.size
+        if self.resize_handle:
+            self.canvas.coords(self.resize_handle, self.x + w - 10, self.y + h - 10,
+                               self.x + w, self.y + h)
+        else:
+            self.resize_handle = self.canvas.create_rectangle(self.x + self.size[0] - 10, self.y + self.size[1] - 10,
+                                                              self.x + self.size[0], self.y + self.size[1],
+                                                              outline=const.BLACK, fill=const.BLACK)
 
     def update_coords(self, x, y):
         """
