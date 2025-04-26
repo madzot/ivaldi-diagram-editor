@@ -66,7 +66,7 @@ class BoxTests(TestMainDiagram):
     @patch("MVP.refactored.frontend.canvas_objects.box.Box.update_wires")
     def test__update_size__changes_size(self, update_wires_mock, update_connections_mock, update_box_mock, tag_bind_mock):
         box = Box(self.custom_canvas, 100, 100)
-        expected_size = (100, 100)
+        expected_size = [100, 100]
         box.update_size(expected_size[0], expected_size[1])
         self.assertEqual(expected_size, box.size)
         self.assertTrue(update_wires_mock.called)
@@ -613,5 +613,5 @@ class BoxTests(TestMainDiagram):
             event.y += 1
             box.on_resize_drag(event)
 
-        self.assertEqual((110, 110), box.size)
+        self.assertEqual([110, 110], box.size)
         self.assertEqual(50, move_label_mock.call_count)

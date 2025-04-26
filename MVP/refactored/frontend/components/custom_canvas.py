@@ -1592,7 +1592,7 @@ class CustomCanvas(tk.Canvas):
             else:
                 box.size = [box.size[1] * x_multi, box.size[0]]
             box.update_coords(box.x * x_multi, box.y * y_multi)
-            box.update_position()
+            box.update_box()
             box.update_connections()
             box.update_wires()
             box.move_label()
