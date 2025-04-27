@@ -464,6 +464,16 @@ inside MainDiagram
     .is_horizontal()
         Check if the canvas is in a horizontal orientation.
 
+    .set_rotation(rotation)
+        Set rotation of CustomCanvas.
+    
+        Parameters:
+            rotation (int): New rotation for CustomCanvas, possible values are 0, 90, 180 and 270.
+
+    .__on_rotation_change__()
+        Completes necessary actions to move the current CustomCanvas to a new direction.
+        Activated after set_rotation().
+
 ---
 
 ## RotationButton

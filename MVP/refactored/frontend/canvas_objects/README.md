@@ -100,11 +100,12 @@ Below is a description of all available variables in the Connection class. It wi
         Parameters:
             color (str): (Optional) String of color name/hex code. Default value is black.
 
-    .move_to(location)
-        Updates the canvas location of the Connection and updates the location variable.
+    .update_location(new_location)
+        Updates the location of the Connection.
+        Takes in logical coordinates.
 
         Parameters:
-            location (tuple): Tuple of x, y coordinates that Connection will move to.
+            location (tuple): Tuple of x, y logical coordinates that Connection will move to.
 
     .lessen_index_by_one()
         Lowers the index of a connection by 1.
@@ -167,17 +168,17 @@ Along with these variables Spider has Connection variables as well. Although all
 | x                | int          | Quick variable to get the x coordinate of the Spider. It is the first number of location.                                                                                            |
 | y                | int          | Quick variable to get the y coordinate of the Spider. It is the second number of location.                                                                                           |
 | location         | list         | List of x, y coordinates.                                                                                                                                                            |
+| display_location | list         | List of display_x, display_y coordinates.                                                                                                                                            |
 | display_x        | int          | Quick variable to get the display_x coordinate of the Spider.                                                                                                                        |
 | display_y        | int          | Quick variable to get the display_y coordinate of the Spider.                                                                                                                        |
-| display_location | list         | List of display_x, display_y coordinates.                                                                                                                                            |
-| rel_x            | float        | A float describing the x position relative to the canvas width.                                                                                                                      |
-| rel_y            | float        | A float describing the y position relative to the canvas height.                                                                                                                     |
 | id               | int          | Spider ID.                                                                                                                                                                           |
 | connections      | list         | List of containing Connections, it is used in algebraic notation creation. During diagram editing it will not contain connections                                                    |
 | context_menu     | tkinter.Menu | Variable that holds the context menu of the Spider.                                                                                                                                  |
 | wires            | list         | List that contains Wire class objects that have been connected to the Spider.<br/> This is the spider version of Connection.wire.<br/> For Spiders the variable `.wire` is not used. |
 | receiver         | Receiver     | Receiver object, usually taken from MainDiagram. Used to send information to the back end portion                                                                                    |
 | is_snapped       | bool         | Boolean stating if the Spider is currently snapped to a column or not.                                                                                                               |
+| rel_x            | float        | A float describing the x position relative to the canvas width.                                                                                                                      |
+| rel_y            | float        | A float describing the y position relative to the canvas height.                                                                                                                     |
 
 ### Spider functions
 

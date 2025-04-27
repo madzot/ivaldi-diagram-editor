@@ -244,9 +244,9 @@ class Connection:
 
     def update_location(self, new_location):
         """
-        Move the Connection to the given location.
+        Update the Connection location.
 
-        Takes a coordinate logical location and moves it to the given location on the canvas.
+        Takes a logical coordinate location and moves it to the given location on the canvas.
 
         :param new_location: tuple or list of coordinates. (x, y)
         :return: None
