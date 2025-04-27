@@ -371,15 +371,15 @@ The coordinates of a Box are the top left corner for it.
 |------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | style                  | string       | Describes style of Box, as described in Box parameters.                                                                                                                                                 |
 | canvas                 | CustomCanvas | The CustomCanvas object that the Box is drawn on.                                                                                                                                                       |
-| x                      | int          | Logical X coordinate of the top left corner of the Box.                                                                                                                                                 |
-| y                      | int          | Logical Y coordinate of the top left corner of the Box.                                                                                                                                                 |
+| x                      | int          | Logical X coordinate of the logical top left corner of the Box.                                                                                                                                         |
+| y                      | int          | Logical Y coordinate of the logical top left corner of the Box.                                                                                                                                         |
 | display_x              | int          | Visual X coordinate of the top left corner of the Box.                                                                                                                                                  |
 | display_y              | int          | Visual Y coordinate of the top left corner of the Box.                                                                                                                                                  |
 | rel_x                  | float        | A float describing the x position relative to the canvas width.                                                                                                                                         |
 | rel_y                  | float        | A float describing the y position relative to the canvas height.                                                                                                                                        |
 | start_x                | int          | Used as the x position where to start moving the Box from when dragging.                                                                                                                                |
 | start_y                | int          | Used as the y position where to start moving the Box from when dragging.                                                                                                                                |
-| size                   | tuple        | Contains the height and width in a tuple.                                                                                                                                                               |
+| size                   | list         | Contains the height and width in a list.                                                                                                                                                                |
 | x_dif                  | int          | Used in dragging to determine the x distance of the mouse from the top left corner.                                                                                                                     |
 | y_dif                  | int          | Used in dragging to determine the y distance of the mouse from the top left corner.                                                                                                                     |
 | connections            | list         | List of Connections attached to the Box.                                                                                                                                                                |
@@ -400,6 +400,7 @@ The coordinates of a Box are the top left corner for it.
 | collision_ids          | list         | List of integers that hold all tags that are attached to the Box. Connections, labels, box rext and resize handle.<br/> This is used to remove collision with self when checking for colliding objects. |
 |                        |              |                                                                                                                                                                                                         |
 | # **Static variables** |              |                                                                                                                                                                                                         |
+| default_size           | tuple        | Default size of the Box.                                                                                                                                                                                |
 | max_label_size         | int          | Integer limiting the label size of a Box.                                                                                                                                                               |
 
 
@@ -475,8 +476,8 @@ The coordinates of a Box are the top left corner for it.
         Returns a list of tags that (go_to_x, go_to_y) is colliding with. Uses the size of the Box for checking.
     
         Parameters:
-            go_to_x (int): x coordinate where to check for collisions.
-            go_to_y (int): y coordinate where to check for collisions.
+            go_to_x (int): logical x coordinate where to check for collisions.
+            go_to_y (int): logical y coordinate where to check for collisions.
 
     .on_resize_scroll(event)
         Handles ctrl + scroll  on the Box. Will change the size of the Box.
@@ -526,8 +527,8 @@ The coordinates of a Box are the top left corner for it.
         Moves the Box and all objects attached to it to a new location.
 
         Parameters:
-            new_x (int): x coordinate of where to move the Box.
-            new_y (int): y coordinate of thwere to move the Box.
+            new_x (int): visual x coordinate of where to move the Box.
+            new_y (int): visual y coordinate of thwere to move the Box.
             bypass_legality (bool): (Optional) Boolean stating if legality checking should be bypassed.
 
     .select()
@@ -551,11 +552,11 @@ The coordinates of a Box are the top left corner for it.
         Changes locked value of the Box to False.
 
     .update_size(new_size_x, new_size_y)
-        Changes size of the Box. Width to new_size_x and height to new_size_y.
+        Changes size of the Box. Logical width to new_size_x and logical height to new_size_y.
 
         Parameters:
-            new_size_x (int): New width of the Box.
-            new_size_y (int): New height of the Box.
+            new_size_x (int): New logical width of the Box.
+            new_size_y (int): New logical height of the Box.
 
     .update_connections()
         Updates Connection locations that are attached to the Box.

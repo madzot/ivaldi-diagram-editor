@@ -1575,7 +1575,7 @@ class CustomCanvas(tk.Canvas):
 
     def __on_rotation_change__(self):
         """
-        Moves all objects on canvas based on rotation.
+        Updates all objects location on canvas based on rotation.
 
         :return: None
         """

@@ -246,9 +246,9 @@ class Connection:
         """
         Update the Connection location.
 
-        Takes a logical coordinate location and moves it to the given location on the canvas.
+        Takes a coordinate logical location and moves Connection to the given location on the canvas.
 
-        :param new_location: tuple or list of coordinates. (x, y)
+        :param new_location: tuple or list of logical coordinates. (x, y)
         :return: None
         """
         self.location = list(new_location)

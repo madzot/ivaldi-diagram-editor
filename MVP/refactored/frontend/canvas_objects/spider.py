@@ -334,7 +334,7 @@ class Spider(Connection):
         connected Connection. It is legal when a Spider is trying to cross over to the other side of a connected Spider,
         but illegal when trying to go into the same x-axis as the connected Spider.
 
-        :param new_x: x coordinate that Spider is trying to move to.
+        :param new_x: logical x coordinate that Spider is trying to move to.
         :param bypass: If legality check should be bypassed.
         :return: boolean
         """
@@ -370,9 +370,9 @@ class Spider(Connection):
         """
         Move the Spider to the given location.
 
-        Takes a coordinate logical location and moves it to the given location on the canvas.
+        Takes a coordinate logical location and moves Spider to the given location on the canvas.
 
-        :param new_location: tuple or list of coordinates. (x, y)
+        :param new_location: tuple or list of logical coordinates. (x, y)
         :return: None
         """
         self.x, self.y = new_location

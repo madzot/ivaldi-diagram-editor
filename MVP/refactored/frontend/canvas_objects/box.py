@@ -785,8 +785,8 @@ class Box:
 
         Update the Size and locations of items attached to the Box.
 
-        :param new_size_x: New width
-        :param new_size_y: New height
+        :param new_size_x: New logical width
+        :param new_size_y: New logical height
         :return: None
         """
         if self.canvas.is_vertical():  # keeps display_y in the same spot
