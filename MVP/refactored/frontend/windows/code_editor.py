@@ -38,8 +38,8 @@ class CodeEditor:
         self.window.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         self.window.geometry("1000x750")
         self.code_view = CodeView(self.window, lexer=pygments.lexers.PythonLexer,
-                                  tab_width=4,
                                   font="Courier")
+        self.code_view.bind("<Tab>", lambda event: self.handle_tab())
 
         self.code_view.pack(fill=tk.BOTH, expand=True)
 
@@ -183,3 +183,14 @@ class CodeEditor:
                 if box.label_text == self.label:
                     box.update_io()
         self.main_diagram.label_content[self.label] = self.code_view.get('1.0', tk.END)
+
+    def handle_tab(self):
+        """
+        Tab press handler.
+
+        Inserts 4 spaces into code editor instead of tab character.
+
+        :return: "break" to prevent regular tab character from being added.
+        """
+        self.code_view.insert(tk.INSERT, " "*4)
+        return "break"
