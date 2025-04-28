@@ -1,26 +1,9 @@
-import os
 from typing import Optional, List
 
+from MVP.refactored.backend.box_functions.function_structure.function_parser import FunctionParser
 from MVP.refactored.backend.box_functions.function_structure.function_structure import FunctionStructure
 from MVP.refactored.backend.code_generation.code_inspector import CodeInspector
-from MVP.refactored.backend.box_functions.function_structure.function_parser import FunctionParser
 
-
-def get_predefined_functions() -> dict:
-    predefined_functions_dict = {}
-    functions_path = os.path.join(os.path.dirname(__file__), "./predefined/")
-    dirs_and_files = os.listdir(functions_path)
-    for name in dirs_and_files:
-        full_path = os.path.join(functions_path, name)
-        if os.path.isfile(full_path):
-            with open(full_path, "r") as file:
-                function_name = name.replace(".py", "").replace("_", " ")
-                predefined_functions_dict[function_name] = file.read()
-
-    return predefined_functions_dict
-
-
-predefined_functions = get_predefined_functions()
 INVOKE_METHOD = "invoke"
 
 
@@ -32,28 +15,18 @@ class BoxFunction:
                  max_args: Optional[int] = None,
                  imports: Optional[List[str]] = None,
                  file_code: Optional[str] = None,
-                 is_predefined_function: bool = False,
-                 predefined_function_file_name: Optional[str] = None,
                  main_function_name: Optional[str] = None):
 
         self.main_function_name: str = main_function_name or INVOKE_METHOD
-        print(f"func name: {self.main_function_name}")
         self.imports: List[str] = imports or []
         self.global_statements: List[str] = []
         self.helper_functions: List[str] = []
         self.main_function: Optional[str] = None
-        self.is_predefined_function = is_predefined_function
         self.min_args: Optional[int] = min_args
         self.max_args: Optional[int] = max_args
 
-        if is_predefined_function:
-            predefined_file_code = predefined_functions[predefined_function_file_name]
-            self._set_data_from_file_code(predefined_file_code)
-        elif file_code is not None:
-            print("Sets data from file code")
+        if file_code is not None:
             self._set_data_from_file_code(file_code)
-            print(f"main func: {self.main_function}")
-            print(f"file code: {file_code}")
         else:
             self.main_function: str = function
 
