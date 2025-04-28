@@ -97,7 +97,10 @@ class HyperEdge:
         return None
 
     def get_box_function(self) -> BoxFunction:
-        return self.box_function
+        from MVP.refactored.frontend.windows.main_diagram import MainDiagram
+        return BoxFunction(is_predefined_function=False,
+                           main_function_name=self.box_label,
+                           file_code=MainDiagram.get_function(self.box_label))
 
     def set_source_node(self, conn_index: int, node: Node):
         if conn_index in self.source_nodes:

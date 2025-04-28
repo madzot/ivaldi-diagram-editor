@@ -329,7 +329,7 @@ class CodeGenerator:
                         hyper_edge_input_count_check[hyper_edge] += 1
                 if hyper_edge_input_count_check[hyper_edge] >= len(hyper_edge.get_source_nodes()):
                     # Process this edge first
-                    if hyper_edge.box_function is not None:
+                    if hyper_edge.box_label is not None:
                         hyper_edge_queue.put(hyper_edge)
                     seen_hyper_edges.add(hyper_edge)
                     for target_node in hyper_edge.get_target_nodes():
