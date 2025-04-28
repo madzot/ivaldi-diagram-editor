@@ -83,15 +83,6 @@ class Generator:
     def remove_operand(self):
         self.operand = None
 
-    def set_box_function(self, box_function):
-        pass
-        # from MVP.refactored.frontend.windows.main_diagram import MainDiagram
-        # box_func = BoxFunction(is_predefined_function=False, file_code=MainDiagram.get_function(self.label))
-        # self.box_function = box_func
-
-    def get_box_function(self) -> BoxFunction | None:
-        return self.box_function
-
     def set_id(self, new_id: int):
         self.id = new_id
 
@@ -112,9 +103,6 @@ class Generator:
         self.right.clear()
 
     def remove_left(self, connection_id: int = None):
-        # self.left.pop(connection_id)
-        # for i, resource in enumerate(self.left):
-        #     resource.index = i
         is_found_connection = False
         to_be_removed: ConnectionInfo | None = None
         for connection in self.left:
@@ -128,9 +116,6 @@ class Generator:
             self.left.remove(to_be_removed)
 
     def remove_right(self, connection_id: int = None):
-        # self.right.pop(connection_id)
-        # for i, resource in enumerate(self.right):
-        #     resource.index = i
         is_found_connection = False
         to_be_removed: ConnectionInfo | None = None
         for connection in self.right:
@@ -144,9 +129,6 @@ class Generator:
             self.right.remove(to_be_removed)
 
     def remove_left_inner(self, connection_id: int = None):
-        # self.left_inner.pop(connection_id)
-        # for i, resource in enumerate(self.left_inner):
-        #     resource.index = i
         is_found_connection = False
         to_be_removed: ConnectionInfo | None = None
         for connection in self.left_inner:
@@ -160,9 +142,6 @@ class Generator:
             self.left_inner.remove(to_be_removed)
 
     def remove_right_inner(self, connection_id: int = None):
-        # self.right_inner.pop(connection_id)
-        # for i, resource in enumerate(self.right_inner):
-        #     resource.index = i
         is_found_connection = False
         to_be_removed: ConnectionInfo | None = None
         for connection in self.right_inner:

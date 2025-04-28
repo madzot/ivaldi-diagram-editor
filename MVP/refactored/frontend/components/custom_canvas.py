@@ -23,7 +23,6 @@ from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.tikz_window import TikzWindow
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-import constants as const
 
 
 class CustomCanvas(tk.Canvas):
@@ -77,7 +76,7 @@ class CustomCanvas(tk.Canvas):
         self.diagram_source_box = diagram_source_box  # Only here if canvas is sub-diagram
 
         if not id_:
-            self.id = IdGenerator.id(self)
+            self.id = IdGenerator.id()
         else:
             self.id = id_
 
@@ -932,8 +931,8 @@ class CustomCanvas(tk.Canvas):
         """
         Handle canvas resizing.
 
-        Updates the locations on Corner objects and diagram inputs and outputs along with previous winfo sizes and canvas
-        label location. This is activated when the application is configured.
+        Updates the locations on Corner objects and diagram inputs and outputs along with previous winfo sizes and
+        canvas label location. This is activated when the application is configured.
 
         :param _: tkinter.Event
         :return: None
@@ -1065,11 +1064,7 @@ class CustomCanvas(tk.Canvas):
         while len(self.wires) > 0:
             self.wires[0].delete()
         while len(self.boxes) > 0:
-            if self.boxes[0].sub_diagram:
-                sub_diagram = 'sub_diagram'
-            else:
-                sub_diagram = None
-            self.boxes[0].delete_box(action=sub_diagram)
+            self.boxes[0].delete_box()
         while len(self.spiders) > 0:
             self.spiders[0].delete()
         while len(self.outputs) > 0:
@@ -1121,9 +1116,10 @@ class CustomCanvas(tk.Canvas):
         if start.side == end.side == const.SPIDER:
             return True
 
-        return not (start.side == end.side or start.side == const.LEFT and start.location[0] - start.width_between_boxes <=
-                    end.location[0] or start.side == const.RIGHT and start.location[0] + start.width_between_boxes >=
-                    end.location[0])
+        return not (start.side == end.side or start.side == const.LEFT
+                    and start.location[0] - start.width_between_boxes <= end.location[0]
+                    or start.side == const.RIGHT
+                    and start.location[0] + start.width_between_boxes >= end.location[0])
 
     def random(self):
         """

@@ -23,7 +23,7 @@ class Hypergraph:
     def __init__(self, hypergraph_id=None, canvas_id=None):
         self.id = hypergraph_id
         if hypergraph_id is None:
-            self.id = IdGenerator.id(self)
+            self.id = IdGenerator.id()
         self.canvas_id = canvas_id
         self.hypergraph_source: dict[int, Node] = {}
         self.nodes: dict[int, Node] = {}

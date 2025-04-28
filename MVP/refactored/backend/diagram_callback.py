@@ -70,22 +70,12 @@ class Receiver:
             HypergraphManager.remove_node(resource_id)
         elif action == ActionType.BOX_ADD_INNER_LEFT:
             return
-            box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_left_inner(
-                ConnectionInfo(connection_nr, ConnectionSide.INNER_LEFT, connection_id, related_object=box))
         elif action == ActionType.BOX_ADD_INNER_RIGHT:
             return
-            box = self.get_generator_by_id(generator_id, canvas_id)
-            box.add_right_inner(
-                ConnectionInfo(connection_nr, ConnectionSide.INNER_RIGHT, connection_id, related_object=box))
         elif action == ActionType.BOX_REMOVE_INNER_LEFT:
             return
-            box = self.get_generator_by_id(generator_id, canvas_id)
-            box.remove_left_inner(connection_id)
         elif action == ActionType.BOX_REMOVE_INNER_RIGHT:
             return
-            box = self.get_generator_by_id(generator_id, canvas_id)
-            box.remove_right_inner(connection_id)
         elif action == ActionType.BOX_ADD_LEFT:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.add_left(ConnectionInfo(connection_nr, ConnectionSide.LEFT, connection_id, related_object=box))
@@ -131,11 +121,8 @@ class Receiver:
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.add_operand(operator)
         elif action == ActionType.BOX_ADD_LABEL:
-            # TODO maybe set box function to generator too?
             box = self.get_generator_by_id(generator_id, canvas_id)
             box.set_label(new_label)
-            # from MVP.refactored.frontend.windows.main_diagram import MainDiagram
-            box.set_box_function(None)
             hyper_edge = HypergraphManager.get_hyper_edge_by_id(generator_id)
             if hyper_edge:
                 hyper_edge.set_box_label(new_label)

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class Node:
     def __init__(self, node_id: int = None, is_special=False):
         if node_id is None:
-            node_id = IdGenerator.id(self)
+            node_id = IdGenerator.id()
         self.id = node_id
         self.inputs: list[HyperEdge] = []
         self.outputs: list[HyperEdge] = []

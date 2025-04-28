@@ -1,14 +1,13 @@
 import tkinter as tk
 from tkinter import simpledialog
 
-from MVP.refactored.backend.id_generator import IdGenerator
-from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
-from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 import constants as const
+from MVP.refactored.backend.id_generator import IdGenerator
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_info import ConnectionInfo
-from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.spider import Spider
+from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
+from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 
 
 def curved_line(start, end, det=15):
@@ -65,7 +64,7 @@ class Wire:
         self.line = None
         self.wire_width = 3
         if not id_:
-            self.id = IdGenerator.id(self)
+            self.id = IdGenerator.id()
         else:
             self.id = id_
         self.receiver = canvas.main_diagram.receiver
@@ -389,11 +388,3 @@ class Wire:
                                                                             related_resource_id=connection.id if isinstance(
                                                                                 connection, Spider) else None),
                                             connection_id=connection.id, canvas_id=self.canvas.id)
-
-    def __eq__(self, other):
-        if type(self) is type(other):
-            return self.id == other.id
-        return False
-
-    def __hash__(self):
-        return hash(self.id)

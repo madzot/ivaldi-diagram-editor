@@ -14,7 +14,7 @@ class HyperEdge:
 
     def __init__(self, hyper_edge_id=None, box_function: BoxFunction = None, sub_diagram_canvas_id=-1):
         if hyper_edge_id is None:
-            hyper_edge_id = IdGenerator.id(self)
+            hyper_edge_id = IdGenerator.id()
         self.id = hyper_edge_id
         self.box_function: BoxFunction | None = box_function
 

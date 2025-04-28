@@ -204,7 +204,8 @@ class MainDiagram(tk.Tk):
             file_hash = hashlib.sha256(file.read().encode()).hexdigest()
         return file_hash
 
-    def load_functions(self):
+    @staticmethod
+    def load_functions():
         """
         Load functions configuration.
 
@@ -216,7 +217,8 @@ class MainDiagram(tk.Tk):
             with open(const.FUNCTIONS_CONF, "r") as file:
                 MainDiagram.label_content = json.load(file)
 
-    def add_function(self, function_label, function_code):
+    @staticmethod
+    def add_function(function_label, function_code):
         """
         Add function to the application.
 

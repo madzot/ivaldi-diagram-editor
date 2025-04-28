@@ -33,7 +33,7 @@ class Resource:
             if connection not in self.spider_connection:
                 self.spider_connection.append(connection)
         else:
-            # if resource is spider, all connections have the same id as spider so we don't have if
+            # if resource is spider, all connections have the same id as spider, so we don't have if
             # and all spider connections should be in order by index
             self.spider_connection.insert(connection.index, connection)
 

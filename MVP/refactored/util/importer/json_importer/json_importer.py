@@ -1,21 +1,18 @@
 import hashlib
 import json
-import random
-import string
-from tkinter import messagebox, filedialog
+import os
+from tkinter import filedialog
 from tkinter import messagebox
 from typing import List
 from typing import TextIO
 
+import constants as const
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-import constants as const
-
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.util.importer.importer import Importer
 from MVP.refactored.util.string_util import StringUtil
-from constants import *
 
 
 class JsonImporter(Importer):

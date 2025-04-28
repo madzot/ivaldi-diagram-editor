@@ -2,17 +2,15 @@ import json
 import os
 import re
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox
 from tkinter import simpledialog
 
 import constants as const
-from MVP.refactored.backend.box_functions.box_function import BoxFunction, predefined_functions
 from MVP.refactored.backend.id_generator import IdGenerator
 from MVP.refactored.backend.types.ActionType import ActionType
 from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
-from MVP.refactored.frontend.canvas_objects.wire import Wire
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 
 
@@ -22,10 +20,11 @@ class Box:
 
     Boxes represent a function, the function itself can be defined by the user.
 
-    Boxes are also used to contain sub-diagrams. The sub-diagram is accessible from the treeview on canvases on the left side of the application.
+    Boxes are also used to contain sub-diagrams. The sub-diagram is accessible from the treeview on canvases on the left
+    side of the application.
 
-    Boxes can contain code. The functions are findable in the "Manage methods" window. Applying code to boxes can be done
-    by renaming them to match an existing function or by adding code to them yourself through the code editor.
+    Boxes can contain code. The functions are findable in the "Manage methods" window. Applying code to boxes can be
+    done by renaming them to match an existing function or by adding code to them yourself through the code editor.
     Code can only be added to a box with an existing label.
 
     The coordinates of a Box are the top left corner for it.
@@ -63,7 +62,7 @@ class Box:
         self.label_text = ""
         self.wires = []
         if not id_:
-            self.id = IdGenerator.id(self)
+            self.id = IdGenerator.id()
         else:
             self.id = id_
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
@@ -167,10 +166,7 @@ class Box:
             self.context_menu.add_command(label="Unfold sub-diagram", command=self.unfold)
             self.context_menu.add_command(label="Lock Box", command=self.lock_box)
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
-        if self.sub_diagram:
-            self.context_menu.add_command(label="Delete Box", command=lambda: self.delete_box(action="sub_diagram"))
-        else:
-            self.context_menu.add_command(label="Delete Box", command=self.delete_box)
+        self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_separator()
         self.context_menu.add_command(label="Cancel")
         self.context_menu.tk_popup(event.x_root, event.y_root)
@@ -263,8 +259,8 @@ class Box:
                         break
                 else:
                     break
-        # select connections to remove
 
+        # select connections to remove
         to_be_removed = []
         for c in self.connections:
             if c.side == const.RIGHT and outputs:
@@ -908,7 +904,7 @@ class Box:
 
         Removes the given Connection from the Box.
 
-        :param circle: Connection that will be removed
+        :param connection: Connection that will be removed
         :return: None
         """
         for c in self.connections:
@@ -935,14 +931,13 @@ class Box:
         self.update_wires()
         self.resize_by_connections()
 
-    def delete_box(self, keep_sub_diagram=False, action=None):
+    def delete_box(self, keep_sub_diagram=False):
         """
         Delete Box.
 
         Delete the Box, its Connections and sub-diagram if chosen to.
 
         :param keep_sub_diagram: (Optional) Specify whether the sub-diagram will be kept.
-        :param action: (Optional) Specify if the deletion is done for creating a sub-diagram.
         :return: None
         """
         for c in self.connections:
@@ -1089,11 +1084,3 @@ class Box:
         if not outputs:
             outputs_amount = 0
         return inputs_amount, outputs_amount
-
-    def __eq__(self, other):
-        if type(self) is type(other):
-            return self.id == other.id
-        return False
-
-    def __hash__(self):
-        return hash(self.id)

@@ -32,7 +32,7 @@ class Spider(Connection):
         self.rel_x = round(self.x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
         self.rel_y = round(self.y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
         if not id_:
-            self.id = IdGenerator.id(self)
+            self.id = IdGenerator.id()
         else:
             self.id = id_
 
