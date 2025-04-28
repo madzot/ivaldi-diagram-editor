@@ -25,7 +25,6 @@ from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Toolbar
-from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.frontend.windows.manage_boxes import ManageBoxes
@@ -364,8 +363,8 @@ class MainDiagram(tk.Tk):
             self.show_error_dialog(f"Label must be less than {Box.max_label_size} characters.")
             return
         if old_label in MainDiagram.label_content.keys():
-            code = MainDiagram.label_content[old_label]
-            MainDiagram.label_content[new_label] = code
+            code = MainDiagram.get_function(old_label)
+            MainDiagram.add_function(new_label, code)
             del MainDiagram.label_content[old_label]
             for canvas in self.canvasses.values():
                 for box in canvas.boxes:

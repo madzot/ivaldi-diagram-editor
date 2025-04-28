@@ -165,8 +165,9 @@ class ManageMethods(tk.Toplevel):
 
         :return: None
         """
+        from MVP.refactored.frontend.windows.main_diagram import MainDiagram
         label = self.table.item(self.table.focus())["text"]
-        code = self.main_diagram.label_content[label]
+        code = MainDiagram.get_function(label)
         CodeEditor(self.main_diagram, label=label, code=code)
 
     def open_label_editor(self):

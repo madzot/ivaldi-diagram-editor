@@ -178,11 +178,12 @@ class CodeEditor:
 
         :return: None
         """
+        from MVP.refactored.frontend.windows.main_diagram import MainDiagram
         for canvas in self.main_diagram.canvasses.values():
             for box in canvas.boxes:
                 if box.label_text == self.label:
                     box.update_io()
-        self.main_diagram.label_content[self.label] = self.code_view.get('1.0', tk.END)
+        MainDiagram.add_function(self.label, self.code_view.get('1.0', tk.END))
 
     def handle_tab(self):
         """
