@@ -1,4 +1,7 @@
 {
+    "add": "def add(numbers: list) -> int:\n    if len(number) < 2:\n        raise ValueError(\"Numbers amount should be at least 2\")",
+    "copy": "def copy(x) -> tuple:\n    return x, x",
+    "subtract": "def subtract(a, b) -> int:\n    if not (a and b):\n        raise ValueError(\"Both numbers must be given\")\n    return a - b",
     "method1": "def method1(x1):\n    return (x1)",
     "method2": "def method2(x2):\n    return (x2)",
     "test": "def test(x) -> tuple:\n    return (x, x)",

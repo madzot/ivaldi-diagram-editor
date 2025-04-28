@@ -1076,10 +1076,13 @@ class Box:
         :return: Tuple of input and output amount
         """
         inputs = re.search(r"\((.*)\)", code).group(1)
-        outputs = re.search(r"return (.*)\n*", code).group(1)
+        outputs = re.search(r"return (.*)\n*", code)
+        if outputs:
+            outputs = outputs.group(1)
+        else:
+            outputs = ""
+
         inputs_amount = len(inputs.split(","))
-        if outputs[0] == "(":
-            outputs = outputs[1:-1]
         outputs_amount = len(outputs.strip().split(","))
         if not inputs:
             inputs_amount = 0
