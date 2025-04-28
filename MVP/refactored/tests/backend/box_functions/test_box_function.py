@@ -1,7 +1,25 @@
 from unittest import TestCase
 
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.box_functions.predefined import add, subtract, copy
+
+add = '''
+def add(*numbers: list) -> int:
+    if len(numbers) < 2:
+        raise ValueError("Numbers amount should be at least 2")
+    return sum(numbers)
+'''
+
+copy = '''
+def copy(x) -> list:
+    return [x, x]
+'''
+
+subtract = '''
+def subtract(*numbers: list) -> int:
+    if len(numbers) < 2:
+        raise ValueError("Numbers amount should be at least 2")
+    return numbers[0] - sum(numbers[1:])
+'''
 
 integral_code = '''
 def compute_integral(f, a, b, n=1000):
@@ -24,11 +42,11 @@ def pow(base, exponent):
 class TestBoxFunction(TestCase):
 
     def setUp(self):
-        self.box_add = BoxFunction(predefined_function_file_name="add", file_code=add, is_predefined_function=True)
-        self.box_subtract = BoxFunction(predefined_function_file_name="subtract", file_code=subtract, is_predefined_function=True)
-        self.box_copy = BoxFunction(predefined_function_file_name="copy", file_code=copy, is_predefined_function=True)
-        self.box_integral = BoxFunction(predefined_function_file_name="integral", file_code=integral_code)
-        self.box_pow = BoxFunction(predefined_function_file_name="pow", file_code=pow_code)
+        self.box_add = BoxFunction(main_function_name="add", file_code=add)
+        self.box_subtract = BoxFunction(main_function_name="subtract", file_code=subtract)
+        self.box_copy = BoxFunction(main_function_name="copy", file_code=copy)
+        self.box_integral = BoxFunction(main_function_name="compute_integral", file_code=integral_code)
+        self.box_pow = BoxFunction(main_function_name="pow", file_code=pow_code)
 
     def test_initialization_name_add(self):
         self.assertEqual(self.box_add.name, "add")

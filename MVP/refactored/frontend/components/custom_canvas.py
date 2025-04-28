@@ -842,7 +842,7 @@ class CustomCanvas(tk.Canvas):
         """
         box = self.get_box_by_id(box_id)
         if box:
-            return BoxFunction(predefined_function_file_name=box.label_text,
+            return BoxFunction(main_function_name=box.label_text,
                                file_code=self.main_diagram.label_content[box.label_text])
         return None
 

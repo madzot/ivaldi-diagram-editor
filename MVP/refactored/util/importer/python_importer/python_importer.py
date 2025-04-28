@@ -127,8 +127,9 @@ class PythonImporter(Importer):
 
     @staticmethod
     def _create_box_sub_diagram(box: Box, assigned_variables_amount: int) -> None:
-        box_func = BoxFunction(is_predefined_function=False,
-                               file_code=box.canvas.main_diagram.label_content[box.label_text])
+        from MVP.refactored.frontend.windows.main_diagram import MainDiagram
+        box_func = BoxFunction(main_function_name=box.label,
+                               file_code=MainDiagram.get_function(box.label_text))
         function_structure: FunctionStructure = box_func.function_structure
         arguments = function_structure.arguments
 
