@@ -32,7 +32,9 @@ class ProjectExporter(Exporter):
         return {"boxes": self.create_boxes_list(canvas),
                 "spiders": self.create_spiders_list(canvas),
                 "io": self.create_io_dict(canvas),
-                "wires": self.create_wires_list(canvas)}
+                "wires": self.create_wires_list(canvas),
+                "rotation": canvas.rotation
+                }
 
     def create_wires_list(self, canvas):
         return [{"id": wire.id,
@@ -67,7 +69,7 @@ class ProjectExporter(Exporter):
                 "id": box.id,
                 "x": box.x,
                 "y": box.y,
-                "size": box.size,
+                "size": box.get_logical_size(box.size),
                 "label": box.label_text,
                 "connections": self.get_connections(box.connections),
                 "sub_diagram": None,

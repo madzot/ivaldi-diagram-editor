@@ -24,13 +24,17 @@ class Spider(Connection):
         :param connection_type: ConnectionType that will define the style of the Connection.
         """
         self.r = 10
+        location = list(location)
         super().__init__(None, 0, const.SPIDER, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
         self.x = location[0]
         self.y = location[1]
         self.location = location
-        self.rel_x = round(self.x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+
+        self.display_location = location
+        self.display_x = self.x
+        self.display_y = self.y
+
         if not id_:
             self.id = IdGenerator.id()
         else:
@@ -38,13 +42,18 @@ class Spider(Connection):
 
         self.connections: list[Connection] = []
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.bind_events()
         self.wires = []
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:
             self.receiver.receiver_callback(ActionType.SPIDER_CREATE, resource_id=self.id, canvas_id=canvas.id)
 
         self.is_snapped = False
+
+        self.update_location(location)  # This can be removed if Connection has separate x and y coords like spider does
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+
+        self.bind_events()
 
     def is_spider(self):
         """
@@ -144,8 +153,8 @@ class Spider(Connection):
         if self.find_collisions(self.x, self.y):
             self.r = old_r
             return
-        self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
-                           self.y + self.r)
+        self.canvas.coords(self.circle, self.display_x - self.r, self.display_y - self.r, self.display_x + self.r,
+                           self.display_y + self.r)
 
     # MOVING, CLICKING ETC.
     def on_press(self):
@@ -202,20 +211,23 @@ class Spider(Connection):
         if self.canvas.pulling_wire:
             return
 
-        go_to_y = event.y
+        log_ev_x, log_ev_y = self.canvas.convert_coords(event.x, event.y, to_logical=True)
+
         go_to_x = self.x
+        go_to_y = log_ev_y
         move_legal = False
-        if not self.is_illegal_move(event.x, bypass=from_configuration):
-            go_to_x = event.x
+
+        if not self.is_illegal_move(log_ev_x, bypass=from_configuration):
+            go_to_x = log_ev_x
             move_legal = True
 
         # snapping into place
         found = False
         if not from_configuration:
             for box in self.canvas.boxes:
-                if abs(box.x + box.size[0] / 2 - go_to_x) < box.size[0] / 2 + self.r and move_legal:
-                    go_to_x = box.x + box.size[0] / 2
-
+                if (abs(box.x + box.get_logical_size(box.size)[0] / 2 - go_to_x) < box.get_logical_size(box.size)[0] / 2
+                        + self.r and move_legal):
+                    go_to_x = box.x + box.get_logical_size(box.size)[0] / 2
                     found = True
             for spider in self.canvas.spiders:
                 if spider == self:
@@ -252,15 +264,10 @@ class Spider(Connection):
         self.align_wire_ends()
 
         self.is_snapped = found
+        self.update_location((go_to_x, go_to_y))
 
-        self.location = [go_to_x, go_to_y]
-        self.x = go_to_x
-        self.y = go_to_y
-
-        self.rel_x = round(self.x / self.canvas.winfo_width(), 4)
-        self.rel_y = round(self.y / self.canvas.winfo_height(), 4)
-        self.canvas.coords(self.circle, self.x - self.r, self.y - self.r, self.x + self.r,
-                           self.y + self.r)
+        self.rel_x = round(self.display_x / self.canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.winfo_height(), 4)
         [w.update() for w in self.wires]
 
     def align_wire_ends(self):
@@ -294,13 +301,14 @@ class Spider(Connection):
         """
         Find collisions at the desired location.
 
-        Takes x and y coordinates and checks the surrounding area, equal to the size of the Spider. Returns a list
-        of canvas tags that are in the location. Wires are excluded from this.
+        Takes x and y logical coordinates and checks the surrounding area, equal to the size of the Spider.
+        Returns a list of canvas tags that are in the location. Wires are excluded from this.
 
         :param go_to_x: x coordinate for the center of the search.
         :param go_to_y: y coordinate for the center of the search.
         :return: List of ints.
         """
+        go_to_x, go_to_y = self.canvas.convert_coords(go_to_x, go_to_y, to_display=True)
         collision = self.canvas.find_overlapping(go_to_x - self.r, go_to_y - self.r, go_to_x + self.r,
                                                  go_to_y + self.r)
         collision = list(collision)
@@ -323,7 +331,7 @@ class Spider(Connection):
         connected Connection. It is legal when a Spider is trying to cross over to the other side of a connected Spider,
         but illegal when trying to go into the same x-axis as the connected Spider.
 
-        :param new_x: x coordinate that Spider is trying to move to.
+        :param new_x: logical x coordinate that Spider is trying to move to.
         :param bypass: If legality check should be bypassed.
         :return: boolean
         """
@@ -354,3 +362,19 @@ class Spider(Connection):
         if wire and wire in self.wires:
             self.wires.remove(wire)
             self.has_wire = len(self.wires) > 0
+
+    def update_location(self, new_location):
+        """
+        Move the Spider to the given location.
+
+        Takes a coordinate logical location and moves Spider to the given location on the canvas.
+
+        :param new_location: tuple or list of logical coordinates. (x, y)
+        :return: None
+        """
+        self.x, self.y = new_location
+
+        super().update_location(new_location)
+        self.display_x, self.display_y = self.display_location
+        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
+        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)

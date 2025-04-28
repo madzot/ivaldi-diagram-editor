@@ -45,7 +45,9 @@ class JsonImporter(Importer):
         self.load_everything_to_canvas(data, self.canvas)
         return os.path.basename(json_file.name)
 
-    def load_everything_to_canvas(self, data: dict, canvas: CustomCanvas) -> None:
+    def load_everything_to_canvas(self, data, canvas):
+        canvas.rotation = data.get("rotation", 0)
+        canvas.rotation_button.update_arrow()
         multi_x, multi_y = self.find_multiplier(data)
         self.load_boxes_to_canvas(data, canvas, multi_x, multi_y)
         self.load_spiders_to_canvas(data, canvas, multi_x, multi_y)
@@ -203,10 +205,18 @@ class JsonImporter(Importer):
         multi_x = 1
         multi_y = 1
 
-        if self.canvas.main_diagram.custom_canvas.winfo_width() < max_x:
-            max_x += min_x
-            multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_width() / max_x, 3)
-        if self.canvas.main_diagram.custom_canvas.winfo_height() < max_y:
-            max_y += 30
-            multi_y = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_y, 3)
+        if self.canvas.is_vertical():
+            if self.canvas.main_diagram.custom_canvas.winfo_height() < max_x:
+                max_x += min_x
+                multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_x, 3)
+            if self.canvas.main_diagram.custom_canvas.winfo_width() < max_y:
+                max_y += 30
+                multi_y = round(self.canvas.main_diagram.custom_canvas.winfo_width() / max_y, 3)
+        else:
+            if self.canvas.main_diagram.custom_canvas.winfo_width() < max_x:
+                max_x += min_x
+                multi_x = round(self.canvas.main_diagram.custom_canvas.winfo_width() / max_x, 3)
+            if self.canvas.main_diagram.custom_canvas.winfo_height() < max_y:
+                max_y += 30
+                multi_y = round(self.canvas.main_diagram.custom_canvas.winfo_height() / max_y, 3)
         return multi_x, multi_y

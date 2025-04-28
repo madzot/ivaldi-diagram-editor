@@ -12,16 +12,17 @@ inside MainDiagram
 
 ### CustomCanvas parameters
 
-| **Parameter**         | **Type**     | **Description**                                                                                                                                                                 | 
-|-----------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| master                | Tk           | The parent widget of this canvas. If None, tkinter will attempt to use the default root.                                                                                        |
-| main_diagram          | MainDiagram  | MainDiagram object used for accessing variables across the application.                                                                                                         |
-|                       |              |                                                                                                                                                                                 |
-| # **Optional params** |              |                                                                                                                                                                                 |
-| id_                   | int          | Custom ID for canvas.                                                                                                                                                           |
-| is_search             | boolean      | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
-| diagram_source_box    | Box          | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |
-| **kwargs              |              | Kwargs for `tkinter.Canvas`                                                                                                                                                     |
+| **Parameter**         | **Type**    | **Description**                                                                                                                                                                 | 
+|-----------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| master                | Tk          | The parent widget of this canvas. If None, tkinter will attempt to use the default root.                                                                                        |
+| main_diagram          | MainDiagram | MainDiagram object used for accessing variables across the application.                                                                                                         |
+|                       |             |                                                                                                                                                                                 |
+| # **Optional params** |             |                                                                                                                                                                                 |
+| id_                   | int         | Custom ID for canvas.                                                                                                                                                           |
+| is_search             | boolean     | States whether the CustomCanvas object is created for the search window and is not part of the regular diagram.<br/> Default value is `False`. This disables some features.     |
+| diagram_source_box    | Box         | Source Box for sub-diagram. A Box object that the currently CustomCanvas is located in. This is only used if the a CustomCanvas is a sub-diagram.<br/> Default value is `None`. |
+| rotation              | int         | Integer that determines how canvas is rotated. <br/> Default value is 0.                                                                                                        |
+| **kwargs              |             | Kwargs for `tkinter.Canvas`                                                                                                                                                     |
 
 
 ### CustomCanvas variables
@@ -68,6 +69,8 @@ inside MainDiagram
 | hover_item               | Any                    | Item that is currently being hovered over. This may not show all items being hovered on.                                                                            |
 | search_result_highlights | list                   | List containing highlighted objects when showing search results.                                                                                                    |
 | wire_label_tags          | list                   | List of tags that represent the Wire labels on the CustomCanvas.                                                                                                    |
+| rotation                 | int                    | Integer that determines how canvas is rotated.                                                                                                                      |
+| rotation_button          | RotationButton         | RotationButton that controls CustomCanvas rotation/direction.                                                                                                       |
 
 
 ### CustomCanvas functions
@@ -261,7 +264,7 @@ inside MainDiagram
 
     .add_box(loc, size, id_, style)
         Creates a Box object. Location, size, id and shape of the Box can be specified with additional params.
-        Returns the created Box tag.
+        Returns the created Box object.
 
         Parameters:
             loc (tuple): (Optional) Location that the Box will be created at. Default is (100, 100)
@@ -283,7 +286,7 @@ inside MainDiagram
 
     .add_spider(loc, id, connection_type)
         Creates a Spider object. Location, id and connection_type can be specified with additional parameters.
-        Returns the created Spider tag.
+        Returns the created Spider object.
 
         Parameters:
             loc (tuple): (Optional) Location that the Spider will be created on. Default is (100, 100).
@@ -439,9 +442,77 @@ inside MainDiagram
             x_length (int): width of the copied area.
             y_length (int): height of the copied area.
 
+    .convert_coords(x, y, to_display, to_logical)
+        Converts coordinates either to visual or logical based on to_display and to_logical values..
+        
+        Parameters:
+            x (int): The logical x-coordinate to convert.
+            y (int): The logical y-coordinate to convert.
+            to_display (boolean): (Optional) Whether to convert from logical to display coordinates.
+            to_logical (boolean): (Optional) Whether to convert from display to logical coordinates.
 
+    .swap_cords_if_rotated(x, y)
+        Swaps x and y values if rotation is 90 or 270 degrees.
 
+        Parameters:
+            x (int): The x-coordinate to potentially swap.
+            y (int): The y-coordinate to potentially swap.
 
+    .is_vertical()
+        Check if the canvas is in a vertical orientation.
+
+    .is_horizontal()
+        Check if the canvas is in a horizontal orientation.
+
+    .set_rotation(rotation)
+        Set rotation of CustomCanvas.
+    
+        Parameters:
+            rotation (int): New rotation for CustomCanvas, possible values are 0, 90, 180 and 270.
+
+    .__on_rotation_change__()
+        Completes necessary actions to move the current CustomCanvas to a new direction.
+        Activated after set_rotation().
+
+---
+
+## RotationButton
+
+RotationButton is a button that allows the user to change the direction/rotation of the current diagram.
+
+### RotationButton parameters
+
+| **Params**    | **Type**     | **Description**                        |
+|---------------|--------------|----------------------------------------|
+| master        | tkinter.Tk   | tk.Tk master widget.                   |
+| custom_canvas | CustomCanvas | CustomCanvas that the button controls. |
+| **kwargs      |              | Keyword arguments.                     |
+
+### RotationButton variables
+
+| **Variable**  | **Type**               | **Description**                                  |
+|---------------|------------------------|--------------------------------------------------|
+| custom_canvas | CustomCanvas           | CustomCanvas that the button controls.           |
+| arrow_base    | PIL.Image.Image        | Base image of the arrow in the button.           |
+| arrow         | PIL.Image.Image        | Copy the base image that changes with rotations. |
+| arrow_image   | PIL.PhotoTk.PhotoImage | PhotoImage that is displayed.                    |
+| button        | tkinter.Label          | tkinter.Label that holds the arrow.              |
+
+### RotationButton functions
+
+    .update()
+        Updates the entire button.
+
+    .update_location()
+        Update the location of the button. Replaces it back to the bottom right corner of the CustomCanvas.
+
+    .update_arrow()
+        Updates the arrow inside the button.
+
+    .rotate_diagram()
+        Activates diagram rotation.
+
+---
 
 ## SearchResultButton
 

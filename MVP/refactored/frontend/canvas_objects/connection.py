@@ -35,6 +35,7 @@ class Connection:
         self.index = index
         self.side = side  # 'spider' if connection is a spider
         self.location = location
+        self.display_location = location
         self.type = connection_type
         self.wire = None
         self.has_wire = False
@@ -45,11 +46,13 @@ class Connection:
             self.id = id_
 
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
-        self.circle = self.canvas.create_oval(location[0] - self.r, location[1] - self.r, location[0] + self.r,
-                                              location[1] + self.r, fill=const.BLACK,
-                                              outline=ConnectionType.COLORS.value[self.type.value],
+        self.circle = self.canvas.create_oval(self.display_location[0] - self.r, self.display_location[1] - self.r,
+                                              self.display_location[0] + self.r, self.display_location[1] + self.r,
+                                              fill=const.BLACK, outline=ConnectionType.COLORS.value[self.type.value],
                                               width=round(min(self.r / 5, 5)))
         self.width_between_boxes = 1  # px
+
+        self.update_location(location)
         self.bind_events()
 
     def update(self):
@@ -243,18 +246,20 @@ class Connection:
         """
         self.canvas.itemconfig(self.circle, fill=color)
 
-    def move_to(self, location):
+    def update_location(self, new_location):
         """
-        Move the Connection to the given location.
+        Update the Connection location.
 
-        Takes a coordinate location and moves it to the given location on the canvas.
+        Takes a coordinate logical location and moves Connection to the given location on the canvas.
 
-        :param location: tuple of coordinates. (x, y)
+        :param new_location: tuple or list of logical coordinates. (x, y)
         :return: None
         """
-        self.canvas.coords(self.circle, location[0] - self.r, location[1] - self.r, location[0] + self.r,
-                           location[1] + self.r)
-        self.location = location
+        self.location = list(new_location)
+        x, y = self.canvas.convert_coords(*self.location, to_display=True)
+        self.display_location = [x, y]
+        self.canvas.coords(self.circle, self.display_location[0] - self.r, self.display_location[1] - self.r,
+                           self.display_location[0] + self.r, self.display_location[1] + self.r)
 
     def lessen_index_by_one(self):
         """
