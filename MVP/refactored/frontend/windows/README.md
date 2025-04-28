@@ -60,6 +60,12 @@ The editor itself is imported from `chlorophyll` package.
     .update_boxes()
         Updates i/o of Boxes on the canvas and adds new code to label_content variable.
 
+    .handle_tab()
+        Handles tab event in code view.
+
+        This is used to insert 4 spaces instead of a tab character into the code editor.
+        It will return the string "break" to stop from regular tkinter actions after tab was pressed.
+
 ---
 
 ## HelpWindow
