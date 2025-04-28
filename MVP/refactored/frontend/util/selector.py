@@ -151,24 +151,22 @@ class Selector:
 
     def paste_copied_items(self, event_x=50, event_y=50, replace=False, multi=1):
         if len(self.copied_items) > 0:
-
+            event_x, event_y = self.canvas.convert_coords(event_x, event_y, to_logical=True)
             middle_point = self.find_middle_point(event_x, event_y)
             wires = self.copied_left_wires + self.copied_right_wires
             pasted_items = []
 
             for item in self.copied_items:
+                x, y = item['location']
+                loc = (event_x + (x - middle_point[0]) * multi,
+                       event_y + (y - middle_point[1]) * multi)
                 if item['component'] == "Box":
-                    loc = (event_x + (item['location'][0] - middle_point[0]) * multi,
-                           event_y + (item['location'][1] - middle_point[1]) * multi)
-
                     new_box = self.paste_box(item, loc, self.copied_wire_list, wires, self.canvas, multi=multi,
                                              replace=replace, return_box=True)
                     pasted_items.append(new_box)
 
                 if item['component'] == "Spider":
-                    new_spider = self.canvas.add_spider((event_x + (item['location'][0] - middle_point[0]) * multi,
-                                                         event_y + (item['location'][1] - middle_point[1]) * multi),
-                                                        connection_type=item['type'])
+                    new_spider = self.canvas.add_spider(loc, connection_type=item['type'])
                     pasted_items.append(new_spider)
                     for wire in self.copied_wire_list:
                         if wire['original_start_connection'] == item['id']:
@@ -189,6 +187,7 @@ class Selector:
     def paste_canvas(self, canvas, canvas_id):
         for diagram in self.copied_sub_diagrams:
             if canvas_id == diagram['Canvas']:
+                canvas.rotation = diagram['Rotation']
                 for item in diagram['Components']:
                     if item['component'] == 'Box':
                         self.paste_box(item, item['location'], diagram['Wires'], [], canvas)
@@ -230,6 +229,8 @@ class Selector:
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
 
+        canvas_width, canvas_height = self.canvas.get_rotated_coords(canvas_width, canvas_height)
+
         if most_left - (middle_x - event_x) < self.canvas.canvasx(0):
             middle_x = event_x + most_left - self.canvas.canvasx(0)
         if most_right - (middle_x - event_x) > self.canvas.canvasx(canvas_width):
@@ -247,6 +248,7 @@ class Selector:
         most_right = 0
         most_up = self.canvas.winfo_height()
         most_down = 0
+        most_left, most_up = self.canvas.get_rotated_coords(most_left, most_up)
         for item in self.copied_items:
             if item['component'] == "Box":
                 if item['location'][0] < most_left:
@@ -273,16 +275,17 @@ class Selector:
         most_right = 0
         most_up = self.canvas.winfo_height()
         most_down = 0
+        most_left, most_up = self.canvas.get_rotated_coords(most_left, most_up)
         for item in self.selected_items:
             if isinstance(item, Box):
                 if item.x < most_left:
                     most_left = item.x
                 if item.y < most_up:
                     most_up = item.y
-                if item.x + item.size[0] > most_right:
-                    most_right = item.x + item.size[0]
-                if item.y + item.size[1] > most_down:
-                    most_down = item.y + item.size[1]
+                if item.x + item.get_logical_size(item.size)[0] > most_right:
+                    most_right = item.x + item.get_logical_size(item.size)[0]
+                if item.y + item.get_logical_size(item.size)[1] > most_down:
+                    most_down = item.y + item.get_logical_size(item.size)[1]
             if isinstance(item, Spider):
                 if item.x - item.r < most_left:
                     most_left = item.x - item.r
@@ -348,10 +351,12 @@ class Selector:
         # Sort wires based on connection height
         right_wires.sort(
             key=lambda w:
-            w.end_connection.location[1] if w.end_connection in connection_list else w.start_connection.location[1])
+            w.end_connection.location[1] if w.end_connection in connection_list else
+            w.start_connection.location[1])
         left_wires.sort(
             key=lambda w:
-            w.end_connection.location[1] if w.end_connection in connection_list else w.start_connection.location[1])
+            w.end_connection.location[1] if w.end_connection in connection_list else
+            w.start_connection.location[1])
         # Add connection to connect to lists
         for wire in left_wires:
             if wire.start_connection in connection_list:
@@ -411,10 +416,10 @@ class Selector:
         most_right_distance = 0
         for item in items:
             if isinstance(item, Box):
-                if item.x + item.size[0] / 2 < most_left_distance:
-                    most_left_distance = item.x + item.size[0] / 2
-                if item.x + item.size[0] / 2 > most_right_distance:
-                    most_right_distance = item.x + item.size[0] / 2
+                if item.x + item.get_logical_size(item.size)[0] / 2 < most_left_distance:
+                    most_left_distance = item.x + item.get_logical_size(item.size)[0] / 2
+                if item.x + item.get_logical_size(item.size)[0] / 2 > most_right_distance:
+                    most_right_distance = item.x + item.get_logical_size(item.size)[0] / 2
             if isinstance(item, Spider):
                 if item.x < most_left_distance:
                     most_left_distance = item.x
@@ -423,9 +428,9 @@ class Selector:
 
         for item in items:
             if isinstance(item, Box):
-                if item.x + item.size[0] / 2 == most_left_distance:
+                if item.x + item.get_logical_size(item.size)[0] / 2 == most_left_distance:
                     most_left.append(item)
-                if item.x + item.size[0] / 2 == most_right_distance:
+                if item.x + item.get_logical_size(item.size)[0] / 2 == most_right_distance:
                     most_right.append(item)
             if isinstance(item, Spider):
                 if item.x == most_left_distance:
@@ -558,6 +563,7 @@ class Selector:
         self.copied_sub_diagrams.append({
             'Canvas': copy.deepcopy(canvas.id),
             'Components': copied_items,
+            'Rotation': copy.deepcopy(canvas.rotation),
             'Wires': wires
         })
 
@@ -577,7 +583,7 @@ class Selector:
             'id': copy.deepcopy(box.id),
             'label': copy.deepcopy(box.label_text),
             'location': (box.x, box.y),
-            'size': copy.deepcopy(box.size),
+            'size': copy.deepcopy(box.get_logical_size(box.size)),
             'shape': copy.deepcopy(box.style),
             'connections': connections_copy,
             'sub-diagram': copy.deepcopy(box.sub_diagram.id) if box.sub_diagram else None

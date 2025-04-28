@@ -20,6 +20,7 @@ from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
 from MVP.refactored.frontend.components.toolbar import Toolbar
+from MVP.refactored.frontend.components.rotation_button import RotationButton
 from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
 from MVP.refactored.frontend.windows.manage_boxes import ManageBoxes
@@ -33,8 +34,8 @@ import constants as const
 
 class MainDiagram(tk.Tk):
     """
-    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window that
-    you see when using the application.
+    `MainDiagram` is the main class of the application. All objects are accessible through this. It is the main window
+    that you see when using the application.
     """
 
     def __init__(self, receiver, load=False):
@@ -56,6 +57,8 @@ class MainDiagram(tk.Tk):
         self.wm_minsize(screen_width_min, screen_height_min)
 
         self.is_search_active = False
+        self.is_tree_visible = True
+        self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
 
         self.selector = None
 
@@ -67,6 +70,7 @@ class MainDiagram(tk.Tk):
         self.custom_canvas = CustomCanvas(self, self)
         self.custom_canvas.focus_set()
         self.custom_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.custom_canvas.update()
 
         self.selector = Selector(self)
         self.custom_canvas.selector = self.selector
@@ -75,13 +79,10 @@ class MainDiagram(tk.Tk):
         self.bind("<Control-f>", lambda event: self.open_search_window())
         self.search_window = None
 
-        self.is_tree_visible = True
-        self.tree = ttk.Treeview(self, bootstyle=SECONDARY)
         self.tree.bind("<Motion>", "break")
         self.tree.pack(side=tk.LEFT, before=self.custom_canvas, fill=tk.Y)
         self.tree.update()
         self.tree.config(height=20)  # Number of visible rows
-
         # Add some items to the tree
         self.tree.insert("", "end", str(self.custom_canvas.id), text="Root")
         self.canvasses = {str(self.custom_canvas.id): self.custom_canvas}
@@ -217,7 +218,8 @@ class MainDiagram(tk.Tk):
 
         :return: None
         """
-        print("Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
+        print(
+            "Warning: file needs to have a method named invoke and a 'meta' dictionary with fields name, min_args and max_args")
         code = CodeGenerator.generate_code(self.custom_canvas, self.canvasses, self)
         CodeEditor(self, code=code, is_generated=True)
 
@@ -557,6 +559,7 @@ class MainDiagram(tk.Tk):
         self.custom_canvas.configure(width=width)
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
+        self.custom_canvas.rotation_button.update()
         self.bind_buttons()
 
         self.toolbar.update_canvas_label()
@@ -850,6 +853,7 @@ class MainDiagram(tk.Tk):
             self.tree.update()
         self.custom_canvas.update()
         self.custom_canvas.update_search_results_button()
+        self.custom_canvas.rotation_button.update_location()
 
     @staticmethod
     def pairwise(iterable):
@@ -912,22 +916,24 @@ class MainDiagram(tk.Tk):
                                             edgecolor=const.BLACK, facecolor="none"))
             if show_connections:
                 for connection in box.connections:
-                    circle = patches.Circle((connection.location[0] / 100, y_max - connection.location[1] / 100),
-                                            connection.r / 100, color=const.BLACK, zorder=2)
+                    circle = patches.Circle(
+                        (connection.display_location[0] / 100, y_max - connection.display_location[1] / 100),
+                        connection.r / 100, color=const.BLACK, zorder=2)
                     ax.add_patch(circle)
 
-            plt.text(box.x / 100 + box.size[0] / 2 / 100, y_max - box.y / 100 - box.size[1] / 2 / 100, box.label_text,
-                     horizontalalignment="center", verticalalignment="center", zorder=2)
+            plt.text(box.display_x / 100 + box.size[0] / 2 / 100, y_max - box.display_y / 100 - box.size[1] / 2 / 100,
+                     box.label_text, horizontalalignment="center", verticalalignment="center", zorder=2)
+            ax.add_patch(polygon)
             for polygon in polygons:
                 ax.add_patch(polygon)
 
         for spider in canvas.spiders:
-            circle = patches.Circle((spider.x / 100, y_max - spider.y / 100), spider.r / 100,
+            circle = patches.Circle((spider.display_x / 100, y_max - spider.display_y / 100), spider.r / 100,
                                     color=const.BLACK, zorder=2)
             ax.add_patch(circle)
 
         for i_o in canvas.inputs + canvas.outputs:
-            con = patches.Circle((i_o.location[0] / 100, y_max - i_o.location[1] / 100), i_o.r / 100,
+            con = patches.Circle((i_o.display_location[0] / 100, y_max - i_o.display_location[1] / 100), i_o.r / 100,
                                  color=const.BLACK, zorder=2)
             ax.add_patch(con)
 
@@ -935,9 +941,13 @@ class MainDiagram(tk.Tk):
             x = []
             y = []
             x_y = {}
-            for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
-                x_y[x_coord / 100] = y_max - y_coord / 100
 
+            if self.custom_canvas.is_vertical():
+                for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                    x_y[y_max - y_coord / 100] = x_coord / 100
+            else:
+                for x_coord, y_coord in self.pairwise(canvas.coords(wire.line)):
+                    x_y[x_coord / 100] = y_max - y_coord / 100
             x_y = dict(sorted(x_y.items()))
             for x_coord in x_y.keys():
                 x.append(x_coord)
@@ -951,8 +961,10 @@ class MainDiagram(tk.Tk):
             y_line = spl(x_linspace)
 
             color, style = self.get_wire_style(wire)
-
-            plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
+            if self.custom_canvas.is_vertical():
+                plt.plot(y_line, x_linspace, style, color=color, linewidth=2, zorder=1)
+            else:
+                plt.plot(x_linspace, y_line, style, color=color, linewidth=2, zorder=1)
 
         for label_tag in canvas.wire_label_tags:
             coords = canvas.coords(label_tag)
