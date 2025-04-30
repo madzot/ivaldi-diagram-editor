@@ -1517,21 +1517,28 @@ class CustomCanvas(tk.Canvas):
         :return: Converted coordinates for given x and y.
         """
         coords = [x, y]
+
+        width = self.winfo_width()
+        height = self.winfo_height()
+        if self.winfo_width() <= 1:
+            width = self.main_diagram.custom_canvas.winfo_width()
+            height = self.main_diagram.custom_canvas.winfo_height()
+
         match self.rotation:
             case 90:
                 if to_display and not to_logical:
-                    coords = [self.main_diagram.custom_canvas.winfo_width() - y, x]
+                    coords = [width - y, x]
                 else:
-                    coords = [y, self.main_diagram.custom_canvas.winfo_width() - x]
+                    coords = [y, width - x]
             case 180:
-                coords = [self.main_diagram.custom_canvas.winfo_width() - x, y]
+                coords = [width - x, y]
             case 270:
                 if to_display and not to_logical:
-                    coords = [self.main_diagram.custom_canvas.winfo_width() - y,
-                              self.main_diagram.custom_canvas.winfo_height() - x]
+                    coords = [width - y,
+                              height - x]
                 else:
-                    coords = [self.main_diagram.custom_canvas.winfo_height() - y,
-                              self.main_diagram.custom_canvas.winfo_width() - x]
+                    coords = [height - y,
+                              width - x]
         return coords
 
     def get_rotated_coords(self, x, y):

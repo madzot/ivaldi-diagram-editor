@@ -379,5 +379,12 @@ class Spider(Connection):
 
         super().update_location(new_location)
         self.display_x, self.display_y = self.display_location
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+
+        width = self.canvas.winfo_width()
+        height = self.canvas.winfo_height()
+        if self.canvas.winfo_width() <= 1:
+            width = self.canvas.main_diagram.custom_canvas.winfo_width()
+            height = self.canvas.main_diagram.custom_canvas.winfo_height()
+
+        self.rel_x = round(self.display_x / width, 4)
+        self.rel_y = round(self.display_y / height, 4)

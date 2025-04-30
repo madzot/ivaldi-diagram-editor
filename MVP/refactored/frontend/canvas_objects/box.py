@@ -1275,21 +1275,27 @@ class Box:
         """
         self.x = x
         self.y = y
+        width = self.canvas.winfo_width()
+        height = self.canvas.winfo_height()
+        if self.canvas.winfo_width() <= 1:
+            width = self.canvas.main_diagram.custom_canvas.winfo_width()
+            height = self.canvas.main_diagram.custom_canvas.winfo_height()
+
         match self.canvas.rotation:
             case 90:
-                self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (y + self.size[0])
+                self.display_x = width - (y + self.size[0])
                 self.display_y = x
             case 180:
-                self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (x + self.size[0])
+                self.display_x = width - (x + self.size[0])
                 self.display_y = y
             case 270:
-                self.display_x = self.canvas.main_diagram.custom_canvas.winfo_width() - (y + self.size[0])
-                self.display_y = self.canvas.main_diagram.custom_canvas.winfo_height() - (x + self.size[1])
+                self.display_x = width - (y + self.size[0])
+                self.display_y = height - (x + self.size[1])
             case _:
                 self.display_x = x
                 self.display_y = y
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+        self.rel_x = round(self.display_x / width, 4)
+        self.rel_y = round(self.display_y / height, 4)
 
     def get_logical_size(self, size):
         """
