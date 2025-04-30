@@ -44,14 +44,17 @@ class Box:
         """
         self.style = style
         self.canvas = canvas
-        x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
-        self.x = x
-        self.y = y
-        self.display_x = x
-        self.display_y = y
-        self.size = self.get_logical_size(size)
 
-        self.update_coords(self.x, self.y)
+        x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
+        self.x = None
+        self.y = None
+        self.display_x = None
+        self.display_y = None
+        self.rel_y = None
+        self.rel_x = None
+        self.update_coords(x, y)
+
+        self.size = self.get_logical_size(size)
 
         self.start_x = self.display_x
         self.start_y = self.display_y
@@ -87,9 +90,6 @@ class Box:
         self.is_snapped = False
 
         self.collision_ids = [self.shape, self.resize_handle]
-
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
 
         self.bind_events()
 
