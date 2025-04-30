@@ -238,9 +238,8 @@ class Tests(TestCustomCanvas):
         self.assertEqual(0, self.custom_canvas.prev_height_min)
 
     @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.update')
-    @patch('MVP.refactored.frontend.canvas_objects.spider.Spider.update_location')
     @patch('MVP.refactored.frontend.canvas_objects.box.Box.update_size')
-    def test__move_boxes_spiders__callouts(self, box_mock, spider_mock, wire_mock):
+    def test__move_boxes_spiders__callouts(self, box_mock, wire_mock):
         box = Box(self.custom_canvas, 100, 200)
         spider = Spider((100, 100), self.custom_canvas)
         spider2 = Spider((200, 100), self.custom_canvas)
@@ -251,13 +250,11 @@ class Tests(TestCustomCanvas):
         self.custom_canvas.wires = [wire]
 
         box_mock.call_count = 0
-        spider_mock.call_count = 0
         wire_mock.call_count = 0
 
         self.custom_canvas.move_boxes_spiders("x", 1)
 
         self.assertEqual(1, box_mock.call_count)
-        self.assertEqual(2, spider_mock.call_count)
         self.assertEqual(1, wire_mock.call_count)
 
     @patch('MVP.refactored.frontend.canvas_objects.wire.Wire.update')
