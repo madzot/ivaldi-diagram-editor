@@ -561,20 +561,23 @@ Toolbar
 |    |    └--- png file
 |    |    └--- project
 |    |    └--- hypergraph
-|    |
-|    └--- Generate
-|    |    └--- TikZ
-|    |    └--- code
-|    |
 |    └--- New
 |    └--- Import new diagram
 |    └--- Import as sub-diagram
 |
-└--- Edit
-|    └--- Search in Project
-|
 └--- View
-     └--- Visualize hypergraph
+|    └--- Visualize hypergraph
+|
+└--- Search
+|    └--- Search in project
+|
+└--- Generate
+     └--- TikZ
+     └--- Code
+
+
+
+
 
 ```
 

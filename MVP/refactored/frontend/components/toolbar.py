@@ -31,33 +31,17 @@ class Toolbar(ttk.Frame):
 
         # File -> Save as
         self.save_submenu = tk.Menu(self.file_menu, tearoff=False)
-        self.save_submenu.add_command(label="png file", command=lambda: self.main_diagram.custom_canvas.save_as_png())
-        self.save_submenu.add_command(label="project", command=lambda: self.main_diagram.save_to_file())
-        self.save_submenu.add_command(label="hypergraph",
+        self.save_submenu.add_command(label="PNG file", command=lambda: self.main_diagram.custom_canvas.save_as_png())
+        self.save_submenu.add_command(label="Project", command=lambda: self.main_diagram.save_to_file())
+        self.save_submenu.add_command(label="Hypergraph",
                                       command=lambda: self.main_diagram.custom_canvas.export_hypergraph())
-
-        # File -> Generate
-        self.generate_submenu = tk.Menu(self.file_menu, tearoff=False)
-        self.generate_submenu.add_command(label="TikZ", command=lambda: self.main_diagram.custom_canvas.open_tikz_generator())
-        self.generate_submenu.add_command(label="code", command=lambda: self.main_diagram.generate_code())
 
         # File menu buttons
         self.file_menu.add_cascade(menu=self.save_submenu, label="Save as")
-        self.file_menu.add_cascade(menu=self.generate_submenu, label="Generate")
         self.file_menu.add_command(label="New", command=self.handle_new_graph)
         self.file_menu.add_command(label="Import new diagram", command=lambda: self.handle_new_graph(import_=True))
         self.file_menu.add_command(label="Import as sub-diagram", command=self.import_sub_diagram)
         self.file_button.pack(side=ttk.LEFT)
-
-        # Edit button
-        self.edit_button = tk.Menubutton(self, text="Edit", width=5, indicatoron=False)
-        self.edit_menu = tk.Menu(self.edit_button, tearoff=False)
-        self.edit_button.config(menu=self.edit_menu)
-
-        # Edit menu buttons
-        self.edit_menu.add_command(label="Search in Project",
-                                   command=lambda: self.main_diagram.open_search_window())
-        self.edit_button.pack(side=ttk.LEFT)
 
         # View button
         self.view_button = tk.Menubutton(self, text="View",
@@ -67,9 +51,31 @@ class Toolbar(ttk.Frame):
 
         # View menu buttons
         self.view_menu.add_command(label="Visualize hypergraph",
-                                   command=lambda: self.main_diagram.visualize_as_graph(self.main_diagram.custom_canvas))
-
+                                   command=lambda:
+                                   self.main_diagram.visualize_as_graph(self.main_diagram.custom_canvas))
         self.view_button.pack(side=ttk.LEFT)
+
+        # Search button
+        self.search_button = tk.Menubutton(self, text="Search", width=6, indicatoron=False)
+        self.search_menu = tk.Menu(self.search_button, tearoff=False)
+        self.search_button.config(menu=self.search_menu)
+
+        # Search menu buttons
+        self.search_menu.add_command(label="Search in Project",
+                                     command=lambda: self.main_diagram.open_search_window())
+        self.search_button.pack(side=ttk.LEFT)
+
+        # Generate button
+        self.generate_button = tk.Menubutton(self, text="Generate", width=8, indicatoron=False)
+        self.generate_menu = tk.Menu(self.generate_button, tearoff=False)
+        self.generate_button.config(menu=self.generate_menu)
+
+        # Generate menu buttons
+        self.generate_menu.add_command(label="TikZ",
+                                       command=lambda: self.main_diagram.custom_canvas.open_tikz_generator())
+        self.generate_menu.add_command(label="Code",
+                                       command=lambda: self.main_diagram.generate_code())
+        self.generate_button.pack(side=ttk.LEFT)
 
         self.help_logo = (Image.open(ASSETS_DIR + "/help-circle-outline.png"))
         self.help_logo = self.help_logo.resize((21, 21))
@@ -170,5 +176,3 @@ class Toolbar(ttk.Frame):
             root_canvas.delete_everything()
         if import_:
             self.main_diagram.load_from_file()
-
-
