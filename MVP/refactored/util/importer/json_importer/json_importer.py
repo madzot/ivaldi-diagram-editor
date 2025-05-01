@@ -1,22 +1,24 @@
 import hashlib
 import json
-import random
-import string
+import os
 from tkinter import filedialog
 from tkinter import messagebox
+from typing import List
+from typing import TextIO
 
+import constants as const
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-import constants as const
-
-
 from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
+from MVP.refactored.util.importer.importer import Importer
+from MVP.refactored.util.string_util import StringUtil
 
 
-class Importer:
-    def __init__(self, canvas):
-        self.canvas: CustomCanvas = canvas
+class JsonImporter(Importer):
+
+    def __init__(self, canvas: CustomCanvas):
+        super().__init__(canvas)
         self.id_randomize = {}
         self.seed = ""
         self.random_id = False
@@ -34,26 +36,30 @@ class Importer:
             self.id_randomize[id_] = hex_dig
             return hex_dig
 
-    def start_import(self, d):
-        self.load_static_variables(d)
-        d = d["main_canvas"]
-        self.load_everything_to_canvas(d, self.canvas)
+    def start_import(self, json_files: List[TextIO]) -> str:
+        json_file = json_files[0]
+        data = json.load(json_file)
+        self.load_static_variables(data)
+        data = data["main_canvas"]
 
-    def load_everything_to_canvas(self, d, canvas):
-        canvas.rotation = d.get("rotation", 0)
+        self.load_everything_to_canvas(data, self.canvas)
+        return os.path.basename(json_file.name)
+
+    def load_everything_to_canvas(self, data, canvas):
+        canvas.rotation = data.get("rotation", 0)
         canvas.rotation_button.update_arrow()
-        multi_x, multi_y = self.find_multiplier(d)
-        self.load_boxes_to_canvas(d, canvas, multi_x, multi_y)
-        self.load_spiders_to_canvas(d, canvas, multi_x, multi_y)
-        self.load_io_to_canvas(d, canvas)
-        self.load_wires_to_canvas(d, canvas)
+        multi_x, multi_y = self.find_multiplier(data)
+        self.load_boxes_to_canvas(data, canvas, multi_x, multi_y)
+        self.load_spiders_to_canvas(data, canvas, multi_x, multi_y)
+        self.load_io_to_canvas(data, canvas)
+        self.load_wires_to_canvas(data, canvas)
 
     @staticmethod
     def load_static_variables(data):
         if "static_variables" in data:
             Connection.active_types = data["static_variables"]["active_types"]
             Wire.defined_wires = data["static_variables"]["defined_wires"]
-            Importer.update_custom_type_names()
+            JsonImporter.update_custom_type_names()
 
     @staticmethod
     def update_custom_type_names():
@@ -129,8 +135,7 @@ class Importer:
             for con in [c for box in canvas.boxes for c in
                         box.connections] + canvas.inputs + canvas.outputs + canvas.spiders:
                 if con.id == end_c_id:
-                    canvas.end_wire_to_connection(
-                        con, True)
+                    canvas.end_wire_to_connection(con, True)
                     break
 
     def load_boxes_to_menu(self):
@@ -142,17 +147,9 @@ class Importer:
             messagebox.showinfo("Info", "Loading custom boxes failed!")
             return {}
 
-    @staticmethod
-    def generate_random_string(length):
-        # Define the possible characters for the random string
-        characters = string.ascii_letters + string.digits + string.punctuation
-        # Generate a random string using the specified characters
-        random_string = ''.join(random.choice(characters) for _ in range(length))
-        return random_string
-
     def add_box_from_menu(self, canvas, box_name, loc=(100, 100), return_box=False):
         with (open(const.BOXES_CONF, 'r') as json_file):
-            self.seed = self.generate_random_string(10)
+            self.seed = StringUtil.generate_random_string(10)
             self.random_id = True
             data = json.load(json_file)
             box = data[box_name]

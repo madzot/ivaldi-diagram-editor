@@ -2,12 +2,10 @@ import json
 import time
 from tkinter import messagebox
 
+import constants as const
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.wire import Wire
-from constants import *
-
 from MVP.refactored.util.exporter.exporter import Exporter
-import constants as const
 
 
 class ProjectExporter(Exporter):

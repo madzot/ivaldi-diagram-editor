@@ -8,8 +8,7 @@ class Copier:
     @staticmethod
     def copy_over_spiders(spiders, canvas):
         for spider in spiders:
-            new_spider = canvas.add_spider(spider.location, connection_type=spider.type)
-            new_spider.id = spider.id
+            new_spider = canvas.add_spider(spider.location, connection_type=spider.type, id_=spider.id)
 
     @staticmethod
     def copy_over_boxes(boxes, canvas):
@@ -35,7 +34,7 @@ class Copier:
             return False
 
     def sort_wires_by_y(self, wires, selected_coordinates):
-        # Find if wire is fully in selected area or if only start/end is in
+        # Find if wire is fully in the selected area or if only start/end is in
         half_in = []
         full_in = []
         for wire in wires:
@@ -154,13 +153,11 @@ class Copier:
     def copy_box(old_box, new_box, remember_connections=True):
         for connection in old_box.connections:
             if connection.side == "right":
-                new_connection = new_box.add_right_connection(connection_type=connection.type)
-                if remember_connections:
-                    new_connection.id = connection.id
+                new_box.add_right_connection(connection_type=connection.type,
+                                             id_=connection.id if remember_connections else None)
             if connection.side == "left":
-                new_connection = new_box.add_left_connection(connection_type=connection.type)
-                if remember_connections:
-                    new_connection.id = connection.id
+                new_box.add_left_connection(connection_type=connection.type,
+                                            id_=connection.id if remember_connections else None)
         new_box.set_label(old_box.label_text)
 
     @staticmethod

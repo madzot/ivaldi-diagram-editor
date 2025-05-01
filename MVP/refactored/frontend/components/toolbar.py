@@ -67,7 +67,7 @@ class Toolbar(ttk.Frame):
 
         # View menu buttons
         self.view_menu.add_command(label="Visualize hypergraph",
-                                   command=lambda: self.main_diagram.visualize_as_graph(self.main_diagram.custom_canvas))
+                                   command=lambda: self.main_diagram.visualize_as_graph())
 
         self.view_button.pack(side=ttk.LEFT)
 
@@ -106,14 +106,14 @@ class Toolbar(ttk.Frame):
         box = self.main_diagram.custom_canvas.add_box(loc=(200, 100))
         sub_diagram = box.edit_sub_diagram(switch=False)
 
-        main_canvas = self.main_diagram.importer.canvas
-        self.main_diagram.importer.canvas = sub_diagram
-        is_importing = self.main_diagram.importer.import_diagram()
+        main_canvas = self.main_diagram.json_importer.canvas
+        self.main_diagram.json_importer.canvas = sub_diagram
+        is_importing = self.main_diagram.json_importer.import_diagram()
         for _ in range(len(sub_diagram.inputs)):
             box.add_left_connection()
         for _ in range(len(sub_diagram.outputs)):
             box.add_right_connection()
-        self.main_diagram.importer.canvas = main_canvas
+        self.main_diagram.json_importer.canvas = main_canvas
         if not is_importing:
             box.delete_box()
 
@@ -170,5 +170,3 @@ class Toolbar(ttk.Frame):
             root_canvas.delete_everything()
         if import_:
             self.main_diagram.load_from_file()
-
-

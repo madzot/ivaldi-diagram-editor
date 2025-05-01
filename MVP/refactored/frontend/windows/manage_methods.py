@@ -34,6 +34,7 @@ class ManageMethods(tk.Toplevel):
         self.table = ttk.Treeview(self, columns="Function", bootstyle=ttk.PRIMARY)
         self.table.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         self.table.bind("<Motion>", "break")
+        self.table.bind("<Destroy>", lambda event: self.destroy())
         self.table.bind("<ButtonRelease-1>", lambda event: self.check_selection())
 
         self.table.column("#0", width=100, minwidth=100, anchor=tk.W)
@@ -62,6 +63,10 @@ class ManageMethods(tk.Toplevel):
         self.add_methods()
 
         self.buttons_hidden = True
+
+    def destroy(self):
+        self.main_diagram.manage_methods = None
+        super().destroy()
 
     def check_selection(self):
         """
@@ -160,8 +165,9 @@ class ManageMethods(tk.Toplevel):
 
         :return: None
         """
+        from MVP.refactored.frontend.windows.main_diagram import MainDiagram
         label = self.table.item(self.table.focus())["text"]
-        code = self.main_diagram.label_content[label]
+        code = MainDiagram.get_function(label)
         CodeEditor(self.main_diagram, label=label, code=code)
 
     def open_label_editor(self):

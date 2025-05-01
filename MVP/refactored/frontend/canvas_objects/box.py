@@ -6,10 +6,13 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
 
+import constants as const
+from MVP.refactored.backend.id_generator import IdGenerator
+from MVP.refactored.backend.types.ActionType import ActionType
+from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.types.connection_type import ConnectionType
 from MVP.refactored.frontend.windows.code_editor import CodeEditor
-import constants as const
 
 
 class Box:
@@ -68,7 +71,7 @@ class Box:
         self.label_text = ""
         self.wires = []
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id()
         else:
             self.id = id_
         self.context_menu = tk.Menu(self.canvas, tearoff=0)
@@ -82,16 +85,26 @@ class Box:
         self.sub_diagram = None
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add", generator_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_CREATE, generator_id=self.id, canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
-                self.receiver.receiver_callback("sub_box", generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id)
+                self.receiver.receiver_callback(ActionType.BOX_SUB_BOX, generator_id=self.id,
+                                                connection_id=self.canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
 
         self.is_snapped = False
 
         self.collision_ids = [self.shape, self.resize_handle]
 
         self.bind_events()
+
+    def remove_wire(self, wire):
+        """
+        Remove specific wire from Box.
+
+        :param wire: Wire to remove
+        :return: None
+        """
+        self.wires.remove(wire)
 
     def set_id(self, id_):
         """
@@ -101,10 +114,12 @@ class Box:
         :return: None
         """
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_swap_id", generator_id=self.id, connection_id=id_)
+            self.receiver.receiver_callback(ActionType.BOX_SWAP_ID, generator_id=self.id, new_id=id_,
+                                            canvas_id=self.canvas.id)
             if self.canvas.diagram_source_box:
-                self.receiver.receiver_callback("sub_box", generator_id=self.id,
-                                                connection_id=self.canvas.diagram_source_box.id)
+                self.receiver.receiver_callback(ActionType.BOX_SUB_BOX, generator_id=self.id,
+                                                connection_id=self.canvas.diagram_source_box.id,
+                                                canvas_id=self.canvas.id)
         self.id = id_
 
     def bind_events(self):
@@ -162,10 +177,7 @@ class Box:
             self.context_menu.add_command(label="Unfold sub-diagram", command=self.unfold)
             self.context_menu.add_command(label="Lock Box", command=self.lock_box)
         self.context_menu.add_command(label="Save Box to Menu", command=self.save_box_to_menu)
-        if self.sub_diagram:
-            self.context_menu.add_command(label="Delete Box", command=lambda: self.delete_box(action="sub_diagram"))
-        else:
-            self.context_menu.add_command(label="Delete Box", command=self.delete_box)
+        self.context_menu.add_command(label="Delete Box", command=self.delete_box)
         self.context_menu.add_separator()
         self.context_menu.add_command(label="Cancel")
         self.context_menu.tk_popup(event.x_root, event.y_root)
@@ -235,7 +247,7 @@ class Box:
         """
         if self.locked:
             return
-        # ask for inputs amount
+        # ask for input amount
         inputs = simpledialog.askstring(title="Inputs (left connections)", prompt="Enter amount")
         if inputs and not inputs.isdigit():
             while True:
@@ -247,7 +259,7 @@ class Box:
                 else:
                     break
 
-        # ask for outputs amount
+        # ask for output amount
         outputs = simpledialog.askstring(title="Outputs (right connections)", prompt="Enter amount")
         if outputs and not outputs.isdigit():
             while True:
@@ -258,8 +270,8 @@ class Box:
                         break
                 else:
                     break
-        # select connections to remove
 
+        # select connections to remove
         to_be_removed = []
         for c in self.connections:
             if c.side == const.RIGHT and outputs:
@@ -276,7 +288,8 @@ class Box:
 
         # add new connections
         if not self.canvas.is_search:
-            self.receiver.receiver_callback("box_remove_connection_all", generator_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_REMOVE_ALL_CONNECTIONS, generator_id=self.id,
+                                            canvas_id=self.canvas.id)
         if outputs:
             for _ in range(int(outputs)):
                 self.add_right_connection()
@@ -296,8 +309,6 @@ class Box:
         :return: CustomCanvas sub-diagram
         """
         from MVP.refactored.frontend.components.custom_canvas import CustomCanvas
-        if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("compound", generator_id=self.id)
         if not self.sub_diagram:
             self.sub_diagram = CustomCanvas(self.canvas.main_diagram, self.canvas.main_diagram,
                                             id_=self.id, highlightthickness=0,
@@ -314,11 +325,14 @@ class Box:
                 if switch:
                     self.canvas.main_diagram.switch_canvas(self.sub_diagram)
 
-            return self.sub_diagram
         else:
             if switch:
                 self.canvas.main_diagram.switch_canvas(self.sub_diagram)
-            return self.sub_diagram
+
+        if self.receiver.listener and not self.canvas.is_search:
+            self.receiver.receiver_callback(ActionType.BOX_COMPOUND, generator_id=self.id, canvas_id=self.canvas.id,
+                                            new_canvas_id=self.sub_diagram.id)
+        return self.sub_diagram
 
     def close_menu(self):
         """
@@ -629,6 +643,9 @@ class Box:
         self.update_label()
 
         if self.label_text:
+            self.receiver.receiver_callback(action=ActionType.BOX_ADD_LABEL, new_label=self.label_text,
+                                            generator_id=self.id, canvas_id=self.canvas.id)
+
             if self.sub_diagram:
                 self.sub_diagram.set_name(self.label_text)
                 self.canvas.main_diagram.update_canvas_name(self.sub_diagram)
@@ -644,7 +661,8 @@ class Box:
         :return: None
         """
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add_operator", generator_id=self.id, operator=self.label_text)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_OPERATOR, generator_id=self.id, operator=self.label_text,
+                                            canvas_id=self.canvas.id)
         if not self.label:
             self.label = self.canvas.create_text((self.display_x + self.size[0] / 2, self.display_y + self.size[1] / 2),
                                                  text=self.label_text, fill=const.BLACK, font=('Helvetica', 14))
@@ -885,8 +903,8 @@ class Box:
         self.update_connections()
         self.update_wires()
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add_left", generator_id=self.id, connection_nr=i,
-                                            connection_id=connection.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_LEFT, generator_id=self.id, connection_nr=i,
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
 
         self.resize_by_connections()
         return connection
@@ -912,46 +930,51 @@ class Box:
         self.update_connections()
         self.update_wires()
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_add_right", generator_id=self.id, connection_nr=i,
-                                            connection_id=connection.id)
+            self.receiver.receiver_callback(ActionType.BOX_ADD_RIGHT, generator_id=self.id, connection_nr=i,
+                                            connection_id=connection.id, canvas_id=self.canvas.id)
         self.resize_by_connections()
         return connection
 
-    def remove_connection(self, circle):
+    def remove_connection(self, connection):
         """
         Remove a Connection from the box.
 
         Removes the given Connection from the Box.
 
-        :param circle: Connection that will be removed
+        :param connection: Connection that will be removed
         :return: None
         """
         for c in self.connections:
-            if c.index > circle.index and circle.side == c.side:
+            if c.index > connection.index and connection.side == c.side:
                 c.lessen_index_by_one()
         if self.receiver.listener and not self.canvas.is_search:
-            self.receiver.receiver_callback("box_remove_connection", generator_id=self.id, connection_nr=circle.index,
-                                            generator_side=circle.side)
-        if circle.side == const.LEFT:
+            if connection.side == ConnectionSide.LEFT:
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_LEFT, generator_id=self.id,
+                                                connection_nr=connection.index, connection_id=connection.id,
+                                                canvas_id=self.canvas.id)
+            elif connection.side == ConnectionSide.RIGHT:
+                self.receiver.receiver_callback(ActionType.BOX_REMOVE_RIGHT, generator_id=self.id,
+                                                connection_nr=connection.index, connection_id=connection.id,
+                                                canvas_id=self.canvas.id)
+        if connection.side == const.LEFT:
             self.left_connections -= 1
-        elif circle.side == const.RIGHT:
+        elif connection.side == const.RIGHT:
             self.right_connections -= 1
 
-        self.connections.remove(circle)
-        self.collision_ids.remove(circle.circle)
-        circle.delete()
+        self.connections.remove(connection)
+        self.collision_ids.remove(connection.circle)
+        connection.delete()
         self.update_connections()
         self.update_wires()
         self.resize_by_connections()
 
-    def delete_box(self, keep_sub_diagram=False, action=None):
+    def delete_box(self, keep_sub_diagram=False):
         """
         Delete Box.
 
         Delete the Box, its Connections and sub-diagram if chosen to.
 
         :param keep_sub_diagram: (Optional) Specify whether the sub-diagram will be kept.
-        :param action: (Optional) Specify if the deletion is done for creating a sub-diagram.
         :return: None
         """
         for c in self.connections:
@@ -968,8 +991,7 @@ class Box:
         if self.sub_diagram and not keep_sub_diagram:
             self.canvas.main_diagram.del_from_canvasses(self.sub_diagram)
         if self.receiver.listener and not self.canvas.is_search:
-            if action != "sub_diagram":
-                self.receiver.receiver_callback("box_delete", generator_id=self.id)
+            self.receiver.receiver_callback(ActionType.BOX_DELETE, generator_id=self.id, canvas_id=self.canvas.id)
 
     # BOOLEANS
     def is_illegal_move(self, connection, new_x, bypass=False):
@@ -1082,10 +1104,13 @@ class Box:
         :return: Tuple of input and output amount
         """
         inputs = re.search(r"\((.*)\)", code).group(1)
-        outputs = re.search(r"return (.*)\n*", code).group(1)
+        outputs = re.search(r"return (.*)\n*", code)
+        if outputs:
+            outputs = outputs.group(1)
+        else:
+            outputs = ""
+
         inputs_amount = len(inputs.split(","))
-        if outputs[0] == "(":
-            outputs = outputs[1:-1]
         outputs_amount = len(outputs.strip().split(","))
         if not inputs:
             inputs_amount = 0

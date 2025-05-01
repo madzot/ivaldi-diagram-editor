@@ -6,8 +6,11 @@ import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from ttkbootstrap.constants import *
 
+import constants as const
 from MVP.refactored.backend.box_functions.box_function import BoxFunction
-from MVP.refactored.backend.hypergraph.hypergraph_manager import HypergraphManager
+from MVP.refactored.backend.id_generator import IdGenerator
+from MVP.refactored.backend.types.ActionType import ActionType
+from MVP.refactored.backend.types.connection_side import ConnectionSide
 from MVP.refactored.frontend.canvas_objects.box import Box
 from MVP.refactored.frontend.canvas_objects.connection import Connection
 from MVP.refactored.frontend.canvas_objects.corner import Corner
@@ -21,7 +24,6 @@ from MVP.refactored.frontend.util.selector import Selector
 from MVP.refactored.frontend.windows.tikz_window import TikzWindow
 from MVP.refactored.util.copier import Copier
 from MVP.refactored.util.exporter.hypergraph_exporter import HypergraphExporter
-import constants as const
 
 
 class CustomCanvas(tk.Canvas):
@@ -76,9 +78,11 @@ class CustomCanvas(tk.Canvas):
         self.diagram_source_box = diagram_source_box  # Only here if canvas is sub-diagram
 
         if not id_:
-            self.id = id(self)
+            self.id = IdGenerator.id()
         else:
             self.id = id_
+
+        self.receiver.add_new_canvas(self.id)
 
         self.name_text = str(self.id)[-6:]
         self.select_box = None
@@ -333,15 +337,6 @@ class CustomCanvas(tk.Canvas):
         if self.pulling_wire:
             self.temp_wire.update()
 
-    def delete(self, *args):
-        """
-        Delete items identified by all tag or ids contained in ARGS.
-
-        :return: None
-        """
-        HypergraphManager.modify_canvas_hypergraph(self)
-        super().delete(*args)
-
     def handle_right_click(self, event):
         """
         Handle right click event on CustomCanvas.
@@ -579,7 +574,7 @@ class CustomCanvas(tk.Canvas):
                 for box in self.main_diagram.quick_create_boxes:
                     sub_menu.add_command(label=box,
                                          command=lambda loc=loc_box, name=box:
-                                         self.main_diagram.importer.add_box_from_menu(self, name, loc))
+                                         self.main_diagram.json_importer.add_box_from_menu(self, name, loc))
 
             self.context_menu.add_command(label="Add spider",
                                           command=lambda loc=(self.convert_coords(event.x, event.y, to_logical=True)):
@@ -797,8 +792,6 @@ class CustomCanvas(tk.Canvas):
             current_wire.update()
             self.nullify_wire_start()
 
-        HypergraphManager.modify_canvas_hypergraph(self)
-
     def cancel_wire_pulling(self, event=None):
         """
         Cancel Wire pulling.
@@ -872,7 +865,8 @@ class CustomCanvas(tk.Canvas):
         """
         box = self.get_box_by_id(box_id)
         if box:
-            return BoxFunction(box.label_text, code=self.main_diagram.label_content[box.label_text])
+            return BoxFunction(main_function_name=box.label_text,
+                               file_code=self.main_diagram.label_content[box.label_text])
         return None
 
     def add_spider(self, loc=(100, 100), id_=None, connection_type=ConnectionType.GENERIC):
@@ -1114,11 +1108,7 @@ class CustomCanvas(tk.Canvas):
         while len(self.wires) > 0:
             self.wires[0].delete()
         while len(self.boxes) > 0:
-            if self.boxes[0].sub_diagram:
-                sub_diagram = 'sub_diagram'
-            else:
-                sub_diagram = None
-            self.boxes[0].delete_box(action=sub_diagram)
+            self.boxes[0].delete_box()
         while len(self.spiders) > 0:
             self.spiders[0].delete()
         while len(self.outputs) > 0:
@@ -1170,10 +1160,10 @@ class CustomCanvas(tk.Canvas):
         if start.side == end.side == const.SPIDER:
             return True
 
-        return not (start.side == end.side or start.side == const.LEFT and start.location[
-            0] - start.width_between_boxes <=
-                    end.location[0] or start.side == const.RIGHT and start.location[0] + start.width_between_boxes >=
-                    end.location[0])
+        return not (start.side == end.side or start.side == const.LEFT
+                    and start.location[0] - start.width_between_boxes <= end.location[0]
+                    or start.side == const.RIGHT
+                    and start.location[0] + start.width_between_boxes >= end.location[0])
 
     def random(self):
         """
@@ -1216,18 +1206,17 @@ class CustomCanvas(tk.Canvas):
         if len(self.outputs) != 0:
             output_index += 1
         connection_output_new = Connection(self.diagram_source_box, output_index,
-                                           const.LEFT, [0, 0], self,
+                                           ConnectionSide.LEFT, [0, 0], self,
                                            r=5 * self.total_scale, id_=id_, connection_type=connection_type)
 
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_right", generator_id=self.diagram_source_box.id,
-                                            connection_id=connection_output_new.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_output", generator_id=None,
-                                            connection_id=connection_output_new.id)
+        if self.receiver.listener:
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_OUTPUT, connection_nr=connection_output_new.index,
+                                            connection_id=connection_output_new.id,
+                                            connection_side=connection_output_new.side, canvas_id=self.id)
 
         self.outputs.append(connection_output_new)
         self.update_inputs_outputs()
+
         return connection_output_new
 
     def add_diagram_input_for_sub_d_wire(self, id_=None):
@@ -1270,7 +1259,8 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_output")
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_OUTPUT, canvas_id=self.id,
+                                            connection_id=to_be_removed.id)
 
     def add_diagram_input(self, id_=None, connection_type=ConnectionType.GENERIC):
         """
@@ -1286,16 +1276,16 @@ class CustomCanvas(tk.Canvas):
         input_index = max([o.index for o in self.inputs] + [0])
         if len(self.inputs) != 0:
             input_index += 1
-        new_input = Connection(self.diagram_source_box, input_index, const.RIGHT, [0, 0], self,
+        new_input = Connection(self.diagram_source_box, input_index, ConnectionSide.RIGHT, [0, 0], self,
                                r=5 * self.total_scale, id_=id_, connection_type=connection_type)
-        if self.diagram_source_box and self.receiver.listener:
-            self.receiver.receiver_callback("add_inner_left", generator_id=self.diagram_source_box.id,
-                                            connection_id=new_input.id)
-        elif self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("add_diagram_input", generator_id=None,
-                                            connection_id=new_input.id)
+        if self.receiver.listener:
+            self.receiver.receiver_callback(ActionType.DIAGRAM_ADD_INPUT,
+                                            connection_id=new_input.id, connection_nr=new_input.index,
+                                            connection_side=new_input.side, canvas_id=self.id)
+
         self.inputs.append(new_input)
         self.update_inputs_outputs()
+
         return new_input
 
     def remove_diagram_input(self):
@@ -1310,7 +1300,8 @@ class CustomCanvas(tk.Canvas):
         to_be_removed.delete()
         self.update_inputs_outputs()
         if self.diagram_source_box is None and self.receiver.listener:
-            self.receiver.receiver_callback("remove_diagram_input")
+            self.receiver.receiver_callback(ActionType.DIAGRAM_REMOVE_INPUT, canvas_id=self.id,
+                                            connection_id=to_be_removed.id)
 
     def remove_specific_diagram_input(self, con):
         """

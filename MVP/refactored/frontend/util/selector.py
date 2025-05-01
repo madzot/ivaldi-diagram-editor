@@ -94,7 +94,7 @@ class Selector:
         for wire in filter(lambda w: w in self.canvas.wires, self.selected_wires):
             wire.delete("sub_diagram")
         for box_ in filter(lambda b: b in self.canvas.boxes, self.selected_boxes):
-            box_.delete_box(keep_sub_diagram=True, action="sub_diagram")
+            box_.delete_box(keep_sub_diagram=True)
         for spider in filter(lambda s: s in self.canvas.spiders, self.selected_spiders):
             spider.delete("sub_diagram")
             if self.canvas.receiver.listener:
@@ -103,7 +103,6 @@ class Selector:
                 )
         sub_diagram = box.edit_sub_diagram(save_to_canvasses=False)
         prev_status = self.canvas.receiver.listener
-        self.canvas.receiver.listener = False
         self.canvas.copier.copy_canvas_contents(
             sub_diagram, self.selected_wires, self.selected_boxes, self.selected_spiders, coordinates, box
         )
@@ -123,11 +122,7 @@ class Selector:
     def delete_selected_items(self):
         for item in self.selected_items:
             if isinstance(item, Box):
-                if item.sub_diagram:
-                    action_param = "sub_diagram"
-                else:
-                    action_param = None
-                item.delete_box(action=action_param)
+                item.delete_box()
             if isinstance(item, Spider):
                 item.delete()
         self.selected_items.clear()
