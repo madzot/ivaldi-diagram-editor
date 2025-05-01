@@ -25,13 +25,14 @@ class Spider(Connection):
         location = list(location)
         super().__init__(None, 0, const.SPIDER, location, canvas, self.r, connection_type=connection_type)
         self.canvas = canvas
-        self.x = location[0]
-        self.y = location[1]
-        self.location = location
+        self.x = None
+        self.y = None
 
-        self.display_location = location
-        self.display_x = self.x
-        self.display_y = self.y
+        self.display_x = None
+        self.display_y = None
+
+        self.rel_x = None
+        self.rel_y = None
 
         if not id_:
             self.id = id(self)
@@ -52,8 +53,6 @@ class Spider(Connection):
         self.is_snapped = False
 
         self.update_location(location)  # This can be removed if Connection has separate x and y coords like spider does
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
 
         self.bind_events()
 
@@ -379,5 +378,12 @@ class Spider(Connection):
 
         super().update_location(new_location)
         self.display_x, self.display_y = self.display_location
-        self.rel_x = round(self.display_x / self.canvas.main_diagram.custom_canvas.winfo_width(), 4)
-        self.rel_y = round(self.display_y / self.canvas.main_diagram.custom_canvas.winfo_height(), 4)
+
+        width = self.canvas.winfo_width()
+        height = self.canvas.winfo_height()
+        if self.canvas.winfo_width() <= 1:
+            width = self.canvas.main_diagram.custom_canvas.winfo_width()
+            height = self.canvas.main_diagram.custom_canvas.winfo_height()
+
+        self.rel_x = round(self.display_x / width, 4)
+        self.rel_y = round(self.display_y / height, 4)
