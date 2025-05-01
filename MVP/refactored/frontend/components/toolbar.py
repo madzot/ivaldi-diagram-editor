@@ -61,7 +61,7 @@ class Toolbar(ttk.Frame):
         self.search_button.config(menu=self.search_menu)
 
         # Search menu buttons
-        self.search_menu.add_command(label="Search in Project",
+        self.search_menu.add_command(label="Search in project",
                                      command=lambda: self.main_diagram.open_search_window())
         self.search_button.pack(side=ttk.LEFT)
 

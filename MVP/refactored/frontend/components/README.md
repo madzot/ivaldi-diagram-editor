@@ -558,9 +558,9 @@ Toolbar
 |
 └--- File
 |    └--- Save as
-|    |    └--- png file
-|    |    └--- project
-|    |    └--- hypergraph
+|    |    └--- PNG file
+|    |    └--- Project
+|    |    └--- Hypergraph
 |    └--- New
 |    └--- Import new diagram
 |    └--- Import as sub-diagram
