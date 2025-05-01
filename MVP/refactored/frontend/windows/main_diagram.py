@@ -923,7 +923,6 @@ class MainDiagram(tk.Tk):
 
             plt.text(box.display_x / 100 + box.size[0] / 2 / 100, y_max - box.display_y / 100 - box.size[1] / 2 / 100,
                      box.label_text, horizontalalignment="center", verticalalignment="center", zorder=2)
-            ax.add_patch(polygon)
             for polygon in polygons:
                 ax.add_patch(polygon)
 
