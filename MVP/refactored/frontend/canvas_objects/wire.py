@@ -6,7 +6,7 @@ from MVP.refactored.frontend.canvas_objects.types.wire_types import WireType
 import constants as const
 
 
-def curved_line(start, end, canvas, det=15):
+def curved_line(start, end, canvas=None, det=15):
     """
     Calculate the coordinates for a curved line.
 
@@ -17,8 +17,12 @@ def curved_line(start, end, canvas, det=15):
     :return: List of coordinates for a curved line from start to end.
     """
 
-    start_x, start_y = canvas.get_rotated_coords(start[0], start[1])
-    end_x, end_y = canvas.get_rotated_coords(end[0], end[1])
+    if canvas:
+        start_x, start_y = canvas.get_rotated_coords(start[0], start[1])
+        end_x, end_y = canvas.get_rotated_coords(end[0], end[1])
+    else:
+        start_x, start_y = start
+        end_x, end_y = end
 
     sx = start_x
     sy = start_y
@@ -28,7 +32,10 @@ def curved_line(start, end, canvas, det=15):
     coordinates = [0] * (det * 2 + 2)
     for i in range(det + 1):
         t = i / det
-        x, y = canvas.get_rotated_coords(sx + dx * t, sy + dy * (3 * t ** 2 - 2 * t ** 3))
+        if canvas:
+            x, y = canvas.get_rotated_coords(sx + dx * t, sy + dy * (3 * t ** 2 - 2 * t ** 3))
+        else:
+            x, y = sx + dx * t, sy + dy * (3 * t ** 2 - 2 * t ** 3)
 
         coordinates[i * 2] = x
         coordinates[i * 2 + 1] = y
@@ -165,11 +172,11 @@ class Wire:
                 self.canvas.coords(self.line,
                                    *curved_line(self.start_connection.display_location,
                                                 self.end_connection.display_location,
-                                                self.canvas))
+                                                canvas=self.canvas))
             else:
                 self.line = self.canvas.create_line(
                     *curved_line(self.start_connection.display_location, self.end_connection.display_location,
-                                 self.canvas), fill=self.color, width=self.wire_width, dash=self.dash_style)
+                                 canvas=self.canvas), fill=self.color, width=self.wire_width, dash=self.dash_style)
                 self.canvas.tag_bind(self.line, '<ButtonPress-3>', self.show_context_menu)
             self.update_wire_label()
             self.canvas.tag_lower(self.line)
