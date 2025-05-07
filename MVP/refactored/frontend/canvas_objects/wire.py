@@ -69,7 +69,7 @@ class Wire:
             Default is WireType.GENERIC.
         """
         self.canvas = canvas
-        self.context_menu = tk.Menu(self.canvas, tearoff=0)
+        self.context_menu = None
         self.start_connection = start_connection
         self.end_connection = end_connection
         self.line = None
