@@ -130,7 +130,8 @@ class CodeEditor:
         self.save_to_file()
         self.main_diagram.load_functions()
         self.update_boxes()
-        self.main_diagram.manage_methods.add_methods()
+        if self.main_diagram.manage_methods:
+            self.main_diagram.manage_methods.add_methods()
         if destroy:
             self.window.destroy()
 
