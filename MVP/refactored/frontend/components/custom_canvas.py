@@ -104,7 +104,7 @@ class CustomCanvas(tk.Canvas):
         self.copier = Copier()
         self.hypergraph_exporter = HypergraphExporter(self)
 
-        self.context_menu = tk.Menu(self, tearoff=0)
+        self.context_menu = None
 
         if not is_search:
             self.tree_logo = Image.open(const.ASSETS_DIR + "/file-tree-outline.png")
