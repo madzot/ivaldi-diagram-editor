@@ -104,12 +104,7 @@ class Wire:
         self.canvas.delete(self.line)
         self.delete_labels()
         if not self.is_temporary:
-            if self.start_connection.box:
-                self.start_connection.box.wires.remove(self)
-            if self.end_connection.box:
-                self.end_connection.box.wires.remove(self)
-            if self in self.canvas.wires:
-                self.canvas.wires.remove(self)
+            self.canvas.wires.remove(self)
         if not self.is_temporary and not self.canvas.is_search:
             self.handle_wire_deletion_callback(action)
 
@@ -153,9 +148,6 @@ class Wire:
 
         :return: None
         """
-        # make sure connections have wires attached after select and deselect as copying between canvasses can remove
-        self.start_connection.add_wire(self)
-        self.end_connection.add_wire(self)
         self.canvas.itemconfig(self.line, fill=self.type.value[0])
 
     def update(self):
