@@ -41,7 +41,7 @@ class Connection:
         else:
             self.id = id_
 
-        self.context_menu = tk.Menu(self.canvas, tearoff=0)
+        self.context_menu = None
         self.circle = self.canvas.create_oval(self.display_location[0] - self.r, self.display_location[1] - self.r,
                                               self.display_location[0] + self.r, self.display_location[1] + self.r,
                                               fill=const.BLACK, outline=ConnectionType.COLORS.value[self.type.value],

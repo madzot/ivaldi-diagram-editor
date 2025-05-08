@@ -40,7 +40,6 @@ class Spider(Connection):
             self.id = id_
 
         self.connections: list[Connection] = []
-        self.context_menu = tk.Menu(self.canvas, tearoff=0)
         self.wires = []
         self.receiver = canvas.main_diagram.receiver
         if self.receiver.listener and not self.canvas.is_search:

@@ -71,7 +71,7 @@ class Box:
             self.id = id(self)
         else:
             self.id = id_
-        self.context_menu = tk.Menu(self.canvas, tearoff=0)
+        self.context_menu = None
 
         self.extra_shapes = {}
         self.shape = None

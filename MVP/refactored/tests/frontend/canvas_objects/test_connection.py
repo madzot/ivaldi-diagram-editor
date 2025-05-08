@@ -286,6 +286,7 @@ class ConnectionTests(TestApplication):
     @patch('tkinter.Menu.add_command')
     def test__add_type_choice__no_active_types(self, add_command_mock, add_cascade_mock):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
+        connection.context_menu = tkinter.Menu()
         connection.add_type_choice()
 
         self.assertEqual(1, add_cascade_mock.call_count)
@@ -296,6 +297,7 @@ class ConnectionTests(TestApplication):
     def test__add_type_choice__some_active_types(self, add_command_mock, add_cascade_mock):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
         Connection.active_types = 4
+        connection.context_menu = tkinter.Menu()
         connection.add_type_choice()
 
         self.assertEqual(1, add_cascade_mock.call_count)
@@ -306,6 +308,7 @@ class ConnectionTests(TestApplication):
     def test__add_type_choice__all_active_types_no_add_new_button(self, add_command_mock, add_cascade_mock):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
         Connection.active_types = 10
+        connection.context_menu = tkinter.Menu()
         connection.add_type_choice()
 
         self.assertEqual(1, add_cascade_mock.call_count)
@@ -314,6 +317,7 @@ class ConnectionTests(TestApplication):
     @patch('tkinter.Menu.destroy')
     def test__close_menu__destroys_menu(self, destroy_mock):
         connection = Connection(None, 1010, const.LEFT, (111, 222), self.custom_canvas)
+        connection.context_menu = tkinter.Menu()
 
         connection.close_menu()
         self.assertTrue(destroy_mock.called)
