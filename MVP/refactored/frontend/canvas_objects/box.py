@@ -46,6 +46,8 @@ class Box:
         self.canvas = canvas
 
         x, y = self.canvas.canvasx(x), self.canvas.canvasy(y)
+        self.size = self.get_logical_size(size)
+
         self.x = None
         self.y = None
         self.display_x = None
@@ -53,8 +55,6 @@ class Box:
         self.rel_y = None
         self.rel_x = None
         self.update_coords(x, y)
-
-        self.size = self.get_logical_size(size)
 
         self.start_x = self.display_x
         self.start_y = self.display_y
