@@ -45,6 +45,7 @@ class WireTest(TestApplication):
         connection_start = Spider((111, 222), self.custom_canvas)
         connection_end = Spider((222, 444), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
+        self.custom_canvas.wires = [wire]
 
         connection_start.add_wire(wire)
         connection_end.add_wire(wire)
@@ -60,11 +61,12 @@ class WireTest(TestApplication):
         self.assertNotIn(wire, connection_end.wires)
 
     @patch("MVP.refactored.frontend.canvas_objects.wire.Wire.handle_wire_addition_callback")
-    def test__delete_self__removes_self_connection_wire(self, handle_wire_addition_callback_mock):
+    def test__delete_self__removes_self_connection_wire(self, _):
         connection_start = Connection(None, 1010, "right", (111, 222), self.custom_canvas)
         connection_end = Connection(None, 1010, "left", (111, 222), self.custom_canvas)
 
         wire = Wire(self.custom_canvas, connection_start, connection_end)
+        self.custom_canvas.wires = [wire]
 
         connection_start.add_wire(wire)
         connection_end.add_wire(wire)
@@ -208,6 +210,7 @@ class WireTest(TestApplication):
         connection_start = Spider((111, 222), self.custom_canvas)
         connection_end = Spider((222, 444), self.custom_canvas)
         wire = Wire(self.custom_canvas, connection_start, connection_end)
+        self.custom_canvas.wires = [wire]
 
         self.assertEqual(0, len(self.custom_canvas.spiders))
 

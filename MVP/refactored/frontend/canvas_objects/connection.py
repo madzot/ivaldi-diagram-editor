@@ -275,14 +275,7 @@ class Connection:
         """
         self.canvas.delete(self.circle)
         if self.has_wire:
-            self.canvas.delete(self.wire)
             self.wire.delete()
-
-            if self.box and self.wire in self.box.wires:
-                self.box.wires.remove(self.wire)
-
-            if self.wire in self.canvas.wires:
-                self.canvas.wires.remove(self.wire)
 
     def add_wire(self, wire):
         """
@@ -315,6 +308,8 @@ class Connection:
         :param wire: Optional parameter that specifies what wire will be removed from the Connection
         :return: None
         """
+        if self.box and self.wire and not self.wire.is_temporary:
+            self.box.wires.remove(self.wire)
         if self.wire:
             self.wire = None
             self.has_wire = False
