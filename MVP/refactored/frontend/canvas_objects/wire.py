@@ -269,9 +269,11 @@ class Wire:
         """
         if self.start_label:
             self.canvas.delete(self.start_label)
+            self.canvas.wire_label_tags.remove(self.start_label)
             self.start_label = None
         if self.end_label:
             self.canvas.delete(self.end_label)
+            self.canvas.wire_label_tags.remove(self.end_label)
             self.end_label = None
 
     def create_spider(self, event):
