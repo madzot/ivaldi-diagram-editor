@@ -19,5 +19,5 @@ The instructions to use the application as specified below.
 Project was initially started by Peeter Maran and Anton Osvald Kuusk and then given to us.
 
 Authors:
-    Mark Dzotsenidze
+    Mark Dzotsenidze,
     Markus Vrager
